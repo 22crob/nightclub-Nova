@@ -40,6 +40,7 @@ BACK_V0, BACK_V1 = 0.78, 1.08    # back bar depth
 FRONT_H = 0.52
 BACK_H = 0.46
 WALL_H = 1.45
+PANEL_D = 0.05  # back panel thickness
 
 
 class Iso:
@@ -112,7 +113,7 @@ def bottle(d, x, y, s, color=BOTTLE, hi=(110, 150, 130)):
 
 def display_tower(d, glow_d, iso, u, s):
     """Lit bottle display box on a post, sitting on the back counter."""
-    v0, v1 = BACK_V0 + 0.08, BACK_V1 - 0.04
+    v0, v1 = BACK_V0 + 0.08, BACK_V1 - PANEL_D - 0.01
     w = 0.07
     # post
     box(d, iso, u - 0.012, u + 0.012, v0 + 0.1, v0 + 0.14, BACK_H, BACK_H + 0.42, CAB_TOP, CAB_FRONT, CAB_SIDE, lw=SS)
@@ -141,20 +142,26 @@ def draw_set(img, glow, iso, u0, s, end_face=True):
     u1 = u0 + LEN
     lw = 2 * SS
 
-    # --- back wall panel ---
-    box(d, iso, u0, u1, BACK_V1, BACK_V1 + 0.05, 0, WALL_H, CAB_TOP, (22, 20, 24), CAB_SIDE, lw=lw, side_face=end_face)
-    slats(d, iso, u0, u1, BACK_V1, BACK_H, WALL_H, 9, color=(12, 12, 16), hi=(34, 32, 38), lw=SS)
-
     # --- back bar cabinet ---
-    box(d, iso, u0, u1, BACK_V0, BACK_V1, 0, BACK_H, CAB_TOP, WOOD, shade(WOOD, 1.15), lw=lw, side_face=end_face)
-    slats(d, iso, u0, u1, BACK_V0, 0.04, BACK_H - 0.05, 8, lw=SS)
-    box(d, iso, u0, u1, BACK_V0 - 0.02, BACK_V1, BACK_H - 0.05, BACK_H, CAB_TOP, TRIM, CAB_SIDE, lw=SS, side_face=end_face)
+    box(d, iso, u0, u1, BACK_V0 - 0.01, BACK_V1, 0, 0.04, TRIM, TRIM, TRIM, lw=SS, side_face=end_face)
+    box(d, iso, u0, u1, BACK_V0, BACK_V1, 0, BACK_H - 0.05, CAB_TOP, WOOD, shade(WOOD, 1.15), lw=lw, side_face=end_face)
+    slats(d, iso, u0, u1, BACK_V0, 0.03, BACK_H - 0.08, 8, lw=SS)
+    box(d, iso, u0, u1, BACK_V0 - 0.03, BACK_V1, BACK_H - 0.05, BACK_H,
+        SLATE_TOP, SLATE_FRONT, SLATE_SIDE, lw=lw, side_face=end_face)
+    glossy_top(d, iso, u0, u1, BACK_V0 - 0.03, BACK_V1, BACK_H, 1)
+
+    # --- back panel, mounted on the back edge of the cabinet ---
+    pv0 = BACK_V1 - PANEL_D
+    box(d, iso, u0, u1, pv0, BACK_V1, BACK_H, WALL_H - 0.05, CAB_TOP, WOOD, shade(WOOD, 1.15), lw=lw, side_face=end_face)
+    slats(d, iso, u0, u1, pv0, BACK_H + 0.03, WALL_H - 0.08, 8, lw=SS)
+    box(d, iso, u0, u1, pv0 - 0.03, BACK_V1 + 0.01, WALL_H - 0.05, WALL_H,
+        SLATE_TOP, SLATE_FRONT, SLATE_SIDE, lw=lw, side_face=end_face)
 
     # items on the back counter, back to front, left to right
     towers = [u0 + LEN * 0.5]
     for i in range(2):
         uu = u0 + LEN * (0.25 + i * 0.5)
-        x, y = iso.p(uu, BACK_V1 - 0.07, BACK_H)
+        x, y = iso.p(uu, BACK_V1 - PANEL_D - 0.03, BACK_H)
         bottle(d, x, y, s)
     for t in towers:
         display_tower(d, gd, iso, t, s)
