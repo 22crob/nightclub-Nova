@@ -33,9 +33,9 @@ The fonts in `fonts/` (Tektur, Outfit) are under the SIL Open Font License.
 
 ## Bar sprite
 
-`bar.py` draws one isometric bar set: a front counter, an open gap for the bartender, and a back bar with a glowing glass rack, lit bottle displays and bottles. The sprite in `sprites/bar_set.png` has a transparent background. Sets are built so you can place them side by side to make a longer bar, as in `sprites/bar_x3_preview.png`.
+`bar.py` draws one isometric bar piece in three parts: a front counter, an open gap for the bartender, and a back bar the same width. The back bar has a glowing glass rack, bottles and a lit bottle display. `sprites/bar_piece.png` has a transparent background. Pieces are built to line up side by side into a longer bar, as in `sprites/bar_x3_preview.png`.
 
 ```bash
-python bar.py              # writes sprites/bar_set.png and previews
+python bar.py              # writes sprites/bar_piece.png and previews
 python bar.py --scale 2    # double resolution
 ```

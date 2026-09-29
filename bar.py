@@ -1,11 +1,11 @@
 #!/usr/bin/env python3
 """Isometric bar sprite for Nightclub Nova.
 
-One "set" is three pieces along the wall: a front counter, an open gap for the
+One piece is three parts along the wall: a front counter, an open gap for the
 bartender, and a back bar with a glowing glass rack, lit bottle displays and
 bottles. Sets are drawn so they can be placed side by side to build a long bar.
 
-    python bar.py                  # sprites/bar_set.png + sprites/bar_preview.png
+    python bar.py                  # sprites/bar_piece.png + sprites/bar_preview.png
     python bar.py --scale 2        # bigger sprite
 """
 
@@ -34,7 +34,7 @@ AMBER = (255, 150, 50)
 BOTTLE = (34, 52, 46)
 
 # Layout, in tile units. u runs along the bar, v runs back toward the wall, z is up.
-LEN = 1.0
+LEN = 0.5
 FRONT_V0, FRONT_V1 = 0.0, 0.34   # front counter depth
 BACK_V0, BACK_V1 = 0.78, 1.08    # back bar depth
 FRONT_H = 0.52
@@ -143,23 +143,23 @@ def draw_set(img, glow, iso, u0, s, end_face=True):
 
     # --- back wall panel ---
     box(d, iso, u0, u1, BACK_V1, BACK_V1 + 0.05, 0, WALL_H, CAB_TOP, (22, 20, 24), CAB_SIDE, lw=lw, side_face=end_face)
-    slats(d, iso, u0, u1, BACK_V1, BACK_H, WALL_H, 18, color=(12, 12, 16), hi=(34, 32, 38), lw=SS)
+    slats(d, iso, u0, u1, BACK_V1, BACK_H, WALL_H, 9, color=(12, 12, 16), hi=(34, 32, 38), lw=SS)
 
     # --- back bar cabinet ---
     box(d, iso, u0, u1, BACK_V0, BACK_V1, 0, BACK_H, CAB_TOP, WOOD, shade(WOOD, 1.15), lw=lw, side_face=end_face)
-    slats(d, iso, u0, u1, BACK_V0, 0.04, BACK_H - 0.05, 16, lw=SS)
+    slats(d, iso, u0, u1, BACK_V0, 0.04, BACK_H - 0.05, 8, lw=SS)
     box(d, iso, u0, u1, BACK_V0 - 0.02, BACK_V1, BACK_H - 0.05, BACK_H, CAB_TOP, TRIM, CAB_SIDE, lw=SS, side_face=end_face)
 
     # items on the back counter, back to front, left to right
-    towers = [u0 + LEN * 0.25, u0 + LEN * 0.75]
-    for i in range(4):
-        uu = u0 + LEN * (0.125 + i * 0.25)
+    towers = [u0 + LEN * 0.5]
+    for i in range(2):
+        uu = u0 + LEN * (0.25 + i * 0.5)
         x, y = iso.p(uu, BACK_V1 - 0.07, BACK_H)
         bottle(d, x, y, s)
     for t in towers:
         display_tower(d, gd, iso, t, s)
-    for i in range(10):
-        uu = u0 + LEN * (0.05 + i * 0.1)
+    for i in range(5):
+        uu = u0 + LEN * (0.1 + i * 0.2)
         for row, vv in enumerate((BACK_V0 + 0.14, BACK_V0 + 0.06)):
             x, y = iso.p(uu + row * 0.03, vv, BACK_H)
             glass(d, gd, x, y, s)
@@ -168,11 +168,11 @@ def draw_set(img, glow, iso, u0, s, end_face=True):
     # kick plate
     box(d, iso, u0, u1, FRONT_V0 - 0.01, FRONT_V1, 0, 0.04, TRIM, TRIM, TRIM, lw=SS, side_face=end_face)
     box(d, iso, u0, u1, FRONT_V0, FRONT_V1, 0, FRONT_H - 0.05, CAB_TOP, WOOD, shade(WOOD, 1.15), lw=lw, side_face=end_face)
-    slats(d, iso, u0, u1, FRONT_V0, 0.03, FRONT_H - 0.08, 20, lw=SS)
+    slats(d, iso, u0, u1, FRONT_V0, 0.03, FRONT_H - 0.08, 10, lw=SS)
     # slab top overhanging the front
     box(d, iso, u0, u1, FRONT_V0 - 0.05, FRONT_V1 + 0.02, FRONT_H - 0.05, FRONT_H,
         SLATE_TOP, SLATE_FRONT, SLATE_SIDE, lw=lw, side_face=end_face)
-    glossy_top(d, iso, u0, u1, FRONT_V0 - 0.05, FRONT_V1 + 0.02, FRONT_H, 2)
+    glossy_top(d, iso, u0, u1, FRONT_V0 - 0.05, FRONT_V1 + 0.02, FRONT_H, 1)
 
 
 def render(n_sets=1, tile=220, scale=1.0):
@@ -214,8 +214,8 @@ def main():
     os.makedirs(args.out, exist_ok=True)
 
     one = render(1, scale=args.scale)
-    one.save(os.path.join(args.out, "bar_set.png"))
-    preview(one).save(os.path.join(args.out, "bar_set_preview.png"))
+    one.save(os.path.join(args.out, "bar_piece.png"))
+    preview(one).save(os.path.join(args.out, "bar_piece_preview.png"))
     preview(render(3, scale=args.scale)).save(os.path.join(args.out, "bar_x3_preview.png"))
     print("wrote", args.out)
 
