@@ -1,4 +1,20 @@
-# Nightclub Nova: 2D image generator
+# Nightclub Nova
+
+## The game: Club Nova
+
+`game/` holds the club tycoon game, built with Phaser 3. You build out an isometric club with bars, DJ booths, dance floors and decorations. Patrons walk in, earn you fans and tip you.
+
+To play, open `game/index.html` in a browser. It needs an internet connection, because Phaser loads from a CDN. Sprites are embedded in the `*_sprites_data.js` files, so the page works when opened straight from disk, without a local server.
+
+| File | What it is |
+|---|---|
+| `game/index.html` | Page layout and styling: top bar, shop menu, buttons |
+| `game/game.js` | All game logic (`ClubScene`) |
+| `game/bar_sprites_data.js` | Bar sprites for 4 facings (base64 PNG) |
+| `game/dj_sprites_data.js` | DJ booth sprites for 4 facings (base64 PNG) |
+| `game/character_sprites_data.js` | Patron walk and dance spritesheets (base64 PNG) |
+
+## 2D image generator
 
 Makes neon synthwave poster art for Nightclub Nova. Each image has a night sky with stars, a glowing "nova" burst, club light beams, a perspective grid floor and neon title text. The same seed always produces the same image.
 
