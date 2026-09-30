@@ -4,15 +4,32 @@
 
 `game/` holds the club tycoon game, built with Phaser 3. You build out an isometric club with bars, DJ booths, dance floors and decorations. Patrons walk in, earn you fans and tip you.
 
-To play, open `game/index.html` in a browser. It needs an internet connection, because Phaser loads from a CDN. Sprites are embedded in the `*_sprites_data.js` files, so the page works when opened straight from disk, without a local server.
+### Playing and developing
 
-| File | What it is |
+You need [Node.js](https://nodejs.org) installed. Then, in the `game/` folder:
+
+```bash
+npm install        # first time only
+npm run dev        # run the game at http://localhost:5173, reloads as you edit
+npm run build      # makes dist/index.html: one file, double-click to play
+npm test           # builds, then plays through the game automatically to check nothing broke
+```
+
+### Layout
+
+| Path | What it is |
 |---|---|
-| `game/index.html` | Page layout and styling: top bar, shop menu, buttons |
-| `game/game.js` | All game logic (`ClubScene`) |
-| `game/bar_sprites_data.js` | Bar sprites for 4 facings (base64 PNG) |
-| `game/dj_sprites_data.js` | DJ booth sprites for 4 facings (base64 PNG) |
-| `game/character_sprites_data.js` | Patron walk and dance spritesheets (base64 PNG) |
+| `game/index.html` | Page layout: top bar, shop panel, buttons |
+| `game/src/main.js` | Starts Phaser |
+| `game/src/style.css` | All page styling |
+| `game/src/config.js` | Tuning numbers: tile size, patron timing, save key |
+| `game/src/catalog.js` | Everything buyable: props, prices, unlock levels, expansions |
+| `game/src/assets.js` | Sprite image list |
+| `game/src/assets/sprites/` | Sprite PNGs (4 facings per prop, patron spritesheets) |
+| `game/src/sfx.js`, `icons.js`, `util.js` | Sound effects, shop icons, helpers |
+| `game/src/scene/ClubScene.js` | The main scene: setup and game loop timers |
+| `game/src/scene/*.js` | The scene's other methods, one file per topic: `world` (floor, walls, expansion), `placement`, `propVisuals`, `shop`, `economy`, `save`, `patrons`, `hud` |
+| `game/tests/smoke.mjs` | Automated play-through test |
 
 ## 2D image generator
 
