@@ -1,5 +1,7 @@
 // Club Nova — isometric nightclub tycoon (Phaser 3).
 import Phaser from 'phaser';
+import '@fontsource/fredoka/latin-500.css';
+import '@fontsource/fredoka/latin-700.css';
 import './style.css';
 import { ClubScene } from './scene/ClubScene.js';
 

@@ -57,6 +57,13 @@ export class ShopMixin {
     }
 
     this.shopToggle.addEventListener('click', () => this.openShop());
+    // Toolbar shortcuts into specific shop tabs.
+    const decorate = document.getElementById('decorateButton');
+    const expand = document.getElementById('expandButton');
+    const staff = document.getElementById('staffButton');
+    if (decorate) decorate.addEventListener('click', () => this.openShop('Floors'));
+    if (expand) expand.addEventListener('click', () => this.openShop('Expand'));
+    if (staff) staff.addEventListener('click', () => this.showToast('Hiring staff is coming soon!', 2500));
     if (this.shopClose) this.shopClose.addEventListener('click', () => this.closeShop());
     // Clicking the dark backdrop (but not the panel itself) also closes it.
     this.shopOverlay.addEventListener('click', (e) => {
@@ -67,7 +74,9 @@ export class ShopMixin {
     this.updateSelectedChip();
   }
 
-  openShop() {
+  // Opens the shop, optionally on a given tab.
+  openShop(category) {
+    if (category) this.setShopCategory(category);
     if (this.shopOverlay) this.shopOverlay.classList.add('open');
   }
 

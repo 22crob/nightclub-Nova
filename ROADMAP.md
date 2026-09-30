@@ -8,7 +8,7 @@ The visual and gameplay reference for everything is **Nightclub City** (2010): i
 - Raised floor slab with dark front edges, tiled sidewalk outside
 - Proportions matched to the reference: a patron is about 1.46 tile widths tall, walls about 1.3x a patron, bar counter at waist height
 
-## 2. Interface reskin
+## 2. Interface reskin: done
 - Top-left portrait with level star and a long XP bar; cash with a money icon top-centre; glossy blue buttons top-right
 - Bottom toolbar of large icon buttons: Shop, Decorate (paint bucket), Staff, Friends
 - Glossy, rounded, bright UI chrome like the reference

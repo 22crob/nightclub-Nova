@@ -168,6 +168,7 @@ export class ClubScene extends Phaser.Scene {
     this.fansText = document.getElementById('fansVal');
     this.levelText = document.getElementById('levelVal');
     this.xpBarFill = document.getElementById('xpBarFill');
+    this.xpText = document.getElementById('xpText');
     this.placedText = document.getElementById('placedVal');
     this.buildShop();
     this.updateUI();

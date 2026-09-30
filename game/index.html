@@ -6,41 +6,66 @@
 <title>Club Nova</title>
 </head>
 <body>
-  <div id="topBar">
-    <div class="left">
-      <div class="avatarWrap">
-        <div class="avatar">🪩</div>
-        <div class="levelBadge" id="levelVal">1</div>
-      </div>
-      <div class="xpWrap">
-        <div class="xpLabel">Fans to next level</div>
-        <div class="xpBarOuter"><div class="xpBarFill" id="xpBarFill"></div></div>
-      </div>
-      <div class="cashPill"><div class="cashIcon">$</div><span class="amount" id="cashVal">500</span></div>
+  <!-- Top-left: portrait, level star, experience bar, small utility buttons -->
+  <div id="hudProfile">
+    <div class="portrait">
+      <div class="portraitFace">🪩</div>
+      <div class="levelStar"><span id="levelVal">1</span></div>
     </div>
-    <div class="right">
-      <div class="statPill fans">
-        <div class="statIcon">★</div>
-        <div class="value"><span id="fansVal">0</span></div>
-        <div class="labelSmall">Fans</div>
+    <div class="profileRight">
+      <div class="xpBar">
+        <div class="xpFill" id="xpBarFill"></div>
+        <div class="xpText" id="xpText">Level 1</div>
       </div>
-      <div class="statPill placed">
-        <div class="statIcon">▣</div>
-        <div class="value" id="placedVal">0/0</div>
-        <div class="labelSmall">Patrons</div>
+      <div class="utilityRow">
+        <div id="muteButton" class="squareButton" title="Sound on/off">🔊</div>
+        <div id="zoomIn" class="squareButton" title="Zoom in">＋</div>
+        <div id="zoomOut" class="squareButton" title="Zoom out">－</div>
       </div>
     </div>
   </div>
 
-  <div id="toast"></div>
-  <div id="hint">Click to place &nbsp;•&nbsp; Right-click to sell &nbsp;•&nbsp; R: rotate &nbsp;•&nbsp; Esc/re-click to deselect &nbsp;•&nbsp; Drag to pan &nbsp;•&nbsp; Scroll to zoom</div>
+  <!-- Top-centre: cash -->
+  <div id="hudCash">
+    <div class="cashStack"><span>$</span></div>
+    <span class="amount" id="cashVal">500</span>
+  </div>
 
+  <!-- Top-right: stat buttons -->
+  <div id="hudStats">
+    <div class="statButton" title="Fans">
+      <div class="statValue"><span class="statIcon">★</span><span id="fansVal">0</span></div>
+      <div class="statLabel">Fans</div>
+    </div>
+    <div class="statButton" title="Patrons in the club / capacity">
+      <div class="statValue"><span class="statIcon">☺</span><span id="placedVal">0/0</span></div>
+      <div class="statLabel">Patrons</div>
+    </div>
+  </div>
+
+  <div id="toast"></div>
+
+  <!-- Bottom-left: tips box -->
+  <div id="hint">
+    <div class="hintTitle">Tips</div>
+    Click to place • Right-click to sell • R to rotate • Esc to put down • Drag to move around • Scroll to zoom
+  </div>
+
+  <!-- Bottom-centre: what you're holding, and the toolbar -->
   <div id="selectedChip"></div>
-  <div id="shopToggle" title="Open shop"><span class="icon">🛍️</span><span>Shop</span></div>
-  <div id="muteButton" title="Toggle sound">🔊</div>
-  <div id="zoomControls">
-    <div id="zoomIn" class="zoomButton" title="Zoom in">+</div>
-    <div id="zoomOut" class="zoomButton" title="Zoom out">−</div>
+  <div id="toolbar">
+    <div id="shopToggle" class="toolButton" title="Buy furniture">
+      <div class="toolIcon">🛍️</div><div class="toolLabel">Shop</div>
+    </div>
+    <div id="decorateButton" class="toolButton" title="Floors and decorations">
+      <div class="toolIcon">🪣</div><div class="toolLabel">Decorate</div>
+    </div>
+    <div id="expandButton" class="toolButton" title="Make the club bigger">
+      <div class="toolIcon">📐</div><div class="toolLabel">Expand</div>
+    </div>
+    <div id="staffButton" class="toolButton" title="Hire staff">
+      <div class="toolIcon">🧑‍🍳</div><div class="toolLabel">Staff</div>
+    </div>
   </div>
 
   <div id="shopOverlay">
