@@ -33,7 +33,7 @@ const state = () => page.evaluate(() => {
   const s = window.__clubNova.scene.getScene('club');
   return {
     cash: s.cash, fans: s.fans, placed: s.placedCount(), patrons: s.patrons.length,
-    textures: ['bar_0', 'bar_90', 'bar_180', 'bar_270', 'dj_0', 'dj_90', 'dj_180', 'dj_270', 'patron_0']
+    textures: ['bar_0', 'bar_90', 'bar_180', 'bar_270', 'dj_0', 'dj_90', 'dj_180', 'dj_270', 'patron_0', 'patron_11']
       .filter((k) => !s.textures.exists(k)),
   };
 });
