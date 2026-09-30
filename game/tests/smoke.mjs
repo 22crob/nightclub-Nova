@@ -27,7 +27,7 @@ page.on('console', (m) => { if (m.type() === 'error') errors.push(m.text()); });
 const tileXY = (gx, gy) => page.evaluate(([gx, gy]) => {
   const s = window.__clubNova.scene.getScene('club');
   const { sx, sy } = s.gridToScreen(gx, gy);
-  return { x: s.world.x + sx, y: s.world.y + sy };
+  return { x: s.world.x + sx * s.world.scaleX, y: s.world.y + sy * s.world.scaleY };
 }, [gx, gy]);
 const state = () => page.evaluate(() => {
   const s = window.__clubNova.scene.getScene('club');
@@ -135,6 +135,14 @@ await page.reload();
 await waitForScene();
 st = await state();
 check('save restores after reload', st.placed === saved.placed && Math.floor(st.cash) === Math.floor(saved.cash), `placed ${st.placed}, cash ${st.cash}`);
+
+// Zoom buttons change the zoom and stay within limits.
+const zoom0 = await page.evaluate(() => window.__clubNova.scene.getScene('club').world.scaleX);
+await page.click('#zoomIn');
+const zoom1 = await page.evaluate(() => window.__clubNova.scene.getScene('club').world.scaleX);
+for (let i = 0; i < 20; i++) await page.click('#zoomOut');
+const zoom2 = await page.evaluate(() => window.__clubNova.scene.getScene('club').world.scaleX);
+check('zoom buttons zoom in and out within limits', zoom1 > zoom0 && Math.abs(zoom2 - 0.6) < 1e-6, `${zoom0.toFixed(2)} -> ${zoom1.toFixed(2)} -> ${zoom2.toFixed(2)}`);
 
 check('no errors in the page', errors.length === 0, errors.join(' | '));
 

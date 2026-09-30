@@ -1,7 +1,8 @@
 // ClubScene methods: Floor tiles, back walls, entrance, grid math, hover tracking and club expansion.
 // Mixed into ClubScene (see ClubScene.js); `this` is the scene.
+import Phaser from 'phaser';
 import { GRID_EXPANSIONS } from '../catalog.js';
-import { PATRON_SPAWN_TILE, TILE_H, TILE_W, WALL_BASEBOARD, WALL_COLORS, WALL_HEIGHT } from '../config.js';
+import { PATRON_SPAWN_TILE, TILE_H, TILE_W, WALL_BASEBOARD, WALL_COLORS, WALL_HEIGHT, ZOOM_MAX, ZOOM_MIN } from '../config.js';
 import { SFX } from '../sfx.js';
 
 export class WorldMixin {
@@ -182,8 +183,8 @@ export class WorldMixin {
   // ghost preview together so they can never fall out of sync with each
   // other or with what a click would actually place.
   updateHoverFromPointer(pointer) {
-    const localX = pointer.x - this.world.x;
-    const localY = pointer.y - this.world.y;
+    const localX = (pointer.x - this.world.x) / this.world.scaleX;
+    const localY = (pointer.y - this.world.y) / this.world.scaleY;
     const { gx, gy } = this.screenToGrid(localX, localY);
     const onGrid = gx >= 0 && gx < this.gridSize && gy >= 0 && gy < this.gridSize;
     const next = onGrid ? { gx, gy } : null;
@@ -253,5 +254,31 @@ export class WorldMixin {
     this.updateUI();
     this.saveGame();
     return true;
+  }
+
+  // Zooms the club view to `zoom` (clamped to ZOOM_MIN..ZOOM_MAX), keeping
+  // the floor point under screen position (sx, sy) fixed, the way map and
+  // game views zoom toward the cursor.
+  zoomTo(zoom, sx = this.scale.width / 2, sy = this.scale.height / 2) {
+    const next = Phaser.Math.Clamp(zoom, ZOOM_MIN, ZOOM_MAX);
+    const prev = this.world.scaleX;
+    if (next === prev) return;
+    const localX = (sx - this.world.x) / prev;
+    const localY = (sy - this.world.y) / prev;
+    this.world.setScale(next);
+    this.world.x = sx - localX * next;
+    this.world.y = sy - localY * next;
+  }
+
+  // Centres the whole room (floor plus back walls) in the space between the
+  // top bar and the shop button.
+  centerView() {
+    const zoom = this.world.scaleX;
+    const top = -TILE_H / 2 - WALL_HEIGHT;
+    const bottom = (this.gridSize - 1) * TILE_H + TILE_H / 2;
+    const areaTop = 90;
+    const areaBottom = this.scale.height - 110;
+    this.world.x = this.scale.width / 2;
+    this.world.y = (areaTop + areaBottom) / 2 - ((top + bottom) / 2) * zoom;
   }
 }

@@ -3,7 +3,7 @@
 import Phaser from 'phaser';
 import { CHARACTER_ANIM_INFO } from '../assets.js';
 import { FLOOR_DECAL_PROPS, PROP_TYPES } from '../catalog.js';
-import { CHARACTER_DISPLAY_HEIGHT, HAIR_STYLES, PATRON_HAIR_COLORS, PATRON_LIFETIME, PATRON_MOVE_INTERVAL, PATRON_OUTFIT_COLORS, PATRON_POI_LINGER, PATRON_SKIN_TONES, PATRON_SPAWN_INTERVAL, PATRON_SPAWN_TILE, PATRON_TIP_INTERVAL, PATRON_Y_OFFSET, PROP_SCALE } from '../config.js';
+import { CHARACTER_DISPLAY_HEIGHT, HAIR_STYLES, PATRON_HAIR_COLORS, PATRON_LIFETIME, PATRON_MOVE_INTERVAL, PATRON_OUTFIT_COLORS, PATRON_POI_LINGER, PATRON_POPUP_Y, PATRON_SKIN_TONES, PATRON_SPAWN_INTERVAL, PATRON_SPAWN_TILE, PATRON_TIP_INTERVAL, PATRON_Y_OFFSET, PROP_SCALE } from '../config.js';
 import { SFX } from '../sfx.js';
 import { randRange } from '../util.js';
 
@@ -535,13 +535,13 @@ export class PatronsMixin {
     // Right next to an actual bar, this doubles as "paying for the drink"
     // rather than a generic tip — a little 🍹 alongside the amount instead
     // of just the $ text sells that without changing the amount itself.
-    const text = this.add.text(x, y - 24 * PROP_SCALE, atBar ? `🍹 +$${amount}` : `+$${amount}`, {
+    const text = this.add.text(x, y - PATRON_POPUP_Y, atBar ? `🍹 +$${amount}` : `+$${amount}`, {
       fontFamily: 'Arial', fontSize: '13px', fontStyle: 'bold', color: '#7dffc4',
     }).setOrigin(0.5, 1);
     this.patronLayer.add(text);
     this.tweens.add({
       targets: text,
-      y: y - 46 * PROP_SCALE,
+      y: y - PATRON_POPUP_Y - 22 * PROP_SCALE,
       alpha: 0,
       duration: 900,
       ease: 'Cubic.easeOut',
@@ -557,13 +557,13 @@ export class PatronsMixin {
   // two moments needing to be the same event under the hood.
   showDrinkOrderPopup(patron) {
     const { x, y } = patron.container;
-    const icon = this.add.text(x, y - 24 * PROP_SCALE, '🍹', {
+    const icon = this.add.text(x, y - PATRON_POPUP_Y, '🍹', {
       fontSize: '16px',
     }).setOrigin(0.5, 1);
     this.patronLayer.add(icon);
     this.tweens.add({
       targets: icon,
-      y: y - 44 * PROP_SCALE,
+      y: y - PATRON_POPUP_Y - 20 * PROP_SCALE,
       alpha: 0,
       duration: 1100,
       delay: 250,

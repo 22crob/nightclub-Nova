@@ -3,7 +3,7 @@
 import Phaser from 'phaser';
 import { BAR_SPRITES, CHARACTER_ANIM_INFO, CHARACTER_SPRITES, DJ_BOOTH_SPRITES } from '../assets.js';
 import { PROP_TYPES } from '../catalog.js';
-import { BASE_GRID_SIZE, FACINGS } from '../config.js';
+import { BASE_GRID_SIZE, FACINGS, ZOOM_DEFAULT } from '../config.js';
 import { SFX } from '../sfx.js';
 import { WorldMixin } from './world.js';
 import { PlacementMixin } from './placement.js';
@@ -60,8 +60,9 @@ export class ClubScene extends Phaser.Scene {
   create() {
     this.cameras.main.setBackgroundColor('#0a0612');
 
-    // World container we can drag around
-    this.world = this.add.container(this.scale.width / 2, 250); // leaves room for the walls below the top bar
+    // World container we can drag around and zoom. centerView() below
+    // positions it once the grid size is known.
+    this.world = this.add.container(0, 0).setScale(ZOOM_DEFAULT);
 
     this.tileLayer = this.add.container(0, 0);
     this.wallLayer = this.add.container(0, 0);
@@ -85,6 +86,7 @@ export class ClubScene extends Phaser.Scene {
     this.buildTiles(this.gridSize);
     this.buildWalls(this.gridSize);
     this.buildDoor();
+    this.centerView();
 
     // Restore a previous save, if there is one — must happen after the
     // tile grid and layers above exist (restoreProp draws into propLayer)
@@ -149,6 +151,19 @@ export class ClubScene extends Phaser.Scene {
     // ESC: quick way to stop holding whatever's selected, same as
     // re-clicking it in the shop.
     this.input.keyboard.on('keydown-ESC', () => this.deselectProp());
+
+    // Zoom: mouse wheel zooms toward the cursor, +/- keys and the on-screen
+    // buttons zoom around the screen centre.
+    this.input.on('wheel', (pointer, objects, dx, dy) => {
+      this.zoomTo(this.world.scaleX * (dy > 0 ? 0.9 : 1 / 0.9), pointer.x, pointer.y);
+      this.updateHoverFromPointer(pointer);
+    });
+    this.input.keyboard.on('keydown-PLUS', () => this.zoomTo(this.world.scaleX / 0.85));
+    this.input.keyboard.on('keydown-MINUS', () => this.zoomTo(this.world.scaleX * 0.85));
+    const zoomIn = document.getElementById('zoomIn');
+    const zoomOut = document.getElementById('zoomOut');
+    if (zoomIn) zoomIn.addEventListener('click', () => this.zoomTo(this.world.scaleX / 0.85));
+    if (zoomOut) zoomOut.addEventListener('click', () => this.zoomTo(this.world.scaleX * 0.85));
 
     this.cashText = document.getElementById('cashVal');
     this.fansText = document.getElementById('fansVal');

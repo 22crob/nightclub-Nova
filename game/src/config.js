@@ -90,7 +90,18 @@ export const PATRON_Y_OFFSET = 6 * PROP_SCALE;
 // tall. The character sprite's own displayHeight is set to this constant
 // directly; its width follows proportionally since Phaser scales
 // uniformly. Tune this one number to make patrons bigger/smaller overall.
-export const CHARACTER_DISPLAY_HEIGHT = TILE_H * 2.2;
+// Set to 3 tile-heights to match Nightclub City's chunky characters: the
+// back walls (WALL_HEIGHT) come out about 1.3x a patron's height, and a bar
+// counter reaches about waist height.
+export const CHARACTER_DISPLAY_HEIGHT = TILE_H * 3;
+// How far above a patron's feet their tip / drink popups start.
+export const PATRON_POPUP_Y = CHARACTER_DISPLAY_HEIGHT * 0.8;
+
+// Camera zoom: the club starts zoomed in, and the mouse wheel or the +/-
+// buttons zoom between these limits.
+export const ZOOM_DEFAULT = 1.35;
+export const ZOOM_MIN = 0.6;
+export const ZOOM_MAX = 2.2;
 
 
 // localStorage key for the save file. Bumping this (v1 -> v2) is the

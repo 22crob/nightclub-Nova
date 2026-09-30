@@ -272,6 +272,22 @@ body { font-family: 'Segoe UI', Arial, sans-serif; }
   cursor: pointer; z-index: 10;
   box-shadow: 0 4px 10px rgba(0,0,0,0.6);
 }
+/* Zoom buttons, stacked above the sound toggle. */
+#zoomControls {
+  position: fixed; bottom: 64px; left: 14px;
+  display: flex; flex-direction: column; gap: 8px; z-index: 10;
+}
+.zoomButton {
+  width: 40px; height: 40px; border-radius: 50%;
+  background: radial-gradient(circle at 35% 30%, #3a2560, #170f28 70%);
+  border: 2px solid #ffd24d; color: #fff;
+  font-family: Arial, sans-serif; font-size: 22px; font-weight: 700; line-height: 1;
+  display: flex; align-items: center; justify-content: center;
+  cursor: pointer; user-select: none;
+  box-shadow: 0 4px 10px rgba(0,0,0,0.6);
+}
+.zoomButton:hover { transform: translateY(-2px); }
+
 #muteButton.muted { border-color: #6a5a8a; filter: grayscale(0.5) brightness(0.75); }
 
 /* Level-up celebration banner — a small gold-trimmed pop-up just under
