@@ -28,6 +28,11 @@ export const BASE_GRID_SIZE = 10;
 // Back walls: plain painted walls, 4 tile-heights tall (about 3.3 m at the
 // Blender art scale of 1 tile = 1 m), comfortably above the 2.3 m bar.
 export const WALL_HEIGHT = TILE_H * 4;
+
+// Floor tiles: one colour with faint seams, so the floor reads as one
+// surface (like Nightclub City's) rather than a grid of outlined squares.
+export const FLOOR_COLOR = 0x1b1030;
+export const FLOOR_SEAM = { color: 0x2c1f45, alpha: 0.9 };
 export const WALL_BASEBOARD = 6;
 export const WALL_COLORS = {
   right: 0x34323c,
@@ -90,10 +95,12 @@ export const PATRON_Y_OFFSET = 6 * PROP_SCALE;
 // tall. The character sprite's own displayHeight is set to this constant
 // directly; its width follows proportionally since Phaser scales
 // uniformly. Tune this one number to make patrons bigger/smaller overall.
-// Set to 3 tile-heights to match Nightclub City's chunky characters: the
-// back walls (WALL_HEIGHT) come out about 1.3x a patron's height, and a bar
-// counter reaches about waist height.
-export const CHARACTER_DISPLAY_HEIGHT = TILE_H * 3;
+// Matched to Nightclub City: there, a character stands about 1.35-1.5 tile
+// widths tall (head to feet). The sprite's figure fills 90% of its frame, so
+// 3.25 tile-heights gives about 1.46 tile widths. The back walls
+// (WALL_HEIGHT) come out about 1.3x a patron, and a bar counter reaches
+// about waist height.
+export const CHARACTER_DISPLAY_HEIGHT = TILE_H * 3.25;
 // How far above a patron's feet their tip / drink popups start.
 export const PATRON_POPUP_Y = CHARACTER_DISPLAY_HEIGHT * 0.8;
 

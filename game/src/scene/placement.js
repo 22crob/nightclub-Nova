@@ -1,7 +1,7 @@
 // ClubScene methods: Footprints, the placement ghost, and placing / rotating / selling / restoring props.
 // Mixed into ClubScene (see ClubScene.js); `this` is the scene.
 import { PROP_TYPES } from '../catalog.js';
-import { FACINGS, FALLBACK_PROP_HEIGHT, SELL_REFUND_RATIO, TILE_H, TILE_W } from '../config.js';
+import { FACINGS, FALLBACK_PROP_HEIGHT, FLOOR_COLOR, SELL_REFUND_RATIO, TILE_H, TILE_W } from '../config.js';
 import { SFX } from '../sfx.js';
 
 export class PlacementMixin {
@@ -116,7 +116,7 @@ export class PlacementMixin {
     // Un-tint whatever tiles were highlighted for the LAST hover/facing/
     // prop combo before computing the new set — the highlight always
     // tracks the current footprint exactly, nothing else touches tile fills.
-    for (const t of this.highlightedTiles) t.setFillStyle(0x1b1030, 1);
+    for (const t of this.highlightedTiles) t.setFillStyle(FLOOR_COLOR, 1);
     this.highlightedTiles = [];
 
     // With nothing to place, show the normal system cursor so the player

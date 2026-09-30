@@ -2,7 +2,7 @@
 // Mixed into ClubScene (see ClubScene.js); `this` is the scene.
 import Phaser from 'phaser';
 import { GRID_EXPANSIONS } from '../catalog.js';
-import { PATRON_SPAWN_TILE, TILE_H, TILE_W, WALL_BASEBOARD, WALL_COLORS, WALL_HEIGHT, ZOOM_MAX, ZOOM_MIN } from '../config.js';
+import { FLOOR_COLOR, FLOOR_SEAM, PATRON_SPAWN_TILE, TILE_H, TILE_W, WALL_BASEBOARD, WALL_COLORS, WALL_HEIGHT, ZOOM_MAX, ZOOM_MIN } from '../config.js';
 import { SFX } from '../sfx.js';
 
 export class WorldMixin {
@@ -39,9 +39,9 @@ export class WorldMixin {
         const tile = this.add.polygon(
           sx, sy,
           [TILE_W / 2, 0, TILE_W, TILE_H / 2, TILE_W / 2, TILE_H, 0, TILE_H / 2],
-          0x1b1030, 1
+          FLOOR_COLOR, 1
         );
-        tile.setStrokeStyle(1, 0x4a2a70, 0.8);
+        tile.setStrokeStyle(1, FLOOR_SEAM.color, FLOOR_SEAM.alpha);
         tile.gx = gx;
         tile.gy = gy;
         this.tileLayer.add(tile);
