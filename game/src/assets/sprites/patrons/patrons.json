@@ -1,0 +1,22 @@
+{
+  "frameWidth": 112,
+  "frameHeight": 176,
+  "columns": 16,
+  "originX": 0.5,
+  "originY": 0.5,
+  "standingHeight": 121.1,
+  "rows": {
+    "idle_front": 0,
+    "idle_back": 1,
+    "walk_front": 2,
+    "walk_back": 3,
+    "dance_front": 4,
+    "dance_back": 5
+  },
+  "frames": {
+    "idle": 4,
+    "walk": 8,
+    "dance": 16
+  },
+  "count": 12
+}

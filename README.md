@@ -38,7 +38,8 @@ Props are modelled and rendered in Blender by scripts in `art/blender/`, so ever
 
 ```bash
 pip install bpy==4.5.4 pillow      # Blender as a Python module, no Blender app needed
-python art/blender/build_bar.py    # rebuilds bar.blend and the 4 bar sprites
+python art/blender/build_bar.py      # rebuilds bar.blend and the 4 bar sprites
+python art/blender/build_patrons.py  # renders the 12 chibi patrons (about 5 minutes)
 ```
 
 The `.blend` files are saved next to the scripts, so you can open them in Blender to look at or tweak a model.

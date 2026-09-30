@@ -13,7 +13,7 @@ The visual and gameplay reference for everything is **Nightclub City** (2010): i
 - Bottom toolbar of large icon buttons: Shop, Decorate (paint bucket), Staff, Friends
 - Glossy, rounded, bright UI chrome like the reference
 
-## 3. Chibi characters (Blender)
+## 3. Chibi characters (Blender): done
 - Big-head chibi patrons: several body types, many outfits, hairstyles and skin tones
 - Walk, dance and idle animations, facing front and back (mirrored for the other two diagonals)
 

@@ -33,7 +33,7 @@ const state = () => page.evaluate(() => {
   const s = window.__clubNova.scene.getScene('club');
   return {
     cash: s.cash, fans: s.fans, placed: s.placedCount(), patrons: s.patrons.length,
-    textures: ['bar_0', 'bar_90', 'bar_180', 'bar_270', 'dj_0', 'dj_90', 'dj_180', 'dj_270', 'patron_walk', 'patron_dance']
+    textures: ['bar_0', 'bar_90', 'bar_180', 'bar_270', 'dj_0', 'dj_90', 'dj_180', 'dj_270', 'patron_0']
       .filter((k) => !s.textures.exists(k)),
   };
 });
@@ -117,6 +117,26 @@ check('R rotates a placed DJ booth', after === (before + 90) % 360, `${before} -
 await page.waitForTimeout(15000);
 st = await state();
 check('patrons arrive', st.patrons > 0, `${st.patrons} on the floor`);
+const looks = await page.evaluate(() => {
+  const s = window.__clubNova.scene.getScene('club');
+  return s.patrons.map((p) => ({ tex: p.container.patronSprite && p.container.patronSprite.texture.key, anim: p.container.patronSprite && p.container.patronSprite.anims.currentAnim && p.container.patronSprite.anims.currentAnim.key }));
+});
+check('patrons use chibi characters and play an animation', looks.length > 0 && looks.every((l) => /^patron_\d+$/.test(l.tex) && /^patron_\d+_(idle|walk|dance)_(front|back)$/.test(l.anim)), JSON.stringify(looks[0]));
+
+// Facing: moving down-screen shows the front, up-screen the back, and the
+// sprite is mirrored for the right-hand diagonals.
+const facing = await page.evaluate(() => {
+  const s = window.__clubNova.scene.getScene('club');
+  const p = s.patrons[0];
+  const c = p.container;
+  const out = {};
+  for (const [name, dx, dy] of [['downLeft', -10, 10], ['downRight', 10, 10], ['upLeft', -10, -10], ['upRight', 10, -10]]) {
+    s.faceToward(p, c.x + dx, c.y + dy);
+    out[name] = `${c.patronDir}${c.scaleX < 0 ? ' mirrored' : ''}`;
+  }
+  return out;
+});
+check('patrons face the way they walk', facing.downLeft === 'front' && facing.downRight === 'front mirrored' && facing.upRight === 'back' && facing.upLeft === 'back mirrored', JSON.stringify(facing));
 check('fans grow over time', st.fans > 5, `${st.fans.toFixed(1)} fans`);
 check('tips bring in cash', st.cash > 100, `cash ${st.cash}`);
 await page.screenshot({ path: path.join(shotDir, 'club.png') });

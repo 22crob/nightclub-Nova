@@ -1,7 +1,7 @@
 // The main game scene. Its methods are split across the files in this
 // folder by topic and mixed in below, so each file stays small.
 import Phaser from 'phaser';
-import { BAR_SPRITES, CHARACTER_ANIM_INFO, CHARACTER_SPRITES, DJ_BOOTH_SPRITES } from '../assets.js';
+import { BAR_SPRITES, DJ_BOOTH_SPRITES, PATRON_META, PATRON_SHEETS } from '../assets.js';
 import { PROP_TYPES } from '../catalog.js';
 import { BASE_GRID_SIZE, FACINGS, ZOOM_DEFAULT } from '../config.js';
 import { SFX } from '../sfx.js';
@@ -46,15 +46,13 @@ export class ClubScene extends Phaser.Scene {
       this.load.image(PROP_TYPES.bar.sprites[facing], BAR_SPRITES[facing]);
     }
 
-    // Patron spritesheets: one shared character model, one grid
-    // spritesheet per animation clip (walk / dance).
-    for (const name of ['walk', 'dance']) {
-      const info = CHARACTER_ANIM_INFO[name];
-      this.load.spritesheet(`patron_${name}`, CHARACTER_SPRITES[name], {
-        frameWidth: info.frameWidth,
-        frameHeight: info.frameHeight,
+    // Chibi patrons: one spritesheet per character.
+    PATRON_SHEETS.forEach((url, i) => {
+      this.load.spritesheet(`patron_${i}`, url, {
+        frameWidth: PATRON_META.frameWidth,
+        frameHeight: PATRON_META.frameHeight,
       });
-    }
+    });
   }
 
   create() {
@@ -204,21 +202,21 @@ export class ClubScene extends Phaser.Scene {
       },
     });
 
-    // Patron character animations (walk / dance) — registered once here
-    // rather than per-patron, since Phaser anims are shared definitions
-    // keyed by name; every patron's sprite just plays one of these two.
+    // Patron animations: one per character, per clip, per facing, named
+    // patron_<i>_<clip>_<front|back> (see patronAnimKey()).
     if (this.hasCharacterSprites()) {
-      this.anims.create({
-        key: 'patron-walk',
-        frames: this.anims.generateFrameNumbers('patron_walk', { start: 0, end: CHARACTER_ANIM_INFO.walk.count - 1 }),
-        frameRate: 8,
-        repeat: -1,
-      });
-      this.anims.create({
-        key: 'patron-dance',
-        frames: this.anims.generateFrameNumbers('patron_dance', { start: 0, end: CHARACTER_ANIM_INFO.dance.count - 1 }),
-        frameRate: 8,
-        repeat: -1,
+      const rates = { idle: 4, walk: 11, dance: 10 };
+      PATRON_SHEETS.forEach((_, i) => {
+        for (const [row, start] of Object.entries(PATRON_META.rows)) {
+          const clip = row.split('_')[0];
+          const first = start * PATRON_META.columns;
+          this.anims.create({
+            key: `patron_${i}_${row}`,
+            frames: this.anims.generateFrameNumbers(`patron_${i}`, { start: first, end: first + PATRON_META.frames[clip] - 1 }),
+            frameRate: rates[clip],
+            repeat: -1,
+          });
+        }
       });
     }
 

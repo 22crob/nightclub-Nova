@@ -1,19 +1,22 @@
 // ClubScene methods: Patrons: spawning, wandering, animation, tipping and leaving.
 // Mixed into ClubScene (see ClubScene.js); `this` is the scene.
 import Phaser from 'phaser';
-import { CHARACTER_ANIM_INFO } from '../assets.js';
+import { PATRON_META, PATRON_SHEETS } from '../assets.js';
 import { FLOOR_DECAL_PROPS, PROP_TYPES } from '../catalog.js';
 import { CHARACTER_DISPLAY_HEIGHT, HAIR_STYLES, PATRON_HAIR_COLORS, PATRON_LIFETIME, PATRON_MOVE_INTERVAL, PATRON_OUTFIT_COLORS, PATRON_POI_LINGER, PATRON_POPUP_Y, PATRON_SKIN_TONES, PATRON_SPAWN_INTERVAL, PATRON_SPAWN_TILE, PATRON_TIP_INTERVAL, PATRON_Y_OFFSET, PROP_SCALE } from '../config.js';
 import { SFX } from '../sfx.js';
 import { randRange } from '../util.js';
 
 export class PatronsMixin {
-  // True only if both patron animation spritesheets actually loaded —
-  // same fallback reasoning as hasAnySprite() above, so a failed load
-  // drops back to the plain colored-primitive patron token instead of a
-  // broken-image sprite.
+  // True once the chibi patron spritesheets have loaded; otherwise patrons
+  // fall back to the plain primitive token instead of a broken image.
   hasCharacterSprites() {
-    return this.textures.exists('patron_walk') && this.textures.exists('patron_dance');
+    return PATRON_SHEETS.length > 0 && this.textures.exists('patron_0');
+  }
+
+  // Animation key for a patron's character, clip and facing.
+  patronAnimKey(container, clip) {
+    return `patron_${container.patronCharacter}_${clip}_${container.patronDir}`;
   }
 
   // ---------------------------------------------------------------------
@@ -41,11 +44,11 @@ export class PatronsMixin {
     if (this.patronTileOccupied(gx, gy)) return; // someone's already standing right there
 
     const { sx, sy } = this.gridToScreen(gx, gy);
-    // Small per-patron size variety (+/-15%) so bodies don't all read as
+    // Slight per-patron size variety (+/-5%) so a crowd doesn't read as
     // identical cutouts. Stored on the patron (not just baked into the
-    // container's scale) because faceTowardScreenX() below has to re-apply
+    // container's scale) because faceToward() below has to re-apply
     // it every time it flips the container to face left/right.
-    const scaleVariance = 0.9 + Math.random() * 0.25;
+    const scaleVariance = 0.95 + Math.random() * 0.1;
     const container = this.drawPatronSprite(sx, sy, scaleVariance);
     // Patrons share the props' layer and draw order (see setPropDepth()), so
     // they can walk behind a bar or in front of it. Tip popups stay on
@@ -94,25 +97,26 @@ export class PatronsMixin {
     return this.drawPatronFallbackToken(sx, sy, scaleVariance);
   }
 
-  // Real character sprite (see assets.js / the Character
-  // Art Pipeline doc) — a drop shadow plus one animated sprite. The sprite
-  // uses the walk clip's own calibrated floor-contact origin (originX/Y),
-  // so its feet land exactly on the tile's screen point with no manual
-  // offset needed — unlike the fallback token below, which needs
-  // PATRON_Y_OFFSET as a hand-tuned fudge factor. Starts in the 'idle'
-  // state (see setPatronAnimation()); the first wander move kicks off
-  // walking.
+  // A random chibi character (see assets.js) with a drop shadow. The
+  // sprite's origin is the point between its feet, calculated by the render
+  // script, so it stands exactly on the tile's screen point. The figure is
+  // scaled so a standing character is 90% of CHARACTER_DISPLAY_HEIGHT tall
+  // (head to feet), the proportion the game was tuned with. Starts idle,
+  // facing front.
   drawPatronCharacterSprite(sx, sy, scaleVariance) {
     const container = this.add.container(sx, sy);
-    const shadow = this.add.ellipse(0, 2 * PROP_SCALE, 22 * PROP_SCALE, 9 * PROP_SCALE, 0x000000, 0.35);
-    const info = CHARACTER_ANIM_INFO.walk;
-    const sprite = this.add.sprite(0, 0, 'patron_walk', 0);
-    sprite.setOrigin(info.originX, info.originY);
-    sprite.setScale(CHARACTER_DISPLAY_HEIGHT / info.frameHeight);
+    const shadow = this.add.ellipse(0, 2 * PROP_SCALE, 30 * PROP_SCALE, 12 * PROP_SCALE, 0x000000, 0.3);
+    container.patronCharacter = Phaser.Math.Between(0, PATRON_SHEETS.length - 1);
+    container.patronDir = 'front';
+    const sprite = this.add.sprite(0, 0, `patron_${container.patronCharacter}`);
+    sprite.setOrigin(PATRON_META.originX, PATRON_META.originY);
+    sprite.setScale((CHARACTER_DISPLAY_HEIGHT * 0.9) / PATRON_META.standingHeight);
     container.add([shadow, sprite]);
     container.setScale(scaleVariance);
     container.patronSprite = sprite;
-    container.patronAnimState = 'idle';
+    container.patronAnimState = null;
+    sprite.play(this.patronAnimKey(container, 'idle'));
+    container.patronAnimState = 'idle_front';
     return container;
   }
 
@@ -124,7 +128,7 @@ export class PatronsMixin {
   // The face dot is the only asymmetric detail on this token — everything
   // else is left/right symmetric, so it's what actually reads as a facing
   // direction once the container gets horizontally flipped in
-  // movePatronRandomly() (via faceTowardScreenX(), which also re-applies
+  // movePatronRandomly() (via faceToward(), which also re-applies
   // scaleVariance so a flip doesn't undo this patron's size roll).
   // Used only as a fallback when the real character sprites (see
   // drawPatronCharacterSprite()) failed to load.
@@ -162,29 +166,17 @@ export class PatronsMixin {
     return this.add.ellipse(0, headTop - 2 * PROP_SCALE, 16 * PROP_SCALE, 9 * PROP_SCALE, color, 1);
   }
 
-  // Switches a patron's character sprite between its three visual states:
-  // 'walk' (wandering between tiles), 'dance' (parked on a dance-floor
-  // tile), and 'idle' (parked anywhere else) — a no-op for the fallback
-  // primitive token, which has no patronSprite. Guards on the state
-  // actually changing so this can be called every tick without
-  // restarting an already-playing animation.
+  // Plays a patron's 'walk', 'dance' or 'idle' clip in its current facing
+  // (see faceToward()). A no-op for the fallback primitive token, which has
+  // no patronSprite, and when that clip and facing are already playing.
   setPatronAnimation(patron, state) {
     const container = patron.container;
     const sprite = container.patronSprite;
-    if (!sprite || container.patronAnimState === state) return;
-    container.patronAnimState = state;
-    if (state === 'idle') {
-      const info = CHARACTER_ANIM_INFO.walk;
-      if (sprite.texture.key !== 'patron_walk') sprite.setTexture('patron_walk');
-      sprite.setOrigin(info.originX, info.originY);
-      sprite.anims.stop();
-      sprite.setFrame(0);
-      return;
-    }
-    const info = CHARACTER_ANIM_INFO[state];
-    sprite.setTexture(`patron_${state}`);
-    sprite.setOrigin(info.originX, info.originY);
-    sprite.play(`patron-${state}`);
+    if (!sprite) return;
+    const key = `${state}_${container.patronDir}`;
+    if (container.patronAnimState === key) return;
+    container.patronAnimState = key;
+    sprite.play(this.patronAnimKey(container, state));
   }
 
   // True if the given tile has one of the actual dance-floor prop types on
@@ -224,16 +216,31 @@ export class PatronsMixin {
     }
   }
 
-  // Isometric movement never has a purely "up" or "down" screen direction
-  // — every one of the 4 grid-neighbor moves has a nonzero horizontal
-  // screen component (see gridToScreen's math) — so left/right is the one
-  // cheap, always-meaningful cue: flip the container horizontally to face
-  // whichever way its screen x is actually headed. targetScreenX is
-  // compared against the container's CURRENT x, i.e. before this move's
-  // tween starts moving it.
-  faceTowardScreenX(patron, targetScreenX) {
-    const facingRight = targetScreenX >= patron.container.x;
-    patron.container.scaleX = (facingRight ? 1 : -1) * patron.scaleVariance;
+  // Turns a patron toward a screen point. Every grid step is one of the
+  // four diagonals: moving down-screen shows the character's front, moving
+  // up-screen its back. The sprites face down-left (front) and up-right
+  // (back); the container is mirrored for the other two diagonals. The
+  // target is compared with the container's current position, before the
+  // move's tween starts.
+  faceToward(patron, targetX, targetY) {
+    const c = patron.container;
+    const right = targetX >= c.x;
+    const front = targetY >= c.y;
+    if (c.patronSprite) {
+      c.patronDir = front ? 'front' : 'back';
+      c.scaleX = (front === right ? -1 : 1) * patron.scaleVariance;
+    } else {
+      c.scaleX = (right ? 1 : -1) * patron.scaleVariance; // fallback token faces right by default
+    }
+  }
+
+  // Turns a patron to face the camera, keeping left/right as it was: for
+  // dancing and standing around once they arrive somewhere.
+  faceFront(patron) {
+    const c = patron.container;
+    if (!c.patronSprite || c.patronDir === 'front') return;
+    c.patronDir = 'front';
+    c.scaleX = -c.scaleX;
   }
 
   // Picks a far-off open (prop-free) tile anywhere on the current grid for
@@ -410,7 +417,7 @@ export class PatronsMixin {
     patron.gy = ty;
     this.setPatronDepth(patron, Math.max(fromNearness, tx + ty));
     const { sx, sy } = this.gridToScreen(tx, ty);
-    this.faceTowardScreenX(patron, sx);
+    this.faceToward(patron, sx, this.patronSeatY(sy, patron.container));
     this.setPatronAnimation(patron, 'walk');
     this.tweens.add({
       targets: patron.container,
@@ -458,6 +465,7 @@ export class PatronsMixin {
           // everywhere.
           const atPOI = this.isDanceFloorTile(tx, ty) || this.isNearRevenueProp(tx, ty);
           patron.nextMoveAt = this.time.now + randRange(...(atPOI ? PATRON_POI_LINGER : PATRON_MOVE_INTERVAL));
+          this.faceFront(patron);
           this.setPatronAnimation(patron, this.isDanceFloorTile(tx, ty) ? 'dance' : 'idle');
           // Landed right next to an actual bar — play the "walked up and
           // ordered a drink" beat (see showDrinkOrderPopup()) once, right as
