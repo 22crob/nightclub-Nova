@@ -1,7 +1,7 @@
 // ClubScene methods: Floor tiles, back walls, entrance, grid math, hover tracking and club expansion.
 // Mixed into ClubScene (see ClubScene.js); `this` is the scene.
 import { GRID_EXPANSIONS } from '../catalog.js';
-import { PATRON_SPAWN_TILE, TILE_H, TILE_W } from '../config.js';
+import { PATRON_SPAWN_TILE, TILE_H, TILE_W, WALL_BASEBOARD, WALL_COLORS, WALL_HEIGHT } from '../config.js';
 import { SFX } from '../sfx.js';
 
 export class WorldMixin {
@@ -49,32 +49,23 @@ export class WorldMixin {
     }
   }
 
-  // Draws the two "back" walls that frame the floor — along the gx=0 and
-  // gy=0 edges, the ones that sit furthest from this fixed camera angle —
-  // leaving the (0,0) corner tile's two edges open as a one-tile doorway
-  // gap (see buildDoor(), and PATRON_SPAWN_TILE which is that same tile).
-  // Styled after a classic isometric-club look: a solid wall panel with a
-  // row of small neon triangle "flags" strung along its top edge.
+  // Draws the two "back" walls that frame the floor, along the gx=0 and
+  // gy=0 edges (the ones furthest from this fixed camera angle), leaving the
+  // (0,0) corner tile's two edges open as a one-tile doorway (see
+  // buildDoor(), and PATRON_SPAWN_TILE, which is that same tile). Plain
+  // painted walls: one flat colour per wall, a dark baseboard, and a thin
+  // lighter edge along the top so the wall reads against the dark
+  // background.
   //
   // Built with plain Graphics rather than the Polygon shape buildTiles()
-  // uses: Polygon only renders correctly (see the note there) when it's
-  // positioned at a small, non-negative (x,y) with non-negative local
-  // points — fine for floor tiles sitting right at the world origin, but a
-  // wall's top edge sits `wallHeight` px ABOVE its tile, which pushes the
-  // whole shape's position well into negative Y for tiles near the front
-  // of the grid and reintroduces the same mis-render. Graphics draws
-  // exactly the absolute points given, so each segment is built straight
-  // from its tile's real screen corners with no origin translation to get
-  // wrong.
+  // uses: Polygon mis-renders when its points go negative (see the note
+  // there), and a wall's top edge sits WALL_HEIGHT px above the floor.
+  // Each wall is one quad per run of tiles rather than one per tile, so
+  // there are no seams between segments.
   //
-  // Redraws everything from scratch every call (cheap — this only ever
-  // runs from create() and on the rare expandClub() purchase, never per
-  // frame) rather than tracking which segments already exist, since a
-  // single Graphics object can't have individual old segments "skipped".
+  // Redraws everything from scratch every call (cheap: this only runs from
+  // create() and on the rare expandClub() purchase).
   buildWalls(upToSize) {
-    const wallHeight = TILE_H * 3; // a solid, room-defining wall — tall relative to the floor tiles, same ballpark as a standing patron sprite plus some headroom
-    const flagSpacing = 10; // px along the top edge between neon flags
-    const flagSize = 6;
     if (!this.wallGraphics) {
       this.wallGraphics = this.add.graphics();
       this.wallLayer.add(this.wallGraphics);
@@ -82,73 +73,39 @@ export class WorldMixin {
     const g = this.wallGraphics;
     g.clear();
 
-    const drawWallQuad = (groundNear, groundFar, fillColor, flagColor) => {
-      const topNear = [groundNear[0], groundNear[1] - wallHeight];
-      const topFar = [groundFar[0], groundFar[1] - wallHeight];
-      g.fillStyle(fillColor, 1);
-      g.lineStyle(1, 0x5a3590, 0.9);
+    const quad = (a, b, bottom, top, color) => {
+      g.fillStyle(color, 1);
       g.beginPath();
-      g.moveTo(groundNear[0], groundNear[1]);
-      g.lineTo(groundFar[0], groundFar[1]);
-      g.lineTo(topFar[0], topFar[1]);
-      g.lineTo(topNear[0], topNear[1]);
+      g.moveTo(a[0], a[1] - bottom);
+      g.lineTo(b[0], b[1] - bottom);
+      g.lineTo(b[0], b[1] - top);
+      g.lineTo(a[0], a[1] - top);
       g.closePath();
       g.fillPath();
-      g.strokePath();
-
-      // A string of small neon triangle "flags" hanging along the wall's
-      // top edge, evenly spaced — the festive trim line from the reference
-      // look, built from plain triangles rather than a new art asset.
-      const dx = topFar[0] - topNear[0];
-      const dy = topFar[1] - topNear[1];
-      const segLen = Math.hypot(dx, dy);
-      const steps = Math.max(1, Math.round(segLen / flagSpacing));
-      g.fillStyle(flagColor, 0.9);
-      for (let i = 0; i <= steps; i++) {
-        const t = i / steps;
-        const fx = topNear[0] + dx * t;
-        const fy = topNear[1] + dy * t;
-        g.beginPath();
-        g.moveTo(fx - flagSize / 2, fy);
-        g.moveTo(fx - flagSize / 2, fy);
-        g.lineTo(fx + flagSize / 2, fy);
-        g.lineTo(fx, fy + flagSize);
-        g.closePath();
-        g.fillPath();
-      }
+    };
+    const drawWall = (groundNear, groundFar, color) => {
+      quad(groundNear, groundFar, 0, WALL_HEIGHT, color);
+      quad(groundNear, groundFar, 0, WALL_BASEBOARD, WALL_COLORS.baseboard);
+      g.lineStyle(2, WALL_COLORS.topEdge, 1);
+      g.lineBetween(groundNear[0], groundNear[1] - WALL_HEIGHT, groundFar[0], groundFar[1] - WALL_HEIGHT);
     };
 
-    // gridToScreen(gx,gy) is the CENTER of that tile's diamond (that's what
-    // screenToGrid()'s hit-testing assumes, and what every sprite/container
-    // is positioned by) — so a tile's four corners sit at that center ±half
-    // a tile width/height, NOT at center+(raw offset) the way these two
-    // loops used to compute them. That off-by-half-a-tile bug shifted every
-    // wall panel down-and-right of the actual floor edge, which is exactly
-    // why the wall looked like it was standing "in front of" the floor line
-    // instead of meeting it.
+    // gridToScreen(gx,gy) is the CENTER of a tile's diamond, so its corners
+    // sit at that center ± half a tile width/height.
+    const last = upToSize - 1;
 
-    // Right-hand back wall, one segment per gx along gy=0, standing on
-    // each tile's top-right edge (the edge that would otherwise border the
-    // nonexistent gy=-1 neighbor). gx=0 is skipped — that's the doorway.
-    for (let gx = 1; gx < upToSize; gx++) {
-      const { sx, sy } = this.gridToScreen(gx, 0);
-      const top = [sx, sy - TILE_H / 2];
-      const right = [sx + TILE_W / 2, sy];
-      drawWallQuad(top, right, 0x3a3a46, 0xff4de0);
-    }
+    // Right-hand back wall along gy=0, from tile gx=1's top corner (gx=0 is
+    // the doorway) to the last tile's right corner.
+    const r0 = this.gridToScreen(1, 0);
+    const r1 = this.gridToScreen(last, 0);
+    drawWall([r0.sx, r0.sy - TILE_H / 2], [r1.sx + TILE_W / 2, r1.sy], WALL_COLORS.right);
 
-    // Left-hand back wall, one segment per gy along gx=0, standing on each
-    // tile's top-left edge (the edge that would otherwise border the
-    // nonexistent gx=-1 neighbor). gy=0 is skipped — the other half of the
-    // doorway gap.
-    for (let gy = 1; gy < upToSize; gy++) {
-      const { sx, sy } = this.gridToScreen(0, gy);
-      const left = [sx - TILE_W / 2, sy];
-      const top = [sx, sy - TILE_H / 2];
-      // A touch darker than the right wall so the two faces read as
-      // distinct surfaces, not one flat color wrapping the corner.
-      drawWallQuad(left, top, 0x2e2e38, 0xff4de0);
-    }
+    // Left-hand back wall along gx=0, from tile gy=1's top corner to the
+    // last tile's left corner. A shade darker than the right wall so the two
+    // faces read as separate surfaces.
+    const l0 = this.gridToScreen(0, 1);
+    const l1 = this.gridToScreen(0, last);
+    drawWall([l0.sx, l0.sy - TILE_H / 2], [l1.sx - TILE_W / 2, l1.sy], WALL_COLORS.left);
   }
 
   // A doorway sitting in the one-tile gap the back walls leave open at
@@ -169,7 +126,7 @@ export class WorldMixin {
   // the neighboring wall segments start, with no gap or overlap either way.
   buildDoor() {
     const { sx, sy } = this.gridToScreen(PATRON_SPAWN_TILE.gx, PATRON_SPAWN_TILE.gy);
-    const wallHeight = TILE_H * 3; // matches buildWalls() so the opening's top edge lines up with the walls flanking it
+    const wallHeight = WALL_HEIGHT; // same as buildWalls() so the opening's top edge lines up with the walls beside it
     // (sx,sy) is this tile's CENTER (see the note in buildWalls()) — corners
     // sit at center ± half a tile width/height, not at center+(raw offset).
     const apex = [sx, sy - TILE_H / 2]; // this tile's top corner — where the two skipped wall segments would have met
@@ -187,7 +144,7 @@ export class WorldMixin {
       const topNear = [groundNear[0], groundNear[1] - wallHeight];
       const topFar = [groundFar[0], groundFar[1] - wallHeight];
       g.fillStyle(0x0d0818, 1);
-      g.lineStyle(2, 0x5a3590, 1);
+      g.lineStyle(2, WALL_COLORS.doorFrame, 1);
       g.beginPath();
       g.moveTo(groundNear[0], groundNear[1]);
       g.lineTo(groundFar[0], groundFar[1]);
@@ -205,7 +162,7 @@ export class WorldMixin {
     drawOpeningQuad(apex, left);
 
     const label = this.add.text(apex[0], apex[1] - wallHeight - 6, 'ENTRANCE', {
-      fontFamily: 'Arial', fontSize: '11px', fontStyle: 'bold', color: '#ff9fe8',
+      fontFamily: 'Arial', fontSize: '11px', fontStyle: 'bold', color: '#c9c4d6',
     }).setOrigin(0.5, 1);
     this.wallLayer.add(label);
   }

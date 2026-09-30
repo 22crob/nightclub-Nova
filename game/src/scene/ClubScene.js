@@ -61,7 +61,7 @@ export class ClubScene extends Phaser.Scene {
     this.cameras.main.setBackgroundColor('#0a0612');
 
     // World container we can drag around
-    this.world = this.add.container(this.scale.width / 2, 160);
+    this.world = this.add.container(this.scale.width / 2, 250); // leaves room for the walls below the top bar
 
     this.tileLayer = this.add.container(0, 0);
     this.wallLayer = this.add.container(0, 0);

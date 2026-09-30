@@ -25,6 +25,18 @@ export const FALLBACK_PROP_HEIGHT = 40 * PROP_SCALE;
 // runtime and gets saved/restored (see serializeState()/loadGame()).
 export const BASE_GRID_SIZE = 10;
 
+// Back walls: plain painted walls, 4 tile-heights tall (about 3.3 m at the
+// Blender art scale of 1 tile = 1 m), comfortably above the 2.3 m bar.
+export const WALL_HEIGHT = TILE_H * 4;
+export const WALL_BASEBOARD = 6;
+export const WALL_COLORS = {
+  right: 0x34323c,
+  left: 0x29272f,
+  baseboard: 0x17161b,
+  topEdge: 0x4a4755,
+  doorFrame: 0x4a4755,
+};
+
 // Facings are in degrees, matching the rotation applied in Blender: 0/90/180/270.
 export const FACINGS = [0, 90, 180, 270];
 
