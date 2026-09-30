@@ -1,5 +1,6 @@
 // The shop catalog: every buyable prop, shop tabs, and club expansion tiers.
 import { TILE_W } from './config.js';
+import barSprite from './assets/sprites/bar.json';
 
 // capacity: how many extra patrons this prop lets the club hold at once
 // (see patronCapacity() below) — bigger/more social props add more room.
@@ -13,9 +14,9 @@ export const PROP_TYPES = {
     key: 'bar', cost: 150, color: 0x2fd0ff, label: 'Bar', unlockLevel: 1, category: 'Bars',
     rotatable: true,
     // sprite key prefix per facing -> 'bar_0', 'bar_90', 'bar_180', 'bar_270'
-    // — real Blender-rendered art (front counter + bartender aisle + rear
-    // cabinet against the wall, see ClubNova_Bar_Design.txt), loaded via
-    // assets.js and ClubScene.preload().
+    // — Blender-rendered art (back bar with bottle wall, bartender aisle,
+    // customer counter; see art/blender/build_bar.py), loaded via assets.js
+    // and ClubScene.preload().
     sprites: { 0: 'bar_0', 90: 'bar_90', 180: 'bar_180', 270: 'bar_270' },
     // The footprint is 3 tiles long x 1 tile wide (per the user's own
     // correction — not the 2x3/6-tile block an earlier session inferred
@@ -29,24 +30,13 @@ export const PROP_TYPES = {
       180: [[0, 0], [0, 1], [0, 2]],
       270: [[0, 0], [1, 0], [2, 0]],
     },
-    // draw scale + vertical anchor, calibrated the SAME WAY the DJ booth's
-    // is (see its own comment above): measure the booth's own actual
-    // rendered width against its footprint's own on-screen diamond width,
-    // then hold the bar to that identical ratio rather than assuming any
-    // fixed overhang/margin number of our own. Isolated real-browser
-    // measurement of the CURRENT (known-good) DJ booth gives an actual
-    // rendered width of 88px against its footprint's mathematically
-    // expected 96px diamond width (2-wide x 1-deep footprint via
-    // gridToScreen corner projection) — i.e. it sits about 8% INSIDE its
-    // tiles, not overhanging them. Applying that same 88/96 (~0.9167x)
-    // ratio to the bar's 1x3 footprint (mathematically expected 128px
-    // diamond width: (dxRange 1 + dyRange 3) * TILE_W/2) targets an actual
-    // rendered width of ~117.33px. The raw bar_0.png's own alpha-silhouette
-    // bounding box measures 453px wide on its 768px source canvas, so:
-    // displayWidth = 768 * (117.33 / 453) = 198.92.
-    displayWidth: 198.92273730684326,
-    originX: 0.5,
-    originY: 0.6732051372528076,
+    // Sprite size and anchor come straight from the Blender render script
+    // (art/blender/build_bar.py), which models the bar at 1 unit = 1 tile
+    // and calculates these from its fixed camera, so the bar fills exactly
+    // its 1x3 footprint.
+    displayWidth: barSprite.displayWidth,
+    originX: barSprite.originX,
+    originY: barSprite.originY,
   },
   // The Bars tab's own unlock-tier item, same idea as neonFloor/vipLounge/
   // neonSign: a pricier, better option that opens up once you've leveled

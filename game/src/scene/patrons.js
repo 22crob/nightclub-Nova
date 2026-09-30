@@ -47,7 +47,10 @@ export class PatronsMixin {
     // it every time it flips the container to face left/right.
     const scaleVariance = 0.9 + Math.random() * 0.25;
     const container = this.drawPatronSprite(sx, sy, scaleVariance);
-    this.patronLayer.add(container);
+    // Patrons share the props' layer and draw order (see setPropDepth()), so
+    // they can walk behind a bar or in front of it. Tip popups stay on
+    // patronLayer, above everything.
+    this.propLayer.add(container);
 
     const now = this.time.now;
     const patron = {
@@ -62,6 +65,7 @@ export class PatronsMixin {
       leaving: false,
     };
     this.patrons.push(patron);
+    this.setPatronDepth(patron, gx + gy);
     this.updateUI(); // refresh the patrons-on-floor readout right away, not on the next tip/tick
 
     // Small idle bob so a patron standing still doesn't read as frozen —
@@ -401,8 +405,10 @@ export class PatronsMixin {
     best = Phaser.Utils.Array.GetRandom(ties);
     const [tx, ty] = best;
     patron.moving = true;
+    const fromNearness = patron.gx + patron.gy;
     patron.gx = tx;
     patron.gy = ty;
+    this.setPatronDepth(patron, Math.max(fromNearness, tx + ty));
     const { sx, sy } = this.gridToScreen(tx, ty);
     this.faceTowardScreenX(patron, sx);
     this.setPatronAnimation(patron, 'walk');
@@ -416,6 +422,7 @@ export class PatronsMixin {
                        // little decelerate-then-reaccelerate steps
       onComplete: () => {
         patron.moving = false;
+        this.setPatronDepth(patron, patron.gx + patron.gy);
         const arrived = patron.gx === patron.targetGx && patron.gy === patron.targetGy;
         if (patron.leaving) {
           patron.departureHops = (patron.departureHops || 0) + 1;
@@ -599,6 +606,16 @@ export class PatronsMixin {
 
   // The patron has actually walked to the door tile — fade it out in place
   // and drop it from the active list.
+  // Puts a patron in the shared prop draw order at the given tile nearness
+  // (gx + gy). While walking, the caller passes the nearer of the two tiles,
+  // so a patron stepping toward the camera doesn't pass under props in front
+  // of its old tile. The small bias draws a patron over a prop of equal
+  // nearness, such as the bar tile they are standing beside.
+  setPatronDepth(patron, nearness) {
+    patron.container.setDepth(nearness + 0.01);
+    this.propLayer.sort('depth');
+  }
+
   finalizeDeparture(patron) {
     this.tweens.add({
       targets: patron.container,

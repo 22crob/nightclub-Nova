@@ -86,6 +86,7 @@ export class PlacementMixin {
       placed.gameObject.setPosition(sx, sy - FALLBACK_PROP_HEIGHT / 2);
       if (placed.label) placed.label.setPosition(sx, sy - FALLBACK_PROP_HEIGHT - 10);
     }
+    this.setPropDepth(placed.gameObject, placed.type, newTiles);
     this.saveGame();
   }
 

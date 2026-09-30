@@ -78,6 +78,28 @@ await clickTile(5, 5);
 st = await state();
 check('placing a DJ booth costs $250', st.cash === 100 && st.placed === 2, `cash ${st.cash}`);
 
+// The bar sprite spans exactly its 1x3 footprint: 4 half-tiles across,
+// plus the render script's small crop margin.
+const barWidth = await page.evaluate(() => {
+  const s = window.__clubNova.scene.getScene('club');
+  return s.placed['2,5'].gameObject.displayWidth;
+});
+check('bar sprite matches its footprint width', barWidth >= 128 && barWidth <= 136, `${barWidth}px for a 128px footprint`);
+
+// Draw order: a prop nearer the camera is drawn over one behind it, even
+// when the one behind is bought later.
+const order = await page.evaluate(() => {
+  const s = window.__clubNova.scene.getScene('club');
+  s.selectedProp = 'plant'; s.cash += 1000;
+  s.placeProp(1, 1);
+  const behind = s.placed['1,1'].gameObject;
+  const front = s.placed['2,5'].gameObject;
+  const ok = s.propLayer.getIndex(behind) < s.propLayer.getIndex(front);
+  s.sellProp(1, 1); s.cash -= 1000 - 30; s.selectedProp = 'dj';
+  return ok;
+});
+check('props draw back to front', order);
+
 // Placing on an occupied tile is refused.
 await clickTile(5, 5);
 st = await state();

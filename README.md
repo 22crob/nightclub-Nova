@@ -32,6 +32,17 @@ npm run build:artifact   # makes dist/artifact.html, the version published as th
 | `game/src/scene/*.js` | The scene's other methods, one file per topic: `world` (floor, walls, expansion), `placement`, `propVisuals`, `shop`, `economy`, `save`, `patrons`, `hud` |
 | `game/tests/smoke.mjs` | Automated play-through test |
 
+## Game art (Blender)
+
+Props are modelled and rendered in Blender by scripts in `art/blender/`, so every sprite has the same camera, lighting and scale. One Blender unit is one game tile (1 m), and the shared camera in `iso_rig.py` renders a tile at exactly the game's tile size. Each build script also writes a JSON file with the sprite's size and anchor point, and the game reads those numbers directly.
+
+```bash
+pip install bpy==4.5.4 pillow      # Blender as a Python module, no Blender app needed
+python art/blender/build_bar.py    # rebuilds bar.blend and the 4 bar sprites
+```
+
+The `.blend` files are saved next to the scripts, so you can open them in Blender to look at or tweak a model.
+
 ## 2D image generator
 
 Makes neon synthwave poster art for Nightclub Nova. Each image has a night sky with stars, a glowing "nova" burst, club light beams, a perspective grid floor and neon title text. The same seed always produces the same image.

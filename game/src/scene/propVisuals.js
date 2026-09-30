@@ -4,6 +4,9 @@ import Phaser from 'phaser';
 import { FLOOR_DECAL_PROPS, PROP_TYPES } from '../catalog.js';
 import { FACINGS, FALLBACK_PROP_HEIGHT, FALLBACK_PROP_WIDTH, PROP_SCALE, TILE_H, TILE_W } from '../config.js';
 
+// Hover name labels sit above every prop.
+const LABEL_DEPTH = 100000;
+
 export class PropVisualsMixin {
   // Returns the texture key to use for a given prop type + facing, falling
   // back to the 0° sprite if that facing's image failed to load (e.g. the
@@ -237,6 +240,22 @@ export class PropVisualsMixin {
       lightRig = this.createDiscoLightRig(sx, sy);
     }
 
+    if (label) label.setDepth(LABEL_DEPTH);
+    this.setPropDepth(gameObject, type, tiles);
+
     return { gameObject, label, lightRig };
+  }
+
+  // Draw order for placed props: in this isometric view, a prop further
+  // down-screen (higher gx + gy) is nearer the camera, so it must be drawn
+  // after, and on top of, props behind it. Without this, props were drawn in
+  // the order they were bought, so a tall bar bought later could cover a
+  // prop standing in front of it. Floor decals always stay underneath.
+  setPropDepth(gameObject, type, tiles) {
+    const nearness = tiles.reduce((sum, [tx, ty]) => sum + tx + ty, 0) / tiles.length;
+    const tieBreak = tiles.reduce((sum, [tx]) => sum + tx, 0) / tiles.length / 1000;
+    const base = FLOOR_DECAL_PROPS.has(type) ? -1000 : 0;
+    gameObject.setDepth(base + nearness + tieBreak);
+    this.propLayer.sort('depth');
   }
 }
