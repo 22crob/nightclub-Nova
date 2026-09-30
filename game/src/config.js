@@ -23,24 +23,39 @@ export const FALLBACK_PROP_HEIGHT = 40 * PROP_SCALE;
 // code that used to check a fixed GRID_SIZE now reads the scene's own
 // this.gridSize instead, since that's a per-club value that changes at
 // runtime and gets saved/restored (see serializeState()/loadGame()).
-export const BASE_GRID_SIZE = 10;
+export const BASE_GRID_SIZE = 12;
 
-// Back walls: plain painted walls, 4 tile-heights tall (about 3.3 m at the
-// Blender art scale of 1 tile = 1 m), comfortably above the 2.3 m bar.
+// Room shell, modelled on the reference game's rooms: thick light-grey
+// concrete walls with pale top caps, a raised floor slab with dark front
+// edges, and a tiled sidewalk outside. Walls are 4 tile-heights tall,
+// about 1.3x a patron.
 export const WALL_HEIGHT = TILE_H * 4;
+export const WALL_THICKNESS = 0.3; // in tiles
+export const WALL_BASEBOARD = 5;
+export const DOOR_HEIGHT = TILE_H * 3.3;
+export const FLOOR_SLAB_DEPTH = 10; // px from the floor down to the sidewalk
+export const ROOM_COLORS = {
+  wallRight: 0x9a9aa3,
+  wallLeft: 0x83838d,
+  wallEnd: 0x6d6d77,
+  baseboard: 0x4a4a52,
+  corner: 0x6a6a74,
+  cap: 0xdcdce2,
+  capEdge: 0x8c8c96,
+  slabRight: 0x2c2c33,
+  slabLeft: 0x1f1f25,
+  slabEdge: 0x3c3c45,
+  door: 0x55565f,
+  doorFrame: 0x2a2a30,
+  doorWindow: 0x9fb8c9,
+  doorBar: 0xb9bac2,
+};
+export const SIDEWALK = { color: 0xb4b5bc, grout: 0x8e8f97, margin: 7, slabTiles: 2 };
 
 // Floor tiles: one colour with faint seams, so the floor reads as one
 // surface (like Nightclub City's) rather than a grid of outlined squares.
-export const FLOOR_COLOR = 0x1b1030;
-export const FLOOR_SEAM = { color: 0x2c1f45, alpha: 0.9 };
-export const WALL_BASEBOARD = 6;
-export const WALL_COLORS = {
-  right: 0x34323c,
-  left: 0x29272f,
-  baseboard: 0x17161b,
-  topEdge: 0x4a4755,
-  doorFrame: 0x4a4755,
-};
+export const FLOOR_COLOR = 0x5d5e66;
+export const FLOOR_SEAM = { color: 0x4d4e56, alpha: 1 };
 
 // Facings are in degrees, matching the rotation applied in Blender: 0/90/180/270.
 export const FACINGS = [0, 90, 180, 270];

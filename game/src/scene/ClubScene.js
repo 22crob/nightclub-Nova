@@ -85,7 +85,6 @@ export class ClubScene extends Phaser.Scene {
     this.tiles = {};
     this.buildTiles(this.gridSize);
     this.buildWalls(this.gridSize);
-    this.buildDoor();
     this.centerView();
 
     // Restore a previous save, if there is one — must happen after the

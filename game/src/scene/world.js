@@ -1,8 +1,9 @@
-// ClubScene methods: Floor tiles, back walls, entrance, grid math, hover tracking and club expansion.
+// ClubScene methods: floor tiles, room shell (walls, door, slab, sidewalk),
+// grid math, hover tracking, zoom and club expansion.
 // Mixed into ClubScene (see ClubScene.js); `this` is the scene.
 import Phaser from 'phaser';
 import { GRID_EXPANSIONS } from '../catalog.js';
-import { FLOOR_COLOR, FLOOR_SEAM, PATRON_SPAWN_TILE, TILE_H, TILE_W, WALL_BASEBOARD, WALL_COLORS, WALL_HEIGHT, ZOOM_MAX, ZOOM_MIN } from '../config.js';
+import { DOOR_HEIGHT, FLOOR_COLOR, FLOOR_SEAM, FLOOR_SLAB_DEPTH, PATRON_SPAWN_TILE, ROOM_COLORS, SIDEWALK, TILE_H, TILE_W, WALL_BASEBOARD, WALL_HEIGHT, WALL_THICKNESS, ZOOM_DEFAULT, ZOOM_MAX, ZOOM_MIN } from '../config.js';
 import { SFX } from '../sfx.js';
 
 export class WorldMixin {
@@ -50,122 +51,99 @@ export class WorldMixin {
     }
   }
 
-  // Draws the two "back" walls that frame the floor, along the gx=0 and
-  // gy=0 edges (the ones furthest from this fixed camera angle), leaving the
-  // (0,0) corner tile's two edges open as a one-tile doorway (see
-  // buildDoor(), and PATRON_SPAWN_TILE, which is that same tile). Plain
-  // painted walls: one flat colour per wall, a dark baseboard, and a thin
-  // lighter edge along the top so the wall reads against the dark
-  // background.
+  // Screen position of a point in grid space (tile centres are whole
+  // numbers, tile edges sit at .5), lifted `h` pixels straight up.
+  gridPoint(gx, gy, h = 0) {
+    const { sx, sy } = this.gridToScreen(gx, gy);
+    return [sx, sy - h];
+  }
+
+  // Draws the room shell in the style of the reference game: the sidewalk
+  // outside, the raised floor slab's front edges, and two thick back walls
+  // with light top caps and a door. Everything is plain Graphics, redrawn
+  // from scratch on create() and whenever the club expands.
   //
-  // Built with plain Graphics rather than the Polygon shape buildTiles()
-  // uses: Polygon mis-renders when its points go negative (see the note
-  // there), and a wall's top edge sits WALL_HEIGHT px above the floor.
-  // Each wall is one quad per run of tiles rather than one per tile, so
-  // there are no seams between segments.
-  //
-  // Redraws everything from scratch every call (cheap: this only runs from
-  // create() and on the rare expandClub() purchase).
+  // Grid space: the floor covers gx, gy in [-0.5, size - 0.5]. The walls
+  // stand outside that along the gy = -0.5 edge (right wall) and the
+  // gx = -0.5 edge (left wall), WALL_THICKNESS tiles thick, so they never
+  // take up floor tiles.
   buildWalls(upToSize) {
-    if (!this.wallGraphics) {
+    if (!this.groundGraphics) {
+      this.groundGraphics = this.add.graphics();
+      this.tileLayer.addAt(this.groundGraphics, 0); // under the floor tiles
       this.wallGraphics = this.add.graphics();
       this.wallLayer.add(this.wallGraphics);
     }
-    const g = this.wallGraphics;
-    g.clear();
-
-    const quad = (a, b, bottom, top, color) => {
+    const n = upToSize - 0.5; // far floor edge
+    const t = -0.5 - WALL_THICKNESS; // outer edge of the walls
+    const P = (gx, gy, h) => this.gridPoint(gx, gy, h);
+    const fill = (g, color, pts) => {
       g.fillStyle(color, 1);
-      g.beginPath();
-      g.moveTo(a[0], a[1] - bottom);
-      g.lineTo(b[0], b[1] - bottom);
-      g.lineTo(b[0], b[1] - top);
-      g.lineTo(a[0], a[1] - top);
-      g.closePath();
-      g.fillPath();
-    };
-    const drawWall = (groundNear, groundFar, color) => {
-      quad(groundNear, groundFar, 0, WALL_HEIGHT, color);
-      quad(groundNear, groundFar, 0, WALL_BASEBOARD, WALL_COLORS.baseboard);
-      g.lineStyle(2, WALL_COLORS.topEdge, 1);
-      g.lineBetween(groundNear[0], groundNear[1] - WALL_HEIGHT, groundFar[0], groundFar[1] - WALL_HEIGHT);
+      g.fillPoints(pts.map(([x, y]) => ({ x, y })), true);
     };
 
-    // gridToScreen(gx,gy) is the CENTER of a tile's diamond, so its corners
-    // sit at that center ± half a tile width/height.
-    const last = upToSize - 1;
+    // --- Ground: sidewalk around the club, then the slab's front faces ---
+    const g = this.groundGraphics;
+    g.clear();
+    const m = SIDEWALK.margin;
+    const drop = FLOOR_SLAB_DEPTH; // the sidewalk sits this far below the floor
+    fill(g, SIDEWALK.color, [P(t - m, t - m, -drop), P(n + m, t - m, -drop), P(n + m, n + m, -drop), P(t - m, n + m, -drop)]);
+    g.lineStyle(1, SIDEWALK.grout, 1);
+    for (let k = Math.ceil(t - m); k <= n + m; k += SIDEWALK.slabTiles) {
+      g.lineBetween(...P(k, t - m, -drop), ...P(k, n + m, -drop));
+      g.lineBetween(...P(t - m, k, -drop), ...P(n + m, k, -drop));
+    }
+    // Slab front faces, down from floor level to the sidewalk.
+    fill(g, ROOM_COLORS.slabRight, [P(n, t, 0), P(n, n, 0), P(n, n, -drop), P(n, t, -drop)]);
+    fill(g, ROOM_COLORS.slabLeft, [P(t, n, 0), P(n, n, 0), P(n, n, -drop), P(t, n, -drop)]);
+    g.lineStyle(1, ROOM_COLORS.slabEdge, 1);
+    g.lineBetween(...P(t, n, 0), ...P(n, n, 0));
+    g.lineBetween(...P(n, n, 0), ...P(n, t, 0));
 
-    // Right-hand back wall along gy=0, from tile gx=1's top corner (gx=0 is
-    // the doorway) to the last tile's right corner.
-    const r0 = this.gridToScreen(1, 0);
-    const r1 = this.gridToScreen(last, 0);
-    drawWall([r0.sx, r0.sy - TILE_H / 2], [r1.sx + TILE_W / 2, r1.sy], WALL_COLORS.right);
+    // --- Walls ---
+    const w = this.wallGraphics;
+    w.clear();
+    const H = WALL_HEIGHT;
+    // Inner faces.
+    fill(w, ROOM_COLORS.wallRight, [P(-0.5, -0.5, 0), P(n, -0.5, 0), P(n, -0.5, H), P(-0.5, -0.5, H)]);
+    fill(w, ROOM_COLORS.wallLeft, [P(-0.5, -0.5, 0), P(-0.5, n, 0), P(-0.5, n, H), P(-0.5, -0.5, H)]);
+    // Baseboards.
+    const bb = WALL_BASEBOARD;
+    fill(w, ROOM_COLORS.baseboard, [P(-0.5, -0.5, 0), P(n, -0.5, 0), P(n, -0.5, bb), P(-0.5, -0.5, bb)]);
+    fill(w, ROOM_COLORS.baseboard, [P(-0.5, -0.5, 0), P(-0.5, n, 0), P(-0.5, n, bb), P(-0.5, -0.5, bb)]);
+    // Shading where the two walls meet.
+    w.lineStyle(2, ROOM_COLORS.corner, 1);
+    w.lineBetween(...P(-0.5, -0.5, 0), ...P(-0.5, -0.5, H));
+    // End faces at the open ends of each wall.
+    fill(w, ROOM_COLORS.wallEnd, [P(n, t, 0), P(n, -0.5, 0), P(n, -0.5, H), P(n, t, H)]);
+    fill(w, ROOM_COLORS.wallEnd, [P(t, n, 0), P(-0.5, n, 0), P(-0.5, n, H), P(t, n, H)]);
+    // Top caps.
+    fill(w, ROOM_COLORS.cap, [P(t, t, H), P(n, t, H), P(n, -0.5, H), P(-0.5, -0.5, H), P(-0.5, n, H), P(t, n, H)]);
+    w.lineStyle(1, ROOM_COLORS.capEdge, 1);
+    w.strokePoints([P(t, t, H), P(n, t, H), P(n, -0.5, H), P(-0.5, -0.5, H), P(-0.5, n, H), P(t, n, H)].map(([x, y]) => ({ x, y })), true);
 
-    // Left-hand back wall along gx=0, from tile gy=1's top corner to the
-    // last tile's left corner. A shade darker than the right wall so the two
-    // faces read as separate surfaces.
-    const l0 = this.gridToScreen(0, 1);
-    const l1 = this.gridToScreen(0, last);
-    drawWall([l0.sx, l0.sy - TILE_H / 2], [l1.sx - TILE_W / 2, l1.sy], WALL_COLORS.left);
+    this.drawDoor(w);
   }
 
-  // A doorway sitting in the one-tile gap the back walls leave open at
-  // (0,0) — the exact tile patrons already spawn and despawn on
-  // (PATRON_SPAWN_TILE) — drawn as an actual dark opening in the wall
-  // (rather than a glow effect) so it reads as a real door. Called once
-  // from create(); the door's tile never moves, so unlike the walls/floor
-  // there's nothing for expandClub() to extend later.
-  //
-  // Built from the SAME two ground-edge points buildWalls() would have
-  // used for this tile (its top-right and top-left edges), rather than an
-  // axis-aligned rectangle floating over the tile's top corner. A plain
-  // rectangle's bottom is a flat horizontal line, but the floor boundary
-  // here is a shallow "V" (the tile's top corner sits higher than its left
-  // and right corners) — that mismatch is exactly what left a wedge of
-  // bare void between the door and the floor grid lines. Using the tile's
-  // real corners means the opening's edges land exactly on top of where
-  // the neighboring wall segments start, with no gap or overlap either way.
-  buildDoor() {
-    const { sx, sy } = this.gridToScreen(PATRON_SPAWN_TILE.gx, PATRON_SPAWN_TILE.gy);
-    const wallHeight = WALL_HEIGHT; // same as buildWalls() so the opening's top edge lines up with the walls beside it
-    // (sx,sy) is this tile's CENTER (see the note in buildWalls()) — corners
-    // sit at center ± half a tile width/height, not at center+(raw offset).
-    const apex = [sx, sy - TILE_H / 2]; // this tile's top corner — where the two skipped wall segments would have met
-    const right = [sx + TILE_W / 2, sy]; // its top-right corner (start of the right-hand wall run)
-    const left = [sx - TILE_W / 2, sy]; // its top-left corner (start of the left-hand wall run)
-
-    if (!this.doorGraphics) {
-      this.doorGraphics = this.add.graphics();
-      this.wallLayer.add(this.doorGraphics);
-    }
-    const g = this.doorGraphics;
-    g.clear();
-
-    const drawOpeningQuad = (groundNear, groundFar) => {
-      const topNear = [groundNear[0], groundNear[1] - wallHeight];
-      const topFar = [groundFar[0], groundFar[1] - wallHeight];
-      g.fillStyle(0x0d0818, 1);
-      g.lineStyle(2, WALL_COLORS.doorFrame, 1);
-      g.beginPath();
-      g.moveTo(groundNear[0], groundNear[1]);
-      g.lineTo(groundFar[0], groundFar[1]);
-      g.lineTo(topFar[0], topFar[1]);
-      g.lineTo(topNear[0], topNear[1]);
-      g.closePath();
-      g.fillPath();
-      g.strokePath();
+  // The club's front door, set into the right-hand wall at the entrance tile
+  // (PATRON_SPAWN_TILE), where patrons walk in and out.
+  drawDoor(w) {
+    const gx = PATRON_SPAWN_TILE.gx;
+    const P = (x, h) => this.gridPoint(x, -0.5, h);
+    const a = gx - 0.38, b = gx + 0.38, mid = gx;
+    const top = DOOR_HEIGHT;
+    const quad = (color, x0, x1, h0, h1) => {
+      w.fillStyle(color, 1);
+      w.fillPoints([P(x0, h0), P(x1, h0), P(x1, h1), P(x0, h1)].map(([x, y]) => ({ x, y })), true);
     };
-
-    // Same two edges the wall loops in buildWalls() skip for this tile —
-    // filling them in dark instead of wall-gray is what makes this read as
-    // an opening rather than a solid corner.
-    drawOpeningQuad(apex, right);
-    drawOpeningQuad(apex, left);
-
-    const label = this.add.text(apex[0], apex[1] - wallHeight - 6, 'ENTRANCE', {
-      fontFamily: 'Arial', fontSize: '11px', fontStyle: 'bold', color: '#c9c4d6',
-    }).setOrigin(0.5, 1);
-    this.wallLayer.add(label);
+    quad(ROOM_COLORS.doorFrame, a - 0.06, b + 0.06, 0, top + 5);
+    quad(ROOM_COLORS.door, a, mid - 0.01, 0, top);
+    quad(ROOM_COLORS.door, mid + 0.01, b, 0, top);
+    // Small windows and push bars.
+    quad(ROOM_COLORS.doorWindow, a + 0.1, mid - 0.1, top * 0.62, top * 0.85);
+    quad(ROOM_COLORS.doorWindow, mid + 0.1, b - 0.1, top * 0.62, top * 0.85);
+    quad(ROOM_COLORS.doorBar, a + 0.06, mid - 0.05, top * 0.44, top * 0.48);
+    quad(ROOM_COLORS.doorBar, mid + 0.05, b - 0.06, top * 0.44, top * 0.48);
   }
 
   // Inverse of gridToScreen: given a point in world-local space (already
@@ -272,12 +250,16 @@ export class WorldMixin {
 
   // Centres the whole room (floor plus back walls) in the space between the
   // top bar and the shop button.
+  // Zooms out from ZOOM_DEFAULT if needed so the whole room fits.
   centerView() {
-    const zoom = this.world.scaleX;
-    const top = -TILE_H / 2 - WALL_HEIGHT;
-    const bottom = (this.gridSize - 1) * TILE_H + TILE_H / 2;
+    const top = -TILE_H / 2 - WALL_HEIGHT - WALL_THICKNESS * TILE_H;
+    const bottom = (this.gridSize - 1) * TILE_H + TILE_H / 2 + FLOOR_SLAB_DEPTH;
+    const halfWidth = (this.gridSize + WALL_THICKNESS) * TILE_W / 2;
     const areaTop = 90;
     const areaBottom = this.scale.height - 110;
+    const fit = Math.min((areaBottom - areaTop) / (bottom - top), (this.scale.width - 40) / (2 * halfWidth));
+    const zoom = Phaser.Math.Clamp(Math.min(ZOOM_DEFAULT, fit), ZOOM_MIN, ZOOM_MAX);
+    this.world.setScale(zoom);
     this.world.x = this.scale.width / 2;
     this.world.y = (areaTop + areaBottom) / 2 - ((top + bottom) / 2) * zoom;
   }
