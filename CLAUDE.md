@@ -12,6 +12,10 @@ The main project is **Club Nova**, an isometric nightclub tycoon game in `game/`
 - Sprite calibration (`displayWidth`, `originX`/`originY`) was measured against the actual rendered PNGs. Re-measure it if a sprite is re-rendered.
 - The save format lives in `src/scene/save.js` under the key `clubNovaSave_v1`. Don't break existing saves; bump the key only if the format changes incompatibly.
 
+## Playable link
+
+The game is published as a private claude.ai Artifact at https://claude.ai/artifact/QfPRRyNXi3X4tXz83RVvNV. To update it, run `npm run build:artifact` and publish `game/dist/artifact.html` to that URL.
+
 ## The owner
 
 The owner isn't a programmer. Explain changes in plain language, and show screenshots of visual changes.

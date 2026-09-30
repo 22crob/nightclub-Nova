@@ -7,7 +7,8 @@
     "dev": "vite",
     "build": "vite build",
     "preview": "vite preview",
-    "test": "vite build && node tests/smoke.mjs"
+    "test": "vite build && node tests/smoke.mjs",
+    "build:artifact": "vite build && node scripts/make-artifact.mjs"
   },
   "dependencies": {
     "phaser": "3.80.1"

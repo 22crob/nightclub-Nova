@@ -13,6 +13,7 @@ npm install        # first time only
 npm run dev        # run the game at http://localhost:5173, reloads as you edit
 npm run build      # makes dist/index.html: one file, double-click to play
 npm test           # builds, then plays through the game automatically to check nothing broke
+npm run build:artifact   # makes dist/artifact.html, the version published as the shareable play link
 ```
 
 ### Layout
