@@ -1,7 +1,7 @@
 // ClubScene methods: Footprints, the placement ghost, and placing / rotating / selling / restoring props.
 // Mixed into ClubScene (see ClubScene.js); `this` is the scene.
 import { PROP_TYPES, STAFF_TYPES } from '../catalog.js';
-import { FACINGS, FALLBACK_PROP_HEIGHT, FLOOR_COLOR, SELL_REFUND_RATIO, TILE_H, TILE_W } from '../config.js';
+import { FACINGS, FALLBACK_PROP_HEIGHT, FLOOR_COLOR, PATRON_SPAWN_TILE, SELL_REFUND_RATIO, TILE_H, TILE_W } from '../config.js';
 import { floorTextureKey } from '../floors.js';
 import { SFX } from '../sfx.js';
 
@@ -16,10 +16,15 @@ export class PlacementMixin {
     return offsets.map(([dx, dy]) => [gx + dx, gy + dy]);
   }
 
-  // True only if every tile in the footprint is on the grid and empty.
-  footprintValid(tiles) {
+  // True only if every tile in the footprint is on the grid and empty. The
+  // doorway tile stays free of anything solid, or no one could get in.
+  // (A save from before this rule may still have something there; loading
+  // it passes allowDoor.)
+  footprintValid(tiles, type = this.selectedProp, allowDoor = false) {
+    const solid = !allowDoor && !(PROP_TYPES[type] && PROP_TYPES[type].floorStyle);
     return tiles.every(([tx, ty]) => (
-      tx >= 0 && tx < this.gridSize && ty >= 0 && ty < this.gridSize && !this.placed[`${tx},${ty}`]
+      tx >= 0 && tx < this.gridSize && ty >= 0 && ty < this.gridSize && !this.placed[`${tx},${ty}`] &&
+      !(solid && tx === PATRON_SPAWN_TILE.gx && ty === PATRON_SPAWN_TILE.gy)
     ));
   }
 
@@ -62,7 +67,7 @@ export class PlacementMixin {
     // Free the old tiles first so the new footprint's validity check
     // doesn't see the prop's own current tiles as "occupied".
     for (const [tx, ty] of placed.tiles) delete this.placed[`${tx},${ty}`];
-    if (!this.footprintValid(newTiles)) {
+    if (!this.footprintValid(newTiles, placed.type)) {
       // Can't rotate in place (would overlap something else or fall off
       // the grid) — put the old occupancy back and leave it as-is.
       for (const [tx, ty] of placed.tiles) this.placed[`${tx},${ty}`] = placed;
@@ -265,7 +270,7 @@ export class PlacementMixin {
   // aborting the rest of the load.
   restoreProp(type, facing, anchor) {
     const tiles = this.getFootprint(type, facing, anchor[0], anchor[1]);
-    if (!this.footprintValid(tiles)) {
+    if (!this.footprintValid(tiles, type, true)) {
       console.warn('[Club Nova] skipped restoring a saved prop that no longer fits:', type, anchor);
       return;
     }

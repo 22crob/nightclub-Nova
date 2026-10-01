@@ -303,6 +303,13 @@ check('clicking a wall paints it with wallpaper ($15)', wall.painted === 'wpBric
 check('wallpaper is saved', wall.saved === 'wpBrick');
 check('animated wallpaper moves while the DJ plays', wall.ledFrames > 3, `${wall.ledFrames} frames`);
 
+// The doorway tile can't be blocked with furniture (floor tiles are fine).
+const door = await page.evaluate(() => {
+  const s = window.__clubNova.scene.getScene('club');
+  return { solid: s.footprintValid([[0, 0]], 'plant'), floor: s.footprintValid([[0, 0]], 'dance') };
+});
+check('furniture can\'t block the front door', door.solid === false && door.floor === true, JSON.stringify(door));
+
 // Seating: every piece has its art, and a patron can sit on a couch (drawn
 // between its two layers), feel better for it, and get up again.
 const seating = await page.evaluate(() => {
