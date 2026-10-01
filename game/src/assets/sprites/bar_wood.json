@@ -5,5 +5,9 @@
   "imageSize": [
     258,
     286
+  ],
+  "layers": [
+    "back",
+    "front"
   ]
 }

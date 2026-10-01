@@ -19,7 +19,8 @@ The visual and gameplay reference for everything is **Nightclub City** (2010): i
 
 ## 4. Props (Blender, one script each via art/blender/iso_rig.py)
 - DJ booth with speakers and decks; light-up dance floor tile (glowing circles)
-- Premium bar; sofas and booths; candle tables; pool table; speakers; plants; neon signs; disco ball
+- Bar line-up: done. Five tiers, same 1x3 size and gameplay, rising detail: Starter (Lv1), Wood (Lv2), Pub (Lv3, the original), Neon (Lv5), Ice (Lv7). Rendered in two layers so bartenders stand between back bar and counter.
+- Sofas and booths; candle tables; pool table; speakers; plants; neon signs; disco ball
 - Wallpapers and floor finishes for the Decorate tool
 
 ## 5. Gameplay

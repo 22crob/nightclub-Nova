@@ -20,6 +20,7 @@ See ROADMAP.md for the plan. The reference for all art, UI and gameplay is Night
 - Scale is 1 Blender unit = 1 tile. Model the prop centred on the origin, inside its footprint, with its front facing -Y. Game +gx is Blender +X, and game +gy is Blender -Y.
 - `render_facings()` renders facings 0/90/180/270 (the model rotated about Z), crops all four to one shared box, and writes `<name>.json` (displayWidth, originX, originY). The catalog imports that JSON, so never hand-tune these numbers.
 - Check new art in the game with the footprint tiles outlined before shipping it.
+- Bars render in two layers too (`render_facings(..., layers=split_counter(root))`): `<name>_back_*` and `<name>_front_*`. The game draws whichever is nearer the camera on top, with the bartender between them. Any prop staff stand inside should do the same.
 - Patrons come from `build_patrons.py`: seeded random chibis built from primitives, posed frame by frame, with an inverted-hull outline. There's one 16x6-frame sheet per character (idle/walk/dance x front/back) plus `patrons.json`. Front faces screen down-left and back faces up-right; the game mirrors both for the other diagonals.
 
 ## Playable link
