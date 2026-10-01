@@ -1,7 +1,7 @@
 // The main game scene. Its methods are split across the files in this
 // folder by topic and mixed in below, so each file stays small.
 import Phaser from 'phaser';
-import { BAR_SPRITES, DJ_BOOTH_SPRITES, PATRON_META, PATRON_SHEETS } from '../assets.js';
+import { PATRON_META, PATRON_SHEETS, SPRITE_URLS } from '../assets.js';
 import { PROP_TYPES } from '../catalog.js';
 import { BASE_GRID_SIZE, FACINGS, PASSIVE_FAN_SHARE, STARTING_CASH, WAGE_INTERVAL_MS, ZOOM_DEFAULT } from '../config.js';
 import { SFX } from '../sfx.js';
@@ -22,7 +22,7 @@ export class ClubScene extends Phaser.Scene {
     super('club');
     this.cash = STARTING_CASH;
     this.fans = 0;
-    this.selectedProp = 'bar';
+    this.selectedProp = 'starterBar';
     this.currentFacing = 0; // facing used for the NEXT rotatable prop placed
     this.placed = {}; // "gx,gy" -> { type, facing, gameObject, label }
     // The club's current floor size — grows via expandClub()/GRID_EXPANSIONS
@@ -43,9 +43,14 @@ export class ClubScene extends Phaser.Scene {
     // fall back to the placeholder box / primitive patron token.
     this.load.on('loaderror', (file) => console.error('[Club Nova] failed to load sprite:', file.key));
 
-    for (const facing of FACINGS) {
-      this.load.image(PROP_TYPES.dj.sprites[facing], DJ_BOOTH_SPRITES[facing]);
-      this.load.image(PROP_TYPES.bar.sprites[facing], BAR_SPRITES[facing]);
+    for (const def of Object.values(PROP_TYPES)) {
+      const sets = [def.sprites, ...Object.values(def.layerSprites || {})].filter(Boolean);
+      for (const set of sets) {
+        for (const facing of FACINGS) {
+          const key = set[facing];
+          if (SPRITE_URLS[key]) this.load.image(key, SPRITE_URLS[key]);
+        }
+      }
     }
 
     // Chibi patrons: one spritesheet per character.

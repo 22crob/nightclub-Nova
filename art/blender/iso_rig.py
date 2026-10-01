@@ -97,6 +97,7 @@ def add_lighting(scene):
 
 def check_projection(scene, cam):
     """One tile step must move exactly TILE_W/2 x TILE_H/2 game pixels."""
+    bpy.context.view_layer.update()  # make sure the camera's placement has taken effect
     def px(p):
         v = world_to_camera_view(scene, cam, Vector(p))
         return v.x * CANVAS, (1 - v.y) * CANVAS
@@ -110,32 +111,54 @@ def check_projection(scene, cam):
     return o
 
 
-def render_facings(scene, cam, root, name, out_dir):
+def render_facings(scene, cam, root, name, out_dir, layers=None):
     """Render the prop at all four facings, crop every image to the same
-    box, and write <name>.json with the game's displayWidth and origin."""
+    box, and write <name>.json with the game's displayWidth and origin.
+
+    `layers` optionally maps a layer name to a list of the prop's objects;
+    each layer is also rendered on its own (everything else hidden) as
+    <name>_<layer>_<facing>.png with the same crop, so the game can draw
+    something between them (a bartender between back bar and counter)."""
     from PIL import Image
 
     origin_px = check_projection(scene, cam)
     os.makedirs(out_dir, exist_ok=True)
+    layers = layers or {}
+    everything = [o for o in root.children_recursive]
     raw = {}
+    raw_layers = {lname: {} for lname in layers}
     for facing in FACINGS:
         root.rotation_euler = (0, 0, math.radians(facing))
         path = os.path.join(out_dir, f'{name}_{facing}.png')
         scene.render.filepath = path
         bpy.ops.render.render(write_still=True)
         raw[facing] = Image.open(path).convert('RGBA')
+        for lname, objs in layers.items():
+            keep = set(objs)
+            for o in everything:
+                o.hide_render = o not in keep
+            path = os.path.join(out_dir, f'{name}_{lname}_{facing}.png')
+            scene.render.filepath = path
+            bpy.ops.render.render(write_still=True)
+            raw_layers[lname][facing] = Image.open(path).convert('RGBA')
+        for o in everything:
+            o.hide_render = False
     root.rotation_euler = (0, 0, 0)
 
     # One shared crop box (the union of all four silhouettes, plus a small
-    # margin) so every facing has the same size and the same anchor point.
+    # margin) so every facing and layer has the same size and anchor point.
     boxes = [img.getchannel('A').point(lambda a: 255 if a > 2 else 0).getbbox() for img in raw.values()]
     pad = 4
     left = max(0, min(b[0] for b in boxes) - pad)
     top = max(0, min(b[1] for b in boxes) - pad)
     right = min(CANVAS, max(b[2] for b in boxes) + pad)
     bottom = min(CANVAS, max(b[3] for b in boxes) + pad)
+    crop = (left, top, right, bottom)
     for facing, img in raw.items():
-        img.crop((left, top, right, bottom)).save(os.path.join(out_dir, f'{name}_{facing}.png'), optimize=True)
+        img.crop(crop).save(os.path.join(out_dir, f'{name}_{facing}.png'), optimize=True)
+    for lname, imgs in raw_layers.items():
+        for facing, img in imgs.items():
+            img.crop(crop).save(os.path.join(out_dir, f'{name}_{lname}_{facing}.png'), optimize=True)
 
     width, height = right - left, bottom - top
     meta = {
@@ -144,7 +167,23 @@ def render_facings(scene, cam, root, name, out_dir):
         'originY': round((origin_px[1] - top) / height, 5),
         'imageSize': [width, height],
     }
+    if layers:
+        meta['layers'] = sorted(layers)
     with open(os.path.join(out_dir, f'{name}.json'), 'w') as f:
         json.dump(meta, f, indent=2)
         f.write('\n')
     return meta
+
+
+def split_counter(root, y_split=-0.6):
+    """Splits a bar's parts into 'front' (the customer counter, on the -Y
+    tile at rest) and 'back' (back bar and aisle), by where each part sits."""
+    bpy.context.view_layer.update()
+    front, back = [], []
+    for o in root.children_recursive:
+        if o.type != 'MESH':
+            continue
+        corners = [o.matrix_world @ Vector(c) for c in o.bound_box]
+        cy = sum(c.y for c in corners) / 8
+        (front if cy < y_split else back).append(o)
+    return {'front': front, 'back': back}

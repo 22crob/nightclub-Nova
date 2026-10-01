@@ -1,5 +1,6 @@
 // Shop / selection-chip icon rendering (plain <canvas>, no Phaser).
-import { BAR_SPRITES, DJ_BOOTH_SPRITES } from './assets.js';
+import { SPRITE_URLS } from './assets.js';
+import { PROP_TYPES } from './catalog.js';
 
 // Renders a small PNG data-URL of a prop's base color as a mini isometric
 // box (or a flat diamond for `isFlat` ground-decal props, e.g. the dance
@@ -81,11 +82,7 @@ export function renderIsoIcon(color, isFlat) {
 // holding" pill) build plain HTML <div> icons, not Phaser game objects.
 // Returns null for anything without real art yet, so those callers fall
 // back to the rendered iso-box chip from renderIsoIcon() above instead.
-const REAL_SPRITE_ICONS = {
-  dj: DJ_BOOTH_SPRITES,
-  bar: BAR_SPRITES,
-};
 export function realSpriteIconFor(key) {
-  const sprites = REAL_SPRITE_ICONS[key];
-  return sprites && sprites[0] ? sprites[0] : null;
+  const def = PROP_TYPES[key];
+  return (def && def.sprites && SPRITE_URLS[def.sprites[0]]) || null;
 }

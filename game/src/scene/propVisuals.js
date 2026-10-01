@@ -193,14 +193,21 @@ export class PropVisualsMixin {
     const { sx, sy } = this.footprintCenter(tiles);
 
     let gameObject;
+    let frontObject = null;
     let label;
-    if (def.rotatable && this.hasAnySprite(type)) {
-      const texKey = this.spriteKeyFor(type, facing);
+    const spriteImage = (texKey) => {
       const img = this.add.image(sx, sy, texKey);
       img.setOrigin(def.originX, def.originY);
       img.setDisplaySize(def.displayWidth, def.displayWidth * (img.height / img.width));
       this.propLayer.add(img);
-      gameObject = img;
+      return img;
+    };
+    if (def.rotatable && this.hasLayerSprites(type)) {
+      // Two layers (back bar, front counter) so staff can stand between.
+      gameObject = spriteImage(this.layerKeyFor(type, facing, 'back'));
+      frontObject = spriteImage(this.layerKeyFor(type, facing, 'front'));
+    } else if (def.rotatable && this.hasAnySprite(type)) {
+      gameObject = spriteImage(this.spriteKeyFor(type, facing));
     } else if (def.rotatable) {
       // sprites failed to load — fall back to a labeled box rather than
       // Phaser's broken-image placeholder
@@ -241,9 +248,9 @@ export class PropVisualsMixin {
     }
 
     if (label) label.setDepth(LABEL_DEPTH);
-    this.setPropDepth(gameObject, type, tiles);
+    this.setPropDepth(gameObject, type, tiles, frontObject, facing);
 
-    return { gameObject, label, lightRig };
+    return { gameObject, frontObject, label, lightRig };
   }
 
   // Draw order for placed props: in this isometric view, a prop further
@@ -251,11 +258,35 @@ export class PropVisualsMixin {
   // after, and on top of, props behind it. Without this, props were drawn in
   // the order they were bought, so a tall bar bought later could cover a
   // prop standing in front of it. Floor decals always stay underneath.
-  setPropDepth(gameObject, type, tiles) {
+  //
+  // A two-layer prop (a bar) puts whichever layer is nearer the camera just
+  // above the other, leaving room between them (baseDepth + 0.001) for its
+  // staff: the counter is nearer at facings 0 and 90, the back bar at 180
+  // and 270.
+  setPropDepth(gameObject, type, tiles, frontObject = null, facing = 0) {
     const nearness = tiles.reduce((sum, [tx, ty]) => sum + tx + ty, 0) / tiles.length;
     const tieBreak = tiles.reduce((sum, [tx]) => sum + tx, 0) / tiles.length / 1000;
-    const base = FLOOR_DECAL_PROPS.has(type) ? -1000 : 0;
-    gameObject.setDepth(base + nearness + tieBreak);
+    const base = (FLOOR_DECAL_PROPS.has(type) ? -1000 : 0) + nearness + tieBreak;
+    gameObject.baseDepth = base;
+    if (frontObject) {
+      const counterNear = facing === 0 || facing === 90;
+      gameObject.setDepth(base + (counterNear ? 0 : 0.002));
+      frontObject.setDepth(base + (counterNear ? 0.002 : 0));
+    } else {
+      gameObject.setDepth(base);
+    }
     this.propLayer.sort('depth');
+  }
+
+  // Texture key for one layer of a layered prop at a facing.
+  layerKeyFor(type, facing, layer) {
+    return PROP_TYPES[type].layerSprites[layer][facing];
+  }
+
+  // True if every layer texture of a layered prop loaded.
+  hasLayerSprites(type) {
+    const def = PROP_TYPES[type];
+    if (!def.layerSprites) return false;
+    return Object.values(def.layerSprites).every((set) => FACINGS.every((f) => this.textures.exists(set[f])));
   }
 }

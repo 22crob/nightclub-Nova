@@ -1,6 +1,35 @@
 // The shop catalog: every buyable prop, shop tabs, and club expansion tiers.
 import { TILE_W } from './config.js';
 import barSprite from './assets/sprites/bar.json';
+import barStarterSprite from './assets/sprites/bar_starter.json';
+import barWoodSprite from './assets/sprites/bar_wood.json';
+import barNeonSprite from './assets/sprites/bar_neon.json';
+import barIceSprite from './assets/sprites/bar_ice.json';
+
+// The bar line-up (art/blender/build_bars.py and build_bar.py): five
+// looks, from a beginner's plywood counter to an ice bar. They play the same
+// (1x3 footprint, $10 drinks, one bartender); only the look, price and
+// unlock level differ. The footprint runs back bar, aisle, counter along gy
+// at facings 0/180 and along gx at 90/270.
+const BAR_FOOTPRINT = {
+  0: [[0, 0], [0, 1], [0, 2]],
+  90: [[0, 0], [1, 0], [2, 0]],
+  180: [[0, 0], [0, 1], [0, 2]],
+  270: [[0, 0], [1, 0], [2, 0]],
+};
+function barTier(key, label, cost, unlockLevel, spriteBase, meta) {
+  return {
+    key, label, cost, unlockLevel, category: 'Bars', color: 0x2fd0ff,
+    staff: 'bartender', drinkPrice: 10, rotatable: true,
+    sprites: { 0: `${spriteBase}_0`, 90: `${spriteBase}_90`, 180: `${spriteBase}_180`, 270: `${spriteBase}_270` },
+    // Drawn in two layers, back bar and front counter, so the bartender
+    // stands between them (see createPropVisual()).
+    layerSprites: meta.layers ? Object.fromEntries(meta.layers.map((layer) => [layer,
+      { 0: `${spriteBase}_${layer}_0`, 90: `${spriteBase}_${layer}_90`, 180: `${spriteBase}_${layer}_180`, 270: `${spriteBase}_${layer}_270` }])) : null,
+    footprint: BAR_FOOTPRINT,
+    displayWidth: meta.displayWidth, originX: meta.originX, originY: meta.originY,
+  };
+}
 
 // capacity: how many extra patrons this prop lets the club hold at once
 // (see patronCapacity() below) — bigger/more social props add more room.
@@ -10,43 +39,11 @@ import barSprite from './assets/sprites/bar.json';
 // at which tier, not in inflating a prop you already have access to.
 // Omitted / 1 means available from the very start.
 export const PROP_TYPES = {
-  bar: {
-    key: 'bar', cost: 150, color: 0x2fd0ff, label: 'Bar', unlockLevel: 1, category: 'Bars',
-    staff: 'bartender', drinkPrice: 10,
-    rotatable: true,
-    // sprite key prefix per facing -> 'bar_0', 'bar_90', 'bar_180', 'bar_270'
-    // — Blender-rendered art (back bar with bottle wall, bartender aisle,
-    // customer counter; see art/blender/build_bar.py), loaded via assets.js
-    // and ClubScene.preload().
-    sprites: { 0: 'bar_0', 90: 'bar_90', 180: 'bar_180', 270: 'bar_270' },
-    // The footprint is 3 tiles long x 1 tile wide (per the user's own
-    // correction — not the 2x3/6-tile block an earlier session inferred
-    // from the design doc's "front counter + aisle + rear cabinet" wording,
-    // which read too big once actually seated on the grid). Facing 0/180
-    // run the 3-tile line along gy; rotating 90° swaps it onto gx — same
-    // gx/gy-swap convention the DJ booth's footprint uses.
-    footprint: {
-      0: [[0, 0], [0, 1], [0, 2]],
-      90: [[0, 0], [1, 0], [2, 0]],
-      180: [[0, 0], [0, 1], [0, 2]],
-      270: [[0, 0], [1, 0], [2, 0]],
-    },
-    // Sprite size and anchor come straight from the Blender render script
-    // (art/blender/build_bar.py), which models the bar at 1 unit = 1 tile
-    // and calculates these from its fixed camera, so the bar fills exactly
-    // its 1x3 footprint.
-    displayWidth: barSprite.displayWidth,
-    originX: barSprite.originX,
-    originY: barSprite.originY,
-  },
-  // The Bars tab's own unlock-tier item, same idea as neonFloor/vipLounge/
-  // neonSign: a pricier, better option that opens up once you've leveled
-  // up, rather than the starter Bar just staying the only choice forever.
-  // Unlike the plain Bar (no fanRate of its own — see isNearRevenueProp(),
-  // which special-cases the 'bar' key so it still counts as a tip-boosting
-  // revenue prop), this one earns its own passive fan rate too.
-  premiumBar: { key: 'premiumBar', cost: 320, color: 0x2fa0ff, label: 'Premium Bar', fanRate: 0.8, unlockLevel: 4, category: 'Bars',
-    staff: 'bartender', drinkPrice: 16 },
+  starterBar: barTier('starterBar', 'Starter Bar', 100, 1, 'bar_starter', barStarterSprite),
+  woodBar: barTier('woodBar', 'Wood Bar', 130, 2, 'bar_wood', barWoodSprite),
+  bar: barTier('bar', 'Pub Bar', 150, 3, 'bar', barSprite),
+  neonBar: barTier('neonBar', 'Neon Bar', 260, 5, 'bar_neon', barNeonSprite),
+  iceBar: barTier('iceBar', 'Ice Bar', 400, 7, 'bar_ice', barIceSprite),
   dj:    {
     key: 'dj', cost: 250, label: 'DJ Booth', fanRate: 1.2, unlockLevel: 1, category: 'Booths',
     staff: 'dj',

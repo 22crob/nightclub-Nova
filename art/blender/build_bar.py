@@ -294,7 +294,7 @@ def main():
     build_back_bar()
 
     bpy.ops.wm.save_as_mainfile(filepath=os.path.join(HERE, 'bar.blend'))
-    meta = iso_rig.render_facings(scene, cam, ROOT, 'bar', SPRITE_DIR)
+    meta = iso_rig.render_facings(scene, cam, ROOT, 'bar', SPRITE_DIR, layers=iso_rig.split_counter(ROOT))
     print('bar sprite meta:', meta)
 
 

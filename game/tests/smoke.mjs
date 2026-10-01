@@ -66,17 +66,17 @@ check('shop opens with 7 tabs', tabs.length === 7 && tabs.includes('Staff'), tab
 check('bar shows its real sprite icon', await page.locator('.propButton .icon').first().evaluate((el) => el.style.backgroundImage.includes('data:image/png')));
 await page.click('#shopClose');
 
-// Place a bar (selected by default, $150) and a DJ booth ($250).
+// Place the Starter Bar (selected by default, $100) and a DJ booth ($250).
 await clickTile(2, 5);
 st = await state();
-check('placing a bar costs $150', st.cash === 550 && st.placed === 1, `cash ${st.cash}`);
+check('placing a Starter Bar costs $100', st.cash === 600 && st.placed === 1, `cash ${st.cash}`);
 
 await page.click('#shopToggle');
 await page.click('.shopTab:has-text("Booths")');
 await page.locator('.propButton').first().click();
 await clickTile(5, 5);
 st = await state();
-check('placing a DJ booth costs $250', st.cash === 300 && st.placed === 2, `cash ${st.cash}`);
+check('placing a DJ booth costs $250', st.cash === 350 && st.placed === 2, `cash ${st.cash}`);
 
 // The bar sprite spans exactly its 1x3 footprint: 4 half-tiles across,
 // plus the render script's small crop margin.
@@ -100,10 +100,23 @@ const order = await page.evaluate(() => {
 });
 check('props draw back to front', order);
 
+// Every bar tier is in the shop, and bars draw as two layers with room for
+// the bartender between them.
+const tiers = await page.evaluate(() => {
+  const s = window.__clubNova.scene.getScene('club');
+  const rec = s.placed['2,5'];
+  return {
+    layered: !!rec.frontObject && rec.frontObject.depth > rec.gameObject.depth,
+    bars: ['starterBar', 'woodBar', 'bar', 'neonBar', 'iceBar'].filter((k) => s.hasLayerSprites(k)).length,
+  };
+});
+check('all five bar tiers load, each in two layers', tiers.bars === 5, `${tiers.bars} of 5`);
+check('a bar facing the camera draws its counter in front', tiers.layered);
+
 // Placing on an occupied tile is refused.
 await clickTile(5, 5);
 st = await state();
-check('occupied tile is refused', st.cash === 300 && st.placed === 2);
+check('occupied tile is refused', st.cash === 350 && st.placed === 2);
 
 // Rotate the placed booth (hover + R).
 const before = await page.evaluate(() => window.__clubNova.scene.getScene('club').placed['5,5'].facing);
@@ -127,7 +140,7 @@ const staffed = await page.evaluate(() => {
   const s = window.__clubNova.scene.getScene('club');
   return { cash: s.cash, music: s.musicPlaying(), working: s.staffableRecords().filter((r) => r.staff).length, rate: s.totalFanRate() };
 });
-check('hiring a bartender ($50) and a DJ ($80)', staffed.cash === 170 && staffed.working === 2, JSON.stringify(staffed));
+check('hiring a bartender ($50) and a DJ ($80)', staffed.cash === 220 && staffed.working === 2, JSON.stringify(staffed));
 check('a working DJ plays music and earns fans', staffed.music && staffed.rate > 0, JSON.stringify(staffed));
 
 // Patrons arrive, get thirsty, buy drinks, earn fans and tip.
@@ -199,7 +212,7 @@ const cashBeforeSell = (await state()).cash;
 await page.keyboard.press('Escape');
 await clickTile(2, 5, 'right');
 st = await state();
-check('right-click sells the bar for $75', st.placed === 1 && st.cash - cashBeforeSell >= 75 && st.cash - cashBeforeSell < 100, `+$${st.cash - cashBeforeSell}`);
+check('right-click sells the bar for half price ($50)', st.placed === 1 && st.cash - cashBeforeSell >= 50 && st.cash - cashBeforeSell < 75, `+$${st.cash - cashBeforeSell}`);
 
 // Save survives a reload. The game also saves as the page unloads, so
 // compare what was restored with what's actually in the save.

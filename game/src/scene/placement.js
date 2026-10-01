@@ -78,7 +78,10 @@ export class PlacementMixin {
     // .setTexture() at all — just move it (and its label) to the new
     // footprint center instead, using the same offsets drawFallbackBox()
     // placed them at originally.
-    if (typeof placed.gameObject.setTexture === 'function') {
+    if (placed.frontObject) {
+      placed.gameObject.setTexture(this.layerKeyFor(placed.type, placed.facing, 'back')).setPosition(sx, sy);
+      placed.frontObject.setTexture(this.layerKeyFor(placed.type, placed.facing, 'front')).setPosition(sx, sy);
+    } else if (typeof placed.gameObject.setTexture === 'function') {
       const texKey = this.spriteKeyFor(placed.type, placed.facing);
       placed.gameObject.setTexture(texKey);
       placed.gameObject.setPosition(sx, sy);
@@ -86,7 +89,7 @@ export class PlacementMixin {
       placed.gameObject.setPosition(sx, sy - FALLBACK_PROP_HEIGHT / 2);
       if (placed.label) placed.label.setPosition(sx, sy - FALLBACK_PROP_HEIGHT - 10);
     }
-    this.setPropDepth(placed.gameObject, placed.type, newTiles);
+    this.setPropDepth(placed.gameObject, placed.type, newTiles, placed.frontObject, placed.facing);
     this.positionStaff(placed);
     this.saveGame();
   }
@@ -181,12 +184,13 @@ export class PlacementMixin {
 
     this.cash -= cost;
     const facing = def.rotatable ? this.currentFacing : 0;
-    const { gameObject, label, lightRig } = this.createPropVisual(this.selectedProp, facing, tiles);
+    const { gameObject, frontObject, label, lightRig } = this.createPropVisual(this.selectedProp, facing, tiles);
 
     const record = {
       type: this.selectedProp,
       facing,
       gameObject,
+      frontObject,
       label,
       lightRig,
       tiles,
@@ -219,6 +223,7 @@ export class PlacementMixin {
     // free all of them, not just the tile that was clicked.
     for (const [tx, ty] of placed.tiles) delete this.placed[`${tx},${ty}`];
     placed.gameObject.destroy();
+    if (placed.frontObject) placed.frontObject.destroy();
     this.detachStaff(placed);
     if (placed.label) {
       // Selling the one prop whose label is currently shown (the player was
@@ -252,8 +257,8 @@ export class PlacementMixin {
       console.warn('[Club Nova] skipped restoring a saved prop that no longer fits:', type, anchor);
       return;
     }
-    const { gameObject, label, lightRig } = this.createPropVisual(type, facing, tiles);
-    const record = { type, facing, gameObject, label, lightRig, tiles, anchor };
+    const { gameObject, frontObject, label, lightRig } = this.createPropVisual(type, facing, tiles);
+    const record = { type, facing, gameObject, frontObject, label, lightRig, tiles, anchor };
     for (const [tx, ty] of tiles) {
       this.placed[`${tx},${ty}`] = record;
     }

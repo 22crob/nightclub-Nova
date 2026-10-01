@@ -2,7 +2,7 @@
 // Mixed into ClubScene (see ClubScene.js); `this` is the scene.
 import { PATRON_META, PATRON_SHEETS } from '../assets.js';
 import { PROP_TYPES, STAFF_TYPES } from '../catalog.js';
-import { CHARACTER_DISPLAY_HEIGHT, THIRST_INTERVAL, PATRON_POPUP_Y, PROP_SCALE, TILE_H } from '../config.js';
+import { CHARACTER_DISPLAY_HEIGHT, THIRST_INTERVAL, PATRON_POPUP_Y, PROP_SCALE } from '../config.js';
 import { realSpriteIconFor } from '../icons.js';
 import { SFX } from '../sfx.js';
 import { randRange } from '../util.js';
@@ -147,38 +147,37 @@ export class StaffMixin {
   }
 
   // Places a staff member for their prop's current position and facing.
-  //  - A bartender stands in the bar's aisle facing the customers. When the
-  //    counter is toward the camera (facings 0 and 90) they're drawn over
-  //    the bar with their legs cropped off, so they appear behind the
-  //    counter; otherwise the bar's tall back wall is in front of them, so
-  //    they're drawn behind the bar.
+  //  - A bartender stands in the bar's aisle facing the customers, drawn
+  //    between the bar's back layer and its counter layer (see
+  //    setPropDepth()), so the counter hides them from the right side.
   //  - A DJ stands just behind the booth facing the dance floor, drawn
   //    behind it so the booth covers their legs.
   positionStaff(rec) {
     const c = rec.staff && rec.staff.container;
     if (!c) return;
     const sprite = c.staffSprite;
-    const barDepth = rec.gameObject.depth;
+    const base = rec.gameObject.baseDepth !== undefined ? rec.gameObject.baseDepth : rec.gameObject.depth;
     let gx;
     let gy;
     let faceOut;
-    let inFront;
+    let depth;
     if (rec.staff.kind === 'bartender') {
       const { aisle, out } = this.barLayout(rec);
       [gx, gy] = aisle;
       faceOut = out || [0, 1];
-      inFront = !out || out[0] > 0 || out[1] > 0;
+      // Between the layers; a one-piece bar without layers draws them on top.
+      depth = rec.frontObject ? base + 0.001 : base + 0.003;
     } else {
       const along = rec.facing === 0 || rec.facing === 180 ? [0, -0.55] : [-0.55, 0];
       const center = rec.tiles.reduce((acc, [x, y]) => [acc[0] + x / rec.tiles.length, acc[1] + y / rec.tiles.length], [0, 0]);
       gx = center[0] + along[0];
       gy = center[1] + along[1];
       faceOut = [-Math.sign(along[0]), -Math.sign(along[1])];
-      inFront = false;
+      depth = base - 0.001;
     }
     const { sx, sy } = this.gridToScreen(gx, gy);
     c.setPosition(sx, sy);
-    c.setDepth(barDepth + (inFront ? 0.001 : -0.001));
+    c.setDepth(depth);
     this.propLayer.sort('depth');
     if (!sprite) return;
     // Face the customers: +gy is screen down-left (front), +gx down-right
@@ -188,15 +187,6 @@ export class StaffMixin {
     c.scaleX = mirrored ? -1 : 1;
     const clip = rec.staff.kind === 'dj' ? 'dance' : 'idle';
     sprite.play(`patron_${c.staffCharacter}_${clip}_${front ? 'front' : 'back'}`);
-    if (rec.staff.kind === 'bartender' && inFront && PROP_TYPES[rec.type].footprint) {
-      // Hide what's below the counter top. On screen, the counter's back
-      // edge sits a little under one tile-height above the bartender's feet.
-      const feetY = PATRON_META.originY * PATRON_META.frameHeight;
-      const cut = (TILE_H * 0.85) / sprite.scaleY;
-      sprite.setCrop(0, 0, PATRON_META.frameWidth, feetY - cut);
-    } else {
-      sprite.setCrop();
-    }
   }
 
   // --- Drinks and wages ---------------------------------------------------
