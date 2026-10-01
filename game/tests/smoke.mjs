@@ -33,7 +33,7 @@ const state = () => page.evaluate(() => {
   const s = window.__clubNova.scene.getScene('club');
   return {
     cash: s.cash, fans: s.fans, placed: s.placedCount(), patrons: s.patrons.length,
-    textures: ['bar_0', 'bar_90', 'bar_180', 'bar_270', 'dj_0', 'dj_90', 'dj_180', 'dj_270', 'patron_0', 'patron_11']
+    textures: ['bar_0', 'bar_90', 'bar_180', 'bar_270', 'dj_club_0', 'dj_wood_90', 'dj_ice_270', 'patron_0', 'patron_11']
       .filter((k) => !s.textures.exists(k)),
   };
 });
@@ -66,7 +66,7 @@ check('shop opens with 7 tabs', tabs.length === 7 && tabs.includes('Staff'), tab
 check('bar shows its real sprite icon', await page.locator('.propButton .icon').first().evaluate((el) => el.style.backgroundImage.includes('data:image/png')));
 await page.click('#shopClose');
 
-// Place the Starter Bar (selected by default, $100) and a DJ booth ($250).
+// Place the Starter Bar (selected by default, $100) and a Wood Booth ($180).
 await clickTile(2, 5);
 st = await state();
 check('placing a Starter Bar costs $100', st.cash === 600 && st.placed === 1, `cash ${st.cash}`);
@@ -76,7 +76,7 @@ await page.click('.shopTab:has-text("Booths")');
 await page.locator('.propButton').first().click();
 await clickTile(5, 5);
 st = await state();
-check('placing a DJ booth costs $250', st.cash === 350 && st.placed === 2, `cash ${st.cash}`);
+check('placing a Wood Booth costs $180', st.cash === 420 && st.placed === 2, `cash ${st.cash}`);
 
 // The bar sprite spans exactly its 1x3 footprint: 4 half-tiles across,
 // plus the render script's small crop margin.
@@ -108,15 +108,17 @@ const tiers = await page.evaluate(() => {
   return {
     layered: !!rec.frontObject && rec.frontObject.depth > rec.gameObject.depth,
     bars: ['starterBar', 'woodBar', 'bar', 'neonBar', 'iceBar'].filter((k) => s.hasLayerSprites(k)).length,
+    booths: ['woodBooth', 'proBooth', 'dj', 'neonBooth', 'iceBooth'].filter((k) => s.hasAnySprite(k)).length,
   };
 });
 check('all five bar tiers load, each in two layers', tiers.bars === 5, `${tiers.bars} of 5`);
 check('a bar facing the camera draws its counter in front', tiers.layered);
+check('all five DJ booth tiers load', tiers.booths === 5, `${tiers.booths} of 5`);
 
 // Placing on an occupied tile is refused.
 await clickTile(5, 5);
 st = await state();
-check('occupied tile is refused', st.cash === 350 && st.placed === 2);
+check('occupied tile is refused', st.cash === 420 && st.placed === 2);
 
 // Rotate the placed booth (hover + R).
 const before = await page.evaluate(() => window.__clubNova.scene.getScene('club').placed['5,5'].facing);
@@ -140,7 +142,7 @@ const staffed = await page.evaluate(() => {
   const s = window.__clubNova.scene.getScene('club');
   return { cash: s.cash, music: s.musicPlaying(), working: s.staffableRecords().filter((r) => r.staff).length, rate: s.totalFanRate() };
 });
-check('hiring a bartender ($50) and a DJ ($80)', staffed.cash === 220 && staffed.working === 2, JSON.stringify(staffed));
+check('hiring a bartender ($50) and a DJ ($80)', staffed.cash === 290 && staffed.working === 2, JSON.stringify(staffed));
 check('a working DJ plays music and earns fans', staffed.music && staffed.rate > 0, JSON.stringify(staffed));
 
 // Patrons arrive, get thirsty, buy drinks, earn fans and tip.
@@ -207,12 +209,15 @@ check('wages are paid', wages.paid === 10, `paid $${wages.paid}`);
 check('unpaid staff quit instead of going into debt', wages.left === 0 && wages.cashAfter === 3, JSON.stringify(wages));
 await page.screenshot({ path: path.join(shotDir, 'club.png') });
 
-// Right-click sells for half price.
+// Right-click sells for half price. Wages are paused so a payday landing
+// mid-check can't skew the sum.
+await page.evaluate(() => { window.__clubNova.scene.getScene('club').payWages = () => {}; });
 const cashBeforeSell = (await state()).cash;
 await page.keyboard.press('Escape');
 await clickTile(2, 5, 'right');
 st = await state();
 check('right-click sells the bar for half price ($50)', st.placed === 1 && st.cash - cashBeforeSell >= 50 && st.cash - cashBeforeSell < 75, `+$${st.cash - cashBeforeSell}`);
+await page.evaluate(() => { delete window.__clubNova.scene.getScene('club').payWages; });
 
 // Save survives a reload. The game also saves as the page unloads, so
 // compare what was restored with what's actually in the save.

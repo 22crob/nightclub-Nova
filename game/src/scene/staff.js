@@ -150,8 +150,8 @@ export class StaffMixin {
   //  - A bartender stands in the bar's aisle facing the customers, drawn
   //    between the bar's back layer and its counter layer (see
   //    setPropDepth()), so the counter hides them from the right side.
-  //  - A DJ stands just behind the booth facing the dance floor, drawn
-  //    behind it so the booth covers their legs.
+  //  - A DJ stands just behind the booth facing the dance floor. When the
+  //    booth faces away from the camera, the DJ is nearer and drawn on top.
   positionStaff(rec) {
     const c = rec.staff && rec.staff.container;
     if (!c) return;
@@ -168,12 +168,16 @@ export class StaffMixin {
       // Between the layers; a one-piece bar without layers draws them on top.
       depth = rec.frontObject ? base + 0.001 : base + 0.003;
     } else {
-      const along = rec.facing === 0 || rec.facing === 180 ? [0, -0.55] : [-0.55, 0];
+      // The booth's front (crowd side) faces +gy at 0, +gx at 90, -gy at
+      // 180 and -gx at 270; the DJ stands on the opposite side.
+      const along = { 0: [0, -0.55], 90: [-0.55, 0], 180: [0, 0.55], 270: [0.55, 0] }[rec.facing] || [0, -0.55];
       const center = rec.tiles.reduce((acc, [x, y]) => [acc[0] + x / rec.tiles.length, acc[1] + y / rec.tiles.length], [0, 0]);
       gx = center[0] + along[0];
       gy = center[1] + along[1];
       faceOut = [-Math.sign(along[0]), -Math.sign(along[1])];
-      depth = base - 0.001;
+      // Behind the booth they're covered by it; on the camera side (180 and
+      // 270) they're seen from behind, in front of it.
+      depth = along[0] + along[1] > 0 ? base + 0.001 : base - 0.001;
     }
     const { sx, sy } = this.gridToScreen(gx, gy);
     c.setPosition(sx, sy);

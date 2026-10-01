@@ -1,10 +1,14 @@
 // The shop catalog: every buyable prop, shop tabs, and club expansion tiers.
-import { TILE_W } from './config.js';
 import barSprite from './assets/sprites/bar.json';
 import barStarterSprite from './assets/sprites/bar_starter.json';
 import barWoodSprite from './assets/sprites/bar_wood.json';
 import barNeonSprite from './assets/sprites/bar_neon.json';
 import barIceSprite from './assets/sprites/bar_ice.json';
+import boothWoodSprite from './assets/sprites/dj_wood.json';
+import boothProSprite from './assets/sprites/dj_pro.json';
+import boothClubSprite from './assets/sprites/dj_club.json';
+import boothNeonSprite from './assets/sprites/dj_neon.json';
+import boothIceSprite from './assets/sprites/dj_ice.json';
 
 // The bar line-up (art/blender/build_bars.py and build_bar.py): five
 // looks, from a beginner's plywood counter to an ice bar. They play the same
@@ -17,6 +21,26 @@ const BAR_FOOTPRINT = {
   180: [[0, 0], [0, 1], [0, 2]],
   270: [[0, 0], [1, 0], [2, 0]],
 };
+// The DJ booth line-up (art/blender/build_booths.py), paired with the bars:
+// same 2x1 footprint and gameplay (a DJ plays music and the booth earns
+// fans), only the look, price and unlock level differ. The key 'dj' stays
+// on the tier-3 Club Booth so older saves keep their booth.
+const BOOTH_FOOTPRINT = {
+  0: [[0, 0], [1, 0]],
+  90: [[0, 0], [0, 1]],
+  180: [[0, 0], [1, 0]],
+  270: [[0, 0], [0, 1]],
+};
+function boothTier(key, label, cost, unlockLevel, spriteBase, meta) {
+  return {
+    key, label, cost, unlockLevel, category: 'Booths', fanRate: 1.2,
+    staff: 'dj', rotatable: true,
+    sprites: { 0: `${spriteBase}_0`, 90: `${spriteBase}_90`, 180: `${spriteBase}_180`, 270: `${spriteBase}_270` },
+    footprint: BOOTH_FOOTPRINT,
+    displayWidth: meta.displayWidth, originX: meta.originX, originY: meta.originY,
+  };
+}
+
 function barTier(key, label, cost, unlockLevel, spriteBase, meta) {
   return {
     key, label, cost, unlockLevel, category: 'Bars', color: 0x2fd0ff,
@@ -44,42 +68,11 @@ export const PROP_TYPES = {
   bar: barTier('bar', 'Pub Bar', 150, 3, 'bar', barSprite),
   neonBar: barTier('neonBar', 'Neon Bar', 260, 5, 'bar_neon', barNeonSprite),
   iceBar: barTier('iceBar', 'Ice Bar', 400, 7, 'bar_ice', barIceSprite),
-  dj:    {
-    key: 'dj', cost: 250, label: 'DJ Booth', fanRate: 1.2, unlockLevel: 1, category: 'Booths',
-    staff: 'dj',
-    rotatable: true,
-    // sprite key prefix per facing -> 'dj_0', 'dj_90', 'dj_180', 'dj_270'
-    sprites: { 0: 'dj_0', 90: 'dj_90', 180: 'dj_180', 270: 'dj_270' },
-    // draw scale + vertical anchor tuning, re-measured directly from the
-    // CURRENTLY deployed dj_0.png (the earlier numbers below were
-    // calibrated against an older render of this sprite that had a
-    // different crop/framing, which had quietly gone stale). Measured by
-    // fitting the two straight base edges in the actual alpha silhouette
-    // (their slopes are exactly ±0.5, matching this game's 2:1 tile ratio)
-    // and taking the midpoint between the two opposite base corners they
-    // define — that midpoint is the object's true floor-center pivot,
-    // independent of any occluded/rounded corner pixels: fracX=0.5 (still
-    // dead center), fracY=0.6641 (was 0.6461). The long base edge measured
-    // ~377.9px in the current 576px render (was ~403px in the old one),
-    // so displayWidth is rescaled to match: 576 * (107.33/377.9*0.26667...
-    // simplifies to) TILE_W * 1.704 so that edge again comes out to exactly
-    // 2 tile-diamond-edges of on-screen distance.
-    displayWidth: TILE_W * 1.704,
-    originX: 0.5,
-    originY: 0.6641,
-    // Which second tile (relative to the clicked/anchor tile) the booth's
-    // long axis occupies, per facing. Blender's world +X axis (the booth's
-    // built-in long axis at facing 0) maps to the game's +gx grid
-    // direction, and rotating the booth 90° in Blender swaps that axis to
-    // world +Y, which maps to the grid's gy direction — so facing 0/180
-    // spans along gx, facing 90/270 spans along gy.
-    footprint: {
-      0: [[0, 0], [1, 0]],
-      90: [[0, 0], [0, 1]],
-      180: [[0, 0], [1, 0]],
-      270: [[0, 0], [0, 1]],
-    },
-  },
+  woodBooth: boothTier('woodBooth', 'Wood Booth', 180, 1, 'dj_wood', boothWoodSprite),
+  proBooth: boothTier('proBooth', 'Pro Booth', 215, 2, 'dj_pro', boothProSprite),
+  dj: boothTier('dj', 'Club Booth', 250, 3, 'dj_club', boothClubSprite),
+  neonBooth: boothTier('neonBooth', 'Neon Booth', 380, 5, 'dj_neon', boothNeonSprite),
+  iceBooth: boothTier('iceBooth', 'Ice Booth', 550, 7, 'dj_ice', boothIceSprite),
   // Floors are the ONLY category that grants patron capacity (see
   // patronCapacity()) — a `capacity` field on a Bars/Booths/Decorations
   // item below is inert by design. Capacity is meant to come from the
