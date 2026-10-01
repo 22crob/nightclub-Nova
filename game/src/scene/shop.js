@@ -63,7 +63,7 @@ export class ShopMixin {
     const staff = document.getElementById('staffButton');
     if (decorate) decorate.addEventListener('click', () => this.openShop('Floors'));
     if (expand) expand.addEventListener('click', () => this.openShop('Expand'));
-    if (staff) staff.addEventListener('click', () => this.showToast('Hiring staff is coming soon!', 2500));
+    if (staff) staff.addEventListener('click', () => this.openShop('Staff'));
     if (this.shopClose) this.shopClose.addEventListener('click', () => this.closeShop());
     // Clicking the dark backdrop (but not the panel itself) also closes it.
     this.shopOverlay.addEventListener('click', (e) => {
@@ -111,6 +111,10 @@ export class ShopMixin {
     // renderExpandCard()/expandClub().
     if (category === 'Expand') {
       this.renderExpandCard();
+      return;
+    }
+    if (category === 'Staff') {
+      this.renderStaffCard();
       return;
     }
 
@@ -259,6 +263,9 @@ export class ShopMixin {
     // while it's the open tab.
     if (this.activeShopCategory === 'Expand' && this.shopItemsEl) {
       this.renderExpandCard();
+    }
+    if (this.activeShopCategory === 'Staff' && this.shopItemsEl && this.shopOverlay.classList.contains('open')) {
+      this.renderStaffCard();
     }
     if (this.shopButtons) {
       for (const key in this.shopButtons) {

@@ -25,6 +25,10 @@ export const FALLBACK_PROP_HEIGHT = 40 * PROP_SCALE;
 // runtime and gets saved/restored (see serializeState()/loadGame()).
 export const BASE_GRID_SIZE = 12;
 
+// Enough to open with a staffed bar, a DJ booth with a DJ, and a few dance
+// tiles.
+export const STARTING_CASH = 700;
+
 // Room shell, modelled on the reference game's rooms: thick light-grey
 // concrete walls with pale top caps, a raised floor slab with dark front
 // edges, and a tiled sidewalk outside. Walls are 4 tile-heights tall,
@@ -57,6 +61,12 @@ export const SIDEWALK = { color: 0xb4b5bc, grout: 0x8e8f97, margin: 7, slabTiles
 export const FLOOR_COLOR = 0x5d5e66;
 export const FLOOR_SEAM = { color: 0x4d4e56, alpha: 1 };
 
+// Staff wages are paid on this interval (see STAFF_TYPES in catalog.js).
+export const WAGE_INTERVAL_MS = 30000;
+// After a drink, how long until a patron is thirsty again and heads back
+// to a bar.
+export const THIRST_INTERVAL = [20000, 30000];
+
 // Facings are in degrees, matching the rotation applied in Blender: 0/90/180/270.
 export const FACINGS = [0, 90, 180, 270];
 
@@ -87,7 +97,7 @@ export const PATRON_MOVE_INTERVAL = [1500, 3000];  // ms a patron waits between 
 // anywhere in particular. Real base-game behavior fix, not a visual one.
 export const PATRON_POI_LINGER = [3500, 7000];     // ms a patron lingers at a point of interest before wandering again
 export const PATRON_TIP_INTERVAL = [3000, 5500];   // ms between a patron's tips
-export const PATRON_LIFETIME = [14000, 22000];     // ms a patron stays before heading out
+export const PATRON_LIFETIME = [28000, 42000];     // ms a patron stays before heading out (the 12x12 room takes a while to cross)
 // Each patron token gets its own skin tone, outfit color, and hair (color +
 // style, or none at all) picked independently at spawn — see
 // drawPatronSprite() — so a full floor reads as a crowd of individuals

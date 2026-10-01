@@ -1,6 +1,6 @@
 // ClubScene methods: Footprints, the placement ghost, and placing / rotating / selling / restoring props.
 // Mixed into ClubScene (see ClubScene.js); `this` is the scene.
-import { PROP_TYPES } from '../catalog.js';
+import { PROP_TYPES, STAFF_TYPES } from '../catalog.js';
 import { FACINGS, FALLBACK_PROP_HEIGHT, FLOOR_COLOR, SELL_REFUND_RATIO, TILE_H, TILE_W } from '../config.js';
 import { SFX } from '../sfx.js';
 
@@ -87,6 +87,7 @@ export class PlacementMixin {
       if (placed.label) placed.label.setPosition(sx, sy - FALLBACK_PROP_HEIGHT - 10);
     }
     this.setPropDepth(placed.gameObject, placed.type, newTiles);
+    this.positionStaff(placed);
     this.saveGame();
   }
 
@@ -199,6 +200,8 @@ export class PlacementMixin {
     this.updateGhost();
     this.updateUI();
     this.saveGame();
+    const staffKind = def.staff && STAFF_TYPES[def.staff];
+    if (staffKind) this.showToast(`Now hire a ${staffKind.label.toLowerCase()} for it: tap Staff!`, 3500);
   }
 
   // Right-clicking a placed prop sells it back for a fraction of its fixed
@@ -216,6 +219,7 @@ export class PlacementMixin {
     // free all of them, not just the tile that was clicked.
     for (const [tx, ty] of placed.tiles) delete this.placed[`${tx},${ty}`];
     placed.gameObject.destroy();
+    this.detachStaff(placed);
     if (placed.label) {
       // Selling the one prop whose label is currently shown (the player was
       // hovering it to right-click-sell it) would otherwise leave a
@@ -253,6 +257,7 @@ export class PlacementMixin {
     for (const [tx, ty] of tiles) {
       this.placed[`${tx},${ty}`] = record;
     }
+    return record;
   }
 
   // Number of distinct placed props, deduped by record identity so a

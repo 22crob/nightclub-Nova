@@ -1,6 +1,6 @@
 // ClubScene methods: Fan rate, patron capacity and level progression.
 // Mixed into ClubScene (see ClubScene.js); `this` is the scene.
-import { PROP_TYPES } from '../catalog.js';
+import { FLOOR_DECAL_PROPS, PROP_TYPES } from '../catalog.js';
 import { PATRON_ABSOLUTE_MAX, PATRON_BASE_CAPACITY } from '../config.js';
 
 export class EconomyMixin {
@@ -11,6 +11,7 @@ export class EconomyMixin {
   // the test/comment near "no offline progress" in the save/load tests —
   // fans only grow while the game is actually open and running.)
   totalFanRate() {
+    const music = this.musicPlaying();
     let rate = 0;
     const counted = new Set();
     for (const key in this.placed) {
@@ -18,7 +19,12 @@ export class EconomyMixin {
       if (counted.has(p)) continue;
       counted.add(p);
       const def = PROP_TYPES[p.type];
-      if (def.fanRate) rate += def.fanRate;
+      if (!def.fanRate) continue;
+      // Staffed props only earn fans while someone works them, and the dance
+      // floor only while a DJ is playing music.
+      if (def.staff && !p.staff) continue;
+      if (FLOOR_DECAL_PROPS.has(p.type) && !music) continue;
+      rate += def.fanRate;
     }
     return rate;
   }

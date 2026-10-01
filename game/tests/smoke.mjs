@@ -56,27 +56,27 @@ await page.reload();
 await waitForScene();
 
 let st = await state();
-check('starts with $500 and an empty club', st.cash === 500 && st.placed === 0, `cash ${st.cash}, placed ${st.placed}`);
+check('starts with $700 and an empty club', st.cash === 700 && st.placed === 0, `cash ${st.cash}, placed ${st.placed}`);
 check('all sprites loaded', st.textures.length === 0, st.textures.join(', ') || 'none missing');
 
 // Shop opens with every tab.
 await page.click('#shopToggle');
 const tabs = await page.locator('.shopTab').allTextContents();
-check('shop opens with 6 tabs', tabs.length === 6, tabs.join(' / '));
+check('shop opens with 7 tabs', tabs.length === 7 && tabs.includes('Staff'), tabs.join(' / '));
 check('bar shows its real sprite icon', await page.locator('.propButton .icon').first().evaluate((el) => el.style.backgroundImage.includes('data:image/png')));
 await page.click('#shopClose');
 
 // Place a bar (selected by default, $150) and a DJ booth ($250).
 await clickTile(2, 5);
 st = await state();
-check('placing a bar costs $150', st.cash === 350 && st.placed === 1, `cash ${st.cash}`);
+check('placing a bar costs $150', st.cash === 550 && st.placed === 1, `cash ${st.cash}`);
 
 await page.click('#shopToggle');
 await page.click('.shopTab:has-text("Booths")');
 await page.locator('.propButton').first().click();
 await clickTile(5, 5);
 st = await state();
-check('placing a DJ booth costs $250', st.cash === 100 && st.placed === 2, `cash ${st.cash}`);
+check('placing a DJ booth costs $250', st.cash === 300 && st.placed === 2, `cash ${st.cash}`);
 
 // The bar sprite spans exactly its 1x3 footprint: 4 half-tiles across,
 // plus the render script's small crop margin.
@@ -103,7 +103,7 @@ check('props draw back to front', order);
 // Placing on an occupied tile is refused.
 await clickTile(5, 5);
 st = await state();
-check('occupied tile is refused', st.cash === 100 && st.placed === 2);
+check('occupied tile is refused', st.cash === 300 && st.placed === 2);
 
 // Rotate the placed booth (hover + R).
 const before = await page.evaluate(() => window.__clubNova.scene.getScene('club').placed['5,5'].facing);
@@ -113,8 +113,25 @@ await page.keyboard.press('r');
 const after = await page.evaluate(() => window.__clubNova.scene.getScene('club').placed['5,5'].facing);
 check('R rotates a placed DJ booth', after === (before + 90) % 360, `${before} -> ${after}`);
 
-// Patrons arrive, earn fans and tip.
-await page.waitForTimeout(15000);
+// Staff: without them, the DJ booth earns no fans and the bar sells nothing.
+const unstaffedRate = await page.evaluate(() => window.__clubNova.scene.getScene('club').totalFanRate());
+check('unstaffed DJ booth earns no fans', unstaffedRate === 0, `rate ${unstaffedRate}`);
+await page.keyboard.press('Escape');
+await page.click('#staffButton');
+const staffRows = await page.locator('.staffRow').count();
+check('Staff tab lists the bar and the DJ booth', staffRows === 2, `${staffRows} rows`);
+await page.locator('.staffButton.hire').first().click();
+await page.locator('.staffButton.hire').first().click();
+await page.click('#shopClose');
+const staffed = await page.evaluate(() => {
+  const s = window.__clubNova.scene.getScene('club');
+  return { cash: s.cash, music: s.musicPlaying(), working: s.staffableRecords().filter((r) => r.staff).length, rate: s.totalFanRate() };
+});
+check('hiring a bartender ($50) and a DJ ($80)', staffed.cash === 170 && staffed.working === 2, JSON.stringify(staffed));
+check('a working DJ plays music and earns fans', staffed.music && staffed.rate > 0, JSON.stringify(staffed));
+
+// Patrons arrive, get thirsty, buy drinks, earn fans and tip.
+await page.waitForTimeout(24000);
 st = await state();
 check('patrons arrive', st.patrons > 0, `${st.patrons} on the floor`);
 const looks = await page.evaluate(() => {
@@ -138,15 +155,33 @@ const facing = await page.evaluate(() => {
 });
 check('patrons face the way they walk', facing.downLeft === 'front' && facing.downRight === 'front mirrored' && facing.upRight === 'back' && facing.upLeft === 'back mirrored', JSON.stringify(facing));
 check('fans grow over time', st.fans > 5, `${st.fans.toFixed(1)} fans`);
-check('tips bring in cash', st.cash > 100, `cash ${st.cash}`);
+const drinks = await page.evaluate(() => window.__clubNova.scene.getScene('club').drinksSold || 0);
+check('patrons buy drinks at the staffed bar', drinks > 0, `${drinks} drinks sold`);
+
+// Wages: $4 + $6 every 30 seconds; if the club can't pay, staff quit.
+const wages = await page.evaluate(() => {
+  const s = window.__clubNova.scene.getScene('club');
+  const before = s.cash;
+  s.payWages();
+  const paid = before - s.cash;
+  s.cash = 3;
+  s.payWages();
+  const left = s.staffableRecords().filter((r) => r.staff).length;
+  const cashAfter = s.cash;
+  s.cash += 500;
+  s.hireStaff(s.placed['5,5']); // re-hire the DJ for the save test below
+  return { paid, left, cashAfter };
+});
+check('wages are paid', wages.paid === 10, `paid $${wages.paid}`);
+check('unpaid staff quit instead of going into debt', wages.left === 0 && wages.cashAfter === 3, JSON.stringify(wages));
 await page.screenshot({ path: path.join(shotDir, 'club.png') });
 
 // Right-click sells for half price.
-const cashBeforeSell = st.cash;
+const cashBeforeSell = (await state()).cash;
 await page.keyboard.press('Escape');
 await clickTile(2, 5, 'right');
 st = await state();
-check('right-click sells the bar for $75', st.placed === 1 && st.cash - cashBeforeSell >= 75, `+$${st.cash - cashBeforeSell}`);
+check('right-click sells the bar for $75', st.placed === 1 && st.cash - cashBeforeSell >= 75 && st.cash - cashBeforeSell < 100, `+$${st.cash - cashBeforeSell}`);
 
 // Save survives a reload.
 await page.evaluate(() => window.__clubNova.scene.getScene('club').saveGame());
@@ -155,6 +190,8 @@ await page.reload();
 await waitForScene();
 st = await state();
 check('save restores after reload', st.placed === saved.placed && Math.floor(st.cash) === Math.floor(saved.cash), `placed ${st.placed}, cash ${st.cash}`);
+const djAfterReload = await page.evaluate(() => !!window.__clubNova.scene.getScene('club').placed['5,5'].staff);
+check('hired staff are saved', djAfterReload);
 
 // Zoom buttons change the zoom and stay within limits.
 const zoom0 = await page.evaluate(() => window.__clubNova.scene.getScene('club').world.scaleX);

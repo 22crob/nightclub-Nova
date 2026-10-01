@@ -3,7 +3,7 @@
 import Phaser from 'phaser';
 import { BAR_SPRITES, DJ_BOOTH_SPRITES, PATRON_META, PATRON_SHEETS } from '../assets.js';
 import { PROP_TYPES } from '../catalog.js';
-import { BASE_GRID_SIZE, FACINGS, ZOOM_DEFAULT } from '../config.js';
+import { BASE_GRID_SIZE, FACINGS, STARTING_CASH, WAGE_INTERVAL_MS, ZOOM_DEFAULT } from '../config.js';
 import { SFX } from '../sfx.js';
 import { WorldMixin } from './world.js';
 import { PlacementMixin } from './placement.js';
@@ -13,12 +13,13 @@ import { EconomyMixin } from './economy.js';
 import { SaveMixin } from './save.js';
 import { PatronsMixin } from './patrons.js';
 import { HudMixin } from './hud.js';
+import { StaffMixin } from './staff.js';
 import { applyMixins } from './applyMixins.js';
 
 export class ClubScene extends Phaser.Scene {
   constructor() {
     super('club');
-    this.cash = 500;
+    this.cash = STARTING_CASH;
     this.fans = 0;
     this.selectedProp = 'bar';
     this.currentFacing = 0; // facing used for the NEXT rotatable prop placed
@@ -244,6 +245,9 @@ export class ClubScene extends Phaser.Scene {
       callback: () => this.saveGame(),
     });
     window.addEventListener('beforeunload', () => this.saveGame());
+
+    // Staff wages.
+    this.time.addEvent({ delay: WAGE_INTERVAL_MS, loop: true, callback: () => this.payWages() });
   }
 }
 
@@ -256,4 +260,5 @@ applyMixins(ClubScene, [
   SaveMixin,
   PatronsMixin,
   HudMixin,
+  StaffMixin,
 ]);

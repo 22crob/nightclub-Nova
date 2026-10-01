@@ -941,6 +941,7 @@ def main():
     os.makedirs(OUT_DIR, exist_ok=True)
     scene, cam = setup_scene()
 
+    bpy.context.view_layer.update()  # make sure the camera's move has taken effect
     v = world_to_camera_view(scene, cam, Vector((0, 0, 0)))
     rows = {}
     r = 0

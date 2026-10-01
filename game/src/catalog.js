@@ -12,6 +12,7 @@ import barSprite from './assets/sprites/bar.json';
 export const PROP_TYPES = {
   bar: {
     key: 'bar', cost: 150, color: 0x2fd0ff, label: 'Bar', unlockLevel: 1, category: 'Bars',
+    staff: 'bartender', drinkPrice: 10,
     rotatable: true,
     // sprite key prefix per facing -> 'bar_0', 'bar_90', 'bar_180', 'bar_270'
     // — Blender-rendered art (back bar with bottle wall, bartender aisle,
@@ -44,9 +45,11 @@ export const PROP_TYPES = {
   // Unlike the plain Bar (no fanRate of its own — see isNearRevenueProp(),
   // which special-cases the 'bar' key so it still counts as a tip-boosting
   // revenue prop), this one earns its own passive fan rate too.
-  premiumBar: { key: 'premiumBar', cost: 320, color: 0x2fa0ff, label: 'Premium Bar', fanRate: 0.8, unlockLevel: 4, category: 'Bars' },
+  premiumBar: { key: 'premiumBar', cost: 320, color: 0x2fa0ff, label: 'Premium Bar', fanRate: 0.8, unlockLevel: 4, category: 'Bars',
+    staff: 'bartender', drinkPrice: 16 },
   dj:    {
     key: 'dj', cost: 250, label: 'DJ Booth', fanRate: 1.2, unlockLevel: 1, category: 'Booths',
+    staff: 'dj',
     rotatable: true,
     // sprite key prefix per facing -> 'dj_0', 'dj_90', 'dj_180', 'dj_270'
     sprites: { 0: 'dj_0', 90: 'dj_90', 180: 'dj_180', 270: 'dj_270' },
@@ -113,7 +116,17 @@ export const PROP_TYPES = {
 // soon" placeholder, so the category structure is visibly in place before
 // there's anything to put in them. "Expand" is last and isn't a set of
 // placeable props at all — see ClubScene.renderExpandCard()/expandClub().
-export const SHOP_CATEGORIES = ['Bars', 'Booths', 'Floors', 'Decorations', 'Wallpaper', 'Expand'];
+export const SHOP_CATEGORIES = ['Bars', 'Booths', 'Floors', 'Decorations', 'Wallpaper', 'Staff', 'Expand'];
+
+// Staff. A prop with `staff` needs one of these working at it: a bar sells
+// drinks only with a bartender, and a DJ booth plays music (making the dance
+// floor and the booth earn fans, and patrons dance) only with a DJ. Hiring
+// costs `hireCost` once; `wage` is paid every WAGE_INTERVAL_MS (config.js).
+// `character` is which patron spritesheet they wear.
+export const STAFF_TYPES = {
+  bartender: { key: 'bartender', label: 'Bartender', hireCost: 50, wage: 4, character: 8 },
+  dj: { key: 'dj', label: 'DJ', hireCost: 80, wage: 6, character: 0 },
+};
 
 // Sequential tiers for growing the club's physical floor past its starting
 // BASE_GRID_SIZE. Priced and level-gated the same way every other purchase

@@ -22,6 +22,8 @@ The visual and gameplay reference for everything is **Nightclub City** (2010): i
 - Premium bar; sofas and booths; candle tables; pool table; speakers; plants; neon signs; disco ball
 - Wallpapers and floor finishes for the Decorate tool
 
-## 5. Staff and gameplay
-- Bartenders behind the bar serving drinks, a DJ at the booth, a bouncer at the door
-- Hire staff; patron needs and moods; parties
+## 5. Gameplay
+- Staff and drink sales: done. Hire a bartender per bar and a DJ per booth (Staff tab); wages every 30s, and staff quit if unpaid. Thirsty patrons walk to staffed bars and buy drinks (the main income); the dance floor and DJ booth only earn fans, and patrons only dance, while a DJ plays. Patrons route around furniture.
+- Next: patron needs and mood (happy patrons tip more and bring fans; unhappy ones leave early)
+- Then: club nights on a clock, with an end-of-night summary
+- Then: Throw a Party events; a bouncer at the door

@@ -2,7 +2,7 @@
 // Mixed into ClubScene (see ClubScene.js); `this` is the scene.
 import Phaser from 'phaser';
 import { PATRON_META, PATRON_SHEETS } from '../assets.js';
-import { FLOOR_DECAL_PROPS, PROP_TYPES } from '../catalog.js';
+import { FLOOR_DECAL_PROPS, PROP_TYPES, STAFF_TYPES } from '../catalog.js';
 import { CHARACTER_DISPLAY_HEIGHT, HAIR_STYLES, PATRON_HAIR_COLORS, PATRON_LIFETIME, PATRON_MOVE_INTERVAL, PATRON_OUTFIT_COLORS, PATRON_POI_LINGER, PATRON_POPUP_Y, PATRON_SKIN_TONES, PATRON_SPAWN_INTERVAL, PATRON_SPAWN_TILE, PATRON_TIP_INTERVAL, PATRON_Y_OFFSET, PROP_SCALE } from '../config.js';
 import { SFX } from '../sfx.js';
 import { randRange } from '../util.js';
@@ -64,6 +64,7 @@ export class PatronsMixin {
       despawnAt: now + randRange(...PATRON_LIFETIME),
       nextMoveAt: now + randRange(...PATRON_MOVE_INTERVAL),
       nextTipAt: now + randRange(...PATRON_TIP_INTERVAL),
+      thirstyAt: now + randRange(0, 3000), // most patrons head for a drink soon after arriving
       moving: false,
       leaving: false,
     };
@@ -106,7 +107,10 @@ export class PatronsMixin {
   drawPatronCharacterSprite(sx, sy, scaleVariance) {
     const container = this.add.container(sx, sy);
     const shadow = this.add.ellipse(0, 2 * PROP_SCALE, 30 * PROP_SCALE, 12 * PROP_SCALE, 0x000000, 0.3);
-    container.patronCharacter = Phaser.Math.Between(0, PATRON_SHEETS.length - 1);
+    // Patrons never wear a staff member's character, so staff stand out.
+    const staffLooks = new Set(Object.values(STAFF_TYPES).map((t) => t.character % PATRON_SHEETS.length));
+    const choices = PATRON_SHEETS.map((_, i) => i).filter((i) => !staffLooks.has(i));
+    container.patronCharacter = Phaser.Utils.Array.GetRandom(choices.length ? choices : [0]);
     container.patronDir = 'front';
     const sprite = this.add.sprite(0, 0, `patron_${container.patronCharacter}`);
     sprite.setOrigin(PATRON_META.originX, PATRON_META.originY);
@@ -193,6 +197,7 @@ export class PatronsMixin {
     const now = this.time.now;
     for (let i = this.patrons.length - 1; i >= 0; i--) {
       const patron = this.patrons[i];
+      if (patron.gone) continue;
       if (patron.leaving) {
         // Normal progress toward the door is chained directly through
         // movePatronRandomly()'s own onComplete, not this tick — this only
@@ -259,11 +264,10 @@ export class PatronsMixin {
     return !FLOOR_DECAL_PROPS.has(rec.type);
   }
 
-  // Finds a walkable tile actually worth heading toward: right on a dance
-  // floor tile if the club has one, or the open tile next to a bar/booth so
-  // a patron can hang out by it (which also happens to be where tips pay
-  // best — see isNearRevenueProp()). Returns null if nothing like that is
-  // placed yet, so callers can fall back to plain wandering.
+  // Finds a walkable tile actually worth heading toward: a dance floor
+  // tile, a bar's customer side (to order a drink; staffed bars are twice
+  // as likely), or the open tile next to a booth. Returns null if nothing
+  // like that is placed yet, so callers can fall back to plain wandering.
   pickPointOfInterestTile() {
     const danceTiles = [];
     const hangoutTiles = [];
@@ -279,7 +283,7 @@ export class PatronsMixin {
       const [tx, ty] = key.split(',').map(Number);
       if (FLOOR_DECAL_PROPS.has(rec.type)) {
         danceTiles.push([tx, ty]);
-      } else if (def.category === 'Bars' || def.category === 'Booths') {
+      } else if (def.category === 'Booths') {
         for (const [dx, dy] of [[1, 0], [-1, 0], [0, 1], [0, -1]]) {
           const nx = tx + dx;
           const ny = ty + dy;
@@ -289,11 +293,25 @@ export class PatronsMixin {
         }
       }
     }
-    // Dance floors are the main draw when there's one on the floor; bar/
-    // booth-adjacent spots are the fallback attraction; ties go random.
-    if (danceTiles.length > 0 && Math.random() < 0.55) return Phaser.Utils.Array.GetRandom(danceTiles);
-    if (hangoutTiles.length > 0) return Phaser.Utils.Array.GetRandom(hangoutTiles);
-    if (danceTiles.length > 0) return Phaser.Utils.Array.GetRandom(danceTiles);
+    const barTiles = [];
+    for (const rec of this.staffableRecords()) {
+      if (PROP_TYPES[rec.type].staff !== 'bartender') continue;
+      for (const t of this.barServiceTiles(rec)) {
+        barTiles.push(t);
+        if (rec.staff) barTiles.push(t, t); // staffed bars draw a crowd
+      }
+    }
+    // A staffed bar is the strongest pull (that's where drinks are sold),
+    // then the dance floor while music plays, then hanging out by booths.
+    // Without a DJ the dance floor is only a weak draw.
+    const music = this.musicPlaying();
+    const pick = Phaser.Utils.Array.GetRandom;
+    const roll = Math.random();
+    const anyStaffedBar = barTiles.length > 0 && this.staffableRecords().some((r) => r.staff && PROP_TYPES[r.type].staff === 'bartender');
+    if (anyStaffedBar && roll < 0.45) return pick(barTiles);
+    if (danceTiles.length > 0 && roll < (music ? 0.85 : 0.6) && (music || Math.random() < 0.3)) return pick(danceTiles);
+    if (hangoutTiles.length > 0 || barTiles.length > 0) return pick(hangoutTiles.concat(barTiles));
+    if (danceTiles.length > 0) return pick(danceTiles);
     return null;
   }
 
@@ -304,6 +322,14 @@ export class PatronsMixin {
   // drifting; the rest of the time (or once nothing new is worth visiting)
   // a plain open tile so patrons still spread out across the whole floor.
   pickRoamTarget(patron) {
+    // Thirsty: head straight for the nearest free spot at a staffed bar.
+    if (patron.thirstyAt !== undefined && this.time.now >= patron.thirstyAt) {
+      const bar = this.nearestFreeBarTile(patron.gx, patron.gy);
+      if (bar) {
+        [patron.targetGx, patron.targetGy] = bar;
+        return;
+      }
+    }
     const poi = this.pickPointOfInterestTile();
     if (poi && Math.random() < 0.7) {
       [patron.targetGx, patron.targetGy] = poi;
@@ -355,7 +381,7 @@ export class PatronsMixin {
     // lifetime expiring mid-hop used to fire this via
     // startPatronDeparture() while the previous hop's tween hadn't finished
     // yet, stacking two competing tweens on the same container's x/y).
-    if (patron.moving) return;
+    if (patron.moving || patron.gone) return;
 
     // A leaving patron already has its target pinned to the door by
     // startPatronDeparture() — never let this pick it a fresh roam target
@@ -382,35 +408,38 @@ export class PatronsMixin {
       }
     }
 
-    const options = [[1, 0], [-1, 0], [0, 1], [0, -1]]
-      .map(([dx, dy]) => [patron.gx + dx, patron.gy + dy])
-      .filter(([tx, ty]) => (
-        tx >= 0 && tx < this.gridSize && ty >= 0 && ty < this.gridSize &&
-        !this.isBlockingProp(tx, ty) &&
-        !this.patronTileOccupied(tx, ty)
-      ));
-    if (options.length === 0) {
-      // Boxed in for the moment — try again shortly rather than getting
-      // permanently stuck waiting on nextMoveAt from before.
-      patron.nextMoveAt = this.time.now + 800;
+    // Follow a route around furniture to the target (see findPath()). The
+    // route is recomputed whenever the target changes or the next step is
+    // blocked; another patron standing on the next step just means waiting
+    // a moment.
+    const targetKey = `${patron.targetGx},${patron.targetGy}`;
+    if (patron.pathTarget !== targetKey || !patron.path || patron.path.length === 0) {
+      patron.path = this.findPath(patron.gx, patron.gy, patron.targetGx, patron.targetGy);
+      patron.pathTarget = targetKey;
+    }
+    let step = patron.path && patron.path[0];
+    if (step && this.isBlockingProp(step[0], step[1])) {
+      patron.path = this.findPath(patron.gx, patron.gy, patron.targetGx, patron.targetGy);
+      step = patron.path && patron.path[0];
+    }
+    if (!step) {
+      // No route (walled in by furniture): pick somewhere else, or leave
+      // from here if heading for the door.
+      if (patron.leaving) { this.finalizeDeparture(patron); return; }
+      this.pickRoamTarget(patron);
+      patron.path = null;
+      patron.nextMoveAt = this.time.now + 400;
       return;
     }
-
-    let best = options[0];
-    let bestDist = Infinity;
-    const ties = [];
-    for (const opt of options) {
-      const dist = Math.abs(opt[0] - patron.targetGx) + Math.abs(opt[1] - patron.targetGy);
-      if (dist < bestDist) {
-        bestDist = dist;
-        ties.length = 0;
-        ties.push(opt);
-      } else if (dist === bestDist) {
-        ties.push(opt);
-      }
+    if (this.patronTileOccupied(step[0], step[1])) {
+      patron.nextMoveAt = this.time.now + 300 + Math.random() * 400;
+      patron.waits = (patron.waits || 0) + 1;
+      if (patron.waits > 6 && !patron.leaving) { this.pickRoamTarget(patron); patron.path = null; patron.waits = 0; }
+      return;
     }
-    best = Phaser.Utils.Array.GetRandom(ties);
-    const [tx, ty] = best;
+    patron.waits = 0;
+    patron.path.shift();
+    const [tx, ty] = step;
     patron.moving = true;
     const fromNearness = patron.gx + patron.gy;
     patron.gx = tx;
@@ -429,6 +458,7 @@ export class PatronsMixin {
                        // little decelerate-then-reaccelerate steps
       onComplete: () => {
         patron.moving = false;
+        if (patron.gone) return;
         this.setPatronDepth(patron, patron.gx + patron.gy);
         const arrived = patron.gx === patron.targetGx && patron.gy === patron.targetGy;
         if (patron.leaving) {
@@ -466,12 +496,13 @@ export class PatronsMixin {
           const atPOI = this.isDanceFloorTile(tx, ty) || this.isNearRevenueProp(tx, ty);
           patron.nextMoveAt = this.time.now + randRange(...(atPOI ? PATRON_POI_LINGER : PATRON_MOVE_INTERVAL));
           this.faceFront(patron);
-          this.setPatronAnimation(patron, this.isDanceFloorTile(tx, ty) ? 'dance' : 'idle');
-          // Landed right next to an actual bar — play the "walked up and
-          // ordered a drink" beat (see showDrinkOrderPopup()) once, right as
-          // they arrive, rather than only ever seeing a silent "+$X" appear
-          // out of nowhere sometime later on their own tip timer.
-          if (this.isBarAdjacent(tx, ty)) this.showDrinkOrderPopup(patron);
+          const dancing = this.isDanceFloorTile(tx, ty) && this.musicPlaying();
+          this.setPatronAnimation(patron, dancing ? 'dance' : 'idle');
+          // At a bar's customer side: order a drink (see orderDrink()).
+          if (this.orderDrink(patron)) patron.nextMoveAt = this.time.now + randRange(...PATRON_POI_LINGER);
+          else if (this.time.now >= patron.thirstyAt && this.nearestFreeBarTile(tx, ty)) {
+            patron.nextMoveAt = Math.min(patron.nextMoveAt, this.time.now + 1200); // thirsty: don't hang about
+          }
         } else if (this.time.now >= patron.despawnAt) {
           // Time's up mid-journey — head for the door instead of
           // continuing to roam toward the old target.
@@ -490,6 +521,41 @@ export class PatronsMixin {
     });
   }
 
+  // Shortest walkable route from (fx, fy) to (tx, ty) as a list of steps
+  // (not including the start), going around blocking furniture. Plain
+  // breadth-first search: the grid is at most 20x20. Null if unreachable.
+  findPath(fx, fy, tx, ty) {
+    if (fx === tx && fy === ty) return [];
+    const n = this.gridSize;
+    const prev = new Map();
+    const key = (x, y) => y * n + x;
+    const queue = [[fx, fy]];
+    prev.set(key(fx, fy), null);
+    while (queue.length) {
+      const [x, y] = queue.shift();
+      for (const [dx, dy] of [[1, 0], [-1, 0], [0, 1], [0, -1]]) {
+        const nx = x + dx;
+        const ny = y + dy;
+        if (nx < 0 || ny < 0 || nx >= n || ny >= n) continue;
+        const k = key(nx, ny);
+        if (prev.has(k)) continue;
+        if (this.isBlockingProp(nx, ny) && !(nx === tx && ny === ty)) continue;
+        prev.set(k, [x, y]);
+        if (nx === tx && ny === ty) {
+          const path = [];
+          let cur = [nx, ny];
+          while (cur && !(cur[0] === fx && cur[1] === fy)) {
+            path.unshift(cur);
+            cur = prev.get(key(cur[0], cur[1]));
+          }
+          return this.isBlockingProp(tx, ty) ? path.slice(0, -1) : path;
+        }
+        queue.push([nx, ny]);
+      }
+    }
+    return null;
+  }
+
   // The real character sprite is anchored via its own calibrated origin
   // (see drawPatronCharacterSprite()), so its container sits right at the
   // tile's screen point; the fallback primitive token still needs the
@@ -500,84 +566,37 @@ export class PatronsMixin {
     return container.patronSprite ? sy : sy - PATRON_Y_OFFSET;
   }
 
-  // True if the patron's own tile or one of its 4 neighbors has a
-  // revenue-generating prop on it (the bar, or anything with a fanRate —
-  // the DJ booth and dance tiles) — being near the action pays better.
+  // True if the patron is somewhere lively: at a staffed bar's customer
+  // side, or next to a working attraction (a DJ booth with a DJ, a dance
+  // floor while music plays, or anything else that earns fans). Patrons
+  // linger longer and tip more there.
   isNearRevenueProp(gx, gy) {
+    const bar = this.barServingTile(gx, gy);
+    if (bar && bar.staff) return true;
+    const music = this.musicPlaying();
     const cells = [[gx, gy], [gx + 1, gy], [gx - 1, gy], [gx, gy + 1], [gx, gy - 1]];
     return cells.some(([tx, ty]) => {
       const rec = this.placed[`${tx},${ty}`];
       if (!rec) return false;
       const def = PROP_TYPES[rec.type];
-      return !!(def.fanRate || def.key === 'bar');
+      if (!def.fanRate) return false;
+      if (def.staff && !rec.staff) return false;
+      if (FLOOR_DECAL_PROPS.has(rec.type) && !music) return false;
+      return true;
     });
   }
 
-  // Narrower than isNearRevenueProp() (which also counts the DJ booth and
-  // dance floors) — true only next to an actual Bar/Premium Bar. Used just
-  // to decide when a patron's arrival plays the "walked up and ordered a
-  // drink" beat (showDrinkOrderPopup()) and when a later tip pop-up gets a
-  // drink icon instead of a plain $ — doesn't affect the tip's economy math
-  // at all, isNearRevenueProp() still owns that.
-  isBarAdjacent(gx, gy) {
-    const cells = [[gx, gy], [gx + 1, gy], [gx - 1, gy], [gx, gy + 1], [gx, gy - 1]];
-    return cells.some(([tx, ty]) => {
-      const rec = this.placed[`${tx},${ty}`];
-      return !!rec && PROP_TYPES[rec.type].category === 'Bars';
-    });
-  }
-
+  // A small tip. Drinks (orderDrink()) are the club's main income; tips
+  // are a little extra, bigger somewhere lively.
   collectPatronTip(patron) {
     const nearRevenue = this.isNearRevenueProp(patron.gx, patron.gy);
-    const base = 4 + Math.random() * 6; // $4-10 base tip
-    const amount = Math.round(nearRevenue ? base * 2.2 : base);
+    const base = 1 + Math.random() * 3; // $1-4
+    const amount = Math.round(nearRevenue ? base * 2 : base);
     this.cash += amount;
     this.fans += nearRevenue ? 0.4 : 0.1;
     SFX.tip();
     this.updateUI();
-    this.showTipPopup(patron, amount, this.isBarAdjacent(patron.gx, patron.gy));
-  }
-
-  showTipPopup(patron, amount, atBar) {
-    const { x, y } = patron.container;
-    // Right next to an actual bar, this doubles as "paying for the drink"
-    // rather than a generic tip — a little 🍹 alongside the amount instead
-    // of just the $ text sells that without changing the amount itself.
-    const text = this.add.text(x, y - PATRON_POPUP_Y, atBar ? `🍹 +$${amount}` : `+$${amount}`, {
-      fontFamily: 'Arial', fontSize: '13px', fontStyle: 'bold', color: '#7dffc4',
-    }).setOrigin(0.5, 1);
-    this.patronLayer.add(text);
-    this.tweens.add({
-      targets: text,
-      y: y - PATRON_POPUP_Y - 22 * PROP_SCALE,
-      alpha: 0,
-      duration: 900,
-      ease: 'Cubic.easeOut',
-      onComplete: () => text.destroy(),
-    });
-  }
-
-  // The moment a patron settles in right next to an actual bar (see
-  // isBarAdjacent()) — a quick "🍹" the instant they arrive, separate from
-  // showTipPopup()'s "+$X"/"🍹 +$X" which fires later on the patron's own
-  // independent tip timer (collectPatronTip()). Together they read as
-  // "walked up to the bar, ordered a drink, then paid for it" without the
-  // two moments needing to be the same event under the hood.
-  showDrinkOrderPopup(patron) {
-    const { x, y } = patron.container;
-    const icon = this.add.text(x, y - PATRON_POPUP_Y, '🍹', {
-      fontSize: '16px',
-    }).setOrigin(0.5, 1);
-    this.patronLayer.add(icon);
-    this.tweens.add({
-      targets: icon,
-      y: y - PATRON_POPUP_Y - 20 * PROP_SCALE,
-      alpha: 0,
-      duration: 1100,
-      delay: 250,
-      ease: 'Cubic.easeOut',
-      onComplete: () => icon.destroy(),
-    });
+    this.floatText(patron.container.x, patron.container.y - PATRON_POPUP_Y, `+$${amount}`, '#7dffc4');
   }
 
   // Sends a patron walking back to the door tile, on foot, tile by tile,
@@ -625,6 +644,10 @@ export class PatronsMixin {
   }
 
   finalizeDeparture(patron) {
+    if (patron.gone) return;
+    // From here the patron is fading out at the door: nothing may move or
+    // animate it again (its container is destroyed when the fade ends).
+    patron.gone = true;
     this.tweens.add({
       targets: patron.container,
       alpha: 0,

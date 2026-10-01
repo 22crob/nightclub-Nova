@@ -36,7 +36,7 @@ export class SaveMixin {
       const rec = this.placed[key];
       if (seen.has(rec)) continue;
       seen.add(rec);
-      placedList.push({ type: rec.type, facing: rec.facing, anchor: rec.anchor });
+      placedList.push({ type: rec.type, facing: rec.facing, anchor: rec.anchor, ...(rec.staff ? { staff: true } : {}) });
     }
     return { cash: this.cash, fans: this.fans, gridSize: this.gridSize, placed: placedList };
   }
@@ -79,7 +79,8 @@ export class SaveMixin {
     if (Array.isArray(data.placed)) {
       for (const entry of data.placed) {
         if (!entry || !PROP_TYPES[entry.type] || !Array.isArray(entry.anchor)) continue;
-        this.restoreProp(entry.type, entry.facing, entry.anchor);
+        const rec = this.restoreProp(entry.type, entry.facing, entry.anchor);
+        if (rec && entry.staff && PROP_TYPES[entry.type].staff) this.attachStaff(rec);
       }
     }
   }
