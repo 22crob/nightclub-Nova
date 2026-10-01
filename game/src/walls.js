@@ -348,6 +348,18 @@ export function wallFrameCanvas(style, frame = 0, side = 'right') {
   return out;
 }
 
+// A flat square sample of a design, for shop icons.
+export function wallSwatchCanvas(style, frame = 0) {
+  const strip = document.createElement('canvas');
+  strip.width = STRIP_W;
+  strip.height = STRIP_H;
+  WALL_STYLES[style].draw(strip.getContext('2d'), STRIP_W, STRIP_H, frame);
+  const out = document.createElement('canvas');
+  out.width = out.height = STRIP_W;
+  out.getContext('2d').drawImage(strip, 0, STRIP_H * 0.25, STRIP_W, STRIP_W, 0, 0, STRIP_W, STRIP_W);
+  return out;
+}
+
 // Which frame wall tile number `index` (counted along its wall) shows on
 // animation tick `tick`.
 export function wallFrameFor(style, index, tick) {

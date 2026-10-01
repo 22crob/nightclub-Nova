@@ -268,6 +268,36 @@ check('an animated floor moves while the DJ plays', floors.music && floors.waveF
 check('every animated floor tile always has a picture', floors.broken.length === 0, floors.broken.join(', ') || 'none blank');
 check('a Step Floor lights up under a patron', floors.lit === 7, `frame ${floors.lit}`);
 
+// Wallpaper: pick one in the shop, click a wall section to paint it.
+const wallXY = await page.evaluate(() => {
+  const s = window.__clubNova.scene.getScene('club');
+  s.selectProp('wpBrick');
+  const paint = s.paintWall.bind(s);
+  s.paintCosts = [];
+  s.paintWall = (section) => { const before = s.cash; paint(section); s.paintCosts.push(before - s.cash); };
+  // Middle of right-wall section 3, half way up.
+  const { x, y } = s.wallSectionOrigin('R3');
+  const lx = x + 16, ly = y + 8 + 64 + 16;
+  return { x: s.world.x + lx * s.world.scaleX, y: s.world.y + ly * s.world.scaleY, hit: s.wallSectionAt(lx, ly) };
+});
+await page.mouse.move(wallXY.x, wallXY.y);
+await page.mouse.click(wallXY.x, wallXY.y);
+await page.waitForTimeout(150);
+const wall = await page.evaluate(() => {
+  const s = window.__clubNova.scene.getScene('club');
+  const saved = JSON.parse(localStorage.getItem('clubNovaSave_v1'));
+  const img = s.wallImages && s.wallImages.R3;
+  s.wallpaper.L1 = 'wpLed'; s.drawWallSection('L1', 'wpLed');
+  const frames = new Set();
+  for (let i = 0; i < 10; i++) { s.animateFloors(); frames.add(s.wallImages.L1.wallFrame); }
+  s.deselectProp();
+  delete s.paintWall;
+  return { costs: s.paintCosts, painted: s.wallpaper.R3, saved: saved.wallpaper && saved.wallpaper.R3, visible: !!img && img.texture.key !== '__MISSING', ledFrames: frames.size };
+});
+check('clicking a wall paints it with wallpaper ($15)', wall.painted === 'wpBrick' && wall.costs.join() === '15' && wall.visible, `${wallXY.hit} -> ${wall.painted}, paid ${wall.costs.join()}`);
+check('wallpaper is saved', wall.saved === 'wpBrick');
+check('animated wallpaper moves while the DJ plays', wall.ledFrames > 3, `${wall.ledFrames} frames`);
+
 check('no errors in the page', errors.length === 0, errors.join(' | '));
 
 await browser.close();

@@ -45,6 +45,12 @@ function floorTier(key, label, cost, unlockLevel, floorStyle) {
   return { key, label, cost, unlockLevel, category: 'Floors', fanRate: 0.4, capacity: 1, floorStyle };
 }
 
+// Wallpaper is painted onto one wall section (a tile wide) at a time; the
+// price is per section. Looks only, no gameplay effect.
+function wallTier(key, label, cost, unlockLevel, wallStyle) {
+  return { key, label, cost, unlockLevel, category: 'Wallpaper', wallStyle };
+}
+
 function barTier(key, label, cost, unlockLevel, spriteBase, meta) {
   return {
     key, label, cost, unlockLevel, category: 'Bars', color: 0x2fd0ff,
@@ -107,12 +113,23 @@ export const PROP_TYPES = {
   // vipLounge's pattern: a pricier, better-fan-rate option that opens up
   // once you've reached level 3.
   neonSign: { key: 'neonSign', cost: 260, color: 0xff5ec9, label: 'Neon Sign', fanRate: 0.7, unlockLevel: 3, category: 'Decorations', glow: true },
+  // Wallpaper (src/walls.js, drawn in code): simple to fancy across the
+  // first ten levels.
+  wpPaint: wallTier('wpPaint', 'Paint', 10, 1, 'paint'),
+  wpBrick: wallTier('wpBrick', 'Brick', 15, 1, 'brick'),
+  wpStripes: wallTier('wpStripes', 'Stripes', 20, 2, 'stripes'),
+  wpWainscot: wallTier('wpWainscot', 'Wood Panel', 25, 2, 'wainscot'),
+  wpDots: wallTier('wpDots', 'Retro Dots', 30, 3, 'retroDots'),
+  wpVelvet: wallTier('wpVelvet', 'Velvet', 40, 4, 'damask'),
+  wpNeon: wallTier('wpNeon', 'Neon Strip', 50, 5, 'neonStrip'),
+  wpEq: wallTier('wpEq', 'Equalizer', 60, 6, 'equalizer'),
+  wpMirror: wallTier('wpMirror', 'Mirror Tiles', 75, 7, 'mirror'),
+  wpChevron: wallTier('wpChevron', 'Neon Chevron', 95, 9, 'chevron'),
+  wpLed: wallTier('wpLed', 'LED Wall', 120, 10, 'ledWall'),
 };
 
-// Tab order for the shop panel (see ClubScene.buildShop()). Decorations and
-// Wallpaper have no items yet — they still get a tab, showing a "coming
-// soon" placeholder, so the category structure is visibly in place before
-// there's anything to put in them. "Expand" is last and isn't a set of
+// Tab order for the shop panel (see ClubScene.buildShop()). A tab with no
+// items shows a "coming soon" placeholder. "Expand" is last and isn't a set of
 // placeable props at all — see ClubScene.renderExpandCard()/expandClub().
 export const SHOP_CATEGORIES = ['Bars', 'Booths', 'Floors', 'Decorations', 'Wallpaper', 'Staff', 'Expand'];
 

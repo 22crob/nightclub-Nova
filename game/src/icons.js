@@ -2,6 +2,7 @@
 import { SPRITE_URLS } from './assets.js';
 import { PROP_TYPES } from './catalog.js';
 import { FLOOR_STYLES, floorFrameCanvas } from './floors.js';
+import { WALL_STYLES, wallSwatchCanvas } from './walls.js';
 
 // Renders a small PNG data-URL of a prop's base color as a mini isometric
 // box (or a flat diamond for `isFlat` ground-decal props, e.g. the dance
@@ -91,6 +92,10 @@ export function realSpriteIconFor(key) {
     const style = def.floorStyle;
     const frame = Math.min(FLOOR_STYLES[style].frames - 1, FLOOR_STYLES[style].phase === 'step' ? 7 : 2);
     return (floorIcons[key] ||= floorFrameCanvas(style, frame).toDataURL());
+  }
+  if (def && def.wallStyle) {
+    const frame = Math.min(WALL_STYLES[def.wallStyle].frames - 1, 2);
+    return (floorIcons[key] ||= wallSwatchCanvas(def.wallStyle, frame).toDataURL());
   }
   return (def && def.sprites && SPRITE_URLS[def.sprites[0]]) || null;
 }

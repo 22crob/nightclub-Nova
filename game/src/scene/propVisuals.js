@@ -344,6 +344,7 @@ export class PropVisualsMixin {
         rec.gameObject.setTexture(floorTextureKey(style, frame));
       }
     }
+    this.animateWalls(music);
   }
 
   isStepTile(gx, gy) {

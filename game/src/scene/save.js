@@ -38,7 +38,7 @@ export class SaveMixin {
       seen.add(rec);
       placedList.push({ type: rec.type, facing: rec.facing, anchor: rec.anchor, ...(rec.staff ? { staff: true } : {}) });
     }
-    return { cash: this.cash, fans: this.fans, gridSize: this.gridSize, placed: placedList };
+    return { cash: this.cash, fans: this.fans, gridSize: this.gridSize, placed: placedList, wallpaper: { ...this.wallpaper } };
   }
 
   saveGame() {
@@ -83,5 +83,6 @@ export class SaveMixin {
         if (rec && entry.staff && PROP_TYPES[entry.type].staff) this.attachStaff(rec);
       }
     }
+    this.restoreWallpaper(data.wallpaper);
   }
 }

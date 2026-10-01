@@ -11,7 +11,7 @@ See ROADMAP.md for the plan. The reference for all art, UI and gameplay is Night
 - The build is a single self-contained HTML file (vite-plugin-singlefile, all assets inlined). It must keep working when opened from disk via `file://`.
 - `ClubScene` is split across `src/scene/*.js` as mixin classes, merged by `applyMixins()`. Put a new method in the file that matches its topic; `applyMixins` throws if two files define the same name.
 - New buyable items go in `src/catalog.js`. Sprites go in `src/assets/sprites/` and are listed in `src/assets.js`.
-- Flat surfaces (dance floors, and later wallpaper) are drawn in code, not Blender: designs live in `src/floors.js` and are added to the catalog with `floorTier()`. A `flow` design needs `frames` to be a multiple of `period`.
+- Flat surfaces (dance floors, and later wallpaper) are drawn in code, not Blender: designs live in `src/floors.js` / `src/walls.js` and are added to the catalog with `floorTier()` / `wallTier()`. Painted wall sections are saved under `wallpaper` in the save. A `flow` design needs `frames` to be a multiple of `period`.
 - Sprite calibration (`displayWidth`, `originX`/`originY`) was measured against the actual rendered PNGs. Re-measure it if a sprite is re-rendered.
 - The save format lives in `src/scene/save.js` under the key `clubNovaSave_v1`. Don't break existing saves; bump the key only if the format changes incompatibly.
 

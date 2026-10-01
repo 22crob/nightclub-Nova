@@ -15,6 +15,7 @@ import { PatronsMixin } from './patrons.js';
 import { HudMixin } from './hud.js';
 import { StaffMixin } from './staff.js';
 import { MoodMixin } from './mood.js';
+import { WallpaperMixin } from './wallpaper.js';
 import { applyMixins } from './applyMixins.js';
 
 export class ClubScene extends Phaser.Scene {
@@ -24,6 +25,7 @@ export class ClubScene extends Phaser.Scene {
     this.fans = 0;
     this.selectedProp = 'starterBar';
     this.currentFacing = 0; // facing used for the NEXT rotatable prop placed
+    this.wallpaper = {}; // wall section -> wallpaper type (see wallpaper.js)
     this.placed = {}; // "gx,gy" -> { type, facing, gameObject, label }
     // The club's current floor size — grows via expandClub()/GRID_EXPANSIONS
     // and is saved/restored like any other piece of club state. Set for
@@ -79,6 +81,7 @@ export class ClubScene extends Phaser.Scene {
     this.world.add(this.propLayer);
     this.world.add(this.patronLayer);
     this.registerFloorTextures();
+    this.registerWallTextures();
     this.world.add(this.ghostLayer);
 
     // If there's a save with an already-expanded club, size the grid to
@@ -141,7 +144,13 @@ export class ClubScene extends Phaser.Scene {
       const wasDragging = this.isDragging;
       dragStart = null;
       this.isDragging = false;
-      if (wasDragging || !this.hoverTile) return;
+      if (wasDragging) return;
+      const holding = PROP_TYPES[this.selectedProp];
+      if (holding && holding.wallStyle) {
+        if (p.event.button === 0 && this.hoverWall) this.paintWall(this.hoverWall);
+        return;
+      }
+      if (!this.hoverTile) return;
       if (p.event.button === 0) {
         this.placeProp(this.hoverTile.gx, this.hoverTile.gy);
       } else if (p.event.button === 2) {
@@ -274,4 +283,5 @@ applyMixins(ClubScene, [
   HudMixin,
   StaffMixin,
   MoodMixin,
+  WallpaperMixin,
 ]);

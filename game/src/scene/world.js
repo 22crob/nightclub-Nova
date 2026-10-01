@@ -73,6 +73,11 @@ export class WorldMixin {
       this.tileLayer.addAt(this.groundGraphics, 0); // under the floor tiles
       this.wallGraphics = this.add.graphics();
       this.wallLayer.add(this.wallGraphics);
+      // Wallpaper sits on the plain wall; the door and corner line on top.
+      this.wallpaperLayer = this.add.container(0, 0);
+      this.wallLayer.add(this.wallpaperLayer);
+      this.wallTrimGraphics = this.add.graphics();
+      this.wallLayer.add(this.wallTrimGraphics);
     }
     const n = upToSize - 0.5; // far floor edge
     const t = -0.5 - WALL_THICKNESS; // outer edge of the walls
@@ -111,9 +116,6 @@ export class WorldMixin {
     const bb = WALL_BASEBOARD;
     fill(w, ROOM_COLORS.baseboard, [P(-0.5, -0.5, 0), P(n, -0.5, 0), P(n, -0.5, bb), P(-0.5, -0.5, bb)]);
     fill(w, ROOM_COLORS.baseboard, [P(-0.5, -0.5, 0), P(-0.5, n, 0), P(-0.5, n, bb), P(-0.5, -0.5, bb)]);
-    // Shading where the two walls meet.
-    w.lineStyle(2, ROOM_COLORS.corner, 1);
-    w.lineBetween(...P(-0.5, -0.5, 0), ...P(-0.5, -0.5, H));
     // End faces at the open ends of each wall.
     fill(w, ROOM_COLORS.wallEnd, [P(n, t, 0), P(n, -0.5, 0), P(n, -0.5, H), P(n, t, H)]);
     fill(w, ROOM_COLORS.wallEnd, [P(t, n, 0), P(-0.5, n, 0), P(-0.5, n, H), P(t, n, H)]);
@@ -122,7 +124,12 @@ export class WorldMixin {
     w.lineStyle(1, ROOM_COLORS.capEdge, 1);
     w.strokePoints([P(t, t, H), P(n, t, H), P(n, -0.5, H), P(-0.5, -0.5, H), P(-0.5, n, H), P(t, n, H)].map(([x, y]) => ({ x, y })), true);
 
-    this.drawDoor(w);
+    const trim = this.wallTrimGraphics;
+    trim.clear();
+    // Shading where the two walls meet.
+    trim.lineStyle(2, ROOM_COLORS.corner, 1);
+    trim.lineBetween(...P(-0.5, -0.5, 0), ...P(-0.5, -0.5, H));
+    this.drawDoor(trim);
   }
 
   // The club's front door, set into the right-hand wall at the entrance tile
@@ -166,6 +173,11 @@ export class WorldMixin {
     const { gx, gy } = this.screenToGrid(localX, localY);
     const onGrid = gx >= 0 && gx < this.gridSize && gy >= 0 && gy < this.gridSize;
     const next = onGrid ? { gx, gy } : null;
+    const wall = this.wallSectionAt(localX, localY);
+    if (wall !== this.hoverWall) {
+      this.hoverWall = wall;
+      this.updateWallGhost();
+    }
 
     const same = (!this.hoverTile && !next) ||
       (this.hoverTile && next && this.hoverTile.gx === next.gx && this.hoverTile.gy === next.gy);
