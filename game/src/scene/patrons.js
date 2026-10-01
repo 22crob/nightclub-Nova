@@ -5,6 +5,7 @@ import { PATRON_META, PATRON_SHEETS } from '../assets.js';
 import { FLOOR_DECAL_PROPS, PROP_TYPES, STAFF_TYPES } from '../catalog.js';
 import { CHARACTER_DISPLAY_HEIGHT, HAIR_STYLES, PATRON_HAIR_COLORS, PATRON_LIFETIME, PATRON_MOVE_INTERVAL, PATRON_OUTFIT_COLORS, PATRON_POI_LINGER, PATRON_POPUP_Y, PATRON_SKIN_TONES, PATRON_SPAWN_INTERVAL, PATRON_SPAWN_TILE, PATRON_TIP_INTERVAL, PATRON_Y_OFFSET, PROP_SCALE } from '../config.js';
 import { SFX } from '../sfx.js';
+import { MOOD } from './mood.js';
 import { randRange } from '../util.js';
 
 export class PatronsMixin {
@@ -24,7 +25,7 @@ export class PatronsMixin {
   // ---------------------------------------------------------------------
 
   scheduleNextPatronSpawn() {
-    this.time.delayedCall(randRange(...PATRON_SPAWN_INTERVAL), () => {
+    this.time.delayedCall(randRange(...PATRON_SPAWN_INTERVAL) * this.spawnDelayFactor(), () => {
       this.trySpawnPatron();
       this.scheduleNextPatronSpawn();
     });
@@ -65,6 +66,9 @@ export class PatronsMixin {
       nextMoveAt: now + randRange(...PATRON_MOVE_INTERVAL),
       nextTipAt: now + randRange(...PATRON_TIP_INTERVAL),
       thirstyAt: now + randRange(0, 3000), // most patrons head for a drink soon after arriving
+      mood: MOOD.start,
+      fun: MOOD.startFun,
+      thirstSince: null,
       moving: false,
       leaving: false,
     };
@@ -207,6 +211,9 @@ export class PatronsMixin {
         continue;
       }
 
+      this.updatePatronMood(patron, (now - (patron.lastTickAt || now)) / 1000);
+      patron.lastTickAt = now;
+      if (patron.leaving) continue; // stormed out just now
       if (now >= patron.despawnAt) {
         this.startPatronDeparture(patron);
         continue;
@@ -591,7 +598,8 @@ export class PatronsMixin {
   collectPatronTip(patron) {
     const nearRevenue = this.isNearRevenueProp(patron.gx, patron.gy);
     const base = 1 + Math.random() * 3; // $1-4
-    const amount = Math.round(nearRevenue ? base * 2 : base);
+    const moodFactor = 0.5 + patron.mood / 100; // unhappy patrons tip half, happy ones up to 1.5x
+    const amount = Math.max(1, Math.round((nearRevenue ? base * 2 : base) * moodFactor));
     this.cash += amount;
     this.fans += nearRevenue ? 0.4 : 0.1;
     SFX.tip();
@@ -645,6 +653,7 @@ export class PatronsMixin {
 
   finalizeDeparture(patron) {
     if (patron.gone) return;
+    this.patronLeaves(patron);
     // From here the patron is fading out at the door: nothing may move or
     // animate it again (its container is destroyed when the fade ends).
     patron.gone = true;

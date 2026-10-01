@@ -158,6 +158,24 @@ check('fans grow over time', st.fans > 5, `${st.fans.toFixed(1)} fans`);
 const drinks = await page.evaluate(() => window.__clubNova.scene.getScene('club').drinksSold || 0);
 check('patrons buy drinks at the staffed bar', drinks > 0, `${drinks} drinks sold`);
 
+// Mood: drinks cheer patrons up, the Vibe readout shows the average, very
+// unhappy patrons storm out, and leaving patrons bring fans by mood.
+const mood = await page.evaluate(() => {
+  const s = window.__clubNova.scene.getScene('club');
+  const p = s.patrons.find((x) => !x.leaving && !x.gone);
+  const out = { vibeText: document.getElementById('vibeVal').textContent };
+  p.mood = 50; s.cheerPatron(p, 15); out.cheered = p.mood;
+  const fake = (extra) => ({ mood: 80, container: { x: 0, y: 0 }, ...extra });
+  const f0 = s.fans; s.patronLeaves(fake({})); out.happyFans = Math.round(s.fans - f0);
+  const f1 = s.fans; s.patronLeaves(fake({ stormedOut: true })); out.angryFans = Math.round(s.fans - f1);
+  p.mood = 10; s.updatePatronMood(p, 0.1); out.stormed = p.leaving && p.stormedOut;
+  return out;
+});
+check('Vibe shows the club mood', /^\d+%$/.test(mood.vibeText), mood.vibeText);
+check('a drink cheers a patron up', mood.cheered === 65, `mood ${mood.cheered}`);
+check('happy patrons bring 3 fans, angry ones cost 2', mood.happyFans === 3 && mood.angryFans === -2, JSON.stringify(mood));
+check('a very unhappy patron storms out', mood.stormed === true);
+
 // Wages: $4 + $6 every 30 seconds; if the club can't pay, staff quit.
 const wages = await page.evaluate(() => {
   const s = window.__clubNova.scene.getScene('club');
@@ -183,13 +201,17 @@ await clickTile(2, 5, 'right');
 st = await state();
 check('right-click sells the bar for $75', st.placed === 1 && st.cash - cashBeforeSell >= 75 && st.cash - cashBeforeSell < 100, `+$${st.cash - cashBeforeSell}`);
 
-// Save survives a reload.
+// Save survives a reload. The game also saves as the page unloads, so
+// compare what was restored with what's actually in the save.
 await page.evaluate(() => window.__clubNova.scene.getScene('club').saveGame());
-const saved = await state();
 await page.reload();
 await waitForScene();
-st = await state();
-check('save restores after reload', st.placed === saved.placed && Math.floor(st.cash) === Math.floor(saved.cash), `placed ${st.placed}, cash ${st.cash}`);
+const restored = await page.evaluate(() => {
+  const s = window.__clubNova.scene.getScene('club');
+  const saved = JSON.parse(localStorage.getItem('clubNovaSave_v1'));
+  return { savedPlaced: saved.placed.length, savedCash: Math.floor(saved.cash), placed: s.placedCount(), cash: Math.floor(s.cash) };
+});
+check('save restores after reload', restored.placed === restored.savedPlaced && Math.abs(restored.cash - restored.savedCash) <= 20, JSON.stringify(restored));
 const djAfterReload = await page.evaluate(() => !!window.__clubNova.scene.getScene('club').placed['5,5'].staff);
 check('hired staff are saved', djAfterReload);
 

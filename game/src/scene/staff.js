@@ -6,6 +6,7 @@ import { CHARACTER_DISPLAY_HEIGHT, THIRST_INTERVAL, PATRON_POPUP_Y, PROP_SCALE, 
 import { realSpriteIconFor } from '../icons.js';
 import { SFX } from '../sfx.js';
 import { randRange } from '../util.js';
+import { MOOD } from './mood.js';
 
 // How long a bar waits before showing "No bartender!" again.
 const NO_STAFF_NOTICE_MS = 8000;
@@ -221,6 +222,7 @@ export class StaffMixin {
     this.cash += price;
     this.fans += 0.3;
     this.drinksSold = (this.drinksSold || 0) + 1;
+    this.cheerPatron(patron, MOOD.drinkMood);
     patron.thirstyAt = now + randRange(...THIRST_INTERVAL);
     SFX.tip();
     this.floatText(patron.container.x, patron.container.y - PATRON_POPUP_Y, `🍹 +$${price}`, '#7dffc4');

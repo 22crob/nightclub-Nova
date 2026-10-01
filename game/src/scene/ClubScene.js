@@ -3,7 +3,7 @@
 import Phaser from 'phaser';
 import { BAR_SPRITES, DJ_BOOTH_SPRITES, PATRON_META, PATRON_SHEETS } from '../assets.js';
 import { PROP_TYPES } from '../catalog.js';
-import { BASE_GRID_SIZE, FACINGS, STARTING_CASH, WAGE_INTERVAL_MS, ZOOM_DEFAULT } from '../config.js';
+import { BASE_GRID_SIZE, FACINGS, PASSIVE_FAN_SHARE, STARTING_CASH, WAGE_INTERVAL_MS, ZOOM_DEFAULT } from '../config.js';
 import { SFX } from '../sfx.js';
 import { WorldMixin } from './world.js';
 import { PlacementMixin } from './placement.js';
@@ -14,6 +14,7 @@ import { SaveMixin } from './save.js';
 import { PatronsMixin } from './patrons.js';
 import { HudMixin } from './hud.js';
 import { StaffMixin } from './staff.js';
+import { MoodMixin } from './mood.js';
 import { applyMixins } from './applyMixins.js';
 
 export class ClubScene extends Phaser.Scene {
@@ -169,6 +170,8 @@ export class ClubScene extends Phaser.Scene {
     this.xpBarFill = document.getElementById('xpBarFill');
     this.xpText = document.getElementById('xpText');
     this.placedText = document.getElementById('placedVal');
+    this.vibeText = document.getElementById('vibeVal');
+    this.vibeIcon = document.getElementById('vibeIcon');
     this.buildShop();
     this.updateUI();
 
@@ -195,7 +198,7 @@ export class ClubScene extends Phaser.Scene {
       delay: 1000,
       loop: true,
       callback: () => {
-        const rate = this.totalFanRate();
+        const rate = this.totalFanRate() * PASSIVE_FAN_SHARE;
         if (rate > 0) {
           this.fans += rate;
           this.updateUI();
@@ -261,4 +264,5 @@ applyMixins(ClubScene, [
   PatronsMixin,
   HudMixin,
   StaffMixin,
+  MoodMixin,
 ]);

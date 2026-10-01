@@ -11,6 +11,11 @@ export class HudMixin {
     // a raw placed-prop count, since capacity (see patronCapacity()) is the
     // number that actually matters for how much the club can earn.
     if (this.placedText) this.placedText.textContent = `${this.patrons.length}/${this.patronCapacity()}`;
+    if (this.vibeText) {
+      const vibe = this.clubVibe();
+      this.vibeText.textContent = vibe == null ? '–' : `${Math.round(vibe)}%`;
+      if (this.vibeIcon) this.vibeIcon.textContent = this.vibeEmoji(vibe);
+    }
 
     const { level, progress } = this.levelInfo();
     if (this.levelText) this.levelText.textContent = level;

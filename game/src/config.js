@@ -61,6 +61,11 @@ export const SIDEWALK = { color: 0xb4b5bc, grout: 0x8e8f97, margin: 7, slabTiles
 export const FLOOR_COLOR = 0x5d5e66;
 export const FLOOR_SEAM = { color: 0x4d4e56, alpha: 1 };
 
+// Each second, the club gains this share of its props' total fanRate in
+// fans. The rest of a club's fans come from patrons: drinks, tips, and how
+// happy they are when they leave (see mood.js).
+export const PASSIVE_FAN_SHARE = 0.25;
+
 // Staff wages are paid on this interval (see STAFF_TYPES in catalog.js).
 export const WAGE_INTERVAL_MS = 30000;
 // After a drink, how long until a patron is thirsty again and heads back
