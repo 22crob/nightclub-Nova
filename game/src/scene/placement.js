@@ -96,6 +96,8 @@ export class PlacementMixin {
       placed.gameObject.setPosition(sx, sy - FALLBACK_PROP_HEIGHT / 2);
       if (placed.label) placed.label.setPosition(sx, sy - FALLBACK_PROP_HEIGHT - 10);
     }
+    if (placed.lightPool) placed.lightPool.setPosition(sx, sy);
+    if (placed.lightRig) placed.lightRig.container.setPosition(sx, sy);
     this.setPropDepth(placed.gameObject, placed.type, newTiles, placed.frontObject, placed.facing);
     this.positionStaff(placed);
     this.saveGame();
@@ -200,7 +202,7 @@ export class PlacementMixin {
 
     this.cash -= cost;
     const facing = def.rotatable ? this.currentFacing : 0;
-    const { gameObject, frontObject, label, lightRig } = this.createPropVisual(this.selectedProp, facing, tiles);
+    const { gameObject, frontObject, label, lightRig, lightPool } = this.createPropVisual(this.selectedProp, facing, tiles);
 
     const record = {
       type: this.selectedProp,
@@ -209,6 +211,7 @@ export class PlacementMixin {
       frontObject,
       label,
       lightRig,
+      lightPool,
       tiles,
       anchor: [gx, gy],
     };
@@ -250,6 +253,7 @@ export class PlacementMixin {
       if (this.hoveredPropLabel === placed.label) this.hoveredPropLabel = null;
       placed.label.destroy();
     }
+    if (placed.lightPool) placed.lightPool.destroy();
     if (placed.lightRig) {
       // Stop the rotation tween before destroying its target — otherwise
       // the tween keeps a dead reference around until it next ticks.
@@ -274,8 +278,8 @@ export class PlacementMixin {
       console.warn('[Club Nova] skipped restoring a saved prop that no longer fits:', type, anchor);
       return;
     }
-    const { gameObject, frontObject, label, lightRig } = this.createPropVisual(type, facing, tiles);
-    const record = { type, facing, gameObject, frontObject, label, lightRig, tiles, anchor };
+    const { gameObject, frontObject, label, lightRig, lightPool } = this.createPropVisual(type, facing, tiles);
+    const record = { type, facing, gameObject, frontObject, label, lightRig, lightPool, tiles, anchor };
     for (const [tx, ty] of tiles) {
       this.placed[`${tx},${ty}`] = record;
     }

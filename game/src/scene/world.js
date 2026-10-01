@@ -76,6 +76,8 @@ export class WorldMixin {
       // Wallpaper sits on the plain wall; the door and corner line on top.
       this.wallpaperLayer = this.add.container(0, 0);
       this.wallLayer.add(this.wallpaperLayer);
+      this.wallShade = this.add.graphics(); // mood lighting (see drawMoodShade())
+      this.wallLayer.add(this.wallShade);
       this.wallTrimGraphics = this.add.graphics();
       this.wallLayer.add(this.wallTrimGraphics);
     }
@@ -130,6 +132,7 @@ export class WorldMixin {
     trim.lineStyle(2, ROOM_COLORS.corner, 1);
     trim.lineBetween(...P(-0.5, -0.5, 0), ...P(-0.5, -0.5, H));
     this.drawDoor(trim);
+    this.drawMoodShade(upToSize);
   }
 
   // The club's front door, set into the right-hand wall at the entrance tile

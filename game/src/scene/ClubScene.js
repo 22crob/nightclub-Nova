@@ -17,6 +17,7 @@ import { StaffMixin } from './staff.js';
 import { MoodMixin } from './mood.js';
 import { WallpaperMixin } from './wallpaper.js';
 import { SeatingMixin } from './seating.js';
+import { LightingMixin } from './lighting.js';
 import { applyMixins } from './applyMixins.js';
 
 export class ClubScene extends Phaser.Scene {
@@ -78,6 +79,8 @@ export class ClubScene extends Phaser.Scene {
     this.patronLayer = this.add.container(0, 0);
     this.ghostLayer = this.add.container(0, 0);
     this.world.add(this.tileLayer);
+    this.registerLightTexture();
+    this.createLightingLayers(); // dimming and glows, between the floor and the walls
     this.world.add(this.wallLayer);
     this.world.add(this.propLayer);
     this.world.add(this.patronLayer);
@@ -286,4 +289,5 @@ applyMixins(ClubScene, [
   MoodMixin,
   WallpaperMixin,
   SeatingMixin,
+  LightingMixin,
 ]);

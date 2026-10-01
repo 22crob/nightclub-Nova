@@ -211,6 +211,18 @@ export const PROP_TYPES = {
   wpLed: wallTier('wpLed', 'LED Wall', 120, 10, 'ledWall'),
 };
 
+// Mood lighting (see lighting.js): props that give off light cast a soft
+// glow on the floor around them: [colour, radius in tiles].
+const PROP_LIGHTS = {
+  bar: [0xffa050, 1.4], neonBar: [0xc040ff, 2.0], iceBar: [0x60c8ff, 2.0],
+  proBooth: [0xffb45a, 1.0], dj: [0xff60c0, 1.2], neonBooth: [0xc040ff, 1.8], iceBooth: [0x60c8ff, 1.8],
+  lavaLamp: [0xff3a28, 1.5], glowTube: [0x30c0ff, 1.6], neonSign: [0xff40c0, 1.6], aquarium: [0x3080ff, 1.5],
+  speakerTower: [0x30e0ff, 0.9], neonSpeaker: [0xc040ff, 1.3], discoBall: [0xc8c8ff, 1.2], spotlight: [0xfff0c0, 1.6],
+  trophy: [0xffc040, 0.9], table: [0xffa040, 1.0], vipLounge: [0xffa040, 1.3], blackBooth: [0xffa040, 1.3],
+  goldBooth: [0xffc060, 1.8],
+};
+for (const [key, light] of Object.entries(PROP_LIGHTS)) PROP_TYPES[key].light = light;
+
 // Tab order for the shop panel (see ClubScene.buildShop()). A tab with no
 // items shows a "coming soon" placeholder. "Expand" is last and isn't a set of
 // placeable props at all — see ClubScene.renderExpandCard()/expandClub().

@@ -155,4 +155,8 @@ export const FLOOR_TICK_MS = 125;
 // Seating (see seating.js): the chance a patron picking somewhere to go
 // heads for a free seat instead, and how long they stay seated (ms).
 export const SEAT_CHANCE = 0.3;
+
+// Mood lighting (see lighting.js): how much the floor and walls are dimmed,
+// and how strong the coloured glow under lights is.
+export const MOOD_LIGHTING = { color: 0x0b0418, floorAlpha: 0.45, wallAlpha: 0.35, glowAlpha: 0.55 };
 export const SEAT_SIT_TIME = [14000, 24000];

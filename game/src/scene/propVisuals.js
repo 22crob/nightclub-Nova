@@ -170,7 +170,7 @@ export class PropVisualsMixin {
       wedge.angle = i * (360 / colors.length); // evenly spaced around the circle
       container.add(wedge);
     });
-    this.tileLayer.add(container);
+    (this.lightLayer || this.tileLayer).add(container);
 
     const tween = this.tweens.add({
       targets: container,
@@ -253,10 +253,12 @@ export class PropVisualsMixin {
       lightRig = this.createDiscoLightRig(sx, sy);
     }
 
+    const lightPool = this.createLightPool(type, sx, sy);
+
     if (label) label.setDepth(LABEL_DEPTH);
     this.setPropDepth(gameObject, type, tiles, frontObject, facing);
 
-    return { gameObject, frontObject, label, lightRig };
+    return { gameObject, frontObject, label, lightRig, lightPool };
   }
 
   // Draw order for placed props: in this isometric view, a prop further
