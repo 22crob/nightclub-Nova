@@ -3,10 +3,20 @@
 // it into the game's 2:1 diamond. Animated designs have several frames that
 // the game steps through to the music (see animateFloors()).
 //
-// A design: { frames, phase, draw(ctx, S, frame) } where S is the square's
-// size in pixels. `phase` says how neighbouring tiles are offset in time:
-// 'ripple' (by distance along the floor, so waves roll across it) or
-// 'random' (every tile on its own beat).
+// A design: { frames, speed, phase, period, draw(ctx, S, frame) } where S
+// is the square's size in pixels and `speed` is how many animation ticks
+// each frame lasts. `phase` says how a tile's frame relates to its
+// neighbours':
+//   'sync'   every tile shows the same frame
+//   'random' every tile on its own beat
+//   'ripple' offset by distance along the floor
+//   'flow'   one pattern `period` tiles long that flows across the whole
+//            floor; the draw function paints its slice of it seamlessly
+//   'step'   driven by dancers: frame 0 is idle, higher frames are brighter
+//            (see animateFloors())
+// The ladder runs simple to fancy: plain tiles first, then a gentle glow,
+// tiles that animate on their own, patterns that flow across the floor,
+// and finally a floor that reacts to the dancers.
 
 // Rendered at 2x and drawn at half size, like the Blender sprites.
 const SQUARE = 128;
@@ -46,6 +56,19 @@ function glowRect(ctx, x, y, w, h, color, blur) {
 }
 
 export const FLOOR_STYLES = {
+  // A plain dark tile, the beginner's floor.
+  plain: {
+    frames: 1,
+    draw(ctx, S) {
+      const g = ctx.createLinearGradient(0, 0, S, S);
+      g.addColorStop(0, '#4a4560');
+      g.addColorStop(1, '#3a3550');
+      ctx.fillStyle = g;
+      ctx.fillRect(0, 0, S, S);
+      bevel(ctx, S);
+    },
+  },
+
   // Classic black-and-white checks.
   checker: {
     frames: 1,
@@ -57,7 +80,6 @@ export const FLOOR_STYLES = {
           ctx.fillRect(i * c, j * c, c, c);
         }
       }
-      // A little gloss.
       const g = ctx.createLinearGradient(0, 0, S, S);
       g.addColorStop(0, 'rgba(255,255,255,0.12)');
       g.addColorStop(1, 'rgba(0,0,0,0.12)');
@@ -83,7 +105,6 @@ export const FLOOR_STYLES = {
             const y = by * half + (across ? k * plank : 0);
             const w = across ? half : plank, h = across ? plank : half;
             ctx.fillRect(x, y, w, h);
-            // Grain.
             ctx.strokeStyle = 'rgba(70,35,15,0.25)';
             ctx.lineWidth = 1;
             for (let gl = 0; gl < 3; gl++) {
@@ -107,34 +128,37 @@ export const FLOOR_STYLES = {
     },
   },
 
-  // Bubblegum terrazzo with colourful confetti chips.
-  confetti: {
-    frames: 1,
-    draw(ctx, S) {
-      ctx.fillStyle = '#ffb3d1';
+  // The first animated floor: a dark tile whose neon edge softly pulses
+  // with the beat, all tiles together.
+  glow: {
+    frames: 8,
+    speed: 2,
+    phase: 'sync',
+    draw(ctx, S, frame) {
+      ctx.fillStyle = '#231d33';
       ctx.fillRect(0, 0, S, S);
-      const r = rng(42);
-      const colors = ['#ffffff', '#ffe14d', '#4dd2ff', '#7a4dff', '#ff4d8d', '#3ce0a0'];
-      for (let k = 0; k < 70; k++) {
-        ctx.save();
-        ctx.translate(r() * S, r() * S);
-        ctx.rotate(r() * Math.PI);
-        ctx.fillStyle = colors[Math.floor(r() * colors.length)];
-        const w = 3 + r() * 7, h = 2 + r() * 4;
-        ctx.beginPath();
-        ctx.moveTo(-w / 2, -h / 2); ctx.lineTo(w / 2, -h / 3); ctx.lineTo(w / 3, h / 2); ctx.lineTo(-w / 2, h / 3);
-        ctx.closePath();
-        ctx.fill();
-        ctx.restore();
-      }
-      bevel(ctx, S);
+      const k = 0.5 + 0.5 * Math.cos((frame / 8) * Math.PI * 2);
+      ctx.save();
+      ctx.shadowColor = '#b44dff';
+      ctx.shadowBlur = 6 + 12 * k;
+      ctx.strokeStyle = `rgba(200,120,255,${0.45 + 0.55 * k})`;
+      ctx.lineWidth = 5;
+      ctx.strokeRect(10, 10, S - 20, S - 20);
+      ctx.restore();
+      const inner = ctx.createRadialGradient(S / 2, S / 2, 0, S / 2, S / 2, S * 0.6);
+      inner.addColorStop(0, `rgba(180,77,255,${0.1 + 0.2 * k})`);
+      inner.addColorStop(1, 'rgba(180,77,255,0)');
+      ctx.fillStyle = inner;
+      ctx.fillRect(0, 0, S, S);
+      bevel(ctx, S, 'rgba(255,255,255,0.08)');
     },
   },
 
   // The classic light-up disco floor: a 3x3 grid of glass squares that
-  // change colour to the beat.
+  // change colour to the beat, each tile on its own.
   lightUp: {
     frames: 8,
+    speed: 4,
     phase: 'random',
     draw(ctx, S, frame) {
       ctx.fillStyle = '#15121f';
@@ -163,9 +187,11 @@ export const FLOOR_STYLES = {
     },
   },
 
-  // Dark tile with a neon ring that pulses outward from the centre.
+  // Dark tile with a neon ring that pulses outward from the centre; the
+  // pulses ripple across the floor.
   neonRings: {
     frames: 8,
+    speed: 2,
     phase: 'ripple',
     draw(ctx, S, frame) {
       const bg = ctx.createRadialGradient(S / 2, S / 2, 4, S / 2, S / 2, S * 0.75);
@@ -185,12 +211,9 @@ export const FLOOR_STYLES = {
         ctx.stroke();
         ctx.restore();
       };
-      // Fixed inner ring, then the pulse.
       ring(S * 0.16, '#3de0ff', 4, 0.9);
       const t = frame / 8;
-      ring(S * (0.2 + t * 0.32), frame % 2 ? '#ff3dd2' : '#3de0ff', 6 - t * 4, 1 - t * 0.7);
-      ring(S * (0.2 + ((t + 0.5) % 1) * 0.32), '#ff3dd2', 6 - ((t + 0.5) % 1) * 4, 1 - ((t + 0.5) % 1) * 0.7);
-      // Centre dot.
+      ring(S * (0.2 + t * 0.32), '#ff3dd2', 6 - t * 4, 1 - t * 0.8);
       ctx.save();
       ctx.shadowColor = '#ffffff';
       ctx.shadowBlur = 10;
@@ -203,138 +226,101 @@ export const FLOOR_STYLES = {
     },
   },
 
-  // Deep space: a purple nebula and twinkling stars.
-  galaxy: {
-    frames: 8,
-    phase: 'random',
+  // A band of light that rolls across the whole dance floor.
+  wave: {
+    frames: 16,
+    speed: 1,
+    phase: 'flow',
+    period: 4,
     draw(ctx, S, frame) {
-      ctx.fillStyle = '#0b0920';
+      flowFill(ctx, S, frame, 16, 4, (x) => {
+        const band = Math.pow(Math.max(0, Math.cos(x * Math.PI * 2)), 6);
+        const echo = Math.pow(Math.max(0, Math.cos((x - 0.5) * Math.PI * 2)), 10) * 0.5;
+        const r = 25 + 230 * band + 30 * echo, g = 20 + 60 * band + 200 * echo, b = 60 + 150 * band + 230 * echo;
+        return `rgb(${r | 0},${g | 0},${b | 0})`;
+      });
+      bevel(ctx, S, 'rgba(255,255,255,0.12)', 'rgba(0,0,0,0.55)');
+    },
+  },
+
+  // A smooth rainbow flowing across the whole dance floor.
+  rainbow: {
+    frames: 16,
+    speed: 1,
+    phase: 'flow',
+    period: 6,
+    draw(ctx, S, frame) {
+      flowFill(ctx, S, frame, 16, 6, (x) => `hsl(${(x * 360) | 0},90%,58%)`);
+      const gloss = ctx.createLinearGradient(0, 0, S, S);
+      gloss.addColorStop(0, 'rgba(255,255,255,0.35)');
+      gloss.addColorStop(0.45, 'rgba(255,255,255,0)');
+      gloss.addColorStop(1, 'rgba(0,0,0,0.15)');
+      ctx.fillStyle = gloss;
       ctx.fillRect(0, 0, S, S);
-      const r = rng(99);
-      const blobs = [['rgba(140,60,255,0.55)', 0.3, 0.35, 0.5], ['rgba(255,60,170,0.4)', 0.7, 0.65, 0.45], ['rgba(60,160,255,0.35)', 0.75, 0.2, 0.35]];
-      for (const [color, bx, by, br] of blobs) {
-        const g = ctx.createRadialGradient(bx * S, by * S, 0, bx * S, by * S, br * S);
-        g.addColorStop(0, color);
-        g.addColorStop(1, 'rgba(0,0,0,0)');
+      bevel(ctx, S, 'rgba(255,255,255,0.3)', 'rgba(0,0,0,0.5)');
+    },
+  },
+
+  // Lights up under each dancer's feet and splashes to the tiles around
+  // them. Frame 0 is idle, frames 1-7 are brighter and brighter.
+  step: {
+    frames: 8,
+    phase: 'step',
+    draw(ctx, S, frame) {
+      ctx.fillStyle = '#16131f';
+      ctx.fillRect(0, 0, S, S);
+      const k = frame / 7;
+      if (k > 0) {
+        const hue = 300 - 120 * k; // purple when faint, turning teal at full
+        const g = ctx.createRadialGradient(S / 2, S / 2, 0, S / 2, S / 2, S * 0.75);
+        g.addColorStop(0, `hsla(${hue},100%,${55 + 25 * k}%,${0.5 + 0.5 * k})`);
+        g.addColorStop(1, `hsla(${hue},100%,45%,${0.25 * k})`);
         ctx.fillStyle = g;
         ctx.fillRect(0, 0, S, S);
       }
-      for (let k = 0; k < 40; k++) {
-        const x = r() * S, y = r() * S, size = 0.6 + r() * 1.6;
-        const twinkle = 0.35 + 0.65 * Math.abs(Math.sin((frame / 8) * Math.PI * 2 + r() * 6.28));
-        ctx.globalAlpha = twinkle;
-        ctx.fillStyle = '#ffffff';
-        ctx.beginPath();
-        ctx.arc(x, y, size, 0, Math.PI * 2);
-        ctx.fill();
-      }
-      // A few bigger sparkle stars.
-      for (let k = 0; k < 3; k++) {
-        const x = 15 + r() * (S - 30), y = 15 + r() * (S - 30);
-        const a = 0.3 + 0.7 * Math.abs(Math.sin((frame / 8) * Math.PI * 2 + k * 2));
-        ctx.globalAlpha = a;
-        ctx.strokeStyle = '#ffffff';
-        ctx.lineWidth = 1.5;
-        ctx.beginPath();
-        ctx.moveTo(x - 6, y); ctx.lineTo(x + 6, y);
-        ctx.moveTo(x, y - 6); ctx.lineTo(x, y + 6);
-        ctx.stroke();
-      }
-      ctx.globalAlpha = 1;
-      bevel(ctx, S, 'rgba(180,140,255,0.25)', 'rgba(0,0,0,0.6)');
-    },
-  },
-
-  // Black and gold art deco fans with a shimmer that sweeps across.
-  goldDeco: {
-    frames: 8,
-    phase: 'ripple',
-    draw(ctx, S, frame) {
-      ctx.fillStyle = '#121014';
-      ctx.fillRect(0, 0, S, S);
-      const half = S / 2;
-      const gold = ctx.createLinearGradient(0, 0, S, S);
-      gold.addColorStop(0, '#fff0a8');
-      gold.addColorStop(0.5, '#d9a52e');
-      gold.addColorStop(1, '#9c6d14');
-      ctx.strokeStyle = gold;
-      for (let bx = 0; bx < 2; bx++) {
-        for (let by = 0; by < 2; by++) {
-          const cx = bx * half + half / 2, cy = by * half + half;
-          for (let k = 1; k <= 4; k++) {
-            ctx.lineWidth = k === 4 ? 3 : 2;
-            ctx.beginPath();
-            ctx.arc(cx, cy, (half / 2) * (k / 4), Math.PI, 0);
-            ctx.stroke();
-          }
-          // Fan spokes.
-          ctx.lineWidth = 1.5;
-          for (let a = 1; a < 6; a++) {
-            const ang = Math.PI + (a / 6) * Math.PI;
-            ctx.beginPath();
-            ctx.moveTo(cx, cy);
-            ctx.lineTo(cx + Math.cos(ang) * half / 2, cy + Math.sin(ang) * half / 2);
-            ctx.stroke();
-          }
+      // Dotted light grid, faint when idle.
+      ctx.fillStyle = `rgba(255,255,255,${0.18 + 0.6 * k})`;
+      for (let i = 1; i < 4; i++) {
+        for (let j = 1; j < 4; j++) {
+          ctx.beginPath();
+          ctx.arc((i * S) / 4, (j * S) / 4, 2.5, 0, Math.PI * 2);
+          ctx.fill();
         }
       }
-      // Shimmer band.
-      const p = (frame / 8) * 2 * S - S / 2;
-      const sh = ctx.createLinearGradient(p - 30, p - 30, p + 30, p + 30);
-      sh.addColorStop(0, 'rgba(255,240,180,0)');
-      sh.addColorStop(0.5, 'rgba(255,240,180,0.45)');
-      sh.addColorStop(1, 'rgba(255,240,180,0)');
-      ctx.fillStyle = sh;
-      ctx.fillRect(0, 0, S, S);
-      ctx.lineWidth = 4;
-      ctx.strokeStyle = '#c99526';
-      ctx.strokeRect(2, 2, S - 4, S - 4);
-    },
-  },
-
-  // Frosted glass with cracks, and a cold shine that glides across.
-  ice: {
-    frames: 8,
-    phase: 'ripple',
-    draw(ctx, S, frame) {
-      const bg = ctx.createLinearGradient(0, 0, S, S);
-      bg.addColorStop(0, '#e6fbff');
-      bg.addColorStop(0.5, '#9fe3f7');
-      bg.addColorStop(1, '#6cc4e8');
-      ctx.fillStyle = bg;
-      ctx.fillRect(0, 0, S, S);
-      // Glowing core light under the glass.
-      const core = ctx.createRadialGradient(S / 2, S / 2, 0, S / 2, S / 2, S * 0.5);
-      core.addColorStop(0, 'rgba(255,255,255,0.7)');
-      core.addColorStop(1, 'rgba(255,255,255,0)');
-      ctx.fillStyle = core;
-      ctx.fillRect(0, 0, S, S);
-      // Frost cracks.
-      const r = rng(5);
-      ctx.strokeStyle = 'rgba(255,255,255,0.75)';
-      ctx.lineWidth = 1.2;
-      for (let k = 0; k < 6; k++) {
-        let x = r() * S, y = r() * S;
-        ctx.beginPath();
-        ctx.moveTo(x, y);
-        for (let s = 0; s < 4; s++) {
-          x += (r() - 0.5) * 30; y += (r() - 0.5) * 30;
-          ctx.lineTo(x, y);
-        }
-        ctx.stroke();
-      }
-      // Shine band.
-      const p = (frame / 8) * 2 * S - S / 2;
-      const sh = ctx.createLinearGradient(p - 24, p - 24, p + 24, p + 24);
-      sh.addColorStop(0, 'rgba(255,255,255,0)');
-      sh.addColorStop(0.5, 'rgba(255,255,255,0.6)');
-      sh.addColorStop(1, 'rgba(255,255,255,0)');
-      ctx.fillStyle = sh;
-      ctx.fillRect(0, 0, S, S);
-      bevel(ctx, S, 'rgba(255,255,255,0.8)', 'rgba(40,110,160,0.6)');
+      bevel(ctx, S, `rgba(255,255,255,${0.1 + 0.3 * k})`, 'rgba(0,0,0,0.6)');
     },
   },
 };
+
+// Paints a 'flow' design's slice of a pattern that repeats every `period`
+// tiles along the floor's diagonal (gx + gy). color(x) gives the colour at
+// position x in [0, 1) through one repeat. Neighbouring tiles join up
+// seamlessly because each one is offset by its distance (see
+// floorFrameFor()).
+function flowFill(ctx, S, frame, frames, period, color) {
+  const g = ctx.createLinearGradient(0, 0, S, S);
+  const shift = (frame / frames) * period;
+  for (let k = 0; k <= 32; k++) {
+    const along = (k / 32) * 2; // u + v across the tile, in tiles
+    const x = (((along - shift) / period) % 1 + 1) % 1;
+    g.addColorStop(k / 32, color(x));
+  }
+  ctx.fillStyle = g;
+  ctx.fillRect(0, 0, S, S);
+}
+
+// Which frame a tile at (gx, gy) shows on animation tick `tick`, for every
+// phase except 'step' (the game tracks those itself).
+export function floorFrameFor(style, gx, gy, tick) {
+  const st = FLOOR_STYLES[style];
+  if (st.frames <= 1) return 0;
+  const beat = Math.floor(tick / (st.speed || 1));
+  let offset = 0;
+  if (st.phase === 'random') offset = (gx * 7 + gy * 13 + gx * gy * 5) % st.frames;
+  else if (st.phase === 'ripple') offset = -(gx + gy);
+  else if (st.phase === 'flow') offset = -(gx + gy) * (st.frames / st.period);
+  return (((beat + offset) % st.frames) + st.frames) % st.frames;
+}
 
 // One frame of a design, squashed into the 2:1 floor diamond.
 export function floorFrameCanvas(style, frame = 0) {
