@@ -59,6 +59,9 @@ let st = await state();
 check('starts with $700 and an empty club', st.cash === 700 && st.placed === 0, `cash ${st.cash}, placed ${st.placed}`);
 check('all sprites loaded', st.textures.length === 0, st.textures.join(', ') || 'none missing');
 
+// Tips are paused while the checks below compare exact cash amounts.
+await page.evaluate(() => { window.__clubNova.scene.getScene('club').collectPatronTip = () => {}; });
+
 // Shop opens with every tab.
 await page.click('#shopToggle');
 const tabs = await page.locator('.shopTab').allTextContents();
@@ -90,12 +93,13 @@ check('bar sprite matches its footprint width', barWidth >= 128 && barWidth <= 1
 // when the one behind is bought later.
 const order = await page.evaluate(() => {
   const s = window.__clubNova.scene.getScene('club');
+  const cashBefore = s.cash;
   s.selectedProp = 'plant'; s.cash += 1000;
   s.placeProp(1, 1);
   const behind = s.placed['1,1'].gameObject;
   const front = s.placed['2,5'].gameObject;
   const ok = s.propLayer.getIndex(behind) < s.propLayer.getIndex(front);
-  s.sellProp(1, 1); s.cash -= 1000 - 30; s.selectedProp = 'dj';
+  s.sellProp(1, 1); s.cash = cashBefore; s.selectedProp = 'dj';
   return ok;
 });
 check('props draw back to front', order);
@@ -118,7 +122,7 @@ check('all five DJ booth tiers load', tiers.booths === 5, `${tiers.booths} of 5`
 // Placing on an occupied tile is refused.
 await clickTile(5, 5);
 st = await state();
-check('occupied tile is refused', st.cash === 420 && st.placed === 2);
+check('occupied tile is refused', st.cash === 420 && st.placed === 2, JSON.stringify({ cash: st.cash, placed: st.placed }));
 
 // Rotate the placed booth (hover + R).
 const before = await page.evaluate(() => window.__clubNova.scene.getScene('club').placed['5,5'].facing);
@@ -143,6 +147,7 @@ const staffed = await page.evaluate(() => {
   return { cash: s.cash, music: s.musicPlaying(), working: s.staffableRecords().filter((r) => r.staff).length, rate: s.totalFanRate() };
 });
 check('hiring a bartender ($50) and a DJ ($80)', staffed.cash === 290 && staffed.working === 2, JSON.stringify(staffed));
+await page.evaluate(() => { delete window.__clubNova.scene.getScene('club').collectPatronTip; });
 check('a working DJ plays music and earns fans', staffed.music && staffed.rate > 0, JSON.stringify(staffed));
 
 // Patrons arrive, get thirsty, buy drinks, earn fans and tip.
@@ -297,6 +302,19 @@ const wall = await page.evaluate(() => {
 check('clicking a wall paints it with wallpaper ($15)', wall.painted === 'wpBrick' && wall.costs.join() === '15' && wall.visible, `${wallXY.hit} -> ${wall.painted}, paid ${wall.costs.join()}`);
 check('wallpaper is saved', wall.saved === 'wpBrick');
 check('animated wallpaper moves while the DJ plays', wall.ledFrames > 3, `${wall.ledFrames} frames`);
+
+// Decorations: all sixteen have their sprites, and one can be placed and
+// rotated like any other prop.
+const decor = await page.evaluate(() => {
+  const s = window.__clubNova.scene.getScene('club');
+  const keys = ['crates', 'plant', 'woodSpeaker', 'discoBall', 'velvetRope', 'palm', 'lavaLamp', 'speakerTower',
+    'neonSign', 'glowTube', 'poolTable', 'spotlight', 'aquarium', 'neonSpeaker', 'trophy', 'luckyCat'];
+  const missing = keys.filter((k) => !s.hasAnySprite(k));
+  const pool = s.restoreProp('poolTable', 90, [10, 2]);
+  return { missing, poolTiles: pool ? pool.tiles.length : 0, poolTex: pool && pool.gameObject.texture.key };
+});
+check('all sixteen decorations have their art', decor.missing.length === 0, decor.missing.join(', ') || '16 of 16');
+check('the pool table takes two tiles', decor.poolTiles === 2 && decor.poolTex === 'decor_pool_90', `${decor.poolTiles} tiles, ${decor.poolTex}`);
 
 check('no errors in the page', errors.length === 0, errors.join(' | '));
 

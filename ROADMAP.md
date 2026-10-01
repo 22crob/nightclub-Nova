@@ -21,7 +21,9 @@ The visual and gameplay reference for everything is **Nightclub City** (2010): i
 - DJ booth line-up: done. Five tiers, same 2x1 size and gameplay: Wood (Lv1), Pro (Lv2), Club (Lv3), Neon (Lv5), Ice (Lv7). Booths only; speakers will be a separate decoration.
 - Dance floor line-up: done. Nine designs drawn in code (src/floors.js), same gameplay, simple to fancy through level 10: Plain, Checker (Lv1), Wood (Lv2), Glow (Lv3, first animated), Light-Up (Lv4), Neon Rings (Lv5), Color Wave (Lv6) and Rainbow Flow (Lv8) that flow across the whole floor, and Step Floor (Lv10) that lights up under dancers. Animated floors move only while a DJ plays.
 - Bar line-up: done. Five tiers, same 1x3 size and gameplay, rising detail: Starter (Lv1), Wood (Lv2), Pub (Lv3, the original), Neon (Lv5), Ice (Lv7). Rendered in two layers so bartenders stand between back bar and counter.
-- Sofas and booths; candle tables; pool table; speakers; plants; neon signs; disco ball
+- Decorations: done. Sixteen Blender models (build_decor.py), simple to fancy through level 9: Beer Crates, Potted Fern, Wood Speaker, Disco Ball (Lv1), Velvet Rope, Palm Tree (Lv2), Lava Lamp, Speaker Tower (Lv3), Neon Sign, Glow Tube (Lv4), Pool Table (Lv5, 2 tiles), Spotlight, Aquarium (Lv6), Neon Speaker (Lv7), Gold Trophy (Lv8), Lucky Cat (Lv9).
+- Characters were shrunk to about 1.5x a bar counter's height, as in Nightclub City.
+- Next: seating (curved velvet booths, couches, bar stools) that patrons actually sit on
 - Wallpaper: done. Eleven designs drawn in code (src/walls.js), painted one wall section at a time ($10-$120 each), simple to fancy through level 10: Paint, Brick (Lv1), Stripes, Wood Panel (Lv2), Retro Dots (Lv3), Velvet (Lv4), Neon Strip (Lv5, first animated), Equalizer (Lv6), Mirror Tiles (Lv7), Neon Chevron (Lv9), LED Wall (Lv10). Animated walls move only while a DJ plays.
 - Later: more variety, e.g. colour versions of each floor and wallpaper, and more wall types
 

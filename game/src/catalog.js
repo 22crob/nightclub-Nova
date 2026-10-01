@@ -9,6 +9,22 @@ import boothProSprite from './assets/sprites/dj_pro.json';
 import boothClubSprite from './assets/sprites/dj_club.json';
 import boothNeonSprite from './assets/sprites/dj_neon.json';
 import boothIceSprite from './assets/sprites/dj_ice.json';
+import decor_fern from './assets/sprites/decor_fern.json';
+import decor_palm from './assets/sprites/decor_palm.json';
+import decor_crates from './assets/sprites/decor_crates.json';
+import decor_woodSpeaker from './assets/sprites/decor_woodSpeaker.json';
+import decor_speaker from './assets/sprites/decor_speaker.json';
+import decor_neonSpeaker from './assets/sprites/decor_neonSpeaker.json';
+import decor_rope from './assets/sprites/decor_rope.json';
+import decor_lava from './assets/sprites/decor_lava.json';
+import decor_tube from './assets/sprites/decor_tube.json';
+import decor_disco from './assets/sprites/decor_disco.json';
+import decor_neonSign from './assets/sprites/decor_neonSign.json';
+import decor_spotlight from './assets/sprites/decor_spotlight.json';
+import decor_pool from './assets/sprites/decor_pool.json';
+import decor_aquarium from './assets/sprites/decor_aquarium.json';
+import decor_trophy from './assets/sprites/decor_trophy.json';
+import decor_luckyCat from './assets/sprites/decor_luckyCat.json';
 
 // The bar line-up (art/blender/build_bars.py and build_bar.py): five
 // looks, from a beginner's plywood counter to an ice bar. They play the same
@@ -43,6 +59,26 @@ function boothTier(key, label, cost, unlockLevel, spriteBase, meta) {
 
 function floorTier(key, label, cost, unlockLevel, floorStyle) {
   return { key, label, cost, unlockLevel, category: 'Floors', fanRate: 0.4, capacity: 1, floorStyle };
+}
+
+// Decorations (art/blender/build_decor.py): one tile unless noted, all
+// rotatable, each adding a little to the fan rate (fancier = a bit more).
+// The disco ball also throws coloured lights on the floor.
+const DECOR_SPRITES = {
+  fern: decor_fern, palm: decor_palm, crates: decor_crates, woodSpeaker: decor_woodSpeaker,
+  speaker: decor_speaker, neonSpeaker: decor_neonSpeaker, rope: decor_rope, lava: decor_lava,
+  tube: decor_tube, disco: decor_disco, neonSign: decor_neonSign, spotlight: decor_spotlight,
+  pool: decor_pool, aquarium: decor_aquarium, trophy: decor_trophy, luckyCat: decor_luckyCat,
+};
+function decorTier(key, label, cost, unlockLevel, model, fanRate, extra = {}) {
+  const meta = DECOR_SPRITES[model];
+  const base = `decor_${model}`;
+  return {
+    key, label, cost, unlockLevel, category: 'Decorations', fanRate, rotatable: true,
+    sprites: { 0: `${base}_0`, 90: `${base}_90`, 180: `${base}_180`, 270: `${base}_270` },
+    displayWidth: meta.displayWidth, originX: meta.originX, originY: meta.originY,
+    ...extra,
+  };
 }
 
 // Wallpaper is painted onto one wall section (a tile wide) at a time; the
@@ -102,17 +138,24 @@ export const PROP_TYPES = {
   // Second unlock tier: a fancier seating area that beats a plain Table on
   // fan rate, unlocked once the club hits level 3.
   vipLounge: { key: 'vipLounge', cost: 380, color: 0xffe066, label: 'VIP Lounge', fanRate: 0.6, unlockLevel: 3, category: 'Booths' },
-  // First item in the Decorations tab: pure ambiance, just a fan-rate
-  // boost from making the place look better.
-  discoBall: { key: 'discoBall', cost: 120, color: 0xd9d9ff, label: 'Disco Ball', fanRate: 0.5, unlockLevel: 1, category: 'Decorations', glow: true, lightRig: true },
-  // A cheap starter decoration — available immediately, same idea as the
-  // disco ball (ambiance only, no capacity), just the entry-level option so
-  // the Decorations tab isn't a single item at launch.
-  plant: { key: 'plant', cost: 60, color: 0x4dff88, label: 'Potted Plant', fanRate: 0.2, unlockLevel: 1, category: 'Decorations' },
-  // The Decorations tab's own unlock-tier item, mirroring the floor/
-  // vipLounge's pattern: a pricier, better-fan-rate option that opens up
-  // once you've reached level 3.
-  neonSign: { key: 'neonSign', cost: 260, color: 0xff5ec9, label: 'Neon Sign', fanRate: 0.7, unlockLevel: 3, category: 'Decorations', glow: true },
+  // Decorations, simple to fancy. 'plant', 'discoBall' and 'neonSign' are
+  // the keys of the original placeholder decorations, kept for old saves.
+  crates: decorTier('crates', 'Beer Crates', 40, 1, 'crates', 0.15),
+  plant: decorTier('plant', 'Potted Fern', 50, 1, 'fern', 0.2),
+  woodSpeaker: decorTier('woodSpeaker', 'Wood Speaker', 80, 1, 'woodSpeaker', 0.3),
+  discoBall: decorTier('discoBall', 'Disco Ball', 120, 1, 'disco', 0.45, { lightRig: true }),
+  velvetRope: decorTier('velvetRope', 'Velvet Rope', 90, 2, 'rope', 0.3),
+  palm: decorTier('palm', 'Palm Tree', 110, 2, 'palm', 0.35),
+  lavaLamp: decorTier('lavaLamp', 'Lava Lamp', 140, 3, 'lava', 0.45),
+  speakerTower: decorTier('speakerTower', 'Speaker Tower', 160, 3, 'speaker', 0.5),
+  neonSign: decorTier('neonSign', 'Neon Sign', 200, 4, 'neonSign', 0.6),
+  glowTube: decorTier('glowTube', 'Glow Tube', 220, 4, 'tube', 0.6),
+  poolTable: decorTier('poolTable', 'Pool Table', 300, 5, 'pool', 0.7, { footprint: BOOTH_FOOTPRINT }),
+  spotlight: decorTier('spotlight', 'Spotlight', 260, 6, 'spotlight', 0.7),
+  aquarium: decorTier('aquarium', 'Aquarium', 350, 6, 'aquarium', 0.8),
+  neonSpeaker: decorTier('neonSpeaker', 'Neon Speaker', 380, 7, 'neonSpeaker', 0.85),
+  trophy: decorTier('trophy', 'Gold Trophy', 450, 8, 'trophy', 0.9),
+  luckyCat: decorTier('luckyCat', 'Lucky Cat', 550, 9, 'luckyCat', 1.0),
   // Wallpaper (src/walls.js, drawn in code): simple to fancy across the
   // first ten levels.
   wpPaint: wallTier('wpPaint', 'Paint', 10, 1, 'paint'),
