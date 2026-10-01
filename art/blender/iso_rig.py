@@ -118,22 +118,24 @@ def render_facings(scene, cam, root, name, out_dir, layers=None):
     `layers` optionally maps a layer name to a list of the prop's objects;
     each layer is also rendered on its own (everything else hidden) as
     <name>_<layer>_<facing>.png with the same crop, so the game can draw
-    something between them (a bartender between back bar and counter)."""
+    something between them (a bartender between back bar and counter).
+    It can also be a function of the facing returning such a map, when
+    which parts are in front depends on the facing (seating)."""
     from PIL import Image
 
     origin_px = check_projection(scene, cam)
     os.makedirs(out_dir, exist_ok=True)
-    layers = layers or {}
+    layers_at = layers if callable(layers) else (lambda facing: layers or {})
     everything = [o for o in root.children_recursive]
     raw = {}
-    raw_layers = {lname: {} for lname in layers}
+    raw_layers = {lname: {} for lname in layers_at(0)}
     for facing in FACINGS:
         root.rotation_euler = (0, 0, math.radians(facing))
         path = os.path.join(out_dir, f'{name}_{facing}.png')
         scene.render.filepath = path
         bpy.ops.render.render(write_still=True)
         raw[facing] = Image.open(path).convert('RGBA')
-        for lname, objs in layers.items():
+        for lname, objs in layers_at(facing).items():
             keep = set(objs)
             for o in everything:
                 o.hide_render = o not in keep
@@ -167,8 +169,8 @@ def render_facings(scene, cam, root, name, out_dir, layers=None):
         'originY': round((origin_px[1] - top) / height, 5),
         'imageSize': [width, height],
     }
-    if layers:
-        meta['layers'] = sorted(layers)
+    if raw_layers:
+        meta['layers'] = sorted(raw_layers)
     with open(os.path.join(out_dir, f'{name}.json'), 'w') as f:
         json.dump(meta, f, indent=2)
         f.write('\n')
