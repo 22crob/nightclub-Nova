@@ -275,7 +275,7 @@ export class PropVisualsMixin {
     const base = (FLOOR_DECAL_PROPS.has(type) ? -1000 : 0) + nearness + tieBreak;
     gameObject.baseDepth = base;
     if (frontObject) {
-      const counterNear = facing === 0 || facing === 90;
+      const counterNear = PROP_TYPES[type].frontAlwaysNear || facing === 0 || facing === 90;
       gameObject.setDepth(base + (counterNear ? 0 : 0.002));
       frontObject.setDepth(base + (counterNear ? 0.002 : 0));
     } else {

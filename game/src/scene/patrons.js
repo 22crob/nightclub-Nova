@@ -290,7 +290,7 @@ export class PatronsMixin {
       const [tx, ty] = key.split(',').map(Number);
       if (FLOOR_DECAL_PROPS.has(rec.type)) {
         danceTiles.push([tx, ty]);
-      } else if (def.category === 'Booths') {
+      } else if (def.category === 'DJ Booths') {
         for (const [dx, dy] of [[1, 0], [-1, 0], [0, 1], [0, -1]]) {
           const nx = tx + dx;
           const ny = ty + dy;
@@ -329,6 +329,7 @@ export class PatronsMixin {
   // drifting; the rest of the time (or once nothing new is worth visiting)
   // a plain open tile so patrons still spread out across the whole floor.
   pickRoamTarget(patron) {
+    this.releaseSeat(patron); // a new plan replaces any seat they were headed for
     // Thirsty: head straight for the nearest free spot at a staffed bar.
     if (patron.thirstyAt !== undefined && this.time.now >= patron.thirstyAt) {
       const bar = this.nearestFreeBarTile(patron.gx, patron.gy);
@@ -337,6 +338,7 @@ export class PatronsMixin {
         return;
       }
     }
+    if (this.maybeGoSit(patron)) return;
     const poi = this.pickPointOfInterestTile();
     if (poi && Math.random() < 0.7) {
       [patron.targetGx, patron.targetGy] = poi;
@@ -389,6 +391,7 @@ export class PatronsMixin {
     // startPatronDeparture() while the previous hop's tween hadn't finished
     // yet, stacking two competing tweens on the same container's x/y).
     if (patron.moving || patron.gone) return;
+    if (patron.sitting) { this.standUp(patron); return; }
 
     // A leaving patron already has its target pinned to the door by
     // startPatronDeparture() — never let this pick it a fresh roam target
@@ -491,6 +494,10 @@ export class PatronsMixin {
             // target once it arrives.
             this.movePatronRandomly(patron);
           }
+          return;
+        }
+        if (arrived && patron.seat && !patron.sitting) {
+          this.sitDown(patron);
           return;
         }
         if (arrived) {
@@ -618,6 +625,13 @@ export class PatronsMixin {
     patron.leaving = true;
     patron.targetGx = PATRON_SPAWN_TILE.gx;
     patron.targetGy = PATRON_SPAWN_TILE.gy;
+    patron.path = null;
+    if (patron.sitting) {
+      // Get up first; standUp() carries on toward the door.
+      if (!patron.moving) this.standUp(patron);
+      return;
+    }
+    this.releaseSeat(patron);
     // A patron's lifetime (despawnAt) is checked on a plain wall-clock timer
     // (see tickPatrons()), completely independent of whatever hop it might
     // already be mid-animation on — so this can fire while patron.moving is
@@ -653,6 +667,7 @@ export class PatronsMixin {
 
   finalizeDeparture(patron) {
     if (patron.gone) return;
+    this.releaseSeat(patron);
     this.patronLeaves(patron);
     // From here the patron is fading out at the door: nothing may move or
     // animate it again (its container is destroyed when the fade ends).

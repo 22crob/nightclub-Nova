@@ -95,6 +95,52 @@ def add_lighting(scene):
     area('Rim', (1.0, 5.0, 4.0), (-50, 0, 170), 350, (1.0, 0.35, 0.8), 3)
 
 
+# Dark drawn outlines around every prop, like Nightclub City's cartoon art
+# (Blender's Freestyle line renderer). Glowing parts get no outline so neon
+# stays bright.
+OUTLINE_THICKNESS = 3.0               # render pixels (1.5 game pixels)
+OUTLINE_COLOR = (0.015, 0.008, 0.02)
+
+
+def _glows(obj):
+    for slot in obj.material_slots:
+        mat = slot.material
+        if not mat or not mat.use_nodes:
+            continue
+        for node in mat.node_tree.nodes:
+            if node.type == 'EMISSION':
+                return True
+            if node.type == 'BSDF_PRINCIPLED' and node.inputs['Emission Strength'].default_value > 0.3:
+                return True
+    return False
+
+
+def add_outlines(scene, root):
+    scene.render.use_freestyle = True
+    scene.render.line_thickness_mode = 'ABSOLUTE'
+    scene.render.line_thickness = 1.0
+    fs = bpy.context.view_layer.freestyle_settings
+    fs.crease_angle = math.radians(137)
+    ls = fs.linesets[0] if fs.linesets else fs.linesets.new('Outlines')
+    ls.select_silhouette = True
+    ls.select_border = True
+    ls.select_crease = True
+    ls.select_external_contour = True
+    if ls.linestyle is None:
+        ls.linestyle = bpy.data.linestyles.new('Outline')
+    ls.linestyle.color = OUTLINE_COLOR
+    ls.linestyle.thickness = OUTLINE_THICKNESS
+    no_lines = bpy.data.collections.get('NoOutline') or bpy.data.collections.new('NoOutline')
+    if no_lines.name not in scene.collection.children:
+        scene.collection.children.link(no_lines)
+    for o in root.children_recursive:
+        if o.type == 'MESH' and _glows(o) and o.name not in no_lines.objects:
+            no_lines.objects.link(o)
+    ls.select_by_collection = True
+    ls.collection = no_lines
+    ls.collection_negation = 'EXCLUSIVE'
+
+
 def check_projection(scene, cam):
     """One tile step must move exactly TILE_W/2 x TILE_H/2 game pixels."""
     bpy.context.view_layer.update()  # make sure the camera's placement has taken effect
@@ -124,6 +170,7 @@ def render_facings(scene, cam, root, name, out_dir, layers=None):
     from PIL import Image
 
     origin_px = check_projection(scene, cam)
+    add_outlines(scene, root)
     os.makedirs(out_dir, exist_ok=True)
     layers_at = layers if callable(layers) else (lambda facing: layers or {})
     everything = [o for o in root.children_recursive]

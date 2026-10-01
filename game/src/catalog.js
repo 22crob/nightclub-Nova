@@ -9,6 +9,14 @@ import boothProSprite from './assets/sprites/dj_pro.json';
 import boothClubSprite from './assets/sprites/dj_club.json';
 import boothNeonSprite from './assets/sprites/dj_neon.json';
 import boothIceSprite from './assets/sprites/dj_ice.json';
+import seat_woodStool from './assets/sprites/seat_woodStool.json';
+import seat_couch from './assets/sprites/seat_couch.json';
+import seat_candleTable from './assets/sprites/seat_candleTable.json';
+import seat_stool from './assets/sprites/seat_stool.json';
+import seat_leatherCouch from './assets/sprites/seat_leatherCouch.json';
+import seat_velvetBooth from './assets/sprites/seat_velvetBooth.json';
+import seat_blackBooth from './assets/sprites/seat_blackBooth.json';
+import seat_goldBooth from './assets/sprites/seat_goldBooth.json';
 import decor_fern from './assets/sprites/decor_fern.json';
 import decor_palm from './assets/sprites/decor_palm.json';
 import decor_crates from './assets/sprites/decor_crates.json';
@@ -49,7 +57,7 @@ const BOOTH_FOOTPRINT = {
 };
 function boothTier(key, label, cost, unlockLevel, spriteBase, meta) {
   return {
-    key, label, cost, unlockLevel, category: 'Booths', fanRate: 1.2,
+    key, label, cost, unlockLevel, category: 'DJ Booths', fanRate: 1.2,
     staff: 'dj', rotatable: true,
     sprites: { 0: `${spriteBase}_0`, 90: `${spriteBase}_90`, 180: `${spriteBase}_180`, 270: `${spriteBase}_270` },
     footprint: BOOTH_FOOTPRINT,
@@ -78,6 +86,32 @@ function decorTier(key, label, cost, unlockLevel, model, fanRate, extra = {}) {
     sprites: { 0: `${base}_0`, 90: `${base}_90`, 180: `${base}_180`, 270: `${base}_270` },
     displayWidth: meta.displayWidth, originX: meta.originX, originY: meta.originY,
     ...extra,
+  };
+}
+
+// Seating (art/blender/build_seating.py): patrons walk over and sit down,
+// which slowly cheers them up (see seating.js). Drawn in two layers with
+// seated patrons between them; unlike a bar, the front layer is always the
+// nearer one, because the render already moved any backrest that faces the
+// camera into it. `seats` are seat positions in Blender units at facing 0,
+// relative to the piece's centre; `sitLift` raises a seated patron (stools).
+const SEAT_SPRITES = {
+  woodStool: seat_woodStool, couch: seat_couch, candleTable: seat_candleTable, stool: seat_stool,
+  leatherCouch: seat_leatherCouch, velvetBooth: seat_velvetBooth, blackBooth: seat_blackBooth, goldBooth: seat_goldBooth,
+};
+const BOOTH_2X2 = { 0: [[0, 0], [1, 0], [0, 1], [1, 1]], 90: [[0, 0], [1, 0], [0, 1], [1, 1]], 180: [[0, 0], [1, 0], [0, 1], [1, 1]], 270: [[0, 0], [1, 0], [0, 1], [1, 1]] };
+function seatTier(key, label, cost, unlockLevel, model, fanRate, footprint = null) {
+  const meta = SEAT_SPRITES[model];
+  const base = `seat_${model}`;
+  const facings = (suffix) => ({ 0: `${base}${suffix}_0`, 90: `${base}${suffix}_90`, 180: `${base}${suffix}_180`, 270: `${base}${suffix}_270` });
+  return {
+    key, label, cost, unlockLevel, category: 'Seating', fanRate, rotatable: true,
+    sprites: facings(''),
+    layerSprites: meta.layers ? Object.fromEntries(meta.layers.map((layer) => [layer, facings(`_${layer}`)])) : null,
+    frontAlwaysNear: true,
+    seats: meta.seats, sitLift: meta.sitLift,
+    ...(footprint ? { footprint } : {}),
+    displayWidth: meta.displayWidth, originX: meta.originX, originY: meta.originY,
   };
 }
 
@@ -134,10 +168,16 @@ export const PROP_TYPES = {
   waveFloor: floorTier('waveFloor', 'Color Wave', 180, 6, 'wave'),
   rainbowFloor: floorTier('rainbowFloor', 'Rainbow Flow', 220, 8, 'rainbow'),
   stepFloor: floorTier('stepFloor', 'Step Floor', 260, 10, 'step'),
-  table: { key: 'table', cost: 80,  color: 0xffb84d, label: 'Table', fanRate: 0.3, unlockLevel: 1, category: 'Booths' },
-  // Second unlock tier: a fancier seating area that beats a plain Table on
-  // fan rate, unlocked once the club hits level 3.
-  vipLounge: { key: 'vipLounge', cost: 380, color: 0xffe066, label: 'VIP Lounge', fanRate: 0.6, unlockLevel: 3, category: 'Booths' },
+  // Seating, simple to fancy. 'table' and 'vipLounge' are the keys of the
+  // original placeholder Table and VIP Lounge, kept for old saves.
+  woodStool: seatTier('woodStool', 'Wood Stool', 40, 1, 'woodStool', 0.1),
+  couch: seatTier('couch', 'Fabric Couch', 90, 1, 'couch', 0.2, BOOTH_FOOTPRINT),
+  table: seatTier('table', 'Candle Table', 60, 2, 'candleTable', 0.2),
+  barStool: seatTier('barStool', 'Chrome Bar Stool', 70, 3, 'stool', 0.2),
+  leatherCouch: seatTier('leatherCouch', 'Leather Couch', 160, 3, 'leatherCouch', 0.3, BOOTH_FOOTPRINT),
+  vipLounge: seatTier('vipLounge', 'Red Velvet Booth', 280, 4, 'velvetBooth', 0.5, BOOTH_2X2),
+  blackBooth: seatTier('blackBooth', 'Black Leather Booth', 360, 6, 'blackBooth', 0.6, BOOTH_2X2),
+  goldBooth: seatTier('goldBooth', 'Gold VIP Booth', 500, 8, 'goldBooth', 0.8, BOOTH_2X2),
   // Decorations, simple to fancy. 'plant', 'discoBall' and 'neonSign' are
   // the keys of the original placeholder decorations, kept for old saves.
   crates: decorTier('crates', 'Beer Crates', 40, 1, 'crates', 0.15),
@@ -174,7 +214,7 @@ export const PROP_TYPES = {
 // Tab order for the shop panel (see ClubScene.buildShop()). A tab with no
 // items shows a "coming soon" placeholder. "Expand" is last and isn't a set of
 // placeable props at all — see ClubScene.renderExpandCard()/expandClub().
-export const SHOP_CATEGORIES = ['Bars', 'Booths', 'Floors', 'Decorations', 'Wallpaper', 'Staff', 'Expand'];
+export const SHOP_CATEGORIES = ['Bars', 'DJ Booths', 'Seating', 'Floors', 'Decorations', 'Wallpaper', 'Staff', 'Expand'];
 
 // Staff. A prop with `staff` needs one of these working at it: a bar sells
 // drinks only with a bartender, and a DJ booth plays music (making the dance

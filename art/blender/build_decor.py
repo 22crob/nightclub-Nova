@@ -495,6 +495,7 @@ def build(name, preview_dir=None):
     if preview_dir:
         os.makedirs(preview_dir, exist_ok=True)
         origin = iso_rig.check_projection(scene, cam)
+        iso_rig.add_outlines(scene, root)
         scene.render.filepath = os.path.join(preview_dir, f'decor_{name}.png')
         bpy.ops.render.render(write_still=True)
         print(f'decor_{name} origin_px:', origin, flush=True)

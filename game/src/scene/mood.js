@@ -18,6 +18,8 @@ export const MOOD = {
   boredomPerSec: 1.6,      // fun lost per second
   danceFunPerSec: 9,       // fun gained per second dancing to a live DJ
   livelyFunPerSec: 2.5,    // fun gained per second somewhere lively
+  seatedFunPerSec: 3,      // fun gained per second sitting down
+  seatedMoodPerSec: 0.8,   // mood gained per second sitting down
   thirstGrace: 12000,      // ms a thirsty patron waits before getting upset
   thirstMoodPerSec: 3.5,   // mood lost per second while thirsty past the grace
   boredMoodPerSec: 2.2,    // mood lost per second while fun < 20
@@ -47,6 +49,7 @@ export class MoodMixin {
     // Fun.
     let fun = patron.fun - MOOD.boredomPerSec * dt;
     if (dancing) fun += MOOD.danceFunPerSec * dt;
+    else if (patron.sitting) fun += MOOD.seatedFunPerSec * dt;
     else if (!patron.moving && this.isNearRevenueProp(patron.gx, patron.gy)) fun += MOOD.livelyFunPerSec * dt;
     patron.fun = clamp(fun);
 
@@ -54,7 +57,10 @@ export class MoodMixin {
     let mood = patron.mood;
     if (patron.fun < 20) mood -= MOOD.boredMoodPerSec * dt;
     if (patron.fun > 60) mood += MOOD.funMoodPerSec * dt;
+    if (patron.sitting) mood += MOOD.seatedMoodPerSec * dt;
     const thirsty = now >= patron.thirstyAt;
+    // A thirsty patron gets up from their seat soon to go and order.
+    if (thirsty && patron.sitting) patron.nextMoveAt = Math.min(patron.nextMoveAt, now + 2000);
     if (thirsty) {
       if (patron.thirstSince == null) patron.thirstSince = now;
       if (now - patron.thirstSince > MOOD.thirstGrace) {

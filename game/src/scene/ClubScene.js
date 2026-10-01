@@ -16,6 +16,7 @@ import { HudMixin } from './hud.js';
 import { StaffMixin } from './staff.js';
 import { MoodMixin } from './mood.js';
 import { WallpaperMixin } from './wallpaper.js';
+import { SeatingMixin } from './seating.js';
 import { applyMixins } from './applyMixins.js';
 
 export class ClubScene extends Phaser.Scene {
@@ -284,4 +285,5 @@ applyMixins(ClubScene, [
   StaffMixin,
   MoodMixin,
   WallpaperMixin,
+  SeatingMixin,
 ]);

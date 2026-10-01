@@ -1,0 +1,28 @@
+{
+  "displayWidth": 96.0,
+  "originX": 0.5,
+  "originY": 0.72588,
+  "imageSize": [
+    192,
+    181
+  ],
+  "layers": [
+    "back",
+    "front"
+  ],
+  "seats": [
+    [
+      -0.554,
+      0.37
+    ],
+    [
+      0.0,
+      0.69
+    ],
+    [
+      0.554,
+      0.37
+    ]
+  ],
+  "sitLift": 0.0
+}

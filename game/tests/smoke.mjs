@@ -65,7 +65,7 @@ await page.evaluate(() => { window.__clubNova.scene.getScene('club').collectPatr
 // Shop opens with every tab.
 await page.click('#shopToggle');
 const tabs = await page.locator('.shopTab').allTextContents();
-check('shop opens with 7 tabs', tabs.length === 7 && tabs.includes('Staff'), tabs.join(' / '));
+check('shop opens with 8 tabs', tabs.length === 8 && tabs.includes('Staff'), tabs.join(' / '));
 check('bar shows its real sprite icon', await page.locator('.propButton .icon').first().evaluate((el) => el.style.backgroundImage.includes('data:image/png')));
 await page.click('#shopClose');
 
@@ -75,7 +75,7 @@ st = await state();
 check('placing a Starter Bar costs $100', st.cash === 600 && st.placed === 1, `cash ${st.cash}`);
 
 await page.click('#shopToggle');
-await page.click('.shopTab:has-text("Booths")');
+await page.click('.shopTab:has-text("DJ Booths")');
 await page.locator('.propButton').first().click();
 await clickTile(5, 5);
 st = await state();
@@ -302,6 +302,34 @@ const wall = await page.evaluate(() => {
 check('clicking a wall paints it with wallpaper ($15)', wall.painted === 'wpBrick' && wall.costs.join() === '15' && wall.visible, `${wallXY.hit} -> ${wall.painted}, paid ${wall.costs.join()}`);
 check('wallpaper is saved', wall.saved === 'wpBrick');
 check('animated wallpaper moves while the DJ plays', wall.ledFrames > 3, `${wall.ledFrames} frames`);
+
+// Seating: every piece has its art, and a patron can sit on a couch (drawn
+// between its two layers), feel better for it, and get up again.
+const seating = await page.evaluate(() => {
+  const s = window.__clubNova.scene.getScene('club');
+  const keys = ['woodStool', 'couch', 'table', 'barStool', 'leatherCouch', 'vipLounge', 'blackBooth', 'goldBooth'];
+  const missing = keys.filter((k) => !(k === 'table' ? s.hasAnySprite(k) : s.hasLayerSprites(k)));
+  const couch = s.restoreProp('couch', 0, [1, 11]);
+  const p = s.patrons.find((q) => !q.leaving && !q.gone);
+  if (!couch || !p) return { missing, error: !couch ? 'no couch' : 'no patron' };
+  s.tweens.killTweensOf(p.container);
+  p.moving = false;
+  s.releaseSeat(p);
+  const claimed = s.claimSeat(p);
+  s.sitDown(p);
+  const d = p.container.depth;
+  const between = d > couch.gameObject.depth && d < couch.frontObject.depth;
+  const taken = couch.seatTaken.includes(p);
+  const fun0 = p.fun;
+  s.updatePatronMood(p, 2);
+  const funUp = p.fun > fun0;
+  s.releaseSeats(couch);
+  return { missing, claimed, sitting: between && taken, funUp, freed: !p.sitting && !p.seat && couch.seatTaken.length === 0 };
+});
+check('all eight seating pieces have their art', seating.missing.length === 0, seating.missing.join(', ') || '8 of 8');
+check('a patron sits on a couch, between its layers', seating.claimed && seating.sitting, JSON.stringify(seating));
+check('sitting cheers a patron up', seating.funUp);
+check('selling or turning seating gets everyone up', seating.freed);
 
 // Decorations: all sixteen have their sprites, and one can be placed and
 // rotated like any other prop.

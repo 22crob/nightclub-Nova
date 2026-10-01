@@ -151,3 +151,8 @@ export const SELL_REFUND_RATIO = 0.5;
 
 // How often animated dance floors step a frame (see animateFloors()).
 export const FLOOR_TICK_MS = 125;
+
+// Seating (see seating.js): the chance a patron picking somewhere to go
+// heads for a free seat instead, and how long they stay seated (ms).
+export const SEAT_CHANCE = 0.3;
+export const SEAT_SIT_TIME = [14000, 24000];

@@ -78,10 +78,7 @@ def candle(name, x, y, z):
 # Fabric couch: 2 x 1 tiles, two seats.
 # --------------------------------------------------------------------------
 
-def build_couch():
-    fabric = plain('#6f6a86', rough=0.9)
-    cushion = plain('#7f7a98', rough=0.9)
-    leg = plain('#2a2420', rough=0.6)
+def couch(fabric, cushion, leg, buttons=None):
     for x in (-0.86, 0.86):
         for y in (-0.36, 0.3):
             cylinder(f'Leg{x}{y}', x, y, 0, 0.08, 0.035, leg, verts=10)
@@ -89,10 +86,55 @@ def build_couch():
     for i, x in enumerate((-0.42, 0.42)):
         box(f'Seat{i}', x - 0.4, x + 0.4, -0.42, 0.18, 0.3, 0.42, cushion, bevel=0.05)
         box(f'BackCushion{i}', x - 0.4, x + 0.4, 0.12, 0.3, 0.42, 0.78, cushion, bevel=0.06)
+        if buttons:
+            for bx in (-0.2, 0.0, 0.2):
+                for z in (0.55, 0.68):
+                    sphere(f'BackButton{i}{bx}{z}', x + bx, 0.115, z, 0.016, buttons, segments=8)
     box('BackRest', -0.92, 0.92, 0.26, 0.4, 0.3, 0.84, fabric, bevel=0.05)
     for x in (-0.92, 0.82):
         box(f'Arm{x}', x, x + 0.1, -0.42, 0.4, 0.3, 0.6, fabric, bevel=0.04)
     return {'seats': [[-0.42, -0.05], [0.42, -0.05]], 'sitLift': 0.0}
+
+
+def build_couch():
+    return couch(plain('#6f6a86', rough=0.9), plain('#7f7a98', rough=0.9), plain('#2a2420', rough=0.6))
+
+
+def build_leather_couch():
+    leather = principled('Leather', srgb('#1e1b22'), rough=0.3)
+    cushion = principled('LeatherCushion', srgb('#2a2630'), rough=0.28)
+    return couch(leather, cushion, plain('#c9ccd6', rough=0.2), buttons=plain('#0e0c10', rough=0.4))
+
+
+# --------------------------------------------------------------------------
+# Wooden stool: 1 tile, one seat, the simple version of the bar stool.
+# --------------------------------------------------------------------------
+
+def build_wood_stool():
+    oak = bb.wood('StoolOak', (0.2, 0.09, 0.035), (0.36, 0.17, 0.07))
+    for k in range(4):
+        a = math.radians(45 + k * 90)
+        x, y = math.cos(a) * 0.16, math.sin(a) * 0.16
+        cone(f'BackLeg{k}', x, y, 0, 0.6, 0.025, 0.022, oak, verts=10)
+    box('BackRungX', -0.13, 0.13, -0.012, 0.012, 0.25, 0.28, oak, bevel=0.004)
+    box('BackRungY', -0.012, 0.012, -0.13, 0.13, 0.25, 0.28, oak, bevel=0.004)
+    cylinder('Seat', 0, 0, 0.6, 0.68, 0.2, oak, verts=32)
+    return {'seats': [[0.0, 0.0]], 'sitLift': 0.27}
+
+
+# --------------------------------------------------------------------------
+# Candle table: a low wooden table with candles, to go with couches.
+# --------------------------------------------------------------------------
+
+def build_candle_table():
+    oak = bb.wood('TableOak', (0.16, 0.07, 0.03), (0.3, 0.14, 0.06))
+    for x in (-0.3, 0.3):
+        for y in (-0.3, 0.3):
+            box(f'Leg{x}{y}', x - 0.035, x + 0.035, y - 0.035, y + 0.035, 0, 0.36, oak, bevel=0.006)
+    box('Top', -0.38, 0.38, -0.38, 0.38, 0.36, 0.42, oak, bevel=0.012)
+    for i, (x, y) in enumerate([(-0.12, -0.08), (0.1, 0.1), (0.14, -0.14)]):
+        candle(f'Candle{i}', x, y, 0.42)
+    return {'seats': [], 'sitLift': 0.0}
 
 
 # --------------------------------------------------------------------------
@@ -117,43 +159,80 @@ def build_stool():
 # Red velvet booth: 2 x 2 tiles, a curved sofa around a round table.
 # --------------------------------------------------------------------------
 
-def build_velvet_booth():
-    velvet = principled('Velvet', srgb('#b0102a'), rough=0.85)
-    velvet_dark = principled('VelvetDark', srgb('#7c0a1e'), rough=0.85)
-    gold = principled('BoothGold', srgb('#e2b23a'), rough=0.25)
-    table_top = principled('TableTop', srgb('#1a1418'), rough=0.15)
-    a0, a1 = -25, 205  # the arc, open toward -Y
-    arc_block('Plinth', 0, 0.05, 0.5, 0.92, a0, a1, 0, 0.1, plain('#2a1a1e', rough=0.6), bevel=0.01)
-    arc_block('Seat', 0, 0.05, 0.5, 0.88, a0, a1, 0.1, 0.42, velvet, bevel=0.04)
-    # The backrest is made of short pieces so each can go in front of or
-    # behind the patrons on its own (see layers_at()).
-    n = 10
+def booth(seat_mat, back_mat, trim, table_top, seat_angles, extras=None):
+    """A curved booth around a round table, open toward -Y."""
+    a0, a1 = -25, 205
+    arc_block('Plinth', 0, 0.05, 0.5, 0.92, a0, a1, 0, 0.1, plain('#1e161a', rough=0.6), bevel=0.01)
+    arc_block('Seat', 0, 0.05, 0.5, 0.88, a0, a1, 0.1, 0.42, seat_mat, bevel=0.04)
+    # The backrest is made of a few pieces so each can go in front of or
+    # behind the patrons on its own (see layers_at()); the joins read as
+    # upholstery panels.
+    n = 5
     for k in range(n):
         b0, b1 = a0 + (a1 - a0) * k / n, a0 + (a1 - a0) * (k + 1) / n
-        arc_block(f'BackRest{k}', 0, 0.05, 0.78, 0.94, b0, b1, 0.42, 1.0, velvet_dark, bevel=0.0)
-        arc_block(f'BackPiping{k}', 0, 0.05, 0.77, 0.95, b0, b1, 0.98, 1.02, gold, bevel=0.0)
-    # Tufted buttons on the backrest.
+        arc_block(f'BackRest{k}', 0, 0.05, 0.78, 0.94, b0, b1, 0.42, 1.0, back_mat, bevel=0.0)
+        arc_block(f'BackPiping{k}', 0, 0.05, 0.77, 0.95, b0, b1, 0.98, 1.02, trim, bevel=0.0)
     for k in range(9):
         a = math.radians(a0 + 10 + k * (a1 - a0 - 20) / 8)
         for z in (0.6, 0.82):
-            sphere(f'BackButton{k}{z}', 0.77 * math.cos(a), 0.05 + 0.77 * math.sin(a), z, 0.018, gold, segments=8)
-    # Round table with drinks and a candle.
-    cylinder('TableFoot', 0, -0.1, 0, 0.04, 0.2, gold, verts=24)
-    cylinder('TableStem', 0, -0.1, 0.04, 0.52, 0.035, gold, verts=12)
+            sphere(f'BackButton{k}{z}', 0.77 * math.cos(a), 0.05 + 0.77 * math.sin(a), z, 0.018, trim, segments=8)
+    cylinder('TableFoot', 0, -0.1, 0, 0.04, 0.2, trim, verts=24)
+    cylinder('TableStem', 0, -0.1, 0.04, 0.52, 0.035, trim, verts=12)
     cylinder('Table', 0, -0.1, 0.52, 0.56, 0.32, table_top, verts=40)
-    cylinder('TableRim', 0, -0.1, 0.515, 0.525, 0.325, gold, verts=40)
-    candle('Candle', 0.0, -0.1, 0.56)
-    for i, (x, y, c) in enumerate([(-0.16, -0.02, '#ff4d8d'), (0.15, -0.2, '#3de0ff')]):
-        drink = principled(f'Drink{i}', srgb(c), rough=0.1, emission=srgb(c), emission_strength=0.6, alpha=0.85)
-        cone(f'Glass{i}', x, y, 0.56, 0.68, 0.03, 0.045, drink, verts=12)
-    seats = [[0.64 * math.cos(math.radians(a)), 0.05 + 0.64 * math.sin(math.radians(a))] for a in (150, 90, 30)]
+    cylinder('TableRim', 0, -0.1, 0.515, 0.525, 0.325, trim, verts=40)
+    if extras:
+        extras()
+    seats = [[0.64 * math.cos(math.radians(a)), 0.05 + 0.64 * math.sin(math.radians(a))] for a in seat_angles]
     return {'seats': [[round(x, 3), round(y, 3)] for x, y in seats], 'sitLift': 0.0}
 
 
+def drinks(colors):
+    spots = [(-0.16, -0.02), (0.15, -0.2), (0.12, 0.04), (-0.1, -0.24)]
+    for i, ((x, y), c) in enumerate(zip(spots, colors)):
+        drink = principled(f'Drink{i}', srgb(c), rough=0.1, emission=srgb(c), emission_strength=0.6, alpha=0.85)
+        cone(f'Glass{i}', x, y, 0.56, 0.68, 0.03, 0.045, drink, verts=12)
+
+
+def build_velvet_booth():
+    def extras():
+        candle('Candle', 0.0, -0.1, 0.56)
+        drinks(['#ff4d8d', '#3de0ff'])
+    return booth(principled('Velvet', srgb('#b0102a'), rough=0.85), principled('VelvetDark', srgb('#7c0a1e'), rough=0.85),
+                 principled('BoothGold', srgb('#e2b23a'), rough=0.25), principled('TableTop', srgb('#1a1418'), rough=0.15),
+                 (150, 90, 30), extras)
+
+
+def build_black_booth():
+    def extras():
+        candle('Candle', 0.0, -0.1, 0.56)
+        drinks(['#ffd23d', '#ff4d8d', '#7dff9a'])
+    return booth(principled('BlackLeather', srgb('#26232a'), rough=0.3), principled('BlackLeatherBack', srgb('#1a181e'), rough=0.3),
+                 plain('#c9ccd6', rough=0.2), principled('GlassTop', srgb('#10141c'), rough=0.05),
+                 (150, 90, 30), extras)
+
+
+def build_gold_booth():
+    gold = principled('VipGold', srgb('#f0c24a'), rough=0.2, emission=srgb('#a87000'), emission_strength=0.2)
+
+    def extras():
+        # Champagne in an ice bucket, flutes, and a warm glow under the seat.
+        cylinder('Bucket', 0.0, -0.08, 0.56, 0.72, 0.075, plain('#d8dbe4', rough=0.2), verts=20)
+        cylinder('Bottle', 0.0, -0.08, 0.6, 0.86, 0.03, principled('Champagne', srgb('#1f4a2a'), rough=0.15), verts=12)
+        cylinder('Foil', 0.0, -0.08, 0.86, 0.9, 0.018, gold, verts=10)
+        drinks(['#ffe9a8', '#ffe9a8', '#ffe9a8'])
+        arc_block('UnderGlow', 0, 0.05, 0.9, 0.93, -25, 205, 0.02, 0.05, neon('VipGlow', (1.0, 0.75, 0.3), 6), bevel=0)
+    return booth(principled('Cream', srgb('#f2e6d0'), rough=0.35), principled('CreamBack', srgb('#e6d6b8'), rough=0.35),
+                 gold, principled('VipTop', srgb('#f8f4ec'), rough=0.15), (160, 115, 65, 20), extras)
+
 SEATING = {
+    'woodStool': build_wood_stool,
     'couch': build_couch,
+    'candleTable': build_candle_table,
     'stool': build_stool,
+    'leatherCouch': build_leather_couch,
     'velvetBooth': build_velvet_booth,
+    'blackBooth': build_black_booth,
+    'goldBooth': build_gold_booth,
 }
 
 
@@ -169,7 +248,7 @@ def layers_at(root, seats):
         a = math.radians(-45 - facing)
         to_cam = (math.cos(a), math.sin(a))
         depth = lambda x, y: x * to_cam[0] + y * to_cam[1]
-        seat_depth = max(depth(x, y) for x, y in seats)
+        seat_depth = max((depth(x, y) for x, y in seats), default=0.0)
         front = [o for o in meshes if not o.name.startswith('Back')
                  or depth(centre[o].x, centre[o].y) > seat_depth + 0.08]
         return {'back': [o for o in meshes if o not in front], 'front': front}
@@ -185,11 +264,13 @@ def build(name, preview_dir=None):
     scene.collection.objects.link(root)
     bb.ROOT = root
     info = SEATING[name]()
-    layers = layers_at(root, info['seats'])
+    # A piece nobody sits on (a table) is one layer, like a decoration.
+    layers = layers_at(root, info['seats']) if info['seats'] else (lambda facing: {})
     base = f'seat_{name}'
     if preview_dir:
         os.makedirs(preview_dir, exist_ok=True)
         origin = iso_rig.check_projection(scene, cam)
+        iso_rig.add_outlines(scene, root)
         everything = list(root.children_recursive)
         for lname, objs in [('all', everything)] + list(layers(0).items()):
             keep = set(objs)

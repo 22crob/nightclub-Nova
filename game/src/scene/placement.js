@@ -53,6 +53,7 @@ export class PlacementMixin {
     // A multi-tile prop's shared record is stored under every tile it
     // occupies; always pivot around its original anchor tile so rotating
     // from a "second" tile doesn't shift the piece.
+    if (PROP_TYPES[placed.type].seats) this.releaseSeats(placed); // anyone sitting gets up first
     const [agx, agy] = placed.anchor;
     const idx = FACINGS.indexOf(placed.facing);
     const newFacing = FACINGS[(idx + 1) % FACINGS.length];
@@ -228,6 +229,7 @@ export class PlacementMixin {
 
     const refund = Math.round(PROP_TYPES[placed.type].cost * SELL_REFUND_RATIO);
     this.cash += refund;
+    if (PROP_TYPES[placed.type].seats) this.releaseSeats(placed);
 
     // The record is stored under every tile a multi-tile prop occupies —
     // free all of them, not just the tile that was clicked.

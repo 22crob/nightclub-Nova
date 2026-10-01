@@ -23,7 +23,8 @@ The visual and gameplay reference for everything is **Nightclub City** (2010): i
 - Bar line-up: done. Five tiers, same 1x3 size and gameplay, rising detail: Starter (Lv1), Wood (Lv2), Pub (Lv3, the original), Neon (Lv5), Ice (Lv7). Rendered in two layers so bartenders stand between back bar and counter.
 - Decorations: done. Sixteen Blender models (build_decor.py), simple to fancy through level 9: Beer Crates, Potted Fern, Wood Speaker, Disco Ball (Lv1), Velvet Rope, Palm Tree (Lv2), Lava Lamp, Speaker Tower (Lv3), Neon Sign, Glow Tube (Lv4), Pool Table (Lv5, 2 tiles), Spotlight, Aquarium (Lv6), Neon Speaker (Lv7), Gold Trophy (Lv8), Lucky Cat (Lv9).
 - Characters were shrunk to about 1.5x a bar counter's height, as in Nightclub City.
-- Next: seating (curved velvet booths, couches, bar stools) that patrons actually sit on
+- Seating: done. Wood Stool, Fabric Couch (Lv1), Candle Table (Lv2), Chrome Bar Stool, Leather Couch (Lv3), Red Velvet Booth (Lv4), Black Leather Booth (Lv6), Gold VIP Booth (Lv8). Patrons walk over and sit, which cheers them up. They don't have a sitting pose yet: the seat hides their legs. Add a real sit pose when the characters are redone.
+- All prop art has drawn outlines, like Nightclub City.
 - Wallpaper: done. Eleven designs drawn in code (src/walls.js), painted one wall section at a time ($10-$120 each), simple to fancy through level 10: Paint, Brick (Lv1), Stripes, Wood Panel (Lv2), Retro Dots (Lv3), Velvet (Lv4), Neon Strip (Lv5, first animated), Equalizer (Lv6), Mirror Tiles (Lv7), Neon Chevron (Lv9), LED Wall (Lv10). Animated walls move only while a DJ plays.
 - Later: more variety, e.g. colour versions of each floor and wallpaper, and more wall types
 
