@@ -125,12 +125,11 @@ export const PATRON_Y_OFFSET = 6 * PROP_SCALE;
 // tall. The character sprite's own displayHeight is set to this constant
 // directly; its width follows proportionally since Phaser scales
 // uniformly. Tune this one number to make patrons bigger/smaller overall.
-// Matched to Nightclub City: there, a character stands about 1.35-1.5 tile
-// widths tall (head to feet). The sprite's figure fills 90% of its frame, so
-// 3.25 tile-heights gives about 1.46 tile widths. The back walls
-// (WALL_HEIGHT) come out about 1.3x a patron, and a bar counter reaches
-// about waist height.
-export const CHARACTER_DISPLAY_HEIGHT = TILE_H * 3.25;
+// Matched to Nightclub City: there, a character stands about 1.5x as tall
+// as a bar counter, so props and decorations read at the right size around
+// them. (It was 3.25 at first, which made characters about 2.4 counters
+// tall.)
+export const CHARACTER_DISPLAY_HEIGHT = TILE_H * 2.1;
 // How far above a patron's feet their tip / drink popups start.
 export const PATRON_POPUP_Y = CHARACTER_DISPLAY_HEIGHT * 0.8;
 
