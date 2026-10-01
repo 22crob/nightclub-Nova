@@ -4,8 +4,8 @@ Run from the repo root with a Python that has the `bpy` module and pillow:
     python art/blender/build_booths.py               # all tiers
     python art/blender/build_booths.py starter ice   # only some tiers
 
-Five tiers that pair with the five bars (build_bars.py), from a folding
-table with a laptop to a glowing ice booth. Booths are only the DJ's desk
+Five tiers that pair with the five bars (build_bars.py), from a wooden
+desk with turntables to a glowing ice booth. Booths are only the DJ's desk
 and gear; speakers are a separate decoration.
 
 Every booth has the same 2 x 1 tile footprint: x in [-1, 1], y in
@@ -58,45 +58,7 @@ def mixer(name, x, y, z, w, d, body, knob, lights=None):
 
 
 # --------------------------------------------------------------------------
-# Tier 1: a folding table with a laptop and a cheap controller.
-# --------------------------------------------------------------------------
-
-def build_starter():
-    top = plain('#d8d8d4', rough=0.6)
-    leg = plain('#6a6a70', rough=0.5)
-    laptop = plain('#b8bcc4', rough=0.4)
-    screen = plain('#2a3140', rough=0.3)
-    ctrl = plain('#2a2a2e', rough=0.6)
-    disc = plain('#4a4a50', rough=0.4)
-    box('TableTop', -0.92, 0.92, -0.32, 0.3, DESK_H - 0.04, DESK_H, top, bevel=0.008)
-    for x in (-0.86, 0.86):
-        for y in (-0.26, 0.24):
-            cylinder(f'Leg{x}{y}', x, y, 0, DESK_H - 0.04, 0.018, leg, verts=10)
-    rod_x('CrossBar', -0.86, 0.86, 0.24, 0.3, 0.012, leg)
-    # Controller with two small platters, and a laptop on the right.
-    box('Controller', -0.55, 0.1, -0.18, 0.12, DESK_H, DESK_H + 0.04, ctrl, bevel=0.01)
-    for x in (-0.4, -0.05):
-        cylinder(f'Jog{x}', x, -0.03, DESK_H + 0.04, DESK_H + 0.055, 0.1, disc, verts=24)
-    box('LaptopBase', 0.25, 0.7, -0.15, 0.15, DESK_H, DESK_H + 0.02, laptop, bevel=0.006)
-    bpy.ops.mesh.primitive_cube_add(size=1, location=(0.475, 0.16, DESK_H + 0.15))
-    lid = bpy.context.active_object
-    lid.scale = (0.45, 0.02, 0.28)
-    lid.rotation_euler = (math.radians(-12), 0, 0)
-    bpy.ops.object.transform_apply(rotation=True, scale=True)
-    bb._finish(lid, laptop, 0.006)
-    bpy.ops.mesh.primitive_cube_add(size=1, location=(0.475, 0.147, DESK_H + 0.152))
-    scr = bpy.context.active_object
-    scr.scale = (0.4, 0.004, 0.23)
-    scr.rotation_euler = (math.radians(-12), 0, 0)
-    bpy.ops.object.transform_apply(rotation=True, scale=True)
-    bb._finish(scr, screen, 0)
-    # A can of soda and a tangle of cable.
-    cylinder('Can', 0.8, -0.2, DESK_H, DESK_H + 0.1, 0.03, plain('#d23a3a', rough=0.3), verts=16)
-    rod_x('Cable', -0.6, 0.25, 0.2, DESK_H + 0.01, 0.008, plain('#111111'))
-
-
-# --------------------------------------------------------------------------
-# Tier 2: a wooden DJ desk with two turntables and a mixer.
+# Tier 1: a wooden DJ desk with two turntables and a mixer.
 # --------------------------------------------------------------------------
 
 def build_wood():
@@ -118,6 +80,36 @@ def build_wood():
     mixer('Mixer', 0, -0.04, DESK_H + 0.01, 0.26, 0.34, deck, knob)
     # Headphones resting on the desk, and a crate of records at the side.
     bpy.ops.mesh.primitive_torus_add(major_radius=0.08, minor_radius=0.012, location=(0.82, 0.18, DESK_H + 0.03))
+    bb._finish(bpy.context.active_object, plain('#1a1a1a'), 0)
+
+
+# --------------------------------------------------------------------------
+# Tier 2: Pro Booth. The wooden desk grown up: a dark stone top, CDJ decks
+# instead of turntables, and one small warm light strip (the first glow).
+# --------------------------------------------------------------------------
+
+def build_pro():
+    oak = wood('ProOak', (0.2, 0.09, 0.035), (0.36, 0.17, 0.07))
+    oak_dark = wood('ProOakDark', (0.1, 0.045, 0.02), (0.2, 0.09, 0.04))
+    stone = principled('ProStone', srgb('#24252c'), rough=0.18)
+    cdj = plain('#2c2d33', rough=0.4)
+    jog = plain('#55565e', rough=0.3)
+    knob = plain('#cfcfd4', rough=0.3)
+    screen = principled('ProScreen', srgb('#1a2a40'), rough=0.2, emission=srgb('#3a8aff'), emission_strength=1.0)
+    warm = neon('ProWarmStrip', srgb('#ffb45a'), 6)
+    box('Kick', -0.92, 0.92, -0.33, 0.3, 0, 0.07, plain('#1e140e'), bevel=0.003)
+    box('Body', -0.94, 0.94, -0.36, 0.3, 0.06, DESK_H - 0.05, oak_dark, bevel=0.008)
+    for i in range(4):
+        x0 = -0.9 + i * 0.455
+        box(f'Panel{i}', x0, x0 + 0.42, -0.38, -0.36, 0.15, DESK_H - 0.17, oak, bevel=0.012)
+    box('Top', -0.97, 0.97, -0.44, 0.34, DESK_H - 0.05, DESK_H + 0.01, stone, bevel=0.014)
+    box('WarmStrip', -0.92, 0.92, -0.43, -0.415, DESK_H - 0.085, DESK_H - 0.07, warm, bevel=0)
+    for x in (-0.55, 0.55):
+        box(f'Cdj{x}', x - 0.21, x + 0.21, -0.26, 0.2, DESK_H + 0.01, DESK_H + 0.07, cdj, bevel=0.012)
+        cylinder(f'Jog{x}', x, -0.06, DESK_H + 0.07, DESK_H + 0.09, 0.14, jog, verts=32)
+        box(f'Screen{x}', x - 0.08, x + 0.08, 0.1, 0.17, DESK_H + 0.07, DESK_H + 0.075, screen, bevel=0)
+    mixer('Mixer', 0, -0.04, DESK_H + 0.01, 0.26, 0.4, cdj, knob)
+    bpy.ops.mesh.primitive_torus_add(major_radius=0.08, minor_radius=0.012, location=(0.84, 0.22, DESK_H + 0.03))
     bb._finish(bpy.context.active_object, plain('#1a1a1a'), 0)
 
 
@@ -223,8 +215,8 @@ def build_ice():
 
 
 TIERS = {
-    'starter': build_starter,
     'wood': build_wood,
+    'pro': build_pro,
     'club': build_club,
     'neon': build_neon,
     'ice': build_ice,
