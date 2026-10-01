@@ -41,6 +41,10 @@ function boothTier(key, label, cost, unlockLevel, spriteBase, meta) {
   };
 }
 
+function floorTier(key, label, cost, unlockLevel, floorStyle) {
+  return { key, label, cost, unlockLevel, category: 'Floors', fanRate: 0.4, capacity: 1, floorStyle };
+}
+
 function barTier(key, label, cost, unlockLevel, spriteBase, meta) {
   return {
     key, label, cost, unlockLevel, category: 'Bars', color: 0x2fd0ff,
@@ -73,18 +77,22 @@ export const PROP_TYPES = {
   dj: boothTier('dj', 'Club Booth', 250, 3, 'dj_club', boothClubSprite),
   neonBooth: boothTier('neonBooth', 'Neon Booth', 380, 5, 'dj_neon', boothNeonSprite),
   iceBooth: boothTier('iceBooth', 'Ice Booth', 550, 7, 'dj_ice', boothIceSprite),
-  // Floors are the ONLY category that grants patron capacity (see
-  // patronCapacity()) — a `capacity` field on a Bars/Booths/Decorations
-  // item below is inert by design. Capacity is meant to come from the
-  // club's actual floor space, eventually including a future "expand the
-  // club" upgrade to its physical size, not from furniture.
-  dance: { key: 'dance', cost: 50,  color: 0x8a4dff, label: 'Dance Tile', fanRate: 0.4, capacity: 1, unlockLevel: 1, category: 'Floors' },
+  // Dance floors (src/floors.js, drawn in code): simple to fancy across the
+  // first ten levels, all with the same gameplay. Floors are the ONLY
+  // category that grants patron capacity (see patronCapacity()); a
+  // `capacity` field on a Bars/Booths/Decorations item is inert by design.
+  // 'dance' and 'neonFloor' are the keys of the two original floors, kept
+  // so older saves load them as Checker and Light-Up.
+  plainFloor: floorTier('plainFloor', 'Plain Floor', 30, 1, 'plain'),
+  dance: floorTier('dance', 'Checker Floor', 40, 1, 'checker'),
+  woodFloor: floorTier('woodFloor', 'Wood Floor', 60, 2, 'parquet'),
+  glowFloor: floorTier('glowFloor', 'Glow Floor', 90, 3, 'glow'),
+  neonFloor: floorTier('neonFloor', 'Light-Up Floor', 120, 4, 'lightUp'),
+  ringFloor: floorTier('ringFloor', 'Neon Rings', 150, 5, 'neonRings'),
+  waveFloor: floorTier('waveFloor', 'Color Wave', 180, 6, 'wave'),
+  rainbowFloor: floorTier('rainbowFloor', 'Rainbow Flow', 220, 8, 'rainbow'),
+  stepFloor: floorTier('stepFloor', 'Step Floor', 260, 10, 'step'),
   table: { key: 'table', cost: 80,  color: 0xffb84d, label: 'Table', fanRate: 0.3, unlockLevel: 1, category: 'Booths' },
-  // First real use of the unlock-gating infrastructure: a fancier, pricier
-  // dance floor that only becomes buyable once you've reached level 2 (100
-  // fans). Its price is still completely fixed once unlocked, same as
-  // every other prop — reaching level 2 just reveals it as purchasable.
-  neonFloor: { key: 'neonFloor', cost: 220, color: 0xff4de0, label: 'Neon Floor', fanRate: 0.9, capacity: 2, unlockLevel: 2, category: 'Floors', glow: true },
   // Second unlock tier: a fancier seating area that beats a plain Table on
   // fan rate, unlocked once the club hits level 3.
   vipLounge: { key: 'vipLounge', cost: 380, color: 0xffe066, label: 'VIP Lounge', fanRate: 0.6, unlockLevel: 3, category: 'Booths' },
@@ -95,7 +103,7 @@ export const PROP_TYPES = {
   // disco ball (ambiance only, no capacity), just the entry-level option so
   // the Decorations tab isn't a single item at launch.
   plant: { key: 'plant', cost: 60, color: 0x4dff88, label: 'Potted Plant', fanRate: 0.2, unlockLevel: 1, category: 'Decorations' },
-  // The Decorations tab's own unlock-tier item, mirroring neonFloor/
+  // The Decorations tab's own unlock-tier item, mirroring the floor/
   // vipLounge's pattern: a pricier, better-fan-rate option that opens up
   // once you've reached level 3.
   neonSign: { key: 'neonSign', cost: 260, color: 0xff5ec9, label: 'Neon Sign', fanRate: 0.7, unlockLevel: 3, category: 'Decorations', glow: true },
@@ -144,8 +152,5 @@ export function fameStars(cost) {
   return 1;
 }
 
-// Non-rotatable props that are flat ground decals (no real height) rather
-// than something sitting on top of a tile — rendered as a flat shaded
-// diamond instead of a 3D box, both in the world (drawIsoBox) and in the
-// build-bar icon (renderIsoIcon).
-export const FLOOR_DECAL_PROPS = new Set(['dance', 'neonFloor']);
+// Dance floor tiles: flat on the ground, patrons dance on them.
+export const FLOOR_DECAL_PROPS = new Set(Object.keys(PROP_TYPES).filter((k) => PROP_TYPES[k].floorStyle));

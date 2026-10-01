@@ -241,6 +241,33 @@ for (let i = 0; i < 20; i++) await page.click('#zoomOut');
 const zoom2 = await page.evaluate(() => window.__clubNova.scene.getScene('club').world.scaleX);
 check('zoom buttons zoom in and out within limits', zoom1 > zoom0 && Math.abs(zoom2 - 0.6) < 1e-6, `${zoom0.toFixed(2)} -> ${zoom1.toFixed(2)} -> ${zoom2.toFixed(2)}`);
 
+// Dance floors: nine designs, the animated ones move only while the DJ
+// plays, and a Step Floor lights up under a patron.
+const floors = await page.evaluate(async () => {
+  const s = window.__clubNova.scene.getScene('club');
+  const floorKeys = ['plainFloor', 'dance', 'woodFloor', 'glowFloor', 'neonFloor', 'ringFloor', 'waveFloor', 'rainbowFloor', 'stepFloor'];
+  const missing = floorKeys.filter((k) => !s.textures.exists(`floor_${{ plainFloor: 'plain', dance: 'checker', woodFloor: 'parquet', glowFloor: 'glow', neonFloor: 'lightUp', ringFloor: 'neonRings', waveFloor: 'wave', rainbowFloor: 'rainbow', stepFloor: 'step' }[k]}_0`));
+  const wave = s.restoreProp('waveFloor', 0, [9, 9]);
+  const step = s.restoreProp('stepFloor', 0, [10, 9]);
+  const music = s.musicPlaying();
+  const flowing = [[8, 9], [8, 10], [9, 10], [10, 10], [11, 10]].map(([x, y], i) => s.restoreProp(i % 2 ? 'rainbowFloor' : 'waveFloor', 0, [x, y]));
+  const frames = new Set();
+  const broken = new Set();
+  for (let i = 0; i < 30; i++) {
+    s.animateFloors();
+    frames.add(wave.gameObject.floorFrame);
+    for (const rec of flowing) if (rec.gameObject.texture.key === '__MISSING') broken.add(rec.type);
+  }
+  const patron = s.patrons.find((p) => !p.gone);
+  let lit = null;
+  if (patron) { patron.gx = 10; patron.gy = 9; s.animateFloors(); lit = step.gameObject.floorFrame; }
+  return { missing, music, waveFrames: frames.size, lit, broken: [...broken] };
+});
+check('all nine dance floor designs are drawn', floors.missing.length === 0, floors.missing.join(', ') || '9 of 9');
+check('an animated floor moves while the DJ plays', floors.music && floors.waveFrames > 3, `${floors.waveFrames} frames`);
+check('every animated floor tile always has a picture', floors.broken.length === 0, floors.broken.join(', ') || 'none blank');
+check('a Step Floor lights up under a patron', floors.lit === 7, `frame ${floors.lit}`);
+
 check('no errors in the page', errors.length === 0, errors.join(' | '));
 
 await browser.close();

@@ -2,6 +2,7 @@
 // Mixed into ClubScene (see ClubScene.js); `this` is the scene.
 import { PROP_TYPES, STAFF_TYPES } from '../catalog.js';
 import { FACINGS, FALLBACK_PROP_HEIGHT, FLOOR_COLOR, SELL_REFUND_RATIO, TILE_H, TILE_W } from '../config.js';
+import { floorTextureKey } from '../floors.js';
 import { SFX } from '../sfx.js';
 
 export class PlacementMixin {
@@ -151,6 +152,12 @@ export class PlacementMixin {
       }
     }
     if (!valid) return; // occupied or off-grid — no ghost sprite, just the red tint
+    if (def.floorStyle) {
+      const { sx, sy } = this.gridToScreen(tiles[0][0], tiles[0][1]);
+      this.ghost = this.add.image(sx, sy, floorTextureKey(def.floorStyle, 0)).setDisplaySize(TILE_W, TILE_H).setAlpha(0.7);
+      this.ghostLayer.add(this.ghost);
+      return;
+    }
     if (!def.rotatable || !this.hasAnySprite(this.selectedProp)) return; // placeholder-box props have no sprite ghost
 
     const { sx, sy } = this.footprintCenter(tiles);

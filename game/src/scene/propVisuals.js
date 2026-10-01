@@ -2,6 +2,7 @@
 // Mixed into ClubScene (see ClubScene.js); `this` is the scene.
 import Phaser from 'phaser';
 import { FLOOR_DECAL_PROPS, PROP_TYPES } from '../catalog.js';
+import { FLOOR_STYLES, floorFrameCanvas, floorFrameFor, floorTextureKey } from '../floors.js';
 import { FACINGS, FALLBACK_PROP_HEIGHT, FALLBACK_PROP_WIDTH, PROP_SCALE, TILE_H, TILE_W } from '../config.js';
 
 // Hover name labels sit above every prop.
@@ -208,6 +209,11 @@ export class PropVisualsMixin {
       frontObject = spriteImage(this.layerKeyFor(type, facing, 'front'));
     } else if (def.rotatable && this.hasAnySprite(type)) {
       gameObject = spriteImage(this.spriteKeyFor(type, facing));
+    } else if (def.floorStyle) {
+      gameObject = this.add.image(sx, sy, floorTextureKey(def.floorStyle, 0));
+      gameObject.setDisplaySize(TILE_W, TILE_H);
+      gameObject.floorFrame = 0;
+      this.propLayer.add(gameObject);
     } else if (def.rotatable) {
       // sprites failed to load — fall back to a labeled box rather than
       // Phaser's broken-image placeholder
@@ -288,5 +294,60 @@ export class PropVisualsMixin {
     const def = PROP_TYPES[type];
     if (!def.layerSprites) return false;
     return Object.values(def.layerSprites).every((set) => FACINGS.every((f) => this.textures.exists(set[f])));
+  }
+
+  // --- Dance floors -------------------------------------------------------
+
+  // Draws every frame of every floor design (src/floors.js) into a texture.
+  registerFloorTextures() {
+    for (const [style, st] of Object.entries(FLOOR_STYLES)) {
+      for (let f = 0; f < st.frames; f++) {
+        const key = floorTextureKey(style, f);
+        if (!this.textures.exists(key)) this.textures.addCanvas(key, floorFrameCanvas(style, f));
+      }
+    }
+  }
+
+  // Steps the animated floors, every FLOOR_TICK_MS. They only move while a
+  // DJ plays; otherwise they rest on frame 0. A Step Floor tile lights up
+  // under a patron and splashes to the tiles beside them, then fades.
+  animateFloors() {
+    this.floorTick = (this.floorTick || 0) + 1;
+    const music = this.musicPlaying();
+    const heat = this.stepHeat || (this.stepHeat = {});
+    for (const key in heat) {
+      if (this.floorTick % 2 === 0) heat[key] = Math.max(0, heat[key] - 1);
+    }
+    if (music) {
+      for (const p of this.patrons) {
+        if (p.gone || !this.isStepTile(p.gx, p.gy)) continue;
+        heat[`${p.gx},${p.gy}`] = 7;
+        for (const [dx, dy] of [[1, 0], [-1, 0], [0, 1], [0, -1]]) {
+          const k = `${p.gx + dx},${p.gy + dy}`;
+          heat[k] = Math.max(heat[k] || 0, 3);
+        }
+      }
+    }
+    const seen = new Set();
+    for (const key in this.placed) {
+      const rec = this.placed[key];
+      if (seen.has(rec)) continue;
+      seen.add(rec);
+      const style = PROP_TYPES[rec.type].floorStyle;
+      if (!style || FLOOR_STYLES[style].frames <= 1) continue;
+      const [gx, gy] = rec.tiles[0];
+      let frame = 0;
+      if (FLOOR_STYLES[style].phase === 'step') frame = heat[`${gx},${gy}`] || 0;
+      else if (music) frame = floorFrameFor(style, gx, gy, this.floorTick);
+      if (rec.gameObject.floorFrame !== frame) {
+        rec.gameObject.floorFrame = frame;
+        rec.gameObject.setTexture(floorTextureKey(style, frame));
+      }
+    }
+  }
+
+  isStepTile(gx, gy) {
+    const rec = this.placed[`${gx},${gy}`];
+    return !!rec && FLOOR_STYLES[PROP_TYPES[rec.type].floorStyle]?.phase === 'step';
   }
 }

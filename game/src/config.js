@@ -149,3 +149,6 @@ export const SAVE_KEY = 'clubNovaSave_v1';
 // Fraction of a prop's fixed cost refunded when you right-click to sell it
 // back (see sellProp()).
 export const SELL_REFUND_RATIO = 0.5;
+
+// How often animated dance floors step a frame (see animateFloors()).
+export const FLOOR_TICK_MS = 125;

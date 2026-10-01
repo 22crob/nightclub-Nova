@@ -11,7 +11,8 @@
 //   'random' every tile on its own beat
 //   'ripple' offset by distance along the floor
 //   'flow'   one pattern `period` tiles long that flows across the whole
-//            floor; the draw function paints its slice of it seamlessly
+//            floor; the draw function paints its slice of it seamlessly.
+//            `frames` must be a multiple of `period`.
 //   'step'   driven by dancers: frame 0 is idle, higher frames are brighter
 //            (see animateFloors())
 // The ladder runs simple to fancy: plain tiles first, then a gentle glow,
@@ -245,12 +246,12 @@ export const FLOOR_STYLES = {
 
   // A smooth rainbow flowing across the whole dance floor.
   rainbow: {
-    frames: 16,
+    frames: 24,
     speed: 1,
     phase: 'flow',
     period: 6,
     draw(ctx, S, frame) {
-      flowFill(ctx, S, frame, 16, 6, (x) => `hsl(${(x * 360) | 0},90%,58%)`);
+      flowFill(ctx, S, frame, 24, 6, (x) => `hsl(${(x * 360) | 0},90%,58%)`);
       const gloss = ctx.createLinearGradient(0, 0, S, S);
       gloss.addColorStop(0, 'rgba(255,255,255,0.35)');
       gloss.addColorStop(0.45, 'rgba(255,255,255,0)');
@@ -318,7 +319,7 @@ export function floorFrameFor(style, gx, gy, tick) {
   let offset = 0;
   if (st.phase === 'random') offset = (gx * 7 + gy * 13 + gx * gy * 5) % st.frames;
   else if (st.phase === 'ripple') offset = -(gx + gy);
-  else if (st.phase === 'flow') offset = -(gx + gy) * (st.frames / st.period);
+  else if (st.phase === 'flow') offset = -(gx + gy) * Math.round(st.frames / st.period);
   return (((beat + offset) % st.frames) + st.frames) % st.frames;
 }
 

@@ -3,7 +3,7 @@
 import Phaser from 'phaser';
 import { PATRON_META, PATRON_SHEETS, SPRITE_URLS } from '../assets.js';
 import { PROP_TYPES } from '../catalog.js';
-import { BASE_GRID_SIZE, FACINGS, PASSIVE_FAN_SHARE, STARTING_CASH, WAGE_INTERVAL_MS, ZOOM_DEFAULT } from '../config.js';
+import { BASE_GRID_SIZE, FACINGS, PASSIVE_FAN_SHARE, FLOOR_TICK_MS, STARTING_CASH, WAGE_INTERVAL_MS, ZOOM_DEFAULT } from '../config.js';
 import { SFX } from '../sfx.js';
 import { WorldMixin } from './world.js';
 import { PlacementMixin } from './placement.js';
@@ -78,6 +78,7 @@ export class ClubScene extends Phaser.Scene {
     this.world.add(this.wallLayer);
     this.world.add(this.propLayer);
     this.world.add(this.patronLayer);
+    this.registerFloorTextures();
     this.world.add(this.ghostLayer);
 
     // If there's a save with an already-expanded club, size the grid to
@@ -253,6 +254,9 @@ export class ClubScene extends Phaser.Scene {
       callback: () => this.saveGame(),
     });
     window.addEventListener('beforeunload', () => this.saveGame());
+
+    // Animated dance floors.
+    this.time.addEvent({ delay: FLOOR_TICK_MS, loop: true, callback: () => this.animateFloors() });
 
     // Staff wages.
     this.time.addEvent({ delay: WAGE_INTERVAL_MS, loop: true, callback: () => this.payWages() });
