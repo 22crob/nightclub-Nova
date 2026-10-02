@@ -49,9 +49,9 @@ import iso_rig  # noqa: E402
 REPO = os.path.dirname(os.path.dirname(HERE))
 OUT_DIR = os.path.join(REPO, 'game', 'src', 'assets', 'sprites', 'patrons')
 
-FRAME_W, FRAME_H = 112, 176
+FRAME_W, FRAME_H = 112, 200
 PX_PER_UNIT = 76            # render pixels per Blender unit, measured on screen
-AIM_Z = 1.02                # height the camera centres on
+AIM_Z = 1.2                 # height the camera centres on
 ANIMS = (('idle', 4), ('walk', 8), ('dance', 16))
 # Front faces screen down-left (Blender -Y), turned 25 degrees toward the
 # camera so the face reads better; back faces up-right, turned the same way.
@@ -211,7 +211,53 @@ def outline_mat():
 OUTLINE_WIDTH = 0.024
 
 
+# Nightclub City proportions: everything is modelled on the old chibi body
+# (head on a short body, about 2 heads tall), then reshaped: longer legs, a
+# taller and slimmer torso, and the head lifted to sit on top, so a
+# character is about 2.6 heads tall. warp_z() maps a rest-pose height on the
+# old body to the new one.
+FEET_Z, HIP_Z, NECK_Z = 0.15, 0.5, 0.98
+LEG_STRETCH, TORSO_STRETCH, SLIM = 1.8, 1.3, 0.85
+HEAD_LIFT = (HIP_Z - FEET_Z) * (LEG_STRETCH - 1) + (NECK_Z - HIP_Z) * (TORSO_STRETCH - 1)
+
+
+def warp_z(z):
+    if z < FEET_Z:
+        return z
+    if z < HIP_Z:
+        return FEET_Z + (z - FEET_Z) * LEG_STRETCH
+    return warp_z(HIP_Z - 1e-9) + (z - HIP_Z) * TORSO_STRETCH
+
+
+def in_head(parent):
+    while parent is not None:
+        if parent.name.startswith('Neck'):
+            return True
+        parent = parent.parent
+    return False
+
+
+def warp_point(p, head):
+    if head:
+        return Vector((p.x, p.y, p.z + HEAD_LIFT))
+    return Vector((p.x * SLIM, p.y * SLIM, warp_z(min(p.z, NECK_Z))))
+
+
+def warp_mesh(obj, parent):
+    """Reshapes a part (still in its rest pose) onto the new proportions."""
+    if in_head(parent):
+        obj.location.z += HEAD_LIFT  # moved whole, so the face decal's mapping holds
+        return
+    bpy.context.view_layer.update()
+    mw = obj.matrix_world.copy()
+    inv = mw.inverted()
+    head = False
+    for v in obj.data.vertices:
+        v.co = inv @ warp_point(mw @ v.co, head)
+
+
 def _finish(obj, material, parent, outline=True, smooth=True, width=OUTLINE_WIDTH):
+    warp_mesh(obj, parent)
     obj.data.materials.append(material)
     if smooth:
         for p in obj.data.polygons:
@@ -322,7 +368,7 @@ def torus(loc, major, minor, material, parent, rot=(0, 0, 0), scale=(1, 1, 1), o
 def pivot(name, loc, parent=None):
     e = bpy.data.objects.new(name, None)
     bpy.context.scene.collection.objects.link(e)
-    e.location = loc
+    e.location = warp_point(Vector(loc), in_head(parent))
     if parent:
         bpy.context.view_layer.update()
         e.parent = parent
@@ -567,7 +613,7 @@ def build_character(look, tmp):
         if look['top'] == 'track':
             capsule((x + (arm_r + 0.004) * (1 if x > 0 else -1), 0, 0.93), (x + (arm_r + 0.004) * (1 if x > 0 else -1), 0, 0.6),
                     0.013, mat(C['white']), sh, outline=False)
-        sphere((x, 0, 0.52), arm_r * 1.3, (1, 1, 1), skin, sh)  # chunky hands
+        sphere((x, 0, 0.53), arm_r * 1.05, (1, 1, 1.15), skin, sh)  # hands
         arms.append(sh)
 
     # Head.
@@ -957,7 +1003,7 @@ def main():
         'originY': round(1 - v.y, 5),
         # Height of a standing character in render pixels, head to feet, so
         # the game can scale sprites to its own character height.
-        'standingHeight': round((1.84 * math.cos(math.radians(30))) * PX_PER_UNIT, 1),
+        'standingHeight': round(((1.84 + HEAD_LIFT) * math.cos(math.radians(30))) * PX_PER_UNIT, 1),
         'rows': rows,
         'frames': {anim: n for anim, n in ANIMS},
         'count': CHARACTER_COUNT,
