@@ -164,7 +164,7 @@ def mat(hex_color, shadow=(0.6, 0.55, 0.78), highlight=1.18):
     remap.inputs[1].default_value = 0.5
     remap.inputs[2].default_value = 0.5
     ramp = nt.nodes.new('ShaderNodeValToRGB')
-    ramp.color_ramp.interpolation = 'CONSTANT'
+    ramp.color_ramp.interpolation = 'EASE'  # soft, glossy shading like Nightclub City's
     ramp.color_ramp.elements[0].position = 0.0
     ramp.color_ramp.elements[0].color = (*tint(base, shadow), 1)
     ramp.color_ramp.elements[1].position = 0.47
@@ -217,7 +217,7 @@ OUTLINE_WIDTH = 0.024
 # character is about 2.6 heads tall. warp_z() maps a rest-pose height on the
 # old body to the new one.
 FEET_Z, HIP_Z, NECK_Z = 0.15, 0.5, 0.98
-LEG_STRETCH, TORSO_STRETCH, SLIM = 1.8, 1.3, 0.85
+LEG_STRETCH, TORSO_STRETCH, SLIM = 1.3, 1.0, 0.62
 HEAD_LIFT = (HIP_Z - FEET_Z) * (LEG_STRETCH - 1) + (NECK_Z - HIP_Z) * (TORSO_STRETCH - 1)
 
 
@@ -446,14 +446,15 @@ def paint_face(look, path):
         d.polygon([P(x, z) for x, z in ((-0.1, 1.2), (0, 1.225), (0.1, 1.2), (0.09, 1.18), (0, 1.195),
                                          (-0.09, 1.18))], fill=beard)
 
-    # Eyes: big glossy anime eyes.
-    iris = rgba(EYES[look['eyes']])
-    iris_dark = tuple(int(c * 0.45) for c in iris[:3]) + (255,)
-    iris_light = tuple(min(255, int(c * 1.35 + 40)) for c in iris[:3]) + (255,)
+    # Eyes: big dark Nightclub City eyes, just tinted with the eye colour.
+    tint_rgb = rgba(EYES[look['eyes']])
+    iris = tuple(int(20 + c * 0.22) for c in tint_rgb[:3]) + (255,)
+    iris_dark = rgba('#0c0810')
+    iris_light = tuple(int(40 + c * 0.35) for c in tint_rgb[:3]) + (255,)
     for side in (1, -1):
         ex, ez = 0.155 * side, 1.335
         ellipse(ex, ez, 0.078, 0.086, rgba('#ffffff'))                     # white
-        ellipse(ex - 0.006 * side, ez - 0.006, 0.06, 0.078, iris)          # iris
+        ellipse(ex - 0.006 * side, ez - 0.006, 0.068, 0.082, iris)         # iris, nearly filling the eye
         ellipse(ex - 0.006 * side, ez - 0.03, 0.045, 0.04, iris_light)    # glow at the bottom
         ellipse(ex - 0.006 * side, ez + 0.02, 0.058, 0.05, iris_dark)      # shade at the top
         ellipse(ex - 0.006 * side, ez - 0.004, 0.027, 0.036, rgba('#140a1c'))   # pupil
