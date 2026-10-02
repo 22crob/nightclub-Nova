@@ -138,7 +138,7 @@ export const PATRON_Y_OFFSET = 6 * PROP_SCALE;
 // as a bar counter, so props and decorations read at the right size around
 // them. (It was 3.25 at first, which made characters about 2.4 counters
 // tall.)
-export const CHARACTER_DISPLAY_HEIGHT = 67.2; // px: about 1.5x a bar counter
+export const CHARACTER_DISPLAY_HEIGHT = 87.4; // px: big next to the furniture, like Nightclub City
 // How far above a patron's feet their tip / drink popups start.
 export const PATRON_POPUP_Y = CHARACTER_DISPLAY_HEIGHT * 0.8;
 
