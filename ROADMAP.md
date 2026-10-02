@@ -33,5 +33,7 @@ The visual and gameplay reference for everything is **Nightclub City** (2010): i
 ## 5. Gameplay
 - Staff and drink sales: done. Hire a bartender per bar and a DJ per booth (Staff tab); wages every 30s, and staff quit if unpaid. Thirsty patrons walk to staffed bars and buy drinks (the main income); the dance floor and DJ booth only earn fans, and patrons only dance, while a DJ plays. Patrons route around furniture.
 - Patron needs and mood: done. Thirst and fun drive mood; mood scales tips (0.5x-1.5x), decides fans on leaving (+3 / +1 / 0, or -2 for storming out early), and the average (Vibe, shown in the HUD) speeds up or slows new arrivals. Passive fans from props were cut to a quarter so happy patrons matter.
+- Permanent DJ: done. Every club opens with a free Wood Booth and a DJ who never stops playing (no hiring or wages). The other booths are upgrades that swap it in place; it can be turned but not sold.
+- Drop the Bass: done. A free 90-second boost with a 5-minute cooldown: tips twice as often and twice as big, thirst twice as fast, most patrons dance, and the music's bass turned way up. The club has a built-in beat (src/music.js, Web Audio, no files).
 - Next: club nights on a clock, with an end-of-night summary
 - Then: Throw a Party events; a bouncer at the door

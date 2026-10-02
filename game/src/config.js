@@ -156,6 +156,12 @@ export const FLOOR_TICK_MS = 125;
 // heads for a free seat instead, and how long they stay seated (ms).
 export const SEAT_CHANCE = 0.3;
 
+// Drop the Bass (see boost.js): a free party boost with a cooldown. During
+// it, tips and thirst run `speedUp` times faster, tips are `tipMultiplier`
+// times bigger, and patrons head for the dance floor `danceChance` of the
+// time.
+export const BOOST = { durationMs: 90000, cooldownMs: 300000, speedUp: 2, tipMultiplier: 2, danceChance: 0.75 };
+
 // Mood lighting (see lighting.js): how much the floor and walls are dimmed,
 // and the coloured glow under lights. The owner found the glows too strong
 // in spots, so they're off for now (`glows: false`).

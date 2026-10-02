@@ -56,7 +56,13 @@ await page.reload();
 await waitForScene();
 
 let st = await state();
-check('starts with $700 and an empty club', st.cash === 700 && st.placed === 0, `cash ${st.cash}, placed ${st.placed}`);
+const opening = await page.evaluate(() => {
+  const s = window.__clubNova.scene.getScene('club');
+  const booth = s.clubBooth();
+  return { type: booth && booth.type, anchor: booth && booth.anchor.join(','), dj: !!(booth && booth.staff), music: s.musicPlaying() };
+});
+check('starts with $700 and just the DJ booth', st.cash === 700 && st.placed === 1, `cash ${st.cash}, placed ${st.placed}`);
+check('every club opens with a Wood Booth and a DJ playing', opening.type === 'woodBooth' && opening.anchor === '5,0' && opening.dj && opening.music, JSON.stringify(opening));
 check('all sprites loaded', st.textures.length === 0, st.textures.join(', ') || 'none missing');
 
 // Tips are paused while the checks below compare exact cash amounts.
@@ -69,17 +75,10 @@ check('shop opens with 8 tabs', tabs.length === 8 && tabs.includes('Staff'), tab
 check('bar shows its real sprite icon', await page.locator('.propButton .icon').first().evaluate((el) => el.style.backgroundImage.includes('data:image/png')));
 await page.click('#shopClose');
 
-// Place the Starter Bar (selected by default, $100) and a Wood Booth ($180).
+// Place the Starter Bar (selected by default, $100).
 await clickTile(2, 5);
 st = await state();
-check('placing a Starter Bar costs $100', st.cash === 600 && st.placed === 1, `cash ${st.cash}`);
-
-await page.click('#shopToggle');
-await page.click('.shopTab:has-text("DJ Booths")');
-await page.locator('.propButton').first().click();
-await clickTile(5, 5);
-st = await state();
-check('placing a Wood Booth costs $180', st.cash === 420 && st.placed === 2, `cash ${st.cash}`);
+check('placing a Starter Bar costs $100', st.cash === 600 && st.placed === 2, `cash ${st.cash}`);
 
 // The bar sprite spans exactly its 1x3 footprint: 4 half-tiles across,
 // plus the render script's small crop margin.
@@ -99,7 +98,7 @@ const order = await page.evaluate(() => {
   const behind = s.placed['1,1'].gameObject;
   const front = s.placed['2,5'].gameObject;
   const ok = s.propLayer.getIndex(behind) < s.propLayer.getIndex(front);
-  s.sellProp(1, 1); s.cash = cashBefore; s.selectedProp = 'dj';
+  s.sellProp(1, 1); s.cash = cashBefore; s.selectedProp = 'starterBar';
   return ok;
 });
 check('props draw back to front', order);
@@ -120,35 +119,33 @@ check('a bar facing the camera draws its counter in front', tiers.layered);
 check('all five DJ booth tiers load', tiers.booths === 5, `${tiers.booths} of 5`);
 
 // Placing on an occupied tile is refused.
-await clickTile(5, 5);
+await clickTile(2, 5);
 st = await state();
-check('occupied tile is refused', st.cash === 420 && st.placed === 2, JSON.stringify({ cash: st.cash, placed: st.placed }));
+check('occupied tile is refused', st.cash === 600 && st.placed === 2, JSON.stringify({ cash: st.cash, placed: st.placed }));
 
-// Rotate the placed booth (hover + R).
-const before = await page.evaluate(() => window.__clubNova.scene.getScene('club').placed['5,5'].facing);
-const { x: rx, y: ry } = await tileXY(5, 5);
+// Rotate the DJ booth (hover + R).
+const before = await page.evaluate(() => window.__clubNova.scene.getScene('club').placed['5,0'].facing);
+const { x: rx, y: ry } = await tileXY(5, 0);
 await page.mouse.move(rx, ry); await page.mouse.move(rx + 1, ry);
 await page.keyboard.press('r');
-const after = await page.evaluate(() => window.__clubNova.scene.getScene('club').placed['5,5'].facing);
-check('R rotates a placed DJ booth', after === (before + 90) % 360, `${before} -> ${after}`);
+const after = await page.evaluate(() => window.__clubNova.scene.getScene('club').placed['5,0'].facing);
+check('R rotates the DJ booth', after === (before + 90) % 360, `${before} -> ${after}`);
 
-// Staff: without them, the DJ booth earns no fans and the bar sells nothing.
-const unstaffedRate = await page.evaluate(() => window.__clubNova.scene.getScene('club').totalFanRate());
-check('unstaffed DJ booth earns no fans', unstaffedRate === 0, `rate ${unstaffedRate}`);
+// The DJ earns fans from the start; the bar needs a bartender.
+const openingRate = await page.evaluate(() => window.__clubNova.scene.getScene('club').totalFanRate());
+check('the DJ booth earns fans from the start', openingRate > 0, `rate ${openingRate}`);
 await page.keyboard.press('Escape');
 await page.click('#staffButton');
 const staffRows = await page.locator('.staffRow').count();
-check('Staff tab lists the bar and the DJ booth', staffRows === 2, `${staffRows} rows`);
-await page.locator('.staffButton.hire').first().click();
+check('Staff tab lists just the bar (the DJ is free)', staffRows === 1, `${staffRows} rows`);
 await page.locator('.staffButton.hire').first().click();
 await page.click('#shopClose');
 const staffed = await page.evaluate(() => {
   const s = window.__clubNova.scene.getScene('club');
-  return { cash: s.cash, music: s.musicPlaying(), working: s.staffableRecords().filter((r) => r.staff).length, rate: s.totalFanRate() };
+  return { cash: s.cash, music: s.musicPlaying(), bartenders: s.hireableRecords().filter((r) => r.staff).length };
 });
-check('hiring a bartender ($50) and a DJ ($80)', staffed.cash === 290 && staffed.working === 2, JSON.stringify(staffed));
+check('hiring a bartender costs $50', staffed.cash === 550 && staffed.bartenders === 1 && staffed.music, JSON.stringify(staffed));
 await page.evaluate(() => { delete window.__clubNova.scene.getScene('club').collectPatronTip; });
-check('a working DJ plays music and earns fans', staffed.music && staffed.rate > 0, JSON.stringify(staffed));
 
 // Patrons arrive, get thirsty, buy drinks, earn fans and tip.
 await page.waitForTimeout(24000);
@@ -204,14 +201,14 @@ const wages = await page.evaluate(() => {
   const paid = before - s.cash;
   s.cash = 3;
   s.payWages();
-  const left = s.staffableRecords().filter((r) => r.staff).length;
+  const left = s.hireableRecords().filter((r) => r.staff).length;
   const cashAfter = s.cash;
   s.cash += 500;
-  s.hireStaff(s.placed['5,5']); // re-hire the DJ for the save test below
-  return { paid, left, cashAfter };
+  const dj = !!s.clubBooth().staff;
+  return { paid, left, cashAfter, dj };
 });
-check('wages are paid', wages.paid === 10, `paid $${wages.paid}`);
-check('unpaid staff quit instead of going into debt', wages.left === 0 && wages.cashAfter === 3, JSON.stringify(wages));
+check('wages are paid (the DJ is free)', wages.paid === 4, `paid $${wages.paid}`);
+check('unpaid bartenders quit; the DJ never does', wages.left === 0 && wages.cashAfter === 3 && wages.dj, JSON.stringify(wages));
 await page.screenshot({ path: path.join(shotDir, 'club.png') });
 
 // Right-click sells for half price. Wages are paused so a payday landing
@@ -235,8 +232,42 @@ const restored = await page.evaluate(() => {
   return { savedPlaced: saved.placed.length, savedCash: Math.floor(saved.cash), placed: s.placedCount(), cash: Math.floor(s.cash) };
 });
 check('save restores after reload', restored.placed === restored.savedPlaced && Math.abs(restored.cash - restored.savedCash) <= 20, JSON.stringify(restored));
-const djAfterReload = await page.evaluate(() => !!window.__clubNova.scene.getScene('club').placed['5,5'].staff);
-check('hired staff are saved', djAfterReload);
+const djAfterReload = await page.evaluate(() => { const b = window.__clubNova.scene.getScene('club').clubBooth(); return !!b && !!b.staff && b.anchor.join(',') === '5,0'; });
+check('the DJ booth and its DJ come back after reload', djAfterReload);
+
+// The DJ booth can't be sold, only upgraded in place (paying the new price
+// less half the old one's).
+const upgrade = await page.evaluate(() => {
+  const s = window.__clubNova.scene.getScene('club');
+  const fans = s.fans;
+  s.fans = Math.max(s.fans, 150); // level 2, for the Pro Booth
+  const c0 = s.cash;
+  s.sellProp(5, 0);
+  const kept = !!s.clubBooth() && s.cash === c0;
+  s.cash = 1000;
+  const ok = s.upgradeClubBooth('proBooth');
+  const b = s.clubBooth();
+  const result = { kept, ok, type: b.type, anchor: b.anchor.join(','), dj: !!b.staff, paid: 1000 - s.cash, booths: s.staffableRecords().filter((r) => r.staff && r.staff.kind === 'dj').length };
+  s.fans = fans;
+  return result;
+});
+check('the DJ booth can\'t be sold', upgrade.kept, JSON.stringify(upgrade));
+check('upgrading the booth swaps it in place ($215 - $90)', upgrade.ok && upgrade.type === 'proBooth' && upgrade.anchor === '5,0' && upgrade.dj && upgrade.paid === 125 && upgrade.booths === 1, JSON.stringify(upgrade));
+
+// Drop the Bass: a 90-second boost, then a cooldown.
+const boost = await page.evaluate(() => {
+  const s = window.__clubNova.scene.getScene('club');
+  const started = s.startBoost();
+  const during = { boosted: s.isBoosted(), factor: s.boostFactor(), button: document.getElementById('boostButton').dataset.state, label: document.getElementById('boostLabel').textContent };
+  const again = s.startBoost();
+  s.boostUntil = s.time.now - 1; // skip to the end
+  s.tickBoost();
+  const afterEnd = { boosted: s.isBoosted(), button: document.getElementById('boostButton').dataset.state, canBoost: s.canBoost() };
+  s.boostReadyAt = 0; s.tickBoost(); // skip the cooldown so later checks aren't affected
+  return { started, during, again, afterEnd };
+});
+check('Drop the Bass starts a 90-second boost', boost.started && boost.during.boosted && boost.during.factor === 2 && boost.during.button === 'active' && /1:(30|29)/.test(boost.during.label), JSON.stringify(boost.during));
+check('the boost can\'t be stacked, and has a cooldown after', !boost.again && !boost.afterEnd.boosted && boost.afterEnd.button === 'cooldown' && !boost.afterEnd.canBoost, JSON.stringify(boost.afterEnd));
 
 // Zoom buttons change the zoom and stay within limits.
 const zoom0 = await page.evaluate(() => window.__clubNova.scene.getScene('club').world.scaleX);

@@ -18,6 +18,8 @@ import { MoodMixin } from './mood.js';
 import { WallpaperMixin } from './wallpaper.js';
 import { SeatingMixin } from './seating.js';
 import { LightingMixin } from './lighting.js';
+import { BoostMixin } from './boost.js';
+import { Music } from '../music.js';
 import { applyMixins } from './applyMixins.js';
 
 export class ClubScene extends Phaser.Scene {
@@ -105,6 +107,7 @@ export class ClubScene extends Phaser.Scene {
     // but before updateUI() below so the very first render already shows
     // the restored cash/fans instead of flashing the fresh-game defaults.
     this.loadGame();
+    this.ensureClubBooth(); // every club has its DJ booth, with the DJ playing
 
     // Baseline for level-up detection (see updateUI()) — set from whatever
     // level the restored save (or a fresh level-1 game) actually starts
@@ -202,9 +205,11 @@ export class ClubScene extends Phaser.Scene {
       this.muteButton.addEventListener('click', () => {
         SFX.unlock();
         SFX.setMuted(!SFX.muted);
+        Music.applyLevels();
         this.updateMuteButton();
       });
     }
+    this.setupBoost();
 
     // Outline layer for the "which tiles will this actually occupy" marker
     // — always drawn on top of props/ghost so a tall sprite's artwork can
@@ -290,4 +295,5 @@ applyMixins(ClubScene, [
   WallpaperMixin,
   SeatingMixin,
   LightingMixin,
+  BoostMixin,
 ]);

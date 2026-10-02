@@ -234,11 +234,27 @@ export class PlacementMixin {
     const key = `${gx},${gy}`;
     const placed = this.placed[key];
     if (!placed) return; // nothing here to sell
+    if (PROP_TYPES[placed.type].staff === 'dj') {
+      // The club's DJ booth stays; it can only be swapped for another tier.
+      SFX.denied();
+      this.showToast('🎧 Your DJ booth stays! Upgrade it from the DJ Booths tab.');
+      return;
+    }
 
     const refund = Math.round(PROP_TYPES[placed.type].cost * SELL_REFUND_RATIO);
     this.cash += refund;
-    if (PROP_TYPES[placed.type].seats) this.releaseSeats(placed);
+    this.removeProp(placed);
 
+    SFX.sell();
+    this.updateGhost(); // the hover tint/ghost may be stale now that this tile is free
+    this.updateUI();
+    this.saveGame();
+  }
+
+  // Takes a placed prop out of the club (its tiles, art, staff and lights),
+  // with no refund: used by selling and by swapping the DJ booth.
+  removeProp(placed) {
+    if (PROP_TYPES[placed.type].seats) this.releaseSeats(placed);
     // The record is stored under every tile a multi-tile prop occupies —
     // free all of them, not just the tile that was clicked.
     for (const [tx, ty] of placed.tiles) delete this.placed[`${tx},${ty}`];
@@ -260,11 +276,6 @@ export class PlacementMixin {
       placed.lightRig.tween.remove();
       placed.lightRig.container.destroy();
     }
-
-    SFX.sell();
-    this.updateGhost(); // the hover tint/ghost may be stale now that this tile is free
-    this.updateUI();
-    this.saveGame();
   }
 
   // Recreates one prop from a save entry — same visual as placeProp() but

@@ -1,6 +1,7 @@
 // ClubScene methods: The shop panel, item selection, unlocks and prices.
 // Mixed into ClubScene (see ClubScene.js); `this` is the scene.
 import { FLOOR_DECAL_PROPS, PROP_TYPES, SHOP_CATEGORIES, fameStars } from '../catalog.js';
+import { SELL_REFUND_RATIO } from '../config.js';
 import { realSpriteIconFor, renderIsoIcon } from '../icons.js';
 import { SFX } from '../sfx.js';
 
@@ -163,6 +164,11 @@ export class ShopMixin {
       cost.textContent = this.isUnlocked(key) ? `💰 ${this.currentCost(key)}` : `🔒 Lv ${def.unlockLevel || 1}`; // overwritten immediately by updateShopUI() below too, but correct from the first frame
 
       button.addEventListener('click', () => {
+        // DJ booths aren't placed: buying one swaps the club's booth.
+        if (def.category === 'DJ Booths') {
+          if (this.upgradeClubBooth(key)) this.closeShop();
+          return;
+        }
         const wasSelected = this.selectedProp === key;
         this.selectProp(key);
         // Only get out of the way once something was actually just picked.
@@ -271,13 +277,18 @@ export class ShopMixin {
       for (const key in this.shopButtons) {
         const unlocked = this.isUnlocked(key);
         const cost = this.currentCost(key);
-        this.shopButtons[key].classList.toggle('selected', unlocked && key === this.selectedProp);
-        this.shopButtons[key].classList.toggle('unaffordable', unlocked && this.cash < cost);
+        // DJ booths are upgrades for the club's one booth: the current one is
+        // marked, and the others show what the swap costs.
+        const booth = PROP_TYPES[key].category === 'DJ Booths' ? this.clubBooth() : null;
+        const current = !!booth && booth.type === key;
+        const swapCost = booth ? cost - Math.round(PROP_TYPES[booth.type].cost * SELL_REFUND_RATIO) : cost;
+        this.shopButtons[key].classList.toggle('selected', unlocked && (booth ? current : key === this.selectedProp));
+        this.shopButtons[key].classList.toggle('unaffordable', unlocked && !current && this.cash < swapCost);
         this.shopButtons[key].classList.toggle('locked', !unlocked);
         if (this.shopCosts[key]) {
-          this.shopCosts[key].textContent = unlocked
-            ? `💰 ${cost}`
-            : `🔒 Lv ${PROP_TYPES[key].unlockLevel || 1}`;
+          let text = unlocked ? `💰 ${cost}` : `🔒 Lv ${PROP_TYPES[key].unlockLevel || 1}`;
+          if (unlocked && booth) text = current ? '🎧 Playing now' : `⬆ ${Math.max(0, swapCost)}`;
+          this.shopCosts[key].textContent = text;
         }
       }
     }

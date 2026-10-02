@@ -174,6 +174,7 @@ export class SeatingMixin {
 
   // Called from pickRoamTarget(): sometimes a patron goes for a sit.
   maybeGoSit(patron) {
+    if (this.isBoosted()) return false; // everyone's dancing
     return Math.random() < SEAT_CHANCE && this.claimSeat(patron);
   }
 }

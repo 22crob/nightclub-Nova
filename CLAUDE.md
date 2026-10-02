@@ -13,6 +13,7 @@ See ROADMAP.md for the plan. The reference for all art, UI and gameplay is Night
 - New buyable items go in `src/catalog.js`. Sprites go in `src/assets/sprites/` and are listed in `src/assets.js`.
 - Flat surfaces (dance floors, and later wallpaper) are drawn in code, not Blender: designs live in `src/floors.js` / `src/walls.js` and are added to the catalog with `floorTier()` / `wallTier()`. Painted wall sections are saved under `wallpaper` in the save. A `flow` design needs `frames` to be a multiple of `period`.
 - Sprite calibration (`displayWidth`, `originX`/`originY`) was measured against the actual rendered PNGs. Re-measure it if a sprite is re-rendered.
+- The club always has exactly one DJ booth with a permanent DJ (`ensureClubBooth()` / `upgradeClubBooth()` in `staff.js`); only bartenders are hired. Music is `src/music.js`, and the Drop the Bass boost is `src/scene/boost.js`.
 - The save format lives in `src/scene/save.js` under the key `clubNovaSave_v1`. Don't break existing saves; bump the key only if the format changes incompatibly.
 
 ## Art pipeline

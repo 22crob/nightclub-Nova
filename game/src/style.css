@@ -323,3 +323,27 @@ body { font-family: var(--ui-font); color: var(--ink); }
   background: linear-gradient(180deg, #3d5b93 0%, #1e3566 50%, #152a55 51%, #0f1f42 100%);
 }
 .staffButton:active { transform: translateY(2px); }
+
+/* Drop the Bass: the party boost button, under the stats (see boost.js). */
+.boostButton {
+  position: fixed; top: calc(74px + env(safe-area-inset-top, 0px)); right: 12px; z-index: 10;
+  display: flex; align-items: center; gap: 8px; padding: 7px 16px 8px; border-radius: 14px;
+  font-size: 17px; font-weight: 700; color: #fff; text-shadow: var(--outline); cursor: pointer; user-select: none;
+  background: linear-gradient(180deg, #ff7ae0 0%, #d63aff 48%, #b21fe0 52%, #7a12b0 100%);
+  border: 2px solid var(--navy);
+  box-shadow: inset 0 2px 0 rgba(255, 255, 255, 0.55), 0 3px 0 var(--navy-deep), 0 6px 14px rgba(214, 58, 255, 0.45);
+  font-variant-numeric: tabular-nums;
+}
+.boostButton:hover { filter: brightness(1.08); }
+.boostButton:active { transform: translateY(2px); }
+.boostIcon { font-size: 20px; }
+.boostButton[data-state="active"] {
+  background: linear-gradient(180deg, #ffe27a 0%, #ff9a3c 48%, #ff6a1f 52%, #c84a0c 100%);
+  box-shadow: inset 0 2px 0 rgba(255, 255, 255, 0.55), 0 3px 0 var(--navy-deep), 0 0 18px rgba(255, 160, 60, 0.8);
+  cursor: default;
+}
+.boostButton[data-state="cooldown"] {
+  background: linear-gradient(180deg, #8a8fa8 0%, #5e6380 48%, #545875 52%, #3a3e58 100%);
+  box-shadow: inset 0 2px 0 rgba(255, 255, 255, 0.3), 0 3px 0 var(--navy-deep);
+  cursor: default; opacity: 0.9;
+}

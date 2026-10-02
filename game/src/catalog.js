@@ -46,9 +46,11 @@ const BAR_FOOTPRINT = {
   270: [[0, 0], [1, 0], [2, 0]],
 };
 // The DJ booth line-up (art/blender/build_booths.py), paired with the bars:
-// same 2x1 footprint and gameplay (a DJ plays music and the booth earns
-// fans), only the look, price and unlock level differ. The key 'dj' stays
-// on the tier-3 Club Booth so older saves keep their booth.
+// same 2x1 footprint and gameplay, only the look, price and unlock level
+// differ. Every club has exactly one booth, with its DJ always playing: a
+// new club starts with a free Wood Booth, and the others are upgrades that
+// swap it in place (see upgradeClubBooth()). The key 'dj' stays on the
+// tier-3 Club Booth so older saves keep their booth.
 const BOOTH_FOOTPRINT = {
   0: [[0, 0], [1, 0]],
   90: [[0, 0], [0, 1]],
@@ -235,7 +237,9 @@ export const SHOP_CATEGORIES = ['Bars', 'DJ Booths', 'Seating', 'Floors', 'Decor
 // `character` is which patron spritesheet they wear.
 export const STAFF_TYPES = {
   bartender: { key: 'bartender', label: 'Bartender', hireCost: 50, wage: 4, character: 8 },
-  dj: { key: 'dj', label: 'DJ', hireCost: 80, wage: 6, character: 0 },
+  // Every club has one DJ from the start who never stops playing: not
+  // hired, never paid, never quits (see ensureClubBooth()).
+  dj: { key: 'dj', label: 'DJ', hireCost: 0, wage: 0, character: 0, permanent: true },
 };
 
 // Sequential tiers for growing the club's physical floor past its starting

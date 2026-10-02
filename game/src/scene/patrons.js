@@ -3,7 +3,7 @@
 import Phaser from 'phaser';
 import { PATRON_META, PATRON_SHEETS } from '../assets.js';
 import { FLOOR_DECAL_PROPS, PROP_TYPES, STAFF_TYPES } from '../catalog.js';
-import { CHARACTER_DISPLAY_HEIGHT, HAIR_STYLES, PATRON_HAIR_COLORS, PATRON_LIFETIME, PATRON_MOVE_INTERVAL, PATRON_OUTFIT_COLORS, PATRON_POI_LINGER, PATRON_POPUP_Y, PATRON_SKIN_TONES, PATRON_SPAWN_INTERVAL, PATRON_SPAWN_TILE, PATRON_TIP_INTERVAL, PATRON_Y_OFFSET, PROP_SCALE } from '../config.js';
+import { BOOST, CHARACTER_DISPLAY_HEIGHT, HAIR_STYLES, PATRON_HAIR_COLORS, PATRON_LIFETIME, PATRON_MOVE_INTERVAL, PATRON_OUTFIT_COLORS, PATRON_POI_LINGER, PATRON_POPUP_Y, PATRON_SKIN_TONES, PATRON_SPAWN_INTERVAL, PATRON_SPAWN_TILE, PATRON_TIP_INTERVAL, PATRON_Y_OFFSET, PROP_SCALE } from '../config.js';
 import { SFX } from '../sfx.js';
 import { MOOD } from './mood.js';
 import { randRange } from '../util.js';
@@ -223,7 +223,7 @@ export class PatronsMixin {
       }
       if (now >= patron.nextTipAt) {
         this.collectPatronTip(patron);
-        patron.nextTipAt = now + randRange(...PATRON_TIP_INTERVAL);
+        patron.nextTipAt = now + randRange(...PATRON_TIP_INTERVAL) / this.boostFactor();
       }
     }
   }
@@ -315,6 +315,7 @@ export class PatronsMixin {
     const pick = Phaser.Utils.Array.GetRandom;
     const roll = Math.random();
     const anyStaffedBar = barTiles.length > 0 && this.staffableRecords().some((r) => r.staff && PROP_TYPES[r.type].staff === 'bartender');
+    if (this.isBoosted() && danceTiles.length > 0 && roll < BOOST.danceChance) return pick(danceTiles); // bass drop: everyone dances
     if (anyStaffedBar && roll < 0.45) return pick(barTiles);
     if (danceTiles.length > 0 && roll < (music ? 0.85 : 0.6) && (music || Math.random() < 0.3)) return pick(danceTiles);
     if (hangoutTiles.length > 0 || barTiles.length > 0) return pick(hangoutTiles.concat(barTiles));
@@ -606,7 +607,8 @@ export class PatronsMixin {
     const nearRevenue = this.isNearRevenueProp(patron.gx, patron.gy);
     const base = 1 + Math.random() * 3; // $1-4
     const moodFactor = 0.5 + patron.mood / 100; // unhappy patrons tip half, happy ones up to 1.5x
-    const amount = Math.max(1, Math.round((nearRevenue ? base * 2 : base) * moodFactor));
+    const boost = this.isBoosted() ? BOOST.tipMultiplier : 1;
+    const amount = Math.max(1, Math.round((nearRevenue ? base * 2 : base) * moodFactor * boost));
     this.cash += amount;
     this.fans += nearRevenue ? 0.4 : 0.1;
     SFX.tip();

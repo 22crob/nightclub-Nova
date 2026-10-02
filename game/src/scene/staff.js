@@ -2,7 +2,7 @@
 // Mixed into ClubScene (see ClubScene.js); `this` is the scene.
 import { PATRON_META, PATRON_SHEETS } from '../assets.js';
 import { PROP_TYPES, STAFF_TYPES } from '../catalog.js';
-import { CHARACTER_DISPLAY_HEIGHT, THIRST_INTERVAL, PATRON_POPUP_Y, PROP_SCALE } from '../config.js';
+import { CHARACTER_DISPLAY_HEIGHT, THIRST_INTERVAL, PATRON_POPUP_Y, PROP_SCALE, SELL_REFUND_RATIO } from '../config.js';
 import { realSpriteIconFor } from '../icons.js';
 import { SFX } from '../sfx.js';
 import { randRange } from '../util.js';
@@ -26,8 +26,14 @@ export class StaffMixin {
     return out.sort((a, b) => a.type.localeCompare(b.type) || a.anchor[0] - b.anchor[0] || a.anchor[1] - b.anchor[1]);
   }
 
-  // True while at least one DJ is working: the dance floor only counts,
-  // and patrons only dance, while music is playing.
+  // Bars that need a bartender: the ones the Staff tab lists. (The DJ is
+  // permanent, see ensureClubBooth().)
+  hireableRecords() {
+    return this.staffableRecords().filter((rec) => !STAFF_TYPES[PROP_TYPES[rec.type].staff].permanent);
+  }
+
+  // True while the DJ is playing, which is always once the club has its
+  // booth: the dance floor only counts, and patrons only dance, with music.
   musicPlaying() {
     return this.staffableRecords().some((rec) => rec.staff && PROP_TYPES[rec.type].staff === 'dj');
   }
@@ -97,7 +103,7 @@ export class StaffMixin {
 
   hireStaff(rec) {
     const type = STAFF_TYPES[PROP_TYPES[rec.type].staff];
-    if (rec.staff) return false;
+    if (rec.staff || type.permanent) return false;
     if (this.cash < type.hireCost) { SFX.denied(); return false; }
     this.cash -= type.hireCost;
     this.attachStaff(rec);
@@ -108,7 +114,7 @@ export class StaffMixin {
   }
 
   fireStaff(rec) {
-    if (!rec.staff) return;
+    if (!rec.staff || rec.staff.kind === 'dj') return; // the DJ never leaves
     this.detachStaff(rec);
     SFX.sell();
     this.updateUI();
@@ -217,7 +223,7 @@ export class StaffMixin {
     this.fans += 0.3;
     this.drinksSold = (this.drinksSold || 0) + 1;
     this.cheerPatron(patron, MOOD.drinkMood);
-    patron.thirstyAt = now + randRange(...THIRST_INTERVAL);
+    patron.thirstyAt = now + randRange(...THIRST_INTERVAL) / this.boostFactor();
     SFX.tip();
     this.floatText(patron.container.x, patron.container.y - PATRON_POPUP_Y, `🍹 +$${price}`, '#7dffc4');
     this.updateUI();
@@ -227,7 +233,7 @@ export class StaffMixin {
   // Pays every working staff member. If the club can't cover the whole bill,
   // staff quit (most expensive first) until it can.
   payWages() {
-    const working = this.staffableRecords().filter((rec) => rec.staff);
+    const working = this.hireableRecords().filter((rec) => rec.staff);
     if (working.length === 0) return;
     const wageOf = (rec) => STAFF_TYPES[PROP_TYPES[rec.type].staff].wage;
     working.sort((a, b) => wageOf(b) - wageOf(a));
@@ -267,22 +273,78 @@ export class StaffMixin {
     });
   }
 
+  // --- The club's DJ booth -------------------------------------------------
+
+  // The club's one DJ booth.
+  clubBooth() {
+    return this.staffableRecords().find((rec) => PROP_TYPES[rec.type].staff === 'dj') || null;
+  }
+
+  // Makes sure the club has exactly one DJ booth with its DJ playing. A new
+  // club gets a free Wood Booth against the back wall; a save with no
+  // booth gets one too, and a save from before this rule with several
+  // keeps the first and is refunded the rest in full.
+  ensureClubBooth() {
+    const booths = this.staffableRecords().filter((rec) => PROP_TYPES[rec.type].staff === 'dj');
+    for (const extra of booths.slice(1)) {
+      const before = this.cash;
+      this.removeProp(extra);
+      this.cash = before + PROP_TYPES[extra.type].cost;
+    }
+    let booth = booths[0];
+    if (!booth) {
+      const mid = Math.floor(this.gridSize / 2) - 1;
+      const spots = [];
+      for (let gy = 0; gy < this.gridSize; gy++) {
+        for (let d = 0; d < this.gridSize; d++) {
+          for (const gx of [mid + d, mid - d]) if (gx >= 0 && gx < this.gridSize - 1) spots.push([gx, gy]);
+        }
+      }
+      for (const [gx, gy] of spots) {
+        booth = this.restoreProp('woodBooth', 0, [gx, gy]);
+        if (booth) break;
+      }
+    }
+    if (booth && !booth.staff) this.attachStaff(booth);
+  }
+
+  // Swaps the club's booth for another tier, in the same spot and facing.
+  // Costs the new booth's price, less half the old one's (like selling it).
+  upgradeClubBooth(type) {
+    const old = this.clubBooth();
+    const def = PROP_TYPES[type];
+    if (!old || old.type === type) { SFX.denied(); return false; }
+    if (!this.isUnlocked(type)) { SFX.denied(); return false; }
+    const refund = Math.round(PROP_TYPES[old.type].cost * SELL_REFUND_RATIO);
+    if (this.cash + refund < def.cost) { SFX.denied(); return false; }
+    const { facing, anchor } = old;
+    this.removeProp(old);
+    const rec = this.restoreProp(type, facing, anchor);
+    this.attachStaff(rec);
+    this.cash += refund - def.cost;
+    SFX.levelUp();
+    this.showToast(`🎧 Your DJ moved into the ${def.label}!`);
+    this.updateUI();
+    this.saveGame();
+    return true;
+  }
+
   // --- Shop tab -----------------------------------------------------------
 
-  // The Staff tab: one row per bar and DJ booth, with a hire / let go
-  // button, and the total wage bill.
+  // The Staff tab: one row per bar, with a hire / let go button, and the
+  // total wage bill.
   renderStaffCard() {
     const el = this.shopItemsEl;
     el.innerHTML = '';
     const card = document.createElement('div');
     card.className = 'staffCard';
-    const records = this.staffableRecords();
+    const records = this.hireableRecords();
 
     const summary = document.createElement('div');
     summary.className = 'staffSummary';
     summary.textContent = records.length
-      ? `Wages: $${this.totalWages()} every 30 seconds`
-      : 'Place a bar or DJ booth first, then hire someone to work it.';
+      ? `Wages: $${this.totalWages()} every 30 seconds · your DJ plays for free`
+      : 'Place a bar first, then hire a bartender to work it. Your DJ plays for free.';
     card.appendChild(summary);
 
     const counts = {};
