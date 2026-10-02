@@ -52,7 +52,17 @@ export const ROOM_COLORS = {
   slabLeft: 0x1f1f25,
   slabEdge: 0x3c3c45,
 };
-export const SIDEWALK = { color: 0xb4b5bc, grout: 0x8e8f97, margin: 9, slabTiles: 3 };
+// The street outside at night (see scene/street.js). Distances are in tiles
+// out from the walls; lineStartGx is where the front of the line stands.
+export const STREET = {
+  sidewalk: 4.5, road: 7,
+  pavement: 0x55535f, grout: 0x46444f, curb: 0x7a7884, asphalt: 0x1d1b24, laneLine: 0xc9a640,
+  carpet: 0x8c1426, carpetEdge: 0xd4a53a, rope: 0xb0102a, brass: 0xd4a53a,
+  lampPost: 0x2a2a33, lampGlow: 0xffd77a, lampEvery: 6,
+  buildings: [0x2a2438, 0x262a3a, 0x30283a, 0x232433], windowLit: 0xf2c75c, windowDark: 0x16141e,
+  lineStartGx: -1.4, lineLength: 6, startInLine: 3, bouncerCharacter: 0,
+  msPerTile: 420, admitEveryMs: 1500, passerEveryMs: [3000, 8000],
+};
 
 // Floor tiles: one colour with faint seams, so the floor reads as one
 // surface (like Nightclub City's) rather than a grid of outlined squares.

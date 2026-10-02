@@ -3,7 +3,7 @@
 // Mixed into ClubScene (see ClubScene.js); `this` is the scene.
 import Phaser from 'phaser';
 import { GRID_EXPANSIONS } from '../catalog.js';
-import { FLOOR_COLOR, FLOOR_SEAM, FLOOR_SLAB_DEPTH, PATRON_SPAWN_TILE, ROOM_COLORS, SIDEWALK, TILE_H, TILE_W, WALL_BASEBOARD, WALL_HEIGHT, WALL_THICKNESS, ZOOM_DEFAULT, ZOOM_MAX, ZOOM_MIN } from '../config.js';
+import { FLOOR_COLOR, FLOOR_SEAM, FLOOR_SLAB_DEPTH, PATRON_SPAWN_TILE, ROOM_COLORS, TILE_H, TILE_W, WALL_BASEBOARD, WALL_HEIGHT, WALL_THICKNESS, ZOOM_DEFAULT, ZOOM_MAX, ZOOM_MIN } from '../config.js';
 import { SFX } from '../sfx.js';
 import { WALL_TEX_H, WALL_TEX_W, doorCanvas } from '../walls.js';
 
@@ -93,15 +93,8 @@ export class WorldMixin {
     // --- Ground: sidewalk around the club, then the slab's front faces ---
     const g = this.groundGraphics;
     g.clear();
-    const m = SIDEWALK.margin;
     const drop = FLOOR_SLAB_DEPTH; // the sidewalk sits this far below the floor
-    fill(g, SIDEWALK.color, [P(t - m, t - m, -drop), P(n + m, t - m, -drop), P(n + m, n + m, -drop), P(t - m, n + m, -drop)]);
-    g.lineStyle(1, SIDEWALK.grout, 1);
-    for (let k = Math.ceil(t - m); k <= n + m; k += SIDEWALK.slabTiles) {
-      g.lineBetween(...P(k, t - m, -drop), ...P(k, n + m, -drop));
-      g.lineBetween(...P(t - m, k, -drop), ...P(n + m, k, -drop));
-    }
-    // Slab front faces, down from floor level to the sidewalk.
+    this.drawStreetGround(g, P, t, n, drop);
     fill(g, ROOM_COLORS.slabRight, [P(n, t, 0), P(n, n, 0), P(n, n, -drop), P(n, t, -drop)]);
     fill(g, ROOM_COLORS.slabLeft, [P(t, n, 0), P(n, n, 0), P(n, n, -drop), P(t, n, -drop)]);
     g.lineStyle(1, ROOM_COLORS.slabEdge, 1);
@@ -134,6 +127,7 @@ export class WorldMixin {
     trim.lineBetween(...P(-0.5, -0.5, 0), ...P(-0.5, -0.5, H));
     this.drawMoodShade(upToSize);
     this.drawDoor();
+    this.drawStreetProps(P, t, n, FLOOR_SLAB_DEPTH);
   }
 
   // The club's front door (see doorCanvas() in walls.js), set into the left

@@ -458,6 +458,23 @@ const decor = await page.evaluate(() => {
 check('all sixteen decorations have their art', decor.missing.length === 0, decor.missing.join(', ') || '16 of 16');
 check('the pool table takes three tiles', decor.poolTiles === 3 && decor.poolTex === 'decor_pool_90', `${decor.poolTiles} tiles, ${decor.poolTex}`);
 
+// The street outside: people line up at the rope and go in one by one.
+const street = await page.evaluate(() => {
+  const s = window.__clubNova.scene.getScene('club');
+  const before = s.patrons.length;
+  const inLine = s.streetQueue.length;
+  const front = s.streetQueue[0];
+  if (front) { front.arrived = true; front.walking = false; front.slot = 0; }
+  // Make room inside, and clear the doorway.
+  s.patronCapacity = () => 99;
+  s.patronTileOccupied = () => false;
+  s.admitFromLine();
+  delete s.patronCapacity;
+  delete s.patronTileOccupied;
+  return { inLine, after: s.streetQueue.length, before, bouncer: !!s.streetBouncer, lamps: s.streetLamps.commandBuffer.length > 0 };
+});
+check('the street has a line at the rope, a bouncer and lamps; the front of the line goes in', street.inLine > 0 && street.after === street.inLine - 1 && street.bouncer && street.lamps, JSON.stringify(street));
+
 check('no errors in the page', errors.length === 0, errors.join(' | '));
 
 await browser.close();

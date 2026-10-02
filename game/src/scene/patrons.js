@@ -26,7 +26,7 @@ export class PatronsMixin {
 
   scheduleNextPatronSpawn() {
     this.time.delayedCall(randRange(...PATRON_SPAWN_INTERVAL) * this.spawnDelayFactor(), () => {
-      this.trySpawnPatron();
+      this.streetArrival(); // someone walks up to the line outside
       this.scheduleNextPatronSpawn();
     });
   }
@@ -38,7 +38,9 @@ export class PatronsMixin {
     return this.patrons.some((p) => !p.leaving && p.gx === gx && p.gy === gy);
   }
 
-  trySpawnPatron() {
+  // Brings a patron in at the door (`character`: their look, from the line
+  // outside).
+  trySpawnPatron(character) {
     if (this.patrons.length >= this.patronCapacity()) return;
     const { gx, gy } = PATRON_SPAWN_TILE;
     if (this.isBlockingProp(gx, gy)) return; // door tile has a blocking prop on it — skip this attempt
@@ -50,7 +52,7 @@ export class PatronsMixin {
     // container's scale) because faceToward() below has to re-apply
     // it every time it flips the container to face left/right.
     const scaleVariance = 0.95 + Math.random() * 0.1;
-    const container = this.drawPatronSprite(sx, sy, scaleVariance);
+    const container = this.drawPatronSprite(sx, sy, scaleVariance, character);
     // Patrons share the props' layer and draw order (see setPropDepth()), so
     // they can walk behind a bar or in front of it. Tip popups stay on
     // patronLayer, above everything.
@@ -95,9 +97,9 @@ export class PatronsMixin {
 
   // Picks the real character sprite when it loaded, else the old
   // colored-primitive token.
-  drawPatronSprite(sx, sy, scaleVariance) {
+  drawPatronSprite(sx, sy, scaleVariance, character) {
     if (this.hasCharacterSprites()) {
-      return this.drawPatronCharacterSprite(sx, sy, scaleVariance);
+      return this.drawPatronCharacterSprite(sx, sy, scaleVariance, character);
     }
     return this.drawPatronFallbackToken(sx, sy, scaleVariance);
   }
@@ -108,13 +110,13 @@ export class PatronsMixin {
   // scaled so a standing character is 90% of CHARACTER_DISPLAY_HEIGHT tall
   // (head to feet), the proportion the game was tuned with. Starts idle,
   // facing front.
-  drawPatronCharacterSprite(sx, sy, scaleVariance) {
+  drawPatronCharacterSprite(sx, sy, scaleVariance, character) {
     const container = this.add.container(sx, sy);
     const shadow = this.add.ellipse(0, 2 * PROP_SCALE, 30 * PROP_SCALE, 12 * PROP_SCALE, 0x000000, 0.3);
     // Patrons never wear a staff member's character, so staff stand out.
     const staffLooks = new Set(Object.values(STAFF_TYPES).map((t) => t.character % PATRON_SHEETS.length));
     const choices = PATRON_SHEETS.map((_, i) => i).filter((i) => !staffLooks.has(i));
-    container.patronCharacter = Phaser.Utils.Array.GetRandom(choices.length ? choices : [0]);
+    container.patronCharacter = character ?? Phaser.Utils.Array.GetRandom(choices.length ? choices : [0]);
     container.patronDir = 'front';
     const sprite = this.add.sprite(0, 0, `patron_${container.patronCharacter}`);
     sprite.setOrigin(PATRON_META.originX, PATRON_META.originY);
@@ -703,6 +705,7 @@ export class PatronsMixin {
     this.releaseSeat(patron);
     this.leaveBarQueue(patron);
     this.patronLeaves(patron);
+    this.streetLeaver(patron.container.patronCharacter); // walks off down the street outside
     // From here the patron is fading out at the door: nothing may move or
     // animate it again (its container is destroyed when the fade ends).
     patron.gone = true;

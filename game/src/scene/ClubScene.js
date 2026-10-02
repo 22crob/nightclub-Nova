@@ -20,6 +20,7 @@ import { SeatingMixin } from './seating.js';
 import { LightingMixin } from './lighting.js';
 import { BoostMixin } from './boost.js';
 import { FloorPaintMixin } from './floorPaint.js';
+import { StreetMixin } from './street.js';
 import { Music } from '../music.js';
 import { applyMixins } from './applyMixins.js';
 
@@ -89,6 +90,8 @@ export class ClubScene extends Phaser.Scene {
     this.createLightingLayers(); // dimming and glows, between the floor and the walls
     this.world.add(this.wallLayer);
     this.world.add(this.propLayer);
+    this.createStreetLayers(); // the street outside, in front of the room
+    this.world.add(this.streetLayer);
     this.world.add(this.patronLayer);
     this.registerFloorTextures();
     this.registerWallTextures();
@@ -271,6 +274,7 @@ export class ClubScene extends Phaser.Scene {
     // Patron spawn loop — attempts a new arrival at a randomized interval
     // (self-rescheduling rather than a fixed-period timer, so spawns don't
     // land in an obvious metronomic rhythm).
+    this.startStreet();
     this.scheduleNextPatronSpawn();
 
     // Patron behavior tick — movement, tipping, and departure are all
@@ -317,4 +321,5 @@ applyMixins(ClubScene, [
   LightingMixin,
   BoostMixin,
   FloorPaintMixin,
+  StreetMixin,
 ]);
