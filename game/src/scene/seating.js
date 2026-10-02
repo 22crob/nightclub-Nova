@@ -96,14 +96,18 @@ export class SeatingMixin {
     patron.moving = true;
     patron.gx = Math.round(spot.gx);
     patron.gy = Math.round(spot.gy);
-    // Between the piece's two layers (see setPropDepth()).
-    c.setDepth(rec.gameObject.baseDepth + 0.001);
-    this.propLayer.sort('depth');
+    // Facing the camera, they sit on top of the cushions (in front of the
+    // whole piece); facing away, between its layers so the backrest, which
+    // is then the nearer layer (see setPropDepth()), hides them.
+    let facingCamera = true;
     if (c.patronSprite) {
       const [fx, fy] = spot.front;
-      c.patronDir = fx > 0 || fy > 0 ? 'front' : 'back';
+      facingCamera = fx > 0 || fy > 0;
+      c.patronDir = facingCamera ? 'front' : 'back';
       c.scaleX = (fx !== 0 ? -1 : 1) * patron.scaleVariance;
     }
+    c.setDepth(rec.gameObject.baseDepth + (facingCamera ? 0.003 : 0.001));
+    this.propLayer.sort('depth');
     this.setPatronAnimation(patron, 'sit');
     this.tweens.add({
       targets: c,

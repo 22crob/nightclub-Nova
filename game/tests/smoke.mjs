@@ -418,7 +418,7 @@ check('dragging paints a stroke of floor ($5 a tile)', paint.a === 'fpStone' && 
 check('painted floor is saved, and isn\'t a dance floor', paint.saved === 'fpStone' && !paint.dance, JSON.stringify(paint));
 
 // Seating: every piece has its art, and a patron can sit on a couch (drawn
-// between its two layers), feel better for it, and get up again.
+// on top of it when facing the camera, else between its two layers), feel better for it, and get up again.
 const seating = await page.evaluate(() => {
   const s = window.__clubNova.scene.getScene('club');
   const keys = ['woodStool', 'couch', 'table', 'barStool', 'leatherCouch', 'vipLounge', 'blackBooth', 'goldBooth'];
@@ -432,7 +432,10 @@ const seating = await page.evaluate(() => {
   const claimed = s.claimSeat(p);
   s.sitDown(p);
   const d = p.container.depth;
-  const between = d > couch.gameObject.depth && d < couch.frontObject.depth;
+  const lo = Math.min(couch.gameObject.depth, couch.frontObject.depth);
+  const hi = Math.max(couch.gameObject.depth, couch.frontObject.depth);
+  // Facing the camera: on top of the whole piece; facing away: between its layers.
+  const between = p.container.patronDir === 'back' ? d > lo && d < hi : d > hi;
   const taken = couch.seatTaken.includes(p);
   const sitAnim = !p.container.patronSprite || String(p.container.patronAnimState).startsWith('sit_');
   const fun0 = p.fun;
@@ -442,7 +445,7 @@ const seating = await page.evaluate(() => {
   return { missing, claimed, sitting: between && taken, sitAnim, funUp, freed: !p.sitting && !p.seat && couch.seatTaken.length === 0 };
 });
 check('all eight seating pieces have their art', seating.missing.length === 0, seating.missing.join(', ') || '8 of 8');
-check('a patron sits on a couch, between its layers', seating.claimed && seating.sitting, JSON.stringify(seating));
+check('a patron sits on a couch, layered right', seating.claimed && seating.sitting, JSON.stringify(seating));
 check('sitting cheers a patron up', seating.funUp);
 check('a seated patron plays the sit animation', seating.sitAnim);
 check('selling or turning seating gets everyone up', seating.freed);
