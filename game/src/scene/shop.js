@@ -191,7 +191,7 @@ export class ShopMixin {
       stats.className = 'propStats';
       const stars = fameStars(def.cost);
       let statsText = '✨ ' + '★'.repeat(stars) + '☆'.repeat(5 - stars);
-      if (def.category === 'Floors' && def.capacity) statsText += `  🧱 +${def.capacity} floor space`;
+      if (def.category === 'Dance Floors' && def.capacity) statsText += `  🧱 +${def.capacity} floor space`;
       stats.textContent = statsText;
       slot.appendChild(stats);
 

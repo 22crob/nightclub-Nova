@@ -67,8 +67,15 @@ function boothTier(key, label, cost, unlockLevel, spriteBase, meta) {
   };
 }
 
+// Regular floors (FLOOR_PAINTS in floors.js) are painted onto the room's
+// floor tile by tile, under the furniture (see floorPaint.js); the price is
+// per tile. Looks only: patrons dance on dance floors, not these.
+function paintTier(key, label, cost, unlockLevel, paintStyle) {
+  return { key, label, cost, unlockLevel, category: 'Floors', paintStyle };
+}
+
 function floorTier(key, label, cost, unlockLevel, floorStyle) {
-  return { key, label, cost, unlockLevel, category: 'Floors', fanRate: 0.4, capacity: 1, floorStyle };
+  return { key, label, cost, unlockLevel, category: 'Dance Floors', fanRate: 0.4, capacity: 1, floorStyle };
 }
 
 // Decorations (art/blender/build_decor.py): one tile unless noted, all
@@ -155,6 +162,15 @@ export const PROP_TYPES = {
   dj: boothTier('dj', 'Club Booth', 250, 3, 'dj_club', boothClubSprite),
   neonBooth: boothTier('neonBooth', 'Neon Booth', 380, 5, 'dj_neon', boothNeonSprite),
   iceBooth: boothTier('iceBooth', 'Ice Booth', 550, 7, 'dj_ice', boothIceSprite),
+  // Regular floors, simple to fancy.
+  fpConcrete: paintTier('fpConcrete', 'Concrete', 5, 1, 'concrete'),
+  fpStone: paintTier('fpStone', 'Stone Tiles', 8, 1, 'stone'),
+  fpWood: paintTier('fpWood', 'Wood Planks', 10, 2, 'planks'),
+  fpRedCarpet: paintTier('fpRedCarpet', 'Red Carpet', 12, 2, 'redCarpet'),
+  fpPurpleCarpet: paintTier('fpPurpleCarpet', 'Purple Carpet', 15, 3, 'purpleCarpet'),
+  fpMarble: paintTier('fpMarble', 'Marble', 20, 4, 'marble'),
+  fpBlackGloss: paintTier('fpBlackGloss', 'Black Gloss', 25, 5, 'blackGloss'),
+  fpGoldMarble: paintTier('fpGoldMarble', 'Gold Marble', 35, 7, 'goldMarble'),
   // Dance floors (src/floors.js, drawn in code): simple to fancy across the
   // first ten levels, all with the same gameplay. Floors are the ONLY
   // category that grants patron capacity (see patronCapacity()); a
@@ -228,7 +244,7 @@ for (const [key, light] of Object.entries(PROP_LIGHTS)) PROP_TYPES[key].light = 
 // Tab order for the shop panel (see ClubScene.buildShop()). A tab with no
 // items shows a "coming soon" placeholder. "Expand" is last and isn't a set of
 // placeable props at all — see ClubScene.renderExpandCard()/expandClub().
-export const SHOP_CATEGORIES = ['Bars', 'DJ Booths', 'Seating', 'Floors', 'Decorations', 'Wallpaper', 'Staff', 'Expand'];
+export const SHOP_CATEGORIES = ['Bars', 'DJ Booths', 'Seating', 'Floors', 'Dance Floors', 'Decorations', 'Wallpaper', 'Staff', 'Expand'];
 
 // Staff. A prop with `staff` needs one of these working at it: a bar sells
 // drinks only with a bartender, and a DJ booth plays music (making the dance

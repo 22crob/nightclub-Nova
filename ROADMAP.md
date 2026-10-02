@@ -36,5 +36,7 @@ The visual and gameplay reference for everything is **Nightclub City** (2010): i
 - Permanent DJ: done. Every club opens with a free Wood Booth and a DJ who never stops playing (no hiring or wages). The other booths are upgrades that swap it in place; it can be turned but not sold.
 - Drop the Bass: done. A free 90-second boost with a 5-minute cooldown: tips twice as often and twice as big, thirst twice as fast, most patrons dance, and the music's bass turned way up. The club has a built-in beat (src/music.js, Web Audio, no files).
 - Patron behaviour pass: done. Bar customers queue in a straight line out from the counter and step up as each is served; wanderers keep off the lines; stuck patrons walk around or squeeze past others; dancers stay 12-22s; visits are 45-65s; thirst and boredom were rebalanced so patrons rarely storm out (checked with a 3-minute simulated club).
+- Regular floors: done. Eight floors (Concrete, Stone Tiles, Wood Planks, Red Carpet, Purple Carpet, Marble, Black Gloss, Gold Marble) painted tile by tile under the furniture, click or drag. Dance floors have their own tab, and patrons only dance on those.
+- Next: a Nightclub City-style shop (a strip along the bottom of the screen)
 - Next: club nights on a clock, with an end-of-night summary
 - Then: Throw a Party events; a bouncer at the door

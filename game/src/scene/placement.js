@@ -123,6 +123,7 @@ export class PlacementMixin {
 
   updateGhost() {
     this.updateWallGhost();
+    this.updateFloorPaintGhost();
     if (this.ghost) {
       this.ghost.destroy();
       this.ghost = null;
@@ -140,7 +141,7 @@ export class PlacementMixin {
     if (!this.selectedProp || !this.hoverTile) return; // deselected (see deselectProp()) — no ghost/highlight to show
 
     const def = PROP_TYPES[this.selectedProp];
-    if (def.wallStyle) return; // wallpaper goes on walls (see updateWallGhost())
+    if (def.wallStyle || def.paintStyle) return; // wallpaper and floor paint have their own previews
 
     const { gx, gy } = this.hoverTile;
     const facing = def.rotatable ? this.currentFacing : 0;
@@ -194,7 +195,7 @@ export class PlacementMixin {
     if (!this.selectedProp) return; // nothing selected (see deselectProp()) — an empty-handed click does nothing
     if (!this.isUnlocked(this.selectedProp)) { SFX.denied(); return; } // shouldn't normally be reachable — selectProp() already blocks this — but never place something not yet unlocked
     const def = PROP_TYPES[this.selectedProp];
-    if (def.wallStyle) return; // wallpaper is painted with paintWall()
+    if (def.wallStyle || def.paintStyle) return; // painted with paintWall() / paintFloor()
     const cost = this.currentCost(this.selectedProp); // fixed price for this item — see currentCost()
     if (this.cash < cost) { SFX.denied(); return; }
 

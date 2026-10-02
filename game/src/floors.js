@@ -293,6 +293,197 @@ export const FLOOR_STYLES = {
   },
 };
 
+// Regular floors: painted onto the room's floor tile by tile (see
+// floorPaint.js), under the furniture. Patrons walk on them but only dance
+// on dance floors. Static, with soft seams so a painted area reads as one
+// surface.
+export const FLOOR_PAINTS = {
+  // Plain dark concrete.
+  concrete: {
+    frames: 1,
+    draw(ctx, S) {
+      ctx.fillStyle = '#56565e';
+      ctx.fillRect(0, 0, S, S);
+      const r = rng(11);
+      for (let k = 0; k < 260; k++) {
+        ctx.fillStyle = r() < 0.5 ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.07)';
+        ctx.fillRect(r() * S, r() * S, 2 + r() * 3, 2 + r() * 3);
+      }
+      seam(ctx, S);
+    },
+  },
+
+  // Grey stone tiles, four to a floor tile.
+  stone: {
+    frames: 1,
+    draw(ctx, S) {
+      const r = rng(5);
+      const h = S / 2;
+      for (let i = 0; i < 2; i++) {
+        for (let j = 0; j < 2; j++) {
+          const v = 112 + Math.floor(r() * 18);
+          ctx.fillStyle = `rgb(${v},${v},${v + 8})`;
+          ctx.fillRect(i * h, j * h, h, h);
+          ctx.strokeStyle = 'rgba(40,40,48,0.6)';
+          ctx.lineWidth = 2;
+          ctx.strokeRect(i * h + 1, j * h + 1, h - 2, h - 2);
+          ctx.fillStyle = 'rgba(255,255,255,0.08)';
+          ctx.fillRect(i * h + 3, j * h + 3, h - 6, 3);
+        }
+      }
+    },
+  },
+
+  // Light oak planks.
+  planks: {
+    frames: 1,
+    draw(ctx, S) {
+      const r = rng(23);
+      const n = 4;
+      const w = S / n;
+      for (let i = 0; i < n; i++) {
+        const tone = ['#b98552', '#c4925e', '#ab7848', '#bf8b57'][i % 4];
+        ctx.fillStyle = tone;
+        ctx.fillRect(0, i * w, S, w);
+        ctx.strokeStyle = 'rgba(80,45,20,0.25)';
+        ctx.lineWidth = 1;
+        for (let g = 0; g < 3; g++) {
+          const y = i * w + 4 + r() * (w - 8);
+          ctx.beginPath();
+          ctx.moveTo(0, y);
+          ctx.bezierCurveTo(S * 0.3, y + 2, S * 0.6, y - 2, S, y + (r() - 0.5) * 2);
+          ctx.stroke();
+        }
+        ctx.fillStyle = 'rgba(60,30,12,0.5)';
+        ctx.fillRect(0, i * w, S, 1.5);
+        const cut = (i % 2 ? 0.3 : 0.75) * S;
+        ctx.fillRect(cut, i * w, 1.5, w);
+      }
+    },
+  },
+
+  // Deep red carpet with a small gold diamond pattern.
+  redCarpet: {
+    frames: 1,
+    draw(ctx, S) {
+      ctx.fillStyle = '#8e1424';
+      ctx.fillRect(0, 0, S, S);
+      ctx.fillStyle = 'rgba(232,184,80,0.55)';
+      const step = S / 4;
+      for (let i = 0; i < 4; i++) {
+        for (let j = 0; j < 4; j++) {
+          const cx = i * step + step / 2;
+          const cy = j * step + step / 2;
+          ctx.beginPath();
+          ctx.moveTo(cx, cy - 5); ctx.lineTo(cx + 5, cy); ctx.lineTo(cx, cy + 5); ctx.lineTo(cx - 5, cy);
+          ctx.closePath();
+          ctx.fill();
+        }
+      }
+      fuzz(ctx, S, 31);
+    },
+  },
+
+  // Purple carpet with soft swirls.
+  purpleCarpet: {
+    frames: 1,
+    draw(ctx, S) {
+      ctx.fillStyle = '#4b2a7a';
+      ctx.fillRect(0, 0, S, S);
+      ctx.strokeStyle = 'rgba(190,140,255,0.45)';
+      ctx.lineWidth = 3;
+      for (const [cx, cy] of [[0, 0], [S, 0], [0, S], [S, S], [S / 2, S / 2]]) {
+        ctx.beginPath();
+        ctx.arc(cx, cy, S * 0.22, 0, Math.PI * 2);
+        ctx.stroke();
+        ctx.beginPath();
+        ctx.arc(cx, cy, S * 0.12, 0, Math.PI * 2);
+        ctx.stroke();
+      }
+      fuzz(ctx, S, 7);
+    },
+  },
+
+  // White marble with grey veins.
+  marble: {
+    frames: 1,
+    draw(ctx, S) {
+      ctx.fillStyle = '#e8e6ea';
+      ctx.fillRect(0, 0, S, S);
+      veins(ctx, S, 'rgba(120,118,135,0.55)', 4);
+      ctx.fillStyle = 'rgba(255,255,255,0.25)';
+      ctx.fillRect(0, 0, S, S / 3);
+      seam(ctx, S, 'rgba(150,150,165,0.6)');
+    },
+  },
+
+  // Glossy black tiles.
+  blackGloss: {
+    frames: 1,
+    draw(ctx, S) {
+      ctx.fillStyle = '#16141b';
+      ctx.fillRect(0, 0, S, S);
+      const g = ctx.createLinearGradient(0, 0, S, S);
+      g.addColorStop(0, 'rgba(255,255,255,0.16)');
+      g.addColorStop(0.4, 'rgba(255,255,255,0)');
+      ctx.fillStyle = g;
+      ctx.fillRect(0, 0, S, S);
+      seam(ctx, S, 'rgba(90,85,105,0.7)');
+    },
+  },
+
+  // Black marble with gold veins.
+  goldMarble: {
+    frames: 1,
+    draw(ctx, S) {
+      ctx.fillStyle = '#1c1a20';
+      ctx.fillRect(0, 0, S, S);
+      veins(ctx, S, 'rgba(232,184,80,0.8)', 9);
+      const g = ctx.createLinearGradient(0, 0, S, S);
+      g.addColorStop(0, 'rgba(255,255,255,0.12)');
+      g.addColorStop(0.45, 'rgba(255,255,255,0)');
+      ctx.fillStyle = g;
+      ctx.fillRect(0, 0, S, S);
+      seam(ctx, S, 'rgba(200,160,70,0.5)');
+    },
+  },
+};
+
+// A thin seam around a painted floor tile.
+function seam(ctx, S, color = 'rgba(30,30,38,0.45)') {
+  ctx.strokeStyle = color;
+  ctx.lineWidth = 1.5;
+  ctx.strokeRect(0.75, 0.75, S - 1.5, S - 1.5);
+}
+
+// Carpet texture: lots of tiny specks.
+function fuzz(ctx, S, seed) {
+  const r = rng(seed);
+  for (let k = 0; k < 500; k++) {
+    ctx.fillStyle = r() < 0.5 ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.1)';
+    ctx.fillRect(r() * S, r() * S, 1.5, 1.5);
+  }
+}
+
+// Marble veins: a few wandering lines.
+function veins(ctx, S, color, seed) {
+  const r = rng(seed);
+  ctx.strokeStyle = color;
+  for (let k = 0; k < 4; k++) {
+    ctx.lineWidth = 0.8 + r() * 1.6;
+    let x = r() * S;
+    let y = 0;
+    ctx.beginPath();
+    ctx.moveTo(x, y);
+    while (y < S) {
+      x += (r() - 0.5) * 30;
+      y += 10 + r() * 20;
+      ctx.lineTo(x, y);
+    }
+    ctx.stroke();
+  }
+}
+
 // Paints a 'flow' design's slice of a pattern that repeats every `period`
 // tiles along the floor's diagonal (gx + gy). color(x) gives the colour at
 // position x in [0, 1) through one repeat. Neighbouring tiles join up
@@ -327,7 +518,7 @@ export function floorFrameFor(style, gx, gy, tick) {
 export function floorFrameCanvas(style, frame = 0) {
   const square = document.createElement('canvas');
   square.width = square.height = SQUARE;
-  FLOOR_STYLES[style].draw(square.getContext('2d'), SQUARE, frame);
+  (FLOOR_STYLES[style] || FLOOR_PAINTS[style]).draw(square.getContext('2d'), SQUARE, frame);
   const out = document.createElement('canvas');
   out.width = FLOOR_TEX_W;
   out.height = FLOOR_TEX_H;

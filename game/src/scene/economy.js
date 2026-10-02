@@ -49,7 +49,7 @@ export class EconomyMixin {
       if (counted.has(rec)) continue;
       counted.add(rec);
       const def = PROP_TYPES[rec.type];
-      if (def.category === 'Floors') capacity += def.capacity || 0;
+      if (def.category === 'Dance Floors') capacity += def.capacity || 0;
     }
     return Math.min(capacity, PATRON_ABSOLUTE_MAX);
   }

@@ -19,6 +19,7 @@ import { WallpaperMixin } from './wallpaper.js';
 import { SeatingMixin } from './seating.js';
 import { LightingMixin } from './lighting.js';
 import { BoostMixin } from './boost.js';
+import { FloorPaintMixin } from './floorPaint.js';
 import { Music } from '../music.js';
 import { applyMixins } from './applyMixins.js';
 
@@ -30,6 +31,7 @@ export class ClubScene extends Phaser.Scene {
     this.selectedProp = 'starterBar';
     this.currentFacing = 0; // facing used for the NEXT rotatable prop placed
     this.wallpaper = {}; // wall section -> wallpaper type (see wallpaper.js)
+    this.floorPaint = {}; // "gx,gy" -> regular floor type (see floorPaint.js)
     this.placed = {}; // "gx,gy" -> { type, facing, gameObject, label }
     // The club's current floor size — grows via expandClub()/GRID_EXPANSIONS
     // and is saved/restored like any other piece of club state. Set for
@@ -81,6 +83,8 @@ export class ClubScene extends Phaser.Scene {
     this.patronLayer = this.add.container(0, 0);
     this.ghostLayer = this.add.container(0, 0);
     this.world.add(this.tileLayer);
+    this.registerFloorPaintTextures();
+    this.createFloorPaintLayer(); // regular floors, over the bare floor
     this.registerLightTexture();
     this.createLightingLayers(); // dimming and glows, between the floor and the walls
     this.world.add(this.wallLayer);
@@ -130,8 +134,17 @@ export class ClubScene extends Phaser.Scene {
 
     this.input.on('pointerdown', (p) => {
       SFX.unlock(); // first real user gesture — safe/cheap to call every time
-      dragStart = { x: p.x, y: p.y, wx: this.world.x, wy: this.world.y };
       this.isDragging = false;
+      // Holding a regular floor: the left button paints (drag to paint a
+      // stroke) instead of moving the view.
+      const holding = PROP_TYPES[this.selectedProp];
+      if (holding && holding.paintStyle && p.event.button === 0) {
+        this.paintingFloor = true;
+        dragStart = null;
+        if (this.hoverTile) this.paintFloor(this.hoverTile.gx, this.hoverTile.gy);
+        return;
+      }
+      dragStart = { x: p.x, y: p.y, wx: this.world.x, wy: this.world.y };
     });
 
     this.input.on('pointermove', (p) => {
@@ -145,9 +158,15 @@ export class ClubScene extends Phaser.Scene {
         }
       }
       this.updateHoverFromPointer(p);
+      if (this.paintingFloor && this.hoverTile) this.paintFloor(this.hoverTile.gx, this.hoverTile.gy);
     });
 
     this.input.on('pointerup', (p) => {
+      if (this.paintingFloor) {
+        this.paintingFloor = false;
+        this.saveGame();
+        return;
+      }
       const wasDragging = this.isDragging;
       dragStart = null;
       this.isDragging = false;
@@ -296,4 +315,5 @@ applyMixins(ClubScene, [
   SeatingMixin,
   LightingMixin,
   BoostMixin,
+  FloorPaintMixin,
 ]);

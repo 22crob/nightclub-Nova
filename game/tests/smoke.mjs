@@ -71,7 +71,7 @@ await page.evaluate(() => { window.__clubNova.scene.getScene('club').collectPatr
 // Shop opens with every tab.
 await page.click('#shopToggle');
 const tabs = await page.locator('.shopTab').allTextContents();
-check('shop opens with 8 tabs', tabs.length === 8 && tabs.includes('Staff'), tabs.join(' / '));
+check('shop opens with 9 tabs', tabs.length === 9 && tabs.includes('Staff'), tabs.join(' / '));
 check('bar shows its real sprite icon', await page.locator('.propButton .icon').first().evaluate((el) => el.style.backgroundImage.includes('data:image/png')));
 await page.click('#shopClose');
 
@@ -378,6 +378,29 @@ const queue = await page.evaluate(() => {
 });
 check('bar customers line up in a straight row', queue.tiles && queue.tiles.join(' ') === '6,9 6,10 6,11', JSON.stringify(queue));
 check('the line steps up when someone is served', queue.before && queue.before[0] === '6,9' && queue.before[1] === '6,10' && queue.after === '6,9', JSON.stringify(queue));
+
+// Regular floors: pick one and click (or drag across) tiles to paint them.
+// It's saved, and patrons don't dance on it.
+await page.evaluate(() => { const s = window.__clubNova.scene.getScene('club'); s.cash += 500; s.selectProp('fpStone'); });
+const paintCash0 = await page.evaluate(() => window.__clubNova.scene.getScene('club').cash);
+{
+  const a = await tileXY(3, 9);
+  const b = await tileXY(4, 9);
+  await page.mouse.move(a.x, a.y); await page.mouse.move(a.x + 1, a.y);
+  await page.mouse.down();
+  await page.mouse.move(b.x, b.y, { steps: 6 });
+  await page.mouse.up();
+  await page.waitForTimeout(150);
+}
+const paint = await page.evaluate((cash0) => {
+  const s = window.__clubNova.scene.getScene('club');
+  const saved = JSON.parse(localStorage.getItem('clubNovaSave_v1')).floorPaint || {};
+  const r = { a: s.floorPaint['3,9'], b: s.floorPaint['4,9'], paid: Math.round(cash0 - s.cash), saved: saved['3,9'], dance: s.isDanceFloorTile(3, 9) };
+  s.deselectProp();
+  return r;
+}, paintCash0);
+check('dragging paints a stroke of floor ($8 a tile)', paint.a === 'fpStone' && paint.b === 'fpStone' && paint.paid >= 16 && paint.paid < 30, JSON.stringify(paint));
+check('painted floor is saved, and isn\'t a dance floor', paint.saved === 'fpStone' && !paint.dance, JSON.stringify(paint));
 
 // Seating: every piece has its art, and a patron can sit on a couch (drawn
 // between its two layers), feel better for it, and get up again.

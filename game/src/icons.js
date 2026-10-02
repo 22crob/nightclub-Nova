@@ -93,6 +93,7 @@ export function realSpriteIconFor(key) {
     const frame = Math.min(FLOOR_STYLES[style].frames - 1, FLOOR_STYLES[style].phase === 'step' ? 7 : 2);
     return (floorIcons[key] ||= floorFrameCanvas(style, frame).toDataURL());
   }
+  if (def && def.paintStyle) return (floorIcons[key] ||= floorFrameCanvas(def.paintStyle, 0).toDataURL());
   if (def && def.wallStyle) {
     const frame = Math.min(WALL_STYLES[def.wallStyle].frames - 1, 2);
     return (floorIcons[key] ||= wallSwatchCanvas(def.wallStyle, frame).toDataURL());
