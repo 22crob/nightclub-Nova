@@ -172,6 +172,8 @@ const facing = await page.evaluate(() => {
 });
 check('patrons face the way they walk', facing.downLeft === 'front' && facing.downRight === 'front mirrored' && facing.upRight === 'back' && facing.upLeft === 'back mirrored', JSON.stringify(facing));
 check('fans grow over time', st.fans > 5, `${st.fans.toFixed(1)} fans`);
+// Patrons want their first drink 3-18s after arriving, so give it time.
+await page.waitForFunction(() => (window.__clubNova.scene.getScene('club').drinksSold || 0) > 0, null, { timeout: 30000 }).catch(() => {});
 const drinks = await page.evaluate(() => window.__clubNova.scene.getScene('club').drinksSold || 0);
 check('patrons buy drinks at the staffed bar', drinks > 0, `${drinks} drinks sold`);
 
