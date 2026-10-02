@@ -39,6 +39,7 @@ The visual and gameplay reference for everything is **Nightclub City** (2010): i
 - Regular floors: done. Eight floors (Concrete, Stone Tiles, Wood Planks, Red Carpet, Purple Carpet, Marble, Black Gloss, Gold Marble) painted tile by tile under the furniture, click or drag. Dance floors have their own tab, and patrons only dance on those.
 - Finer grid: done. Tiles are 48 px instead of 64 (the room is 16x16 instead of 12x12 in the same space), so furniture covers more, smaller tiles like Nightclub City's. Bars are single 1x3 pieces (back bar, aisle, counter) that fit their tiles exactly and line up into one long bar along a wall. All furniture was re-rendered at the new scale. Saves moved to a new key, so clubs started fresh.
 - HUD restyle: done. Dark glass, chrome rims and neon edges, like Nightclub City's interface.
-- Next: a Nightclub City-style shop (a strip along the bottom of the screen)
+- Shop strip: done. The shop is a dark strip along the bottom like Nightclub City's: category buttons on the left, a scrolling row of items with prices, a name bubble on hover, and an OK button. It stays open while you build.
+- Next: shrink the image files (the game is about 11.5 MB of the play link's 16 MB)
 - Next: club nights on a clock, with an end-of-night summary
 - Then: Throw a Party events; a bouncer at the door

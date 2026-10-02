@@ -78,14 +78,20 @@
     </div>
   </div>
 
+  <!-- The shop: a strip along the bottom of the screen, like Nightclub
+       City's. Category buttons on the left, items in a scrolling row, a name
+       bubble over the hovered item, and OK to finish. It stays open while
+       you build (see shop.js). -->
   <div id="shopOverlay">
-    <div id="shopPanel">
-      <div class="shopHeader">
-        <div id="shopTabs"></div>
-        <div id="shopClose" title="Close">✕</div>
-      </div>
+    <div id="shopTabs"></div>
+    <div id="shopCatName"></div>
+    <div id="shopStrip">
+      <div id="shopPrev" class="shopArrow" title="Scroll left">◀</div>
       <div id="shopItems"></div>
+      <div id="shopNext" class="shopArrow" title="Scroll right">▶</div>
     </div>
+    <div id="shopTip"></div>
+    <div id="shopClose" title="Done building">OK</div>
   </div>
 
   <script type="module" src="/src/main.js"></script>

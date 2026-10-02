@@ -73,7 +73,15 @@ await page.click('#shopToggle');
 const tabs = await page.locator('.shopTab').allTextContents();
 check('shop opens with 9 tabs', tabs.length === 9 && tabs.includes('Staff'), tabs.join(' / '));
 check('bar shows its real sprite icon', await page.locator('.propButton .icon').first().evaluate((el) => el.style.backgroundImage.includes('data:image/png')));
+// Picking an item keeps the shop open (build mode); OK puts it away and
+// puts the item down.
+await page.click('.shopTab:has-text("Seating")');
+await page.locator('.propButton').first().click();
+const picked = await page.evaluate(() => ({ open: document.getElementById('shopOverlay').classList.contains('open'), held: window.__clubNova.scene.getScene('club').selectedProp }));
 await page.click('#shopClose');
+const closed = await page.evaluate(() => ({ open: document.getElementById('shopOverlay').classList.contains('open'), held: window.__clubNova.scene.getScene('club').selectedProp }));
+check('the shop stays open while building, OK closes it', picked.open && picked.held === 'woodStool' && !closed.open && !closed.held, JSON.stringify({ picked, closed }));
+await page.evaluate(() => window.__clubNova.scene.getScene('club').selectProp('starterBar'));
 
 // Place the Starter Bar (selected by default, $100).
 await clickTile(2, 5);

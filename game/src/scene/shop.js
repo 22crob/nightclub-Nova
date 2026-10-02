@@ -5,6 +5,12 @@ import { SELL_REFUND_RATIO } from '../config.js';
 import { realSpriteIconFor, renderIsoIcon } from '../icons.js';
 import { SFX } from '../sfx.js';
 
+// Category buttons on the left of the shop strip.
+const CATEGORY_ICONS = {
+  Bars: '🍸', 'DJ Booths': '🎧', Seating: '🛋️', Floors: '🟫', 'Dance Floors': '💃',
+  Decorations: '🪴', Wallpaper: '🖼️', Staff: '🧑‍🍳', Expand: '📐',
+};
+
 export class ShopMixin {
   // True once the player's level has reached this prop's unlockLevel
   // (defaults to 1 — available from the start — if a type doesn't set one).
@@ -31,18 +37,18 @@ export class ShopMixin {
     this.updateShopUI();
   }
 
-  // Builds the categorized shop once: a tab per SHOP_CATEGORIES entry (a
-  // real one right now is just Bars/Booths/Floors — Decorations and
-  // Wallpaper are empty placeholders until there's content for them), plus
-  // wiring for the toggle button that opens the panel and the close
-  // button/backdrop that dismiss it. The panel starts open on whichever
-  // category the currently selected prop belongs to.
+  // Builds the shop once: the strip along the bottom of the screen (see
+  // index.html), a category button per SHOP_CATEGORIES entry, the scroll
+  // arrows and the OK button. Opens on whichever category the currently
+  // selected item belongs to.
   buildShop() {
     this.shopToggle = document.getElementById('shopToggle');
     this.shopOverlay = document.getElementById('shopOverlay');
     this.shopClose = document.getElementById('shopClose');
     this.shopTabsEl = document.getElementById('shopTabs');
     this.shopItemsEl = document.getElementById('shopItems');
+    this.shopCatName = document.getElementById('shopCatName');
+    this.shopTip = document.getElementById('shopTip');
     this.selectedChip = document.getElementById('selectedChip');
     if (!this.shopToggle || !this.shopOverlay || !this.shopTabsEl || !this.shopItemsEl) return; // older/debug HTML — skip silently
 
@@ -51,38 +57,67 @@ export class ShopMixin {
     for (const category of SHOP_CATEGORIES) {
       const tab = document.createElement('div');
       tab.className = 'shopTab';
-      tab.textContent = category;
+      tab.dataset.icon = CATEGORY_ICONS[category] || '•';
+      tab.title = category;
+      const name = document.createElement('span');
+      name.className = 'tabName';
+      name.textContent = category;
+      tab.appendChild(name);
       tab.addEventListener('click', () => this.setShopCategory(category));
       this.shopTabsEl.appendChild(tab);
       this.shopTabButtons[category] = tab;
     }
 
     this.shopToggle.addEventListener('click', () => this.openShop());
-    // Toolbar shortcuts into specific shop tabs.
+    // Toolbar shortcuts into specific shop categories.
     const decorate = document.getElementById('decorateButton');
     const expand = document.getElementById('expandButton');
     const staff = document.getElementById('staffButton');
     if (decorate) decorate.addEventListener('click', () => this.openShop('Floors'));
     if (expand) expand.addEventListener('click', () => this.openShop('Expand'));
     if (staff) staff.addEventListener('click', () => this.openShop('Staff'));
-    if (this.shopClose) this.shopClose.addEventListener('click', () => this.closeShop());
-    // Clicking the dark backdrop (but not the panel itself) also closes it.
-    this.shopOverlay.addEventListener('click', (e) => {
-      if (e.target === this.shopOverlay) this.closeShop();
-    });
+    if (this.shopClose) this.shopClose.addEventListener('click', () => { this.closeShop(); this.deselectProp(); });
+    // Arrows (and the mouse wheel) scroll the row of items.
+    const scrollBy = (dir) => this.shopItemsEl.scrollBy({ left: dir * this.shopItemsEl.clientWidth * 0.8, behavior: 'smooth' });
+    const prev = document.getElementById('shopPrev');
+    const next = document.getElementById('shopNext');
+    if (prev) prev.addEventListener('click', () => scrollBy(-1));
+    if (next) next.addEventListener('click', () => scrollBy(1));
+    this.shopItemsEl.addEventListener('wheel', (e) => {
+      e.preventDefault();
+      this.shopItemsEl.scrollLeft += e.deltaY + e.deltaX;
+    }, { passive: false });
 
     this.setShopCategory((PROP_TYPES[this.selectedProp] && PROP_TYPES[this.selectedProp].category) || SHOP_CATEGORIES[0]);
     this.updateSelectedChip();
   }
 
-  // Opens the shop, optionally on a given tab.
+  // Opens the shop, optionally on a given category. It stays open while you
+  // build; OK (or Esc) puts it away.
   openShop(category) {
     if (category) this.setShopCategory(category);
     if (this.shopOverlay) this.shopOverlay.classList.add('open');
+    document.body.classList.add('shopOpen');
   }
 
   closeShop() {
     if (this.shopOverlay) this.shopOverlay.classList.remove('open');
+    document.body.classList.remove('shopOpen');
+    this.hideShopTip();
+  }
+
+  // The name bubble over an item in the strip.
+  showShopTip(slot, text) {
+    if (!this.shopTip) return;
+    this.shopTip.textContent = text;
+    const r = slot.getBoundingClientRect();
+    this.shopTip.style.left = `${r.left + r.width / 2}px`;
+    this.shopTip.style.top = `${r.top - 10}px`;
+    this.shopTip.classList.add('show');
+  }
+
+  hideShopTip() {
+    if (this.shopTip) this.shopTip.classList.remove('show');
   }
 
   // Switches the active tab and re-renders that category's items. Item
@@ -90,6 +125,9 @@ export class ShopMixin {
   // showing — updateShopUI() below only needs to keep those in sync.
   setShopCategory(category) {
     this.activeShopCategory = category;
+    if (this.shopCatName) this.shopCatName.textContent = `${CATEGORY_ICONS[category] || ''} ${category}`;
+    this.hideShopTip();
+    if (this.shopItemsEl) this.shopItemsEl.scrollLeft = 0;
     if (this.shopTabButtons) {
       for (const cat in this.shopTabButtons) {
         this.shopTabButtons[cat].classList.toggle('active', cat === category);
@@ -161,23 +199,16 @@ export class ShopMixin {
 
       const cost = document.createElement('div');
       cost.className = 'propCost';
-      cost.textContent = this.isUnlocked(key) ? `💰 ${this.currentCost(key)}` : `🔒 Lv ${def.unlockLevel || 1}`; // overwritten immediately by updateShopUI() below too, but correct from the first frame
+      cost.textContent = this.isUnlocked(key) ? `$${this.currentCost(key)}` : `🔒 Lv ${def.unlockLevel || 1}`; // overwritten immediately by updateShopUI() below too, but correct from the first frame
 
       button.addEventListener('click', () => {
         // DJ booths aren't placed: buying one swaps the club's booth.
         if (def.category === 'DJ Booths') {
-          if (this.upgradeClubBooth(key)) this.closeShop();
+          this.upgradeClubBooth(key);
           return;
         }
-        const wasSelected = this.selectedProp === key;
+        // The shop stays open: pick an item, place it in the club, repeat.
         this.selectProp(key);
-        // Only get out of the way once something was actually just picked.
-        // selectProp() silently no-ops (just a denied blip) on a locked
-        // item, and clicking the CURRENT selection again is a deselect, not
-        // a pick — closing the whole shop in either case used to leave the
-        // player having to reopen it just to try a different item, or to
-        // keep browsing after clearing their selection.
-        if (!wasSelected && this.selectedProp === key) this.closeShop();
       });
       slot.appendChild(button);
       slot.appendChild(label);
@@ -194,6 +225,9 @@ export class ShopMixin {
       if (def.category === 'Dance Floors' && def.capacity) statsText += `  🧱 +${def.capacity} floor space`;
       stats.textContent = statsText;
       slot.appendChild(stats);
+      // Name bubble on hover (the label and stats are hidden in the strip).
+      slot.addEventListener('mouseenter', () => this.showShopTip(slot, `${def.label}   ${statsText}`));
+      slot.addEventListener('mouseleave', () => this.hideShopTip());
 
       this.shopItemsEl.appendChild(slot);
       this.shopButtons[key] = button;
@@ -247,7 +281,7 @@ export class ShopMixin {
     button.className = 'expandButton';
     button.classList.toggle('unaffordable', unlocked && !afford);
     button.classList.toggle('locked', !unlocked);
-    button.textContent = unlocked ? `💰 Expand for ${tier.cost}` : `🔒 Unlocks at Lv ${tier.unlockLevel}`;
+    button.textContent = unlocked ? `Expand for $${tier.cost}` : `🔒 Unlocks at Lv ${tier.unlockLevel}`;
     button.addEventListener('click', () => {
       if (this.expandClub()) this.closeShop(); // successful purchase — get out of the way so the player can see the new floor
     });
@@ -286,8 +320,8 @@ export class ShopMixin {
         this.shopButtons[key].classList.toggle('unaffordable', unlocked && !current && this.cash < swapCost);
         this.shopButtons[key].classList.toggle('locked', !unlocked);
         if (this.shopCosts[key]) {
-          let text = unlocked ? `💰 ${cost}` : `🔒 Lv ${PROP_TYPES[key].unlockLevel || 1}`;
-          if (unlocked && booth) text = current ? '🎧 Playing now' : `⬆ ${Math.max(0, swapCost)}`;
+          let text = unlocked ? `$${cost}` : `🔒 Lv ${PROP_TYPES[key].unlockLevel || 1}`;
+          if (unlocked && booth) text = current ? '🎧 Playing' : `⬆ $${Math.max(0, swapCost)}`;
           this.shopCosts[key].textContent = text;
         }
       }
