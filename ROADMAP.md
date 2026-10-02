@@ -40,6 +40,6 @@ The visual and gameplay reference for everything is **Nightclub City** (2010): i
 - Finer grid: done. Tiles are 48 px instead of 64 (the room is 16x16 instead of 12x12 in the same space), so furniture covers more, smaller tiles like Nightclub City's. Bars are single 1x3 pieces (back bar, aisle, counter) that fit their tiles exactly and line up into one long bar along a wall. All furniture was re-rendered at the new scale. Saves moved to a new key, so clubs started fresh.
 - HUD restyle: done. Dark glass, chrome rims and neon edges, like Nightclub City's interface.
 - Shop strip: done. The shop is a dark strip along the bottom like Nightclub City's: category buttons on the left, a scrolling row of items with prices, a name bubble on hover, and an OK button. It stays open while you build.
-- Next: shrink the image files (the game is about 11.5 MB of the play link's 16 MB)
+- Done: image files shrunk to 256-colour palettes (`art/compress_sprites.py`); the game is about 4 MB of the play link's 16 MB
 - Next: club nights on a clock, with an end-of-night summary
 - Then: Throw a Party events; a bouncer at the door
