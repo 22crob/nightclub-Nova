@@ -256,7 +256,7 @@ export class ClubScene extends Phaser.Scene {
     // Patron animations: one per character, per clip, per facing, named
     // patron_<i>_<clip>_<front|back> (see patronAnimKey()).
     if (this.hasCharacterSprites()) {
-      const rates = { idle: 4, walk: 11, dance: 10 };
+      const rates = PATRON_META.fps;
       PATRON_SHEETS.forEach((_, i) => {
         for (const [row, start] of Object.entries(PATRON_META.rows)) {
           const clip = row.split('_')[0];

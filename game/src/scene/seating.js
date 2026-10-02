@@ -104,7 +104,7 @@ export class SeatingMixin {
       c.patronDir = fx > 0 || fy > 0 ? 'front' : 'back';
       c.scaleX = (fx !== 0 ? -1 : 1) * patron.scaleVariance;
     }
-    this.setPatronAnimation(patron, 'idle');
+    this.setPatronAnimation(patron, 'sit');
     this.tweens.add({
       targets: c,
       x: sx,

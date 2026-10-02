@@ -434,15 +434,17 @@ const seating = await page.evaluate(() => {
   const d = p.container.depth;
   const between = d > couch.gameObject.depth && d < couch.frontObject.depth;
   const taken = couch.seatTaken.includes(p);
+  const sitAnim = !p.container.patronSprite || String(p.container.patronAnimState).startsWith('sit_');
   const fun0 = p.fun;
   s.updatePatronMood(p, 2);
   const funUp = p.fun > fun0;
   s.releaseSeats(couch);
-  return { missing, claimed, sitting: between && taken, funUp, freed: !p.sitting && !p.seat && couch.seatTaken.length === 0 };
+  return { missing, claimed, sitting: between && taken, sitAnim, funUp, freed: !p.sitting && !p.seat && couch.seatTaken.length === 0 };
 });
 check('all eight seating pieces have their art', seating.missing.length === 0, seating.missing.join(', ') || '8 of 8');
 check('a patron sits on a couch, between its layers', seating.claimed && seating.sitting, JSON.stringify(seating));
 check('sitting cheers a patron up', seating.funUp);
+check('a seated patron plays the sit animation', seating.sitAnim);
 check('selling or turning seating gets everyone up', seating.freed);
 
 // Decorations: all sixteen have their sprites, and one can be placed and

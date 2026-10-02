@@ -100,20 +100,33 @@ def cut_left_arm(fig, cy, hy):
     a = fig.getchannel('A')
     box = a.getbbox()
     narrow = 0.3 * (box[2] - box[0])     # an arm is under a third of his width
+    mid = (box[0] + box[2]) / 2
     rows, prev = {}, None
     for y in range(cy, min(h, hy + int(0.15 * h))):
         r = runs(a, y, w)
-        arm = r[0] if len(r) >= 2 and r[0][1] - r[0][0] < narrow else None
+        # The arm/body cut is the widest gap left of the middle (fingers
+        # can leave narrower gaps inside the hand).
+        gaps = [(r[i][1], r[i + 1][0]) for i in range(len(r) - 1) if r[i][1] < mid]
+        gap = max(gaps, key=lambda g: g[1] - g[0]) if gaps else None
+        arm = (r[0][0], gap[0]) if gap and gap[0] - r[0][0] < narrow else None
         if arm and prev and (arm[1] < prev[0] or arm[0] > prev[1]):
             arm = None                   # a different part, not the arm
         if arm is None:
-            if rows:
+            if len(rows) >= 0.05 * h:
                 break
+            rows, prev = {}, None        # a blip (an ear, a finger): keep looking
             continue
-        rows[y] = (arm[1] + r[1][0]) // 2   # split in the middle of the gap
+        rows[y] = (gap[0] + gap[1]) // 2    # split in the middle of the gap
         prev = arm
     if len(rows) < 0.05 * h:
         return None
+    # Fingertips just below the hand, fully left of the last cut, belong to
+    # the arm too.
+    end = max(rows)
+    for y in range(end + 1, min(h, end + int(0.05 * h))):
+        r = runs(a, y, w)
+        if r and r[0][1] < rows[end]:
+            rows[y] = rows[end]
     top = min(rows)
     split = rows[top]
     # Above the armpit the upper arm touches the jacket; carry the cut
@@ -172,7 +185,7 @@ def pieces(fig, chin, hip):
     return {
         **arms,
         'head': band(0, cy),
-        'body': band(cy, hy),
+        'body': band(cy, hy + int(0.03 * h)),
         'legL': band(hy, h, 0, mid),
         'legR': band(hy, h, mid, w),
         'chin_y': cy,
@@ -188,76 +201,105 @@ def place(canvas, piece, dx, dy, angle=0.0, pivot=None, scale=(1.0, 1.0)):
         p = p.resize((max(1, int(w * scale[0])), max(1, int(h * scale[1]))), Image.LANCZOS)
     if angle:
         p = p.rotate(angle, resample=Image.BICUBIC, center=pivot, expand=False)
-    canvas.alpha_composite(p, (int(dx), int(dy)))
+    if dx < 0 or dy < 0:                 # alpha_composite won't take negative offsets
+        layer = Image.new('RGBA', canvas.size)
+        layer.paste(p, (int(dx), int(dy)))
+        canvas.alpha_composite(layer)
+    else:
+        canvas.alpha_composite(p, (int(dx), int(dy)))
 
 
-def frame(parts, size, anim, t):
+def pose(anim, t, h, view):
+    """How each piece moves at time t (0..1 through the loop). Angles are
+    degrees; arm angles are positive outward from the body. leg_scale
+    below 1 bends the knees (feet stay planted, the hips drop)."""
+    p = dict(dx=0.0, leg_scale=1.0, body_rot=0.0, head_rot=0.0, head_dy=0.0,
+             armL=3.0, armR=3.0, legL_rot=0.0, legR_rot=0.0, liftL=0.0, liftR=0.0, sit=False)
+    breath = 0.5 - 0.5 * math.cos(TAU * t)
+    if anim in ('idle', 'sit'):
+        p['leg_scale'] = 1 - 0.008 * breath
+        p['head_rot'] = 1.2 * math.sin(TAU * t)
+        p['head_dy'] = 0.003 * h * breath
+        p['armL'] = p['armR'] = 2 + 2 * breath
+        if anim == 'sit':
+            # Hips on the seat, thighs coming toward us (foreshortened).
+            p['sit'] = True
+            p['leg_scale'] = 0.45 if view == 'front' else 0.3
+            p['armL'] = p['armR'] = 1 + 1.5 * breath
+    elif anim == 'walk':
+        a = TAU * t
+        sn, cs = math.sin(a), math.cos(a)
+        p['legL_rot'], p['legR_rot'] = 15 * sn, -15 * sn
+        p['liftL'] = 0.025 * h * max(0.0, cs) ** 2      # the leg swinging through lifts
+        p['liftR'] = 0.025 * h * max(0.0, -cs) ** 2
+        p['leg_scale'] = 1 - 0.035 * abs(sn)            # lowest at full stride
+        p['armL'], p['armR'] = 5 - 12 * sn, 5 + 12 * sn   # arms swing against the legs
+        p['body_rot'] = 1.5 * sn
+        p['head_rot'] = -1.0 * sn
+    elif anim == 'dance':
+        beat = 4 * t
+        down = 0.5 + 0.5 * math.cos(TAU * beat)          # 1 on the beat
+        sway = math.sin(math.pi * beat)                  # hips left, then right
+        p['leg_scale'] = 1 - 0.07 * down                 # knees bounce on every beat
+        p['dx'] = 0.025 * h * sway
+        p['body_rot'] = -3 * sway
+        p['head_rot'] = 2.5 * sway + 3 * down
+        p['head_dy'] = 0.008 * h * down
+        p['legL_rot'], p['legR_rot'] = 4 * sway, 4 * sway
+        p['liftL'] = 0.015 * h * max(0.0, -sway)
+        p['liftR'] = 0.015 * h * max(0.0, sway)
+        # Arms loose by the sides, swinging out with the hips...
+        p['armL'] = 8 + 14 * max(0.0, sway) + 4 * down
+        p['armR'] = 8 + 14 * max(0.0, -sway) + 4 * down
+        # ...then one hand goes up (quickly, held with a little wave), then
+        # the other.
+        for side, start in (('armL', 2), ('armR', 3)):
+            u = beat - start
+            if 0 <= u <= 1:
+                env = min(1.0, u / 0.2, (1 - u) / 0.2)
+                env = env * env * (3 - 2 * env)          # smooth in and out
+                p[side] += env * (125 - p[side] + 6 * math.sin(TAU * 2 * beat))
+    return p
+
+
+def frame(parts, size, anim, t, view):
     """One animation frame of the figure at 4x, feet at the bottom middle."""
     w, h = size
-    cw, ch = FW * SS, FH * SS
-    canvas = Image.new('RGBA', (cw, ch))
-    ox = (cw - w) // 2
-    oy = int(FEET_Y * SS) - h
-    head_dy = head_rot = body_rot = 0.0
-    lift_l = lift_r = 0.0
-    arm_l = arm_r = 0.0               # degrees; positive swings outward
-    bob = 0.0
-    sq = 1.0
-    if anim == 'idle':
-        bob = -0.004 * h * (0.5 - 0.5 * math.cos(TAU * t))
-        head_dy = -0.004 * h * math.sin(TAU * t)
-        head_rot = 1.5 * math.sin(TAU * t)
-        arm_l = arm_r = 2 * (0.5 - 0.5 * math.cos(TAU * t))
-    elif anim == 'walk':
-        s = math.sin(TAU * t)
-        bob = -0.02 * h * abs(s)
-        lift_l = 0.035 * h * max(0.0, s)
-        lift_r = 0.035 * h * max(0.0, -s)
-        body_rot = 2.5 * s
-        head_rot = -1.5 * s
-        arm_l, arm_r = 14 * s, -14 * s
-    elif anim == 'dance':
-        beat = t * 4
-        bounce = abs(math.sin(math.pi * beat))
-        bob = -0.05 * h * bounce
-        sq = 1.0 - 0.03 * (1 - bounce)
-        body_rot = 7 * math.sin(TAU * t)
-        head_rot = -5 * math.sin(math.pi * beat) - 0.5 * body_rot
-        head_dy = 0.012 * h * (1 - bounce)
-        side = math.sin(math.pi * beat)
-        lift_l = 0.03 * h * max(0.0, side)
-        lift_r = 0.03 * h * max(0.0, -side)
-        # Bar 1: arms pump on the beat; bar 2: one hand up, then the other.
-        pump = 0.5 - 0.5 * math.cos(TAU * beat)
-        if t < 0.5:
-            arm_l = arm_r = 20 + 30 * pump
-        else:
-            u = (t - 0.5) * 2
-            up = math.sin(math.pi * u) ** 2
-            arm_l = 20 + (115 * up if u < 0.5 else 15 * pump)
-            arm_r = 20 + (115 * up if u >= 0.5 else 15 * pump)
+    hy, cy = parts['hip_y'], parts['chin_y']
+    q = pose(anim, t, h, view)
 
-    hip_pivot = (w / 2, parts['hip_y'])
-    chin_pivot = (w / 2, parts['chin_y'])
-    # Upper body = body + head, swaying about the hips.
+    legs = Image.new('RGBA', size)
+    for side in ('legL', 'legR'):
+        bb = parts[side].getbbox()
+        if bb:
+            place(legs, parts[side], 0, -q['lift' + side[-1]], q[side + '_rot'], ((bb[0] + bb[2]) / 2, hy))
+    # Squash the legs toward the feet (knees bend) or, sitting, toward the
+    # hips (thighs pointing at us); the hips follow.
+    anchor = hy if q['sit'] else h
+    ls = q['leg_scale']
+    legs = legs.resize((w, max(1, int(h * ls))), Image.LANCZOS)
+    legs_y = anchor - anchor * ls
+    hip_drop = (anchor - hy) * (1 - ls)
+    if q['dx']:
+        # Lean the legs so they meet the hips as they sway.
+        k = q['dx'] / max(1.0, (h - hy) * ls)
+        legs = legs.transform(legs.size, Image.AFFINE, (1, k, -k * legs.size[1], 0, 1, 0), Image.BICUBIC)
+
     upper = Image.new('RGBA', size)
     upper.alpha_composite(parts['body'])
-    place(upper, parts['head'], 0, head_dy, head_rot, chin_pivot)
-    for side, ang in (('armL', -arm_l), ('armR', arm_r)):
+    place(upper, parts['head'], 0, q['head_dy'], q['head_rot'], (w / 2, cy))
+    for side in ('armL', 'armR'):
         if parts.get(side) is not None:
+            ang = -q[side] if side == 'armL' else q[side]
             place(upper, parts[side], 0, 0, ang, parts[side + '_pivot'])
-    legs = Image.new('RGBA', size)
-    place(legs, parts['legL'], 0, -lift_l)
-    place(legs, parts['legR'], 0, -lift_r)
+
     whole = Image.new('RGBA', size)
-    whole.alpha_composite(legs)
-    place(whole, upper, 0, 0, body_rot, hip_pivot)
-    if sq != 1.0:
-        nh = int(h * sq)
-        whole = whole.resize((w, nh), Image.LANCZOS)
-        canvas.alpha_composite(whole, (ox, int(oy + (h - nh) + bob)))
-    else:
-        canvas.alpha_composite(whole, (ox, int(oy + bob)))
+    whole.alpha_composite(legs, (0, int(legs_y)))
+    place(whole, upper, q['dx'], hip_drop, q['body_rot'], (w / 2, hy))
+
+    canvas = Image.new('RGBA', (FW * SS, FH * SS))
+    oy = int(FEET_Y * SS) - h
+    place(canvas, whole, (FW * SS - w) // 2, int(oy))
     return canvas.resize((FW, FH), Image.LANCZOS)
 
 
@@ -291,7 +333,7 @@ def build_sheet(path, chin, hip):
         parts, size = views[direction]
         n = META['frames'][anim]
         for f in range(n):
-            sheet.alpha_composite(frame(parts, size, anim, f / n), (f * FW, row * FH))
+            sheet.alpha_composite(frame(parts, size, anim, f / n, direction), (f * FW, row * FH))
     return sheet
 
 

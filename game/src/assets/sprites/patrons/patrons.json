@@ -1,7 +1,7 @@
 {
   "frameWidth": 112,
   "frameHeight": 176,
-  "columns": 16,
+  "columns": 32,
   "originX": 0.5,
   "originY": 0.88144,
   "standingHeight": 121.1,
@@ -11,12 +11,21 @@
     "walk_front": 2,
     "walk_back": 3,
     "dance_front": 4,
-    "dance_back": 5
+    "dance_back": 5,
+    "sit_front": 6,
+    "sit_back": 7
   },
   "frames": {
-    "idle": 4,
-    "walk": 8,
-    "dance": 16
+    "idle": 8,
+    "walk": 16,
+    "dance": 32,
+    "sit": 8
   },
-  "count": 12
+  "count": 12,
+  "fps": {
+    "idle": 6,
+    "walk": 22,
+    "dance": 16,
+    "sit": 5
+  }
 }
