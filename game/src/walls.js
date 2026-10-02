@@ -9,7 +9,7 @@
 // tiles long that flows along the whole wall; `frames` must be a multiple
 // of `period`). Every design draws its own baseboard at the bottom.
 
-import { TILE_H, TILE_W, WALL_HEIGHT } from './config.js';
+import { DOOR_HEIGHT, TILE_H, TILE_W, WALL_HEIGHT } from './config.js';
 
 // Rendered at 2x and drawn at half size. One tile along a wall moves
 // TILE_W/2 x TILE_H/2 game pixels on screen; the wall is WALL_HEIGHT tall.
@@ -334,10 +334,18 @@ export function wallFrameCanvas(style, frame = 0, side = 'right') {
   strip.width = STRIP_W;
   strip.height = STRIP_H;
   WALL_STYLES[style].draw(strip.getContext('2d'), STRIP_W, STRIP_H, frame);
+  return shearOntoWall(strip, side);
+}
+
+// Shears a flat strip (one tile of wall, seen straight on) onto the left or
+// right back wall.
+function shearOntoWall(strip, side) {
   if (side === 'left') {
     const sctx = strip.getContext('2d');
+    sctx.globalCompositeOperation = 'source-atop'; // darken only what's drawn
     sctx.fillStyle = 'rgba(0,0,0,0.15)';
     sctx.fillRect(0, 0, STRIP_W, STRIP_H);
+    sctx.globalCompositeOperation = 'source-over';
   }
   const out = document.createElement('canvas');
   out.width = WALL_TEX_W;
@@ -348,6 +356,82 @@ export function wallFrameCanvas(style, frame = 0, side = 'right') {
   else ctx.setTransform(-a, b, 0, 1, WALL_TEX_W, 0);
   ctx.drawImage(strip, 0, 0);
   return out;
+}
+
+// The club's front door, like Nightclub City's: a single brushed-steel
+// door with riveted edges, a small glowing porthole, a gold push plate and
+// a chrome handle, set into one tile of wall.
+export function doorCanvas(side = 'left') {
+  const strip = document.createElement('canvas');
+  strip.width = STRIP_W;
+  strip.height = STRIP_H;
+  const ctx = strip.getContext('2d');
+  const W = STRIP_W;
+  const H = STRIP_H;
+  const dh = DOOR_HEIGHT * 2;
+  const x0 = 7, x1 = W - 7, top = H - dh;
+  // Frame.
+  ctx.fillStyle = '#1b1d24';
+  ctx.fillRect(x0 - 5, top - 5, x1 - x0 + 10, dh + 5);
+  ctx.fillStyle = '#5a5f6b';
+  ctx.fillRect(x0 - 3, top - 3, x1 - x0 + 6, 2);
+  // Brushed steel leaf.
+  const steel = ctx.createLinearGradient(x0, 0, x1, 0);
+  steel.addColorStop(0, '#7d8390');
+  steel.addColorStop(0.45, '#b9bfca');
+  steel.addColorStop(0.55, '#a7adb9');
+  steel.addColorStop(1, '#6b717d');
+  ctx.fillStyle = steel;
+  ctx.fillRect(x0, top, x1 - x0, dh);
+  ctx.strokeStyle = 'rgba(255,255,255,0.12)';
+  ctx.lineWidth = 1;
+  for (let x = x0 + 3; x < x1; x += 4) {
+    ctx.beginPath(); ctx.moveTo(x, top + 2); ctx.lineTo(x, H - 2); ctx.stroke();
+  }
+  // Riveted border.
+  ctx.strokeStyle = 'rgba(40,42,50,0.7)';
+  ctx.lineWidth = 2;
+  ctx.strokeRect(x0 + 4, top + 4, x1 - x0 - 8, dh - 8);
+  ctx.fillStyle = '#e6e9ef';
+  for (let y = top + 9; y < H - 6; y += 13) {
+    for (const x of [x0 + 7, x1 - 7]) {
+      ctx.beginPath(); ctx.arc(x, y, 1.6, 0, Math.PI * 2); ctx.fill();
+    }
+  }
+  // Glowing porthole.
+  const cx = W / 2, cy = top + dh * 0.24, r = 9;
+  const glow = ctx.createRadialGradient(cx, cy, 1, cx, cy, r);
+  glow.addColorStop(0, '#ffd6ff');
+  glow.addColorStop(0.5, '#d27cff');
+  glow.addColorStop(1, '#6a2aa8');
+  ctx.save();
+  ctx.shadowColor = '#d27cff';
+  ctx.shadowBlur = 10;
+  ctx.fillStyle = glow;
+  ctx.beginPath(); ctx.ellipse(cx, cy, r * 0.75, r, 0, 0, Math.PI * 2); ctx.fill();
+  ctx.restore();
+  ctx.strokeStyle = '#2a2c34';
+  ctx.lineWidth = 3;
+  ctx.beginPath(); ctx.ellipse(cx, cy, r * 0.75 + 1.5, r + 1.5, 0, 0, Math.PI * 2); ctx.stroke();
+  ctx.strokeStyle = '#dfe3ea';
+  ctx.lineWidth = 1;
+  ctx.beginPath(); ctx.ellipse(cx, cy, r * 0.75 + 3, r + 3, 0, 0, Math.PI * 2); ctx.stroke();
+  // Gold push plate and a chrome handle.
+  const py = top + dh * 0.52;
+  const plate = ctx.createLinearGradient(x0 + 4, 0, x0 + 12, 0);
+  plate.addColorStop(0, '#fff0a8');
+  plate.addColorStop(1, '#c98a14');
+  ctx.fillStyle = plate;
+  ctx.fillRect(x0 + 4, py - 16, 8, 32);
+  ctx.fillStyle = '#e9edf3';
+  ctx.fillRect(x1 - 12, py - 12, 4, 24);
+  ctx.fillStyle = '#5a5f6b';
+  ctx.fillRect(x1 - 13, py - 13, 6, 2);
+  ctx.fillRect(x1 - 13, py + 11, 6, 2);
+  // Kick plate.
+  ctx.fillStyle = 'rgba(30,32,40,0.55)';
+  ctx.fillRect(x0 + 2, H - 22, x1 - x0 - 4, 18);
+  return shearOntoWall(strip, side);
 }
 
 // A flat square sample of a design, for shop icons.

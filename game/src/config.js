@@ -51,10 +51,6 @@ export const ROOM_COLORS = {
   slabRight: 0x2c2c33,
   slabLeft: 0x1f1f25,
   slabEdge: 0x3c3c45,
-  door: 0x55565f,
-  doorFrame: 0x2a2a30,
-  doorWindow: 0x9fb8c9,
-  doorBar: 0xb9bac2,
 };
 export const SIDEWALK = { color: 0xb4b5bc, grout: 0x8e8f97, margin: 9, slabTiles: 3 };
 
@@ -85,7 +81,7 @@ export const FACINGS = [0, 90, 180, 270];
 // as ambient "reputation from having a nice venue" growth, on top of
 // this.
 // ---------------------------------------------------------------------
-export const PATRON_SPAWN_TILE = { gx: 1, gy: 0 }; // the "door" — patrons walk in and out here
+export const PATRON_SPAWN_TILE = { gx: 0, gy: 1 }; // the door, on the left wall like Nightclub City's: patrons walk in and out here
 // Capacity is no longer a flat number — an empty club still draws a
 // trickle of curious visitors (PATRON_BASE_CAPACITY), and every prop you
 // place adds room for more (PROP_TYPES[type].capacity), up to a hard

@@ -86,7 +86,7 @@ const barWidth = await page.evaluate(() => {
   const s = window.__clubNova.scene.getScene('club');
   return s.placed['2,5'].gameObject.displayWidth;
 });
-check('bar sprite matches its 3x3 footprint', barWidth >= 140 && barWidth <= 156, `${barWidth}px for a 144px footprint`);
+check('bar sprite matches its 1x3 footprint', barWidth >= 94 && barWidth <= 104, `${barWidth}px for a 96px footprint`);
 
 // Draw order: a prop nearer the camera is drawn over one behind it, even
 // when the one behind is bought later.
@@ -339,7 +339,7 @@ check('animated wallpaper moves while the DJ plays', wall.ledFrames > 3, `${wall
 // The doorway tile can't be blocked with furniture (floor tiles are fine).
 const door = await page.evaluate(() => {
   const s = window.__clubNova.scene.getScene('club');
-  return { solid: s.footprintValid([[1, 0]], 'plant'), floor: s.footprintValid([[1, 0]], 'dance') };
+  return { solid: s.footprintValid([[0, 1]], 'plant'), floor: s.footprintValid([[0, 1]], 'dance') };
 });
 check('furniture can\'t block the front door', door.solid === false && door.floor === true, JSON.stringify(door));
 
@@ -376,8 +376,8 @@ const queue = await page.evaluate(() => {
   s.leaveBarQueue(b);
   return { tiles, before, after };
 });
-check('bar customers line up in a straight row', queue.tiles && queue.tiles.join(' ') === '7,9 7,10 7,11 7,12', JSON.stringify(queue));
-check('the line steps up when someone is served', queue.before && queue.before[0] === '7,9' && queue.before[1] === '7,10' && queue.after === '7,9', JSON.stringify(queue));
+check('bar customers line up in a straight row', queue.tiles && queue.tiles.join(' ') === '6,9 6,10 6,11 6,12', JSON.stringify(queue));
+check('the line steps up when someone is served', queue.before && queue.before[0] === '6,9' && queue.before[1] === '6,10' && queue.after === '6,9', JSON.stringify(queue));
 
 // Regular floors: pick one and click (or drag across) tiles to paint them.
 // It's saved, and patrons don't dance on it.

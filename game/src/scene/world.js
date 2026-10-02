@@ -3,8 +3,9 @@
 // Mixed into ClubScene (see ClubScene.js); `this` is the scene.
 import Phaser from 'phaser';
 import { GRID_EXPANSIONS } from '../catalog.js';
-import { DOOR_HEIGHT, FLOOR_COLOR, FLOOR_SEAM, FLOOR_SLAB_DEPTH, PATRON_SPAWN_TILE, ROOM_COLORS, SIDEWALK, TILE_H, TILE_W, WALL_BASEBOARD, WALL_HEIGHT, WALL_THICKNESS, ZOOM_DEFAULT, ZOOM_MAX, ZOOM_MIN } from '../config.js';
+import { FLOOR_COLOR, FLOOR_SEAM, FLOOR_SLAB_DEPTH, PATRON_SPAWN_TILE, ROOM_COLORS, SIDEWALK, TILE_H, TILE_W, WALL_BASEBOARD, WALL_HEIGHT, WALL_THICKNESS, ZOOM_DEFAULT, ZOOM_MAX, ZOOM_MIN } from '../config.js';
 import { SFX } from '../sfx.js';
+import { WALL_TEX_H, WALL_TEX_W, doorCanvas } from '../walls.js';
 
 export class WorldMixin {
   gridToScreen(gx, gy) {
@@ -131,29 +132,19 @@ export class WorldMixin {
     // Shading where the two walls meet.
     trim.lineStyle(2, ROOM_COLORS.corner, 1);
     trim.lineBetween(...P(-0.5, -0.5, 0), ...P(-0.5, -0.5, H));
-    this.drawDoor(trim);
     this.drawMoodShade(upToSize);
+    this.drawDoor();
   }
 
-  // The club's front door, set into the right-hand wall at the entrance tile
-  // (PATRON_SPAWN_TILE), where patrons walk in and out.
-  drawDoor(w) {
-    const gx = PATRON_SPAWN_TILE.gx;
-    const P = (x, h) => this.gridPoint(x, -0.5, h);
-    const a = gx - 0.46, b = gx + 0.46, mid = gx;
-    const top = DOOR_HEIGHT;
-    const quad = (color, x0, x1, h0, h1) => {
-      w.fillStyle(color, 1);
-      w.fillPoints([P(x0, h0), P(x1, h0), P(x1, h1), P(x0, h1)].map(([x, y]) => ({ x, y })), true);
-    };
-    quad(ROOM_COLORS.doorFrame, a - 0.06, b + 0.06, 0, top + 5);
-    quad(ROOM_COLORS.door, a, mid - 0.01, 0, top);
-    quad(ROOM_COLORS.door, mid + 0.01, b, 0, top);
-    // Small windows and push bars.
-    quad(ROOM_COLORS.doorWindow, a + 0.1, mid - 0.1, top * 0.62, top * 0.85);
-    quad(ROOM_COLORS.doorWindow, mid + 0.1, b - 0.1, top * 0.62, top * 0.85);
-    quad(ROOM_COLORS.doorBar, a + 0.06, mid - 0.05, top * 0.44, top * 0.48);
-    quad(ROOM_COLORS.doorBar, mid + 0.05, b - 0.06, top * 0.44, top * 0.48);
+  // The club's front door (see doorCanvas() in walls.js), set into the left
+  // wall at the entrance tile (PATRON_SPAWN_TILE), like Nightclub City's.
+  // Drawn over the wallpaper and the mood shading.
+  drawDoor() {
+    if (!this.textures.exists('clubDoor')) this.textures.addCanvas('clubDoor', doorCanvas('left'));
+    if (this.doorImage) this.doorImage.destroy();
+    const { x, y } = this.wallSectionOrigin(`L${PATRON_SPAWN_TILE.gy}`);
+    this.doorImage = this.add.image(x, y, 'clubDoor').setOrigin(0, 0).setDisplaySize(WALL_TEX_W / 2, WALL_TEX_H / 2);
+    this.wallLayer.add(this.doorImage);
   }
 
   // Inverse of gridToScreen: given a point in world-local space (already

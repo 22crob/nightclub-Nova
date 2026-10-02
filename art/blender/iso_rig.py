@@ -241,13 +241,13 @@ def render_facings(scene, cam, root, name, out_dir, layers=None):
     return meta
 
 
-def make_bar_piece(root, copies=3, squeeze=0.75):
-    """Turns a one-unit-wide bar module into a joinable bar piece, like
-    Nightclub City's long bars: `copies` of the module side by side along
-    X (the counter), then the whole thing squeezed horizontally so the
-    piece fits exactly `copies` x 3 game tiles once render_facings() applies
-    MODEL_SCALE (3 * 0.75 * 4/3 = 3). Heights are unchanged. The modules'
-    ends meet, so pieces placed side by side make one continuous bar."""
+def make_bar_piece(root, copies=1, squeeze=0.75):
+    """Fits a one-unit-wide bar module to the game's tiles: squeezed
+    horizontally so it covers exactly 1 x 3 tiles (back bar, aisle,
+    counter) once render_facings() applies MODEL_SCALE (0.75 * 4/3 = 1).
+    Heights are unchanged. Its ends meet the tile edges, so bars placed
+    side by side line up into one long bar, like Nightclub City's.
+    `copies` > 1 would lay that many modules side by side in one piece."""
     originals = list(root.children)
     for k in range(copies):
         offset = k - (copies - 1) / 2

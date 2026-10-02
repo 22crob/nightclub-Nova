@@ -352,7 +352,7 @@ def build_tier(name):
     scene.collection.objects.link(root)
     bb.ROOT = root
     TIERS[name]()
-    iso_rig.make_bar_piece(root)  # three modules wide, joinable (3x3 tiles)
+    iso_rig.make_bar_piece(root)  # one module, fitted to 1 x 3 tiles
     bpy.ops.wm.save_as_mainfile(filepath=os.path.join(HERE, f'bar_{name}.blend'))
     meta = iso_rig.render_facings(scene, cam, root, f'bar_{name}', bb.SPRITE_DIR, layers=iso_rig.split_counter(root))
     print(f'bar_{name}:', meta, flush=True)
