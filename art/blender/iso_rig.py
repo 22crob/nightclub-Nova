@@ -241,6 +241,27 @@ def render_facings(scene, cam, root, name, out_dir, layers=None):
     return meta
 
 
+def make_bar_piece(root, copies=3, squeeze=0.75):
+    """Turns a one-unit-wide bar module into a joinable bar piece, like
+    Nightclub City's long bars: `copies` of the module side by side along
+    X (the counter), then the whole thing squeezed horizontally so the
+    piece fits exactly `copies` x 3 game tiles once render_facings() applies
+    MODEL_SCALE (3 * 0.75 * 4/3 = 3). Heights are unchanged. The modules'
+    ends meet, so pieces placed side by side make one continuous bar."""
+    originals = list(root.children)
+    for k in range(copies):
+        offset = k - (copies - 1) / 2
+        if offset == 0:
+            continue  # the originals are the middle module
+        for o in originals:
+            twin = o.copy()  # shares the mesh and materials
+            bpy.context.scene.collection.objects.link(twin)
+            twin.parent = root
+            twin.location.x = o.location.x + offset
+    root.scale = (squeeze, squeeze, 1.0)
+    bpy.context.view_layer.update()
+
+
 def split_counter(root, y_split=-0.6):
     """Splits a bar's parts into 'front' (the customer counter, on the -Y
     tile at rest) and 'back' (back bar and aisle), by where each part sits."""

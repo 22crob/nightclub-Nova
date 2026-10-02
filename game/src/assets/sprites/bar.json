@@ -1,10 +1,10 @@
 {
-  "displayWidth": 134.0,
+  "displayWidth": 150.0,
   "originX": 0.5,
-  "originY": 0.7955,
+  "originY": 0.77647,
   "imageSize": [
-    268,
-    314
+    300,
+    332
   ],
   "layers": [
     "back",

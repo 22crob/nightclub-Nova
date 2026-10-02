@@ -292,6 +292,7 @@ def main():
     build_front_counter()
     build_aisle()
     build_back_bar()
+    iso_rig.make_bar_piece(ROOT)  # three modules wide, joinable (3x3 tiles)
 
     bpy.ops.wm.save_as_mainfile(filepath=os.path.join(HERE, 'bar.blend'))
     meta = iso_rig.render_facings(scene, cam, ROOT, 'bar', SPRITE_DIR, layers=iso_rig.split_counter(ROOT))

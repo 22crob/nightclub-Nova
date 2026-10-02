@@ -36,15 +36,13 @@ import decor_luckyCat from './assets/sprites/decor_luckyCat.json';
 
 // The bar line-up (art/blender/build_bars.py and build_bar.py): five
 // looks, from a beginner's plywood counter to an ice bar. They play the same
-// (1x3 footprint, $10 drinks, one bartender); only the look, price and
-// unlock level differ. The footprint runs back bar, aisle, counter along gy
-// at facings 0/180 and along gx at 90/270.
-const BAR_FOOTPRINT = {
-  0: [[0, 0], [0, 1], [0, 2], [0, 3]],
-  90: [[0, 0], [1, 0], [2, 0], [3, 0]],
-  180: [[0, 0], [0, 1], [0, 2], [0, 3]],
-  270: [[0, 0], [1, 0], [2, 0], [3, 0]],
-};
+// ($10 drinks, one bartender); only the look, price and unlock level differ.
+// Each bar is a 3x3 piece, like Nightclub City's: back bar, aisle and
+// counter, three tiles deep, and three tiles along the counter. Pieces
+// placed side by side join into one long bar. The counter faces +gy at
+// facing 0 and turns with the bar (see barLayout()).
+const SQUARE_3X3 = [[0, 0], [1, 0], [2, 0], [0, 1], [1, 1], [2, 1], [0, 2], [1, 2], [2, 2]];
+const BAR_FOOTPRINT = { 0: SQUARE_3X3, 90: SQUARE_3X3, 180: SQUARE_3X3, 270: SQUARE_3X3 };
 // The DJ booth line-up (art/blender/build_booths.py), paired with the bars:
 // same 2x1 footprint and gameplay, only the look, price and unlock level
 // differ. Every club has exactly one booth, with its DJ always playing: a
@@ -108,7 +106,6 @@ const SEAT_SPRITES = {
   woodStool: seat_woodStool, couch: seat_couch, candleTable: seat_candleTable, stool: seat_stool,
   leatherCouch: seat_leatherCouch, velvetBooth: seat_velvetBooth, blackBooth: seat_blackBooth, goldBooth: seat_goldBooth,
 };
-const SQUARE_3X3 = [[0, 0], [1, 0], [2, 0], [0, 1], [1, 1], [2, 1], [0, 2], [1, 2], [2, 2]];
 const BOOTH_3X3 = { 0: SQUARE_3X3, 90: SQUARE_3X3, 180: SQUARE_3X3, 270: SQUARE_3X3 };
 function seatTier(key, label, cost, unlockLevel, model, fanRate, footprint = null) {
   const meta = SEAT_SPRITES[model];

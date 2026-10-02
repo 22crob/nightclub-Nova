@@ -86,7 +86,7 @@ const barWidth = await page.evaluate(() => {
   const s = window.__clubNova.scene.getScene('club');
   return s.placed['2,5'].gameObject.displayWidth;
 });
-check('bar sprite matches its footprint width', barWidth >= 124 && barWidth <= 140, `${barWidth}px for a 1x4 footprint (120px) plus its counter overhang`);
+check('bar sprite matches its 3x3 footprint', barWidth >= 140 && barWidth <= 156, `${barWidth}px for a 144px footprint`);
 
 // Draw order: a prop nearer the camera is drawn over one behind it, even
 // when the one behind is bought later.
@@ -376,8 +376,8 @@ const queue = await page.evaluate(() => {
   s.leaveBarQueue(b);
   return { tiles, before, after };
 });
-check('bar customers line up in a straight row', queue.tiles && queue.tiles.join(' ') === '6,10 6,11 6,12 6,13', JSON.stringify(queue));
-check('the line steps up when someone is served', queue.before && queue.before[0] === '6,10' && queue.before[1] === '6,11' && queue.after === '6,10', JSON.stringify(queue));
+check('bar customers line up in a straight row', queue.tiles && queue.tiles.join(' ') === '7,9 7,10 7,11 7,12', JSON.stringify(queue));
+check('the line steps up when someone is served', queue.before && queue.before[0] === '7,9' && queue.before[1] === '7,10' && queue.after === '7,9', JSON.stringify(queue));
 
 // Regular floors: pick one and click (or drag across) tiles to paint them.
 // It's saved, and patrons don't dance on it.

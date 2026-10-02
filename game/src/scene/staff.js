@@ -54,18 +54,15 @@ export class StaffMixin {
     const def = PROP_TYPES[rec.type];
     const [ax, ay] = rec.anchor;
     if (!def.footprint) return { counter: [ax, ay], out: null, aisle: [ax, ay] };
-    const last = rec.tiles.length - 1;
+    // A 3x3 bar: the counter is the middle of its front row, and the
+    // bartender's aisle is the middle tile.
     const layouts = {
-      0: { counter: [ax, ay + last], out: [0, 1] },
-      90: { counter: [ax + last, ay], out: [1, 0] },
-      180: { counter: [ax, ay], out: [0, -1] },
-      270: { counter: [ax, ay], out: [-1, 0] },
+      0: { counter: [ax + 1, ay + 2], out: [0, 1] },
+      90: { counter: [ax + 2, ay + 1], out: [1, 0] },
+      180: { counter: [ax + 1, ay], out: [0, -1] },
+      270: { counter: [ax, ay + 1], out: [-1, 0] },
     };
-    // The bartender's aisle is the middle of the bar, between the back bar
-    // and the counter (it falls between two tiles).
-    const mid = (rec.tiles.length - 1) / 2;
-    const aisle = [rec.tiles[0][0] + (rec.tiles[last][0] - rec.tiles[0][0]) * (mid / last), rec.tiles[0][1] + (rec.tiles[last][1] - rec.tiles[0][1]) * (mid / last)];
-    return { ...layouts[rec.facing], aisle };
+    return { ...layouts[rec.facing], aisle: [ax + 1, ay + 1] };
   }
 
   // Where customers line up at a bar: the ordering spot right in front of
