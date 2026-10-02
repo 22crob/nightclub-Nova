@@ -218,7 +218,8 @@ OUTLINE_WIDTH = 0.024
 # character is about 2.6 heads tall. warp_z() maps a rest-pose height on the
 # old body to the new one.
 FEET_Z, HIP_Z, NECK_Z = 0.15, 0.5, 0.98
-LEG_STRETCH, TORSO_STRETCH, SLIM = 1.3, 1.0, 0.62
+GLANCE, LID_DROP = 0.022, 0.012  # eyes glance sideways under heavy lids
+LEG_STRETCH, TORSO_STRETCH, SLIM = 1.05, 0.95, 0.6
 HEAD_LIFT = (HIP_Z - FEET_Z) * (LEG_STRETCH - 1) + (NECK_Z - HIP_Z) * (TORSO_STRETCH - 1)
 
 
@@ -460,19 +461,24 @@ def paint_face(look, path):
     for side in (1, -1):
         ex, ez = 0.155 * side, 1.335
         ellipse(ex, ez, 0.078, 0.086, rgba('#ffffff'))                     # white
-        ellipse(ex - 0.006 * side, ez - 0.006, 0.068, 0.082, iris)         # iris, nearly filling the eye
-        ellipse(ex - 0.006 * side, ez - 0.03, 0.045, 0.04, iris_light)    # glow at the bottom
-        ellipse(ex - 0.006 * side, ez + 0.02, 0.058, 0.05, iris_dark)      # shade at the top
-        ellipse(ex - 0.006 * side, ez - 0.004, 0.027, 0.036, rgba('#140a1c'))   # pupil
-        ellipse(ex + 0.022 * side * -1 + 0.0, ez + 0.03, 0.022, 0.026, rgba('#ffffff'))  # big glint
-        ellipse(ex + 0.018 * side, ez - 0.035, 0.01, 0.012, rgba('#ffffff'))           # small glint
-        # Heavy upper lash line, thicker at the outer corner.
+        ellipse(ex - 0.006 * side + GLANCE, ez - 0.006, 0.068, 0.082, iris)         # iris, nearly filling the eye
+        ellipse(ex - 0.006 * side + GLANCE, ez - 0.03, 0.045, 0.04, iris_light)    # glow at the bottom
+        ellipse(ex - 0.006 * side + GLANCE, ez + 0.02, 0.058, 0.05, iris_dark)      # shade at the top
+        ellipse(ex - 0.006 * side + GLANCE, ez - 0.004, 0.027, 0.036, rgba('#140a1c'))   # pupil
+        ellipse(ex - 0.022 * side + GLANCE, ez - 0.012, 0.02, 0.024, rgba('#ffffff'))  # big glint
+        ellipse(ex + 0.018 * side + GLANCE, ez - 0.035, 0.01, 0.012, rgba('#ffffff'))           # small glint
+        # Heavy, half-closed upper lid, like Nightclub City's cool, bored
+        # club kids: the top of the eye is cut away (back to bare, shaded
+        # skin), sloping down outward.
+        lid_in, lid_out = ez + LID_DROP, ez + LID_DROP - 0.018
+        d.polygon([P(ex - 0.1 * side, ez + 0.12), P(ex + 0.1 * side, ez + 0.12),
+                   P(ex + 0.1 * side, lid_out), P(ex - 0.1 * side, lid_in)], fill=(0, 0, 0, 0))
+        d.line([P(ex - 0.09 * side, lid_in), P(ex + 0.095 * side, lid_out - 0.005)], fill=ink, width=int(L(0.032)))
+        ox = ex + 0.09 * side
+        d.polygon([P(ox, lid_out + 0.012), P(ox + 0.035 * side, lid_out + 0.03 + (0.015 if fem else 0)),
+                   P(ox - 0.015 * side, lid_out - 0.01)], fill=ink)
         x0, y0 = P(ex - 0.092, ez + 0.1)
         x1, y1 = P(ex + 0.092, ez - 0.08)
-        d.arc([x0, y0, x1, y1], start=195, end=345, fill=ink, width=int(L(0.03 if fem else 0.026)))
-        ox = ex + 0.085 * side
-        d.polygon([P(ox, ez + 0.035), P(ox + 0.04 * side, ez + 0.06 + (0.02 if fem else 0)),
-                   P(ox - 0.01 * side, ez + 0.065)], fill=ink)
         # Lower lid.
         d.arc([x0, y0, x1, y1], start=40, end=140, fill=rgba('#6b3a4a', 160), width=int(L(0.008)))
         # Brows.
