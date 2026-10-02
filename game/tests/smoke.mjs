@@ -33,7 +33,7 @@ const state = () => page.evaluate(() => {
   const s = window.__clubNova.scene.getScene('club');
   return {
     cash: s.cash, fans: s.fans, placed: s.placedCount(), patrons: s.patrons.length,
-    textures: ['bar_0', 'bar_90', 'bar_180', 'bar_270', 'dj_club_0', 'dj_wood_90', 'dj_ice_270', 'patron_0', 'patron_11']
+    textures: ['bar_0', 'bar_90', 'bar_180', 'bar_270', 'dj_club_0', 'dj_wood_90', 'dj_ice_270', 'patron_0', 'patron_11', 'patron_12']
       .filter((k) => !s.textures.exists(k)),
   };
 });
@@ -164,6 +164,19 @@ const looks = await page.evaluate(() => {
   return s.patrons.map((p) => ({ tex: p.container.patronSprite && p.container.patronSprite.texture.key, anim: p.container.patronSprite && p.container.patronSprite.anims.currentAnim && p.container.patronSprite.anims.currentAnim.key }));
 });
 check('patrons use chibi characters and play an animation', looks.length > 0 && looks.every((l) => /^patron_\d+$/.test(l.tex) && /^patron_\d+_(idle|walk|dance)_(front|back)$/.test(l.anim)), JSON.stringify(looks[0]));
+
+// The 3D test patron (sheet 12) turns up, walks, and doesn't sit yet.
+const testPatron = await page.evaluate(() => {
+  const s = window.__clubNova.scene.getScene('club');
+  const c = s.drawPatronSprite(0, 0, 1, 12);
+  s.setPatronAnimation({ container: c }, 'walk');
+  const anim = c.patronSprite.anims.currentAnim && c.patronSprite.anims.currentAnim.key;
+  const frame = c.patronSprite.frame;
+  const sits = s.maybeGoSit({ container: c });
+  c.destroy();
+  return { anim, size: [frame.width, frame.height], sits };
+});
+check('the 3D test patron walks and stays standing', testPatron.anim === 'patron_12_walk_front' && testPatron.size[0] === 112 && testPatron.sits === false, JSON.stringify(testPatron));
 
 // Facing: moving down-screen shows the front, up-screen the back, and the
 // sprite is mirrored for the right-hand diagonals.

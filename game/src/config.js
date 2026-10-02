@@ -112,6 +112,11 @@ export const PATRON_POI_LINGER = [3500, 7000];
 export const PATRON_DANCE_LINGER = [12000, 22000]; // ms a patron dances before moving on     // ms a patron lingers at a point of interest before wandering again
 export const PATRON_TIP_INTERVAL = [3000, 5500];   // ms between a patron's tips
 export const PATRON_LIFETIME = [45000, 65000];     // ms a patron stays before heading out (the 12x12 room takes a while to cross)
+// The new 3D patron style (art/blender/build_patron3d.py) on trial: he is
+// patron sheet 12 and turns up in this share of arrivals so he's easy to
+// spot. He has only a walk so far (idle holds a walk pose, dance steps on
+// the spot), so he doesn't sit down until his sit animation exists.
+export const TEST_PATRON = { character: 12, share: 0.35, canSit: false };
 // Each patron token gets its own skin tone, outfit color, and hair (color +
 // style, or none at all) picked independently at spawn — see
 // drawPatronSprite() — so a full floor reads as a crowd of individuals

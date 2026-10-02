@@ -9,7 +9,7 @@
 // tile for others. Sitting slowly cheers them up (see updatePatronMood());
 // after a while, or when thirsty, they hop back down.
 import { PROP_TYPES } from '../catalog.js';
-import { SEAT_CHANCE, SEAT_SIT_TIME, TILE_W } from '../config.js';
+import { SEAT_CHANCE, SEAT_SIT_TIME, TEST_PATRON, TILE_W } from '../config.js';
 
 // Screen pixels per Blender unit of height, for sitLift.
 const UNIT_HEIGHT_PX = (TILE_W / Math.SQRT2) * Math.cos(Math.PI / 6);
@@ -179,6 +179,7 @@ export class SeatingMixin {
   // Called from pickRoamTarget(): sometimes a patron goes for a sit.
   maybeGoSit(patron) {
     if (this.isBoosted()) return false; // everyone's dancing
+    if (!TEST_PATRON.canSit && patron.container.patronCharacter === TEST_PATRON.character) return false;
     return Math.random() < SEAT_CHANCE && this.claimSeat(patron);
   }
 }
