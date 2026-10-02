@@ -324,8 +324,8 @@ export class StaffMixin {
   // A short-lived label that floats up and fades, above everything.
   floatText(x, y, text, color) {
     const label = this.add.text(x, y, text, {
-      fontFamily: 'Fredoka, Arial, sans-serif', fontSize: '14px', fontStyle: 'bold', color,
-      stroke: '#0a1f44', strokeThickness: 3,
+      fontFamily: 'Arial, Helvetica, sans-serif', fontSize: '14px', fontStyle: 'bold', color,
+      stroke: '#000000', strokeThickness: 3,
     }).setOrigin(0.5, 1);
     this.patronLayer.add(label);
     this.tweens.add({
