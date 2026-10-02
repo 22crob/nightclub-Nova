@@ -214,7 +214,8 @@ def pose(anim, t, h, view):
     degrees; arm angles are positive outward from the body. leg_scale
     below 1 bends the knees (feet stay planted, the hips drop)."""
     p = dict(dx=0.0, leg_scale=1.0, body_rot=0.0, head_rot=0.0, head_dy=0.0,
-             armL=3.0, armR=3.0, legL_rot=0.0, legR_rot=0.0, liftL=0.0, liftR=0.0, sit=False)
+             armL=3.0, armR=3.0, legL_rot=0.0, legR_rot=0.0, liftL=0.0, liftR=0.0, sit=False,
+             thigh_rot=0.0)
     breath = 0.5 - 0.5 * math.cos(TAU * t)
     if anim in ('idle', 'sit'):
         p['leg_scale'] = 1 - 0.008 * breath
@@ -224,7 +225,12 @@ def pose(anim, t, h, view):
         if anim == 'sit':
             # Hips on the seat, thighs coming toward us (foreshortened).
             p['sit'] = True
-            p['leg_scale'] = 0.45 if view == 'front' else 0.3
+            if view == 'front':
+                # Thighs point at us along the seat (toward the lower left,
+                # the way he faces), shins hang over the front edge.
+                p['thigh_rot'] = -62
+            else:
+                p['leg_scale'] = 0.3                     # hidden behind him anyway
             p['armL'] = p['armR'] = 1 + 1.5 * breath
     elif anim == 'walk':
         a = TAU * t
@@ -262,14 +268,48 @@ def pose(anim, t, h, view):
     return p
 
 
+def seated_legs(parts, size, thigh_rot):
+    """Legs bent at the knee for sitting: (shins, thighs). Each leg is split
+    halfway down; the thigh turns about the hip by thigh_rot degrees and the
+    shin hangs straight down from where the knee ends up."""
+    w, h = size
+    hy = parts['hip_y']
+    knee = int(hy + 0.5 * (h - hy))
+    shins, thighs = Image.new('RGBA', size), Image.new('RGBA', size)
+    a = math.radians(thigh_rot)
+    for side in ('legR', 'legL'):                    # far leg first
+        leg = parts[side]
+        bb = leg.getbbox()
+        if not bb:
+            continue
+        pivot = ((bb[0] + bb[2]) / 2, hy)
+        thigh = Image.new('RGBA', size)
+        thigh.paste(leg.crop((0, 0, w, knee + 2)), (0, 0))
+        shin = Image.new('RGBA', size)
+        shin.paste(leg.crop((0, knee, w, h)), (0, knee))
+        length = knee - hy
+        # Where the knee lands once the thigh has turned (PIL turns
+        # counter-clockwise for positive angles, on screen).
+        kx = -length * math.sin(-a)
+        ky = length * math.cos(-a) - length
+        place(shins, shin, kx, ky)
+        place(thighs, thigh, 0, 0, thigh_rot, pivot)
+    return shins, thighs
+
+
 def frame(parts, size, anim, t, view):
     """One animation frame of the figure at 4x, feet at the bottom middle."""
     w, h = size
     hy, cy = parts['hip_y'], parts['chin_y']
     q = pose(anim, t, h, view)
 
-    legs = Image.new('RGBA', size)
-    for side in ('legL', 'legR'):
+    lap = None
+    if q['thigh_rot']:
+        legs, lap = seated_legs(parts, size, q['thigh_rot'])
+        q['leg_scale'] = 1.0
+    else:
+        legs = Image.new('RGBA', size)
+    for side in ('legL', 'legR') if not q['thigh_rot'] else ():
         bb = parts[side].getbbox()
         if bb:
             place(legs, parts[side], 0, -q['lift' + side[-1]], q[side + '_rot'], ((bb[0] + bb[2]) / 2, hy))
@@ -287,6 +327,8 @@ def frame(parts, size, anim, t, view):
 
     upper = Image.new('RGBA', size)
     upper.alpha_composite(parts['body'])
+    if lap is not None:
+        upper.alpha_composite(lap)               # the lap is in front of his belly
     place(upper, parts['head'], 0, q['head_dy'], q['head_rot'], (w / 2, cy))
     for side in ('armL', 'armR'):
         if parts.get(side) is not None:
