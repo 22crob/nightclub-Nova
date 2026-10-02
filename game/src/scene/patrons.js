@@ -3,7 +3,7 @@
 import Phaser from 'phaser';
 import { PATRON_META, PATRON_SHEETS } from '../assets.js';
 import { FLOOR_DECAL_PROPS, PROP_TYPES, STAFF_TYPES } from '../catalog.js';
-import { BOOST, CHARACTER_DISPLAY_HEIGHT, DRINK_RUN_CHANCE, PATRON_DANCE_LINGER, HAIR_STYLES, PATRON_HAIR_COLORS, PATRON_LIFETIME, PATRON_MOVE_INTERVAL, PATRON_OUTFIT_COLORS, PATRON_POI_LINGER, PATRON_POPUP_Y, PATRON_SKIN_TONES, PATRON_SPAWN_INTERVAL, PATRON_SPAWN_TILE, PATRON_TIP_INTERVAL, PATRON_Y_OFFSET, PROP_SCALE, TEST_PATRON } from '../config.js';
+import { BOOST, CHARACTER_DISPLAY_HEIGHT, DRINK_RUN_CHANCE, PATRON_DANCE_LINGER, HAIR_STYLES, PATRON_HAIR_COLORS, PATRON_LIFETIME, PATRON_MOVE_INTERVAL, PATRON_OUTFIT_COLORS, PATRON_POI_LINGER, PATRON_POPUP_Y, PATRON_SKIN_TONES, PATRON_SPAWN_INTERVAL, PATRON_SPAWN_TILE, PATRON_TIP_INTERVAL, PATRON_Y_OFFSET, PROP_SCALE } from '../config.js';
 import { SFX } from '../sfx.js';
 import { MOOD } from './mood.js';
 import { randRange } from '../util.js';
@@ -116,8 +116,7 @@ export class PatronsMixin {
     // Patrons never wear a staff member's character, so staff stand out.
     const staffLooks = new Set(Object.values(STAFF_TYPES).map((t) => t.character % PATRON_SHEETS.length));
     const choices = PATRON_SHEETS.map((_, i) => i).filter((i) => !staffLooks.has(i));
-    const testing = choices.includes(TEST_PATRON.character) && Math.random() < TEST_PATRON.share;
-    container.patronCharacter = character ?? (testing ? TEST_PATRON.character : Phaser.Utils.Array.GetRandom(choices.length ? choices : [0]));
+    container.patronCharacter = character ?? Phaser.Utils.Array.GetRandom(choices.length ? choices : [0]);
     container.patronDir = 'front';
     const sprite = this.add.sprite(0, 0, `patron_${container.patronCharacter}`);
     sprite.setOrigin(PATRON_META.originX, PATRON_META.originY);
