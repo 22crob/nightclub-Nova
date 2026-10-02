@@ -59,6 +59,7 @@ export class PlacementMixin {
     // occupies; always pivot around its original anchor tile so rotating
     // from a "second" tile doesn't shift the piece.
     if (PROP_TYPES[placed.type].seats) this.releaseSeats(placed); // anyone sitting gets up first
+    if (placed.queue) this.clearBarQueue(placed); // the line moves with the bar
     const [agx, agy] = placed.anchor;
     const idx = FACINGS.indexOf(placed.facing);
     const newFacing = FACINGS[(idx + 1) % FACINGS.length];

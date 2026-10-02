@@ -70,7 +70,7 @@ export const PASSIVE_FAN_SHARE = 0.25;
 export const WAGE_INTERVAL_MS = 30000;
 // After a drink, how long until a patron is thirsty again and heads back
 // to a bar.
-export const THIRST_INTERVAL = [20000, 30000];
+export const THIRST_INTERVAL = [32000, 50000];
 
 // Facings are in degrees, matching the rotation applied in Blender: 0/90/180/270.
 export const FACINGS = [0, 90, 180, 270];
@@ -100,9 +100,10 @@ export const PATRON_MOVE_INTERVAL = [1500, 3000];  // ms a patron waits between 
 // patron would leave a good spot on the exact same short timer as an empty
 // one, so the floor never visibly had anyone actually "hanging out"
 // anywhere in particular. Real base-game behavior fix, not a visual one.
-export const PATRON_POI_LINGER = [3500, 7000];     // ms a patron lingers at a point of interest before wandering again
+export const PATRON_POI_LINGER = [3500, 7000];
+export const PATRON_DANCE_LINGER = [12000, 22000]; // ms a patron dances before moving on     // ms a patron lingers at a point of interest before wandering again
 export const PATRON_TIP_INTERVAL = [3000, 5500];   // ms between a patron's tips
-export const PATRON_LIFETIME = [28000, 42000];     // ms a patron stays before heading out (the 12x12 room takes a while to cross)
+export const PATRON_LIFETIME = [45000, 65000];     // ms a patron stays before heading out (the 12x12 room takes a while to cross)
 // Each patron token gets its own skin tone, outfit color, and hair (color +
 // style, or none at all) picked independently at spawn — see
 // drawPatronSprite() — so a full floor reads as a crowd of individuals
@@ -155,6 +156,12 @@ export const FLOOR_TICK_MS = 125;
 // Seating (see seating.js): the chance a patron picking somewhere to go
 // heads for a free seat instead, and how long they stay seated (ms).
 export const SEAT_CHANCE = 0.3;
+
+// Bars: customers queue in a straight line out from the counter, at most
+// this many (the first one is ordering). DRINK_RUN_CHANCE is how often a
+// patron who isn't thirsty yet still goes for a drink.
+export const BAR_QUEUE_LENGTH = 4;
+export const DRINK_RUN_CHANCE = 0.1;
 
 // Drop the Bass (see boost.js): a free party boost with a cooldown. During
 // it, tips and thirst run `speedUp` times faster, tips are `tipMultiplier`

@@ -15,16 +15,17 @@ import { PATRON_POPUP_Y } from '../config.js';
 export const MOOD = {
   start: 60,
   startFun: 40,
-  boredomPerSec: 1.6,      // fun lost per second
+  boredomPerSec: 0.9,      // fun lost per second (the DJ is always playing, so the room itself is a little fun)
   danceFunPerSec: 9,       // fun gained per second dancing to a live DJ
   livelyFunPerSec: 2.5,    // fun gained per second somewhere lively
   seatedFunPerSec: 3,      // fun gained per second sitting down
   seatedMoodPerSec: 0.8,   // mood gained per second sitting down
   thirstGrace: 12000,      // ms a thirsty patron waits before getting upset
   thirstMoodPerSec: 3.5,   // mood lost per second while thirsty past the grace
-  boredMoodPerSec: 2.2,    // mood lost per second while fun < 20
+  boredMoodPerSec: 1.5,    // mood lost per second while fun < 20
   funMoodPerSec: 1.0,      // mood gained per second while fun > 60
   drinkMood: 15,           // mood from a drink
+  queuePatience: 0.35,     // thirst hurts this much less while in line at a bar
   stormOutBelow: 20,       // a patron this unhappy leaves early
   bubbleEveryMs: 9000,     // how often a patron repeats a need bubble
 };
@@ -64,7 +65,8 @@ export class MoodMixin {
     if (thirsty) {
       if (patron.thirstSince == null) patron.thirstSince = now;
       if (now - patron.thirstSince > MOOD.thirstGrace) {
-        mood -= MOOD.thirstMoodPerSec * dt;
+        // In line for a drink, they're more patient.
+        mood -= MOOD.thirstMoodPerSec * dt * (patron.queue ? MOOD.queuePatience : 1);
         this.moodBubble(patron, '🍹?');
       }
     } else {

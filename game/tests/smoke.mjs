@@ -354,6 +354,29 @@ const lighting = await page.evaluate(() => {
 });
 check('the room is dimmed, with no glows under lights', lighting.shaded && !lighting.glow, JSON.stringify(lighting));
 
+// Bar lines: customers queue in a straight line out from the counter and
+// step up when the front one is served.
+const queue = await page.evaluate(() => {
+  const s = window.__clubNova.scene.getScene('club');
+  s.cash += 500;
+  const bar = s.restoreProp('woodBar', 0, [6, 6]);
+  s.hireStaff(bar);
+  const others = s.staffableRecords().filter((r) => r !== bar && r.staff && r.staff.kind === 'bartender');
+  others.forEach((r) => s.detachStaff(r)); // only this bar is open
+  const tiles = s.barQueueTiles(bar).map((t) => t.join(','));
+  // Two stand-in customers (the line logic only needs these fields).
+  const a = { nextMoveAt: 0 };
+  const b = { nextMoveAt: 0 };
+  s.joinBarQueue(a); s.joinBarQueue(b);
+  const before = [[a.targetGx, a.targetGy].join(','), [b.targetGx, b.targetGy].join(',')];
+  s.leaveBarQueue(a);
+  const after = [b.targetGx, b.targetGy].join(',');
+  s.leaveBarQueue(b);
+  return { tiles, before, after };
+});
+check('bar customers line up in a straight row', queue.tiles && queue.tiles.join(' ') === '6,9 6,10 6,11', JSON.stringify(queue));
+check('the line steps up when someone is served', queue.before && queue.before[0] === '6,9' && queue.before[1] === '6,10' && queue.after === '6,9', JSON.stringify(queue));
+
 // Seating: every piece has its art, and a patron can sit on a couch (drawn
 // between its two layers), feel better for it, and get up again.
 const seating = await page.evaluate(() => {

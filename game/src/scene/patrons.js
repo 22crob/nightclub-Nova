@@ -3,7 +3,7 @@
 import Phaser from 'phaser';
 import { PATRON_META, PATRON_SHEETS } from '../assets.js';
 import { FLOOR_DECAL_PROPS, PROP_TYPES, STAFF_TYPES } from '../catalog.js';
-import { BOOST, CHARACTER_DISPLAY_HEIGHT, HAIR_STYLES, PATRON_HAIR_COLORS, PATRON_LIFETIME, PATRON_MOVE_INTERVAL, PATRON_OUTFIT_COLORS, PATRON_POI_LINGER, PATRON_POPUP_Y, PATRON_SKIN_TONES, PATRON_SPAWN_INTERVAL, PATRON_SPAWN_TILE, PATRON_TIP_INTERVAL, PATRON_Y_OFFSET, PROP_SCALE } from '../config.js';
+import { BOOST, CHARACTER_DISPLAY_HEIGHT, DRINK_RUN_CHANCE, PATRON_DANCE_LINGER, HAIR_STYLES, PATRON_HAIR_COLORS, PATRON_LIFETIME, PATRON_MOVE_INTERVAL, PATRON_OUTFIT_COLORS, PATRON_POI_LINGER, PATRON_POPUP_Y, PATRON_SKIN_TONES, PATRON_SPAWN_INTERVAL, PATRON_SPAWN_TILE, PATRON_TIP_INTERVAL, PATRON_Y_OFFSET, PROP_SCALE } from '../config.js';
 import { SFX } from '../sfx.js';
 import { MOOD } from './mood.js';
 import { randRange } from '../util.js';
@@ -65,7 +65,7 @@ export class PatronsMixin {
       despawnAt: now + randRange(...PATRON_LIFETIME),
       nextMoveAt: now + randRange(...PATRON_MOVE_INTERVAL),
       nextTipAt: now + randRange(...PATRON_TIP_INTERVAL),
-      thirstyAt: now + randRange(0, 3000), // most patrons head for a drink soon after arriving
+      thirstyAt: now + randRange(3000, 18000), // most patrons want a drink soon after arriving, not all at once
       mood: MOOD.start,
       fun: MOOD.startFun,
       thirstSince: null,
@@ -276,8 +276,8 @@ export class PatronsMixin {
   // as likely), or the open tile next to a booth. Returns null if nothing
   // like that is placed yet, so callers can fall back to plain wandering.
   pickPointOfInterestTile() {
-    const danceTiles = [];
-    const hangoutTiles = [];
+    let danceTiles = [];
+    let hangoutTiles = [];
     // Walk this.placed by KEY (one entry per occupied grid tile) rather
     // than deduping by record identity — every key already names one real
     // tile, which is exactly the granularity a dance-floor or bar/booth
@@ -300,25 +300,20 @@ export class PatronsMixin {
         }
       }
     }
-    const barTiles = [];
-    for (const rec of this.staffableRecords()) {
-      if (PROP_TYPES[rec.type].staff !== 'bartender') continue;
-      for (const t of this.barServiceTiles(rec)) {
-        barTiles.push(t);
-        if (rec.staff) barTiles.push(t, t); // staffed bars draw a crowd
-      }
-    }
-    // A staffed bar is the strongest pull (that's where drinks are sold),
-    // then the dance floor while music plays, then hanging out by booths.
-    // Without a DJ the dance floor is only a weak draw.
+    // The dance floor is the big draw while music plays (going for a drink
+    // is handled by the bar lines, see pickRoamTarget()); otherwise hang out
+    // by the DJ booth.
+    // Nobody hangs about in a bar line unless they're queueing.
+    const lines = this.barLineTiles();
+    const free = (t) => !lines.has(`${t[0]},${t[1]}`);
+    danceTiles = danceTiles.filter(free);
+    hangoutTiles = hangoutTiles.filter(free);
     const music = this.musicPlaying();
     const pick = Phaser.Utils.Array.GetRandom;
     const roll = Math.random();
-    const anyStaffedBar = barTiles.length > 0 && this.staffableRecords().some((r) => r.staff && PROP_TYPES[r.type].staff === 'bartender');
     if (this.isBoosted() && danceTiles.length > 0 && roll < BOOST.danceChance) return pick(danceTiles); // bass drop: everyone dances
-    if (anyStaffedBar && roll < 0.45) return pick(barTiles);
-    if (danceTiles.length > 0 && roll < (music ? 0.85 : 0.6) && (music || Math.random() < 0.3)) return pick(danceTiles);
-    if (hangoutTiles.length > 0 || barTiles.length > 0) return pick(hangoutTiles.concat(barTiles));
+    if (danceTiles.length > 0 && music && roll < 0.75) return pick(danceTiles);
+    if (hangoutTiles.length > 0) return pick(hangoutTiles);
     if (danceTiles.length > 0) return pick(danceTiles);
     return null;
   }
@@ -330,25 +325,23 @@ export class PatronsMixin {
   // drifting; the rest of the time (or once nothing new is worth visiting)
   // a plain open tile so patrons still spread out across the whole floor.
   pickRoamTarget(patron) {
+    // In line at a bar: stay in line.
+    if (patron.queue) { this.updateQueueTarget(patron); if (patron.queue) return; }
     this.releaseSeat(patron); // a new plan replaces any seat they were headed for
-    // Thirsty: head straight for the nearest free spot at a staffed bar.
-    if (patron.thirstyAt !== undefined && this.time.now >= patron.thirstyAt) {
-      const bar = this.nearestFreeBarTile(patron.gx, patron.gy);
-      if (bar) {
-        [patron.targetGx, patron.targetGy] = bar;
-        return;
-      }
-    }
+    // Thirsty (or just fancying one): join the shortest line at a staffed bar.
+    const thirsty = patron.thirstyAt !== undefined && this.time.now >= patron.thirstyAt;
+    if ((thirsty || Math.random() < DRINK_RUN_CHANCE) && this.joinBarQueue(patron)) return;
     if (this.maybeGoSit(patron)) return;
     const poi = this.pickPointOfInterestTile();
     if (poi && Math.random() < 0.7) {
       [patron.targetGx, patron.targetGy] = poi;
       return;
     }
+    const lines = this.barLineTiles();
     for (let i = 0; i < 12; i++) {
       const tx = Phaser.Math.Between(0, this.gridSize - 1);
       const ty = Phaser.Math.Between(0, this.gridSize - 1);
-      if (!this.isBlockingProp(tx, ty)) {
+      if (!this.isBlockingProp(tx, ty) && !lines.has(`${tx},${ty}`)) {
         patron.targetGx = tx;
         patron.targetGy = ty;
         return;
@@ -357,7 +350,7 @@ export class PatronsMixin {
     const open = [];
     for (let gx = 0; gx < this.gridSize; gx++) {
       for (let gy = 0; gy < this.gridSize; gy++) {
-        if (!this.isBlockingProp(gx, gy)) open.push([gx, gy]);
+        if (!this.isBlockingProp(gx, gy) && !lines.has(`${gx},${gy}`)) open.push([gx, gy]);
       }
     }
     if (open.length > 0) {
@@ -434,6 +427,8 @@ export class PatronsMixin {
       step = patron.path && patron.path[0];
     }
     if (!step) {
+      // Already in their place in line (nothing left to walk).
+      if (patron.queue && patron.gx === patron.targetGx && patron.gy === patron.targetGy) { this.waitInLine(patron); return; }
       // No route (walled in by furniture): pick somewhere else, or leave
       // from here if heading for the door.
       if (patron.leaving) { this.finalizeDeparture(patron); return; }
@@ -443,9 +438,26 @@ export class PatronsMixin {
       return;
     }
     if (this.patronTileOccupied(step[0], step[1])) {
+      // Someone's in the way: walk around them if there's another route.
+      const around = this.findPath(patron.gx, patron.gy, patron.targetGx, patron.targetGy, true);
+      if (around && around.length && !this.patronTileOccupied(around[0][0], around[0][1])) {
+        patron.path = around;
+        step = around[0];
+      }
+    }
+    // Still blocked: after a few tries, squeeze past them, like people do in
+    // a crowd. Nobody squeezes past someone in a bar line while queueing
+    // themselves, though: the line keeps its order.
+    const blocker = this.patrons.find((p) => p !== patron && !p.leaving && !p.gone && p.gx === step[0] && p.gy === step[1]);
+    const squeezePast = blocker && (patron.waits || 0) >= 3 && !(patron.queue && blocker.queue);
+    if (blocker && !squeezePast) {
       patron.nextMoveAt = this.time.now + 300 + Math.random() * 400;
       patron.waits = (patron.waits || 0) + 1;
-      if (patron.waits > 6 && !patron.leaving) { this.pickRoamTarget(patron); patron.path = null; patron.waits = 0; }
+      // Stuck behind someone: find another way, unless it's just the line
+      // at the bar, which is worth waiting in.
+      if (patron.waits > 6 && !patron.leaving && !patron.queue) { this.pickRoamTarget(patron); patron.path = null; patron.waits = 0; }
+      // Even a line isn't worth being stuck in forever.
+      if (patron.waits > 20 && patron.queue) { this.leaveBarQueue(patron); this.pickRoamTarget(patron); patron.waits = 0; }
       return;
     }
     patron.waits = 0;
@@ -501,6 +513,10 @@ export class PatronsMixin {
           this.sitDown(patron);
           return;
         }
+        if (arrived && patron.queue) {
+          this.waitInLine(patron);
+          return;
+        }
         if (arrived) {
           // Reached the spot it was roaming toward — stand/mingle here for a
           // bit before picking a fresh target. A genuine point of interest
@@ -508,16 +524,14 @@ export class PatronsMixin {
           // dwell than a random empty tile, so patrons visibly linger at
           // the good spots instead of drifting off on the same short timer
           // everywhere.
-          const atPOI = this.isDanceFloorTile(tx, ty) || this.isNearRevenueProp(tx, ty);
-          patron.nextMoveAt = this.time.now + randRange(...(atPOI ? PATRON_POI_LINGER : PATRON_MOVE_INTERVAL));
-          this.faceFront(patron);
           const dancing = this.isDanceFloorTile(tx, ty) && this.musicPlaying();
+          const atPOI = this.isDanceFloorTile(tx, ty) || this.isNearRevenueProp(tx, ty);
+          const linger = dancing ? PATRON_DANCE_LINGER : (atPOI ? PATRON_POI_LINGER : PATRON_MOVE_INTERVAL);
+          patron.nextMoveAt = this.time.now + randRange(...linger);
+          this.faceFront(patron);
           this.setPatronAnimation(patron, dancing ? 'dance' : 'idle');
-          // At a bar's customer side: order a drink (see orderDrink()).
-          if (this.orderDrink(patron)) patron.nextMoveAt = this.time.now + randRange(...PATRON_POI_LINGER);
-          else if (this.time.now >= patron.thirstyAt && this.nearestFreeBarTile(tx, ty)) {
-            patron.nextMoveAt = Math.min(patron.nextMoveAt, this.time.now + 1200); // thirsty: don't hang about
-          }
+          // Thirsty: don't hang about, go and get in line.
+          if (this.time.now >= patron.thirstyAt) patron.nextMoveAt = Math.min(patron.nextMoveAt, this.time.now + 1200);
         } else if (this.time.now >= patron.despawnAt) {
           // Time's up mid-journey — head for the door instead of
           // continuing to roam toward the old target.
@@ -536,11 +550,27 @@ export class PatronsMixin {
     });
   }
 
+  // A patron standing in their place in a bar line: wait facing the
+  // counter, or order if they're at the front.
+  waitInLine(patron) {
+    this.faceBar(patron);
+    this.setPatronAnimation(patron, 'idle');
+    const front = patron.queue.queue[0] === patron;
+    if (front && this.orderDrink(patron)) patron.nextMoveAt = this.time.now + randRange(1200, 2000); // take the drink and go
+    else patron.nextMoveAt = this.time.now + 500; // check again if the line has moved
+  }
+
   // Shortest walkable route from (fx, fy) to (tx, ty) as a list of steps
   // (not including the start), going around blocking furniture. Plain
   // breadth-first search: the grid is at most 20x20. Null if unreachable.
-  findPath(fx, fy, tx, ty) {
+  findPath(fx, fy, tx, ty, avoidPatrons = false) {
     if (fx === tx && fy === ty) return [];
+    // Optionally treat tiles other patrons are standing on as blocked, to
+    // find a way around a crowd (see movePatronRandomly()).
+    const crowd = new Set();
+    if (avoidPatrons) {
+      for (const p of this.patrons) if (!p.leaving && !p.gone && !(p.gx === fx && p.gy === fy)) crowd.add(`${p.gx},${p.gy}`);
+    }
     const n = this.gridSize;
     const prev = new Map();
     const key = (x, y) => y * n + x;
@@ -554,7 +584,7 @@ export class PatronsMixin {
         if (nx < 0 || ny < 0 || nx >= n || ny >= n) continue;
         const k = key(nx, ny);
         if (prev.has(k)) continue;
-        if (this.isBlockingProp(nx, ny) && !(nx === tx && ny === ty)) continue;
+        if ((this.isBlockingProp(nx, ny) || crowd.has(`${nx},${ny}`)) && !(nx === tx && ny === ty)) continue;
         prev.set(k, [x, y]);
         if (nx === tx && ny === ty) {
           const path = [];
@@ -625,6 +655,7 @@ export class PatronsMixin {
   startPatronDeparture(patron) {
     if (patron.leaving) return; // already on its way out
     patron.leaving = true;
+    this.leaveBarQueue(patron);
     patron.targetGx = PATRON_SPAWN_TILE.gx;
     patron.targetGy = PATRON_SPAWN_TILE.gy;
     patron.path = null;
@@ -670,6 +701,7 @@ export class PatronsMixin {
   finalizeDeparture(patron) {
     if (patron.gone) return;
     this.releaseSeat(patron);
+    this.leaveBarQueue(patron);
     this.patronLeaves(patron);
     // From here the patron is fading out at the door: nothing may move or
     // animate it again (its container is destroyed when the fade ends).

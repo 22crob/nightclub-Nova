@@ -2,7 +2,7 @@
 // Mixed into ClubScene (see ClubScene.js); `this` is the scene.
 import { PATRON_META, PATRON_SHEETS } from '../assets.js';
 import { PROP_TYPES, STAFF_TYPES } from '../catalog.js';
-import { CHARACTER_DISPLAY_HEIGHT, THIRST_INTERVAL, PATRON_POPUP_Y, PROP_SCALE, SELL_REFUND_RATIO } from '../config.js';
+import { BAR_QUEUE_LENGTH, CHARACTER_DISPLAY_HEIGHT, THIRST_INTERVAL, PATRON_POPUP_Y, PROP_SCALE, SELL_REFUND_RATIO } from '../config.js';
 import { realSpriteIconFor } from '../icons.js';
 import { SFX } from '../sfx.js';
 import { randRange } from '../util.js';
@@ -63,40 +63,102 @@ export class StaffMixin {
     return { ...layouts[rec.facing], aisle: rec.tiles[1] };
   }
 
-  // Walkable tiles a customer can order from: in front of the counter and
-  // on either side of it.
-  barServiceTiles(rec) {
+  // Where customers line up at a bar: the ordering spot right in front of
+  // the counter, then a straight line back from it, stopping at anything in
+  // the way (at most BAR_QUEUE_LENGTH tiles).
+  barQueueTiles(rec) {
     const { counter, out } = this.barLayout(rec);
-    const [cx, cy] = counter;
-    const offsets = out ? [out, [out[1], out[0]], [-out[1], -out[0]]] : [[1, 0], [-1, 0], [0, 1], [0, -1]];
-    return offsets
-      .map(([dx, dy]) => [cx + dx, cy + dy])
-      .filter(([x, y]) => x >= 0 && y >= 0 && x < this.gridSize && y < this.gridSize && !this.isBlockingProp(x, y));
-  }
-
-  // The nearest free customer-side tile of a staffed bar, for a thirsty
-  // patron at (gx, gy). Null if there's no staffed bar or no free spot.
-  nearestFreeBarTile(gx, gy) {
-    let best = null;
-    let bestDist = Infinity;
-    for (const rec of this.staffableRecords()) {
-      if (!rec.staff || PROP_TYPES[rec.type].staff !== 'bartender') continue;
-      for (const [x, y] of this.barServiceTiles(rec)) {
-        if (this.patronTileOccupied(x, y)) continue;
-        const d = Math.abs(x - gx) + Math.abs(y - gy);
-        if (d < bestDist) { bestDist = d; best = [x, y]; }
-      }
+    const [dx, dy] = out || [0, 1];
+    const tiles = [];
+    for (let k = 1; k <= BAR_QUEUE_LENGTH; k++) {
+      const x = counter[0] + dx * k;
+      const y = counter[1] + dy * k;
+      if (x < 0 || y < 0 || x >= this.gridSize || y >= this.gridSize || this.isBlockingProp(x, y)) break;
+      tiles.push([x, y]);
     }
-    return best;
+    return tiles;
   }
 
-  // The bar a customer standing on (gx, gy) would order from, if any.
+  // The bar whose ordering spot is (gx, gy), if any.
   barServingTile(gx, gy) {
     for (const rec of this.staffableRecords()) {
       if (PROP_TYPES[rec.type].staff !== 'bartender') continue;
-      if (this.barServiceTiles(rec).some(([x, y]) => x === gx && y === gy)) return rec;
+      const spot = this.barQueueTiles(rec)[0];
+      if (spot && spot[0] === gx && spot[1] === gy) return rec;
     }
     return null;
+  }
+
+  // --- Bar queues ---------------------------------------------------------
+  // rec.queue lists the patrons lined up at a bar, front first; each one's
+  // walk target is their place in the line, and everyone steps up when the
+  // front customer is served or someone leaves the line.
+
+  // Every tile of every staffed bar's line, as "gx,gy" keys: wanderers keep
+  // off them so they don't block the queue.
+  barLineTiles() {
+    const keys = new Set();
+    for (const rec of this.staffableRecords()) {
+      if (!rec.staff || PROP_TYPES[rec.type].staff !== 'bartender') continue;
+      for (const [x, y] of this.barQueueTiles(rec)) keys.add(`${x},${y}`);
+    }
+    return keys;
+  }
+
+  // Joins the shortest line at a staffed bar with room. False if none.
+  joinBarQueue(patron) {
+    if (patron.queue) return true;
+    let best = null;
+    for (const rec of this.staffableRecords()) {
+      if (!rec.staff || PROP_TYPES[rec.type].staff !== 'bartender') continue;
+      rec.queue = (rec.queue || []).filter((p) => p.queue === rec && !p.gone && !p.leaving);
+      if (rec.queue.length >= this.barQueueTiles(rec).length) continue; // line's full
+      if (!best || rec.queue.length < best.queue.length) best = rec;
+    }
+    if (!best) return false;
+    this.releaseSeat(patron);
+    best.queue.push(patron);
+    patron.queue = best;
+    this.updateQueueTarget(patron);
+    return true;
+  }
+
+  // Points a queued patron at their current place in line.
+  updateQueueTarget(patron) {
+    const rec = patron.queue;
+    const slot = this.barQueueTiles(rec)[rec.queue.indexOf(patron)];
+    if (!slot) { this.leaveBarQueue(patron); return; } // the line got shorter (something placed in it)
+    [patron.targetGx, patron.targetGy] = slot;
+    patron.path = null;
+  }
+
+  leaveBarQueue(patron) {
+    const rec = patron.queue;
+    if (!rec) return;
+    patron.queue = null;
+    rec.queue = (rec.queue || []).filter((p) => p !== patron);
+    for (const p of rec.queue) {
+      this.updateQueueTarget(p);
+      if (!p.moving) p.nextMoveAt = Math.min(p.nextMoveAt, this.time.now + 300); // step up
+    }
+  }
+
+  // A bar was sold, turned or lost its bartender: everyone in its line
+  // goes and does something else.
+  clearBarQueue(rec) {
+    for (const p of rec.queue || []) {
+      p.queue = null;
+      p.targetGx = undefined;
+      p.path = null;
+    }
+    rec.queue = [];
+  }
+
+  // Turns a queued patron to face the bar's counter.
+  faceBar(patron) {
+    const { counter } = this.barLayout(patron.queue);
+    const { sx, sy } = this.gridToScreen(counter[0], counter[1]);
+    this.faceToward(patron, sx, sy);
   }
 
   // --- Hiring -------------------------------------------------------------
@@ -132,6 +194,7 @@ export class StaffMixin {
 
   detachStaff(rec) {
     if (!rec.staff) return;
+    this.clearBarQueue(rec);
     rec.staff.container.destroy();
     rec.staff = null;
   }
@@ -209,6 +272,7 @@ export class StaffMixin {
     if (!rec) return false;
     const now = this.time.now;
     if (!rec.staff) {
+      this.clearBarQueue(rec);
       if (!rec.lastNoStaffNotice || now - rec.lastNoStaffNotice > NO_STAFF_NOTICE_MS) {
         rec.lastNoStaffNotice = now;
         const { sx, sy } = this.footprintCenter(rec.tiles);
@@ -218,6 +282,7 @@ export class StaffMixin {
       patron.thirstyAt = now + 8000; // try again a bit later
       return false;
     }
+    this.leaveBarQueue(patron); // served: the line steps up
     const price = PROP_TYPES[rec.type].drinkPrice || 10;
     this.cash += price;
     this.fans += 0.3;
