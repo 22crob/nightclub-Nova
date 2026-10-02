@@ -25,7 +25,7 @@ The visual and gameplay reference for everything is **Nightclub City** (2010): i
 - Characters were shrunk to about 1.5x a bar counter's height, as in Nightclub City.
 - Seating: done. Wood Stool, Fabric Couch (Lv1), Candle Table (Lv2), Chrome Bar Stool, Leather Couch (Lv3), Red Velvet Booth (Lv4), Black Leather Booth (Lv6), Gold VIP Booth (Lv8). Patrons walk over and sit, which cheers them up. They don't have a sitting pose yet: the seat hides their legs. Add a real sit pose when the characters are redone.
 - All prop art has drawn outlines, like Nightclub City.
-- Mood lighting: done. The floor and walls are dimmed, and lights (lamps, neon, candles, fancy bars and booths) cast coloured glows on the floor (src/scene/lighting.js, PROP_LIGHTS in catalog.js).
+- Mood lighting: done. The floor and walls are gently dimmed (src/scene/lighting.js). Coloured glows under lights (PROP_LIGHTS in catalog.js) are built but switched off (MOOD_LIGHTING.glows), because the owner found them too strong in spots.
 - Later: moving spotlights as a decoration you buy, lights pulsing to the beat, and a night city outside with a queue at the door.
 - Wallpaper: done. Eleven designs drawn in code (src/walls.js), painted one wall section at a time ($10-$120 each), simple to fancy through level 10: Paint, Brick (Lv1), Stripes, Wood Panel (Lv2), Retro Dots (Lv3), Velvet (Lv4), Neon Strip (Lv5, first animated), Equalizer (Lv6), Mirror Tiles (Lv7), Neon Chevron (Lv9), LED Wall (Lv10). Animated walls move only while a DJ plays.
 - Later: more variety, e.g. colour versions of each floor and wallpaper, and more wall types

@@ -72,7 +72,7 @@ export class LightingMixin {
   // The glow a placed prop casts on the floor, if it gives off light.
   createLightPool(type, sx, sy) {
     const light = PROP_TYPES[type].light;
-    if (!light) return null;
+    if (!light || !MOOD_LIGHTING.glows) return null;
     const [color, radius] = light;
     const pool = this.add.image(sx, sy, POOL_KEY)
       .setTint(color)

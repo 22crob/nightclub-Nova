@@ -310,18 +310,18 @@ const door = await page.evaluate(() => {
 });
 check('furniture can\'t block the front door', door.solid === false && door.floor === true, JSON.stringify(door));
 
-// Mood lighting: the room is dimmed, and a lava lamp casts a glow that
-// goes away when it's sold.
+// Mood lighting: the room is dimmed. Glows under lights are switched off
+// for now (MOOD_LIGHTING.glows), so a lava lamp casts none.
 const lighting = await page.evaluate(() => {
   const s = window.__clubNova.scene.getScene('club');
   const shaded = s.floorShade.commandBuffer.length > 0 && s.wallShade.commandBuffer.length > 0;
   s.cash += 1000;
   const lamp = s.restoreProp('lavaLamp', 0, [11, 6]);
-  const glow = !!lamp.lightPool && s.lightLayer.exists(lamp.lightPool);
+  const glow = !!lamp.lightPool;
   s.sellProp(11, 6);
-  return { shaded, glow, gone: !s.lightLayer.exists(lamp.lightPool) };
+  return { shaded, glow };
 });
-check('the room is dimmed and lights glow on the floor', lighting.shaded && lighting.glow && lighting.gone, JSON.stringify(lighting));
+check('the room is dimmed, with no glows under lights', lighting.shaded && !lighting.glow, JSON.stringify(lighting));
 
 // Seating: every piece has its art, and a patron can sit on a couch (drawn
 // between its two layers), feel better for it, and get up again.

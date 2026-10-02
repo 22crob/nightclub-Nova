@@ -157,6 +157,7 @@ export const FLOOR_TICK_MS = 125;
 export const SEAT_CHANCE = 0.3;
 
 // Mood lighting (see lighting.js): how much the floor and walls are dimmed,
-// and how strong the coloured glow under lights is.
-export const MOOD_LIGHTING = { color: 0x0b0418, floorAlpha: 0.45, wallAlpha: 0.35, glowAlpha: 0.55 };
+// and the coloured glow under lights. The owner found the glows too strong
+// in spots, so they're off for now (`glows: false`).
+export const MOOD_LIGHTING = { color: 0x0b0418, floorAlpha: 0.3, wallAlpha: 0.2, glows: false, glowAlpha: 0.55 };
 export const SEAT_SIT_TIME = [14000, 24000];
