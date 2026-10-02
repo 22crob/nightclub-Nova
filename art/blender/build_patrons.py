@@ -32,6 +32,7 @@ and mirrors the back row for up-left / up-right.
 
 import json
 import math
+import zlib
 import os
 import random
 import sys
@@ -256,9 +257,14 @@ def warp_mesh(obj, parent):
         v.co = inv @ warp_point(mw @ v.co, head)
 
 
-def _finish(obj, material, parent, outline=True, smooth=True, width=OUTLINE_WIDTH):
+def _finish(obj, material, parent, outline=True, smooth=True, width=OUTLINE_WIDTH, subdivide=True):
     warp_mesh(obj, parent)
     obj.data.materials.append(material)
+    # Rounds off every box and tube, so the body reads as soft cartoon
+    # shapes rather than blocks.
+    if subdivide:
+        sub = obj.modifiers.new('Smooth', 'SUBSURF')
+        sub.levels = sub.render_levels = 2
     if smooth:
         for p in obj.data.polygons:
             p.use_smooth = True
@@ -337,7 +343,7 @@ def cone(base, tip, radius, material, parent, outline=True):
     obj = bpy.context.active_object
     obj.rotation_mode = 'QUATERNION'
     obj.rotation_quaternion = Vector((0, 0, 1)).rotation_difference((tip - base).normalized())
-    return _finish(obj, material, parent, outline)
+    return _finish(obj, material, parent, outline, subdivide=False)  # skirts and coat tails keep their shape
 
 
 def lock(base, tip, radius, material, parent, flat=0.6, outline=True):
@@ -626,7 +632,18 @@ def build_character(look, tmp):
     build_hair(look, neck)
     build_accessories(look, neck, body, accent_hex)
     return {'root': root, 'body': body, 'neck': neck, 'legs': legs, 'arms': arms,
-            'crossed': bool(look.get('arms_behind'))}
+            'crossed': bool(look.get('arms_behind')),
+            'stance': zlib.crc32(repr(sorted(look.items())).encode()) % len(STANCES)}
+
+
+# Relaxed standing poses, like Nightclub City's: weight on one leg, a lean,
+# a head tilt, arms held a little out. Each character gets one.
+#   (hip lean, head tilt, chin, left arm out, right arm out, arms forward, left leg out, right leg out)
+STANCES = [
+    (0.07, -0.14, -0.06, 0.32, 0.18, 0.12, 0.16, 0.04),   # weight on the right leg, head cocked
+    (-0.06, 0.12, -0.04, 0.2, 0.34, 0.08, 0.05, 0.15),    # mirrored
+    (0.03, -0.08, -0.1, 0.4, 0.4, 0.2, 0.12, 0.12),       # wide, confident, chin up
+]
 
 
 def sleeve_materials(look, top, skin):
@@ -858,8 +875,17 @@ def pose(rig, anim, t, facing):
             armL.rotation_euler = (0.45, 0.0, 0.35)
             armR.rotation_euler = (0.45, 0.0, -0.35)
         else:
-            armL.rotation_euler.y = -0.12 - 0.04 * math.sin(tau * t)
-            armR.rotation_euler.y = 0.12 + 0.04 * math.sin(tau * t)
+            lean, tilt, chin, arm_l, arm_r, fwd, leg_l, leg_r = STANCES[rig['stance']]
+            sway = 0.04 * math.sin(tau * t)
+            body.rotation_euler.y = lean
+            neck.rotation_euler.y = tilt - lean + sway
+            neck.rotation_euler.x = chin
+            armL.rotation_euler.y = -arm_l - sway
+            armR.rotation_euler.y = arm_r + sway
+            armL.rotation_euler.x = -fwd
+            armR.rotation_euler.x = -fwd * 0.6
+            legL.rotation_euler.y = -leg_l - lean
+            legR.rotation_euler.y = leg_r - lean
     elif anim == 'walk':
         s = math.sin(tau * t)
         legL.rotation_euler.x = 0.6 * s
