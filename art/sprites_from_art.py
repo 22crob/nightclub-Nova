@@ -11,10 +11,14 @@ picture: the head bobs and tilts on the body, the arms swing from the
 shoulders (they are cut free below the armpits), the legs take turns stepping,
 and the whole figure bounces and sways to the beat.
 
-    python3 art/sprites_from_art.py IMAGE INDEX [--chin 0.42] [--hip 0.74]
+    python3 art/sprites_from_art.py IMAGE INDEX [--chin 631] [--hip 361]
 
---chin and --hip are where the chin and the hips are, as a share of the
-character's height from the top of the hair (look at the picture).
+--chin and --hip are how far the chin and the hips are above the soles,
+in pixels of the picture. Every outfit is drawn on the same base body at
+the same size, so the defaults fit them all; measuring from the feet keeps
+tall hair or a hat from shifting the cuts. The body is scaled the same for
+every outfit too (feet to chin = BODY of the standing height), so hair and
+hats simply stand taller.
 """
 import argparse
 import json
@@ -29,6 +33,7 @@ META = json.load(open(os.path.join(OUT_DIR, 'patrons.json')))
 FW, FH = META['frameWidth'], META['frameHeight']
 FEET_Y = META['originY'] * FH          # where the feet stand in a frame
 HEIGHT = META['standingHeight']        # character height in a frame, px
+BODY = 0.63                            # feet-to-chin share of standing height
 SS = 4                                 # work at 4x, then shrink: smooth edges
 TAU = 2 * math.pi
 
@@ -268,8 +273,9 @@ def build_sheet(path, chin, hip):
         padded = Image.new('RGBA', (fw + 2 * mx, fh + my))
         padded.paste(fig, (mx, my))
         # Cut at full size (the gaps under the arms are clearer), then shrink.
-        parts = pieces(padded, (my + chin * fh) / (fh + my), (my + hip * fh) / (fh + my))
-        scale = HEIGHT * SS / fh
+        ph = fh + my
+        parts = pieces(padded, (ph - chin) / ph, (ph - hip) / ph)
+        scale = BODY * HEIGHT * SS / chin
         size = (int(padded.size[0] * scale), int(padded.size[1] * scale))
         for k, v in list(parts.items()):
             if isinstance(v, Image.Image):
@@ -293,8 +299,8 @@ def main():
     ap = argparse.ArgumentParser()
     ap.add_argument('image')
     ap.add_argument('index', type=int)
-    ap.add_argument('--chin', type=float, default=0.42)
-    ap.add_argument('--hip', type=float, default=0.74)
+    ap.add_argument('--chin', type=float, default=631)
+    ap.add_argument('--hip', type=float, default=361)
     ap.add_argument('--out', default=None)
     args = ap.parse_args()
     sheet = build_sheet(args.image, args.chin, args.hip)
