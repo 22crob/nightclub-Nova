@@ -145,39 +145,26 @@ _mat_cache = {}
 
 
 def mat(hex_color, shadow=(0.6, 0.55, 0.78), highlight=1.18):
-    """Cel-shaded material: flat base colour, one cool shadow tone where the
-    surface turns away from LIGHT_DIR, and a thin highlight band where it
-    faces it squarely."""
+    """A lit material, so light and shadow wrap round the forms like
+    Nightclub City's rendered characters. Skin gets a little subsurface
+    glow and a soft sheen; cloth is matte; anything very bright (shoe soles,
+    glints) is a touch glossier. (`shadow`/`highlight` are left over from the
+    old flat cel shading and only used to tell skin apart.)"""
     key = (hex_color, shadow, highlight)
     if key in _mat_cache:
         return _mat_cache[key]
     base = linear(hex_color)
-    m = bpy.data.materials.new(f'Toon{hex_color}')
+    is_skin = hex_color in SKIN
+    m = bpy.data.materials.new(f'Lit{hex_color}')
     m.use_nodes = True
-    nt = m.node_tree
-    nt.nodes.remove(nt.nodes['Principled BSDF'])
-    geo = nt.nodes.new('ShaderNodeNewGeometry')
-    dot = nt.nodes.new('ShaderNodeVectorMath')
-    dot.operation = 'DOT_PRODUCT'
-    dot.inputs[1].default_value = LIGHT_DIR
-    remap = nt.nodes.new('ShaderNodeMath')
-    remap.operation = 'MULTIPLY_ADD'
-    remap.inputs[1].default_value = 0.5
-    remap.inputs[2].default_value = 0.5
-    ramp = nt.nodes.new('ShaderNodeValToRGB')
-    ramp.color_ramp.interpolation = 'EASE'  # soft, glossy shading like Nightclub City's
-    ramp.color_ramp.elements[0].position = 0.0
-    ramp.color_ramp.elements[0].color = (*tint(base, shadow), 1)
-    ramp.color_ramp.elements[1].position = 0.47
-    ramp.color_ramp.elements[1].color = (*base, 1)
-    hi = ramp.color_ramp.elements.new(0.93)
-    hi.color = (*tint(base, (highlight,) * 3), 1)
-    em = nt.nodes.new('ShaderNodeEmission')
-    nt.links.new(geo.outputs['Normal'], dot.inputs[0])
-    nt.links.new(dot.outputs['Value'], remap.inputs[0])
-    nt.links.new(remap.outputs['Value'], ramp.inputs['Fac'])
-    nt.links.new(ramp.outputs['Color'], em.inputs['Color'])
-    nt.links.new(em.outputs['Emission'], nt.nodes['Material Output'].inputs['Surface'])
+    bsdf = m.node_tree.nodes['Principled BSDF']
+    bsdf.inputs['Base Color'].default_value = (*base, 1)
+    bsdf.inputs['Roughness'].default_value = 0.42 if is_skin else 0.62
+    bsdf.inputs['Specular IOR Level'].default_value = 0.35 if is_skin else 0.25
+    if is_skin:
+        bsdf.inputs['Subsurface Weight'].default_value = 0.12
+        bsdf.inputs['Subsurface Radius'].default_value = (0.9, 0.35, 0.2)
+        bsdf.inputs['Subsurface Scale'].default_value = 0.03
     _mat_cache[key] = m
     return m
 
@@ -196,9 +183,19 @@ def outline_mat():
     em.inputs['Color'].default_value = (*linear(OUTLINE), 1)
     tr = nt.nodes.new('ShaderNodeBsdfTransparent')
     mix = nt.nodes.new('ShaderNodeMixShader')
-    nt.links.new(geo.outputs['Backfacing'], mix.inputs['Fac'])
-    nt.links.new(em.outputs['Emission'], mix.inputs[1])
-    nt.links.new(tr.outputs['BSDF'], mix.inputs[2])
+    # Only the camera sees the outline; light passes straight through it.
+    path = nt.nodes.new('ShaderNodeLightPath')
+    facing = nt.nodes.new('ShaderNodeMath')  # the inside-out shell faces us only at the rim
+    facing.operation = 'SUBTRACT'
+    facing.inputs[0].default_value = 1.0
+    nt.links.new(geo.outputs['Backfacing'], facing.inputs[1])
+    seen = nt.nodes.new('ShaderNodeMath')
+    seen.operation = 'MULTIPLY'
+    nt.links.new(facing.outputs['Value'], seen.inputs[0])
+    nt.links.new(path.outputs['Is Camera Ray'], seen.inputs[1])
+    nt.links.new(seen.outputs['Value'], mix.inputs['Fac'])
+    nt.links.new(tr.outputs['BSDF'], mix.inputs[1])
+    nt.links.new(em.outputs['Emission'], mix.inputs[2])
     nt.links.new(mix.outputs['Shader'], nt.nodes['Material Output'].inputs['Surface'])
     _mat_cache['outline'] = m
     return m
@@ -549,17 +546,34 @@ def face_decal(look, neck, tmp):
     nt.links.new(sep.outputs['Y'], front.inputs[0])
     nt.links.new(tex.outputs['Alpha'], mask.inputs[0])
     nt.links.new(front.outputs['Value'], mask.inputs[1])
-    nt.links.new(tex.outputs['Color'], em.inputs['Color'])
+    lit = nt.nodes.new('ShaderNodeBsdfPrincipled')
+    lit.inputs['Roughness'].default_value = 0.3
+    nt.links.new(tex.outputs['Color'], lit.inputs['Base Color'])
     nt.links.new(mask.outputs['Value'], mix.inputs['Fac'])
     nt.links.new(tr.outputs['BSDF'], mix.inputs[1])
-    nt.links.new(em.outputs['Emission'], mix.inputs[2])
+    nt.links.new(lit.outputs['BSDF'], mix.inputs[2])
     nt.links.new(mix.outputs['Shader'], nt.nodes['Material Output'].inputs['Surface'])
-    sphere(HEAD_C, HEAD_R * 1.006, HEAD_SCALE, m, neck, outline=False, segments=48)
+    shape_head(sphere(HEAD_C, HEAD_R * 1.006, HEAD_SCALE, m, neck, outline=False, segments=48))
 
 
 # --------------------------------------------------------------------------
 # Character
 # --------------------------------------------------------------------------
+
+JAW = 0.2  # how much the lower face narrows toward the chin
+
+
+def shape_head(obj):
+    """Turns the head ball into a face shape: the lower half narrows to a
+    jaw and chin."""
+    rz = HEAD_R * HEAD_SCALE[2]
+    for v in obj.data.vertices:
+        if v.co.z < 0:
+            t = (-v.co.z / rz) ** 1.5
+            v.co.x *= 1 - JAW * t
+            v.co.y *= 1 - JAW * 0.5 * t
+    return obj
+
 
 def look_for(index):
     return CAST[index % len(CAST)]
@@ -631,7 +645,8 @@ def build_character(look, tmp):
 
     # Head.
     neck = pivot('Neck', (0, 0, 0.98), body)
-    sphere(HEAD_C, HEAD_R, HEAD_SCALE, skin, neck, segments=36)
+    shape_head(sphere(HEAD_C, HEAD_R, HEAD_SCALE, skin, neck, segments=36))
+    sphere((0, -HEAD_R * 0.9, HEAD_C.z - 0.085), 0.034, (0.85, 1.0, 1.15), skin, neck, outline=False)  # nose
     for x in (0.415, -0.415):
         sphere((x, 0.02, 1.3), 0.075, (0.55, 1, 1.1), skin, neck)
     face_decal(look, neck, tmp)
@@ -931,25 +946,46 @@ def setup_scene():
     scene = iso_rig.reset_scene()
     scene.render.resolution_x = FRAME_W
     scene.render.resolution_y = FRAME_H
-    # Flat emission shading needs few samples: just enough to smooth edges.
-    scene.cycles.samples = 16
-    scene.cycles.use_denoising = False
+    scene.cycles.samples = 48
+    scene.cycles.use_denoising = True
     scene.cycles.transparent_max_bounces = 16
     cam = iso_rig.add_camera(scene)
     cam.data.sensor_fit = 'VERTICAL'
     cam.data.ortho_scale = FRAME_H / PX_PER_UNIT
     forward = cam.rotation_euler.to_matrix() @ Vector((0, 0, -1))
     cam.location = Vector((0, 0, AIM_Z)) - forward * 30
-    # Materials are self-lit, so the colours must come out exactly as
-    # picked: no scene lights or world, plain view transform.
     scene.view_settings.view_transform = 'Standard'
     scene.view_settings.look = 'None'
+    add_character_lights(scene)
     return scene, cam
+
+
+def add_character_lights(scene):
+    """Studio lighting: a warm key light from the upper front-left, a cool
+    fill from the right, and a rim light behind to pick out the edges."""
+    world = bpy.data.worlds.new('Ambient')
+    world.use_nodes = True
+    world.node_tree.nodes['Background'].inputs['Color'].default_value = (0.32, 0.3, 0.38, 1)
+    world.node_tree.nodes['Background'].inputs['Strength'].default_value = 0.9
+    scene.world = world
+    for name, energy, color, loc, size in (
+            ('Key', 620, (1.0, 0.95, 0.88), (-3.5, -4.5, 5.0), 3.0),
+            ('Fill', 300, (0.8, 0.85, 1.0), (4.5, -3.0, 2.5), 4.0),
+            ('Rim', 500, (0.95, 0.85, 1.0), (1.5, 5.0, 4.0), 2.0)):
+        light = bpy.data.lights.new(name, 'AREA')
+        light.energy = energy
+        light.color = color
+        light.size = size
+        obj = bpy.data.objects.new(name, light)
+        scene.collection.objects.link(obj)
+        obj.location = loc
+        direction = Vector((0, 0, 1.2)) - Vector(loc)
+        obj.rotation_euler = direction.to_track_quat('-Z', 'Y').to_euler()
 
 
 def clear_character():
     for obj in list(bpy.data.objects):
-        if obj.name != 'IsoCam':
+        if obj.name != 'IsoCam' and obj.type != 'LIGHT':
             bpy.data.objects.remove(obj, do_unlink=True)
     for mesh in list(bpy.data.meshes):
         if mesh.users == 0:
