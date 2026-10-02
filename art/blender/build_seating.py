@@ -271,6 +271,7 @@ def build(name, preview_dir=None):
         os.makedirs(preview_dir, exist_ok=True)
         origin = iso_rig.check_projection(scene, cam)
         iso_rig.add_outlines(scene, root)
+        iso_rig.apply_model_scale(root)
         everything = list(root.children_recursive)
         for lname, objs in [('all', everything)] + list(layers(0).items()):
             keep = set(objs)
@@ -282,7 +283,10 @@ def build(name, preview_dir=None):
         return
     bpy.ops.wm.save_as_mainfile(filepath=os.path.join(HERE, f'{base}.blend'))
     meta = iso_rig.render_facings(scene, cam, root, base, bb.SPRITE_DIR, layers=layers)
-    meta.update(info)
+    # Seats are modelled at the original scale; the game wants them in tiles.
+    s = iso_rig.MODEL_SCALE
+    meta['seats'] = [[round(x * s, 4), round(y * s, 4)] for x, y in info['seats']]
+    meta['sitLift'] = round(info['sitLift'] * s, 4)
     with open(os.path.join(bb.SPRITE_DIR, f'{base}.json'), 'w') as f:
         json.dump(meta, f, indent=2)
         f.write('\n')

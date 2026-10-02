@@ -14,12 +14,12 @@ See ROADMAP.md for the plan. The reference for all art, UI and gameplay is Night
 - Flat surfaces (dance floors, and later wallpaper) are drawn in code, not Blender: designs live in `src/floors.js` / `src/walls.js` and are added to the catalog with `floorTier()` / `wallTier()`. Painted wall sections are saved under `wallpaper` in the save. Regular floors (`FLOOR_PAINTS`, `paintTier()`) are painted tile by tile like wallpaper (`src/scene/floorPaint.js`, saved under `floorPaint`); dance floors (`floorTier()`) are placed props, and the only tiles patrons dance on. A `flow` design needs `frames` to be a multiple of `period`.
 - Sprite calibration (`displayWidth`, `originX`/`originY`) was measured against the actual rendered PNGs. Re-measure it if a sprite is re-rendered.
 - The club always has exactly one DJ booth with a permanent DJ (`ensureClubBooth()` / `upgradeClubBooth()` in `staff.js`); only bartenders are hired. Music is `src/music.js`, and the Drop the Bass boost is `src/scene/boost.js`.
-- The save format lives in `src/scene/save.js` under the key `clubNovaSave_v1`. Don't break existing saves; bump the key only if the format changes incompatibly.
+- The save format lives in `src/scene/save.js` under the key `clubNovaSave_v2` (v2 came with the finer grid; v1 saves don't fit it). Don't break existing saves; bump the key only if the format changes incompatibly.
 
 ## Art pipeline
 
 - New props are modelled in Blender with a script in `art/blender/`, using `iso_rig.py` for the camera, lighting and rendering. Run it with a Python that has `bpy==4.5.4` and pillow.
-- Scale is 1 Blender unit = 1 tile. Model the prop centred on the origin, inside its footprint, with its front facing -Y. Game +gx is Blender +X, and game +gy is Blender -Y.
+- Models are built at the original scale (1 Blender unit = one of the old 64 px tiles); `render_facings()` scales them by `iso_rig.MODEL_SCALE` (4/3) onto the game's finer 48 px tiles, so a model covers about a third more tiles than its size in units, and footprints in the catalog are in game tiles (bars 1x4, DJ booths/couches/pool table 3x1, curved booths 3x3). Model the prop centred on the origin with its front facing -Y. Game +gx is Blender +X, and game +gy is Blender -Y.
 - `render_facings()` renders facings 0/90/180/270 (the model rotated about Z), crops all four to one shared box, and writes `<name>.json` (displayWidth, originX, originY). The catalog imports that JSON, so never hand-tune these numbers.
 - Check new art in the game with the footprint tiles outlined before shipping it.
 - Decorations are in `build_decor.py`. `--preview DIR name...` renders facing 0 only, for a quick look before the full render. For scale: a bar counter is 1.0 tall and a patron about 1.5. Avoid `metal=1` materials (they render black with no environment) and faces that sit exactly on top of each other.

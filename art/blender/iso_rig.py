@@ -22,7 +22,12 @@ from bpy_extras.object_utils import world_to_camera_view
 from mathutils import Vector
 
 # Must match game/src/config.js
-TILE_W = 64                 # on-screen width of one tile, in game pixels
+TILE_W = 48                 # on-screen width of one tile, in game pixels
+# Models are built at the original scale, where a tile was 64 px wide, and
+# rendered this much bigger in tiles so they keep their size on screen: the
+# finer grid matches Nightclub City, whose furniture fills more, smaller
+# tiles. Footprints in the game's catalog are in the new tiles.
+MODEL_SCALE = 64 / TILE_W
 SUPERSAMPLE = 2             # sprites are rendered at 2x and drawn at half size
 PX_PER_TILE = TILE_W * SUPERSAMPLE            # render pixels across one tile diamond
 PX_PER_UNIT = PX_PER_TILE / math.sqrt(2)      # render pixels per Blender unit, horizontally
@@ -141,6 +146,15 @@ def add_outlines(scene, root):
     ls.collection_negation = 'EXCLUSIVE'
 
 
+def apply_model_scale(root):
+    """Scales a model up by MODEL_SCALE (on top of any scale it already
+    has). Returns the previous scale so it can be put back."""
+    before = tuple(root.scale)
+    root.scale = tuple(c * MODEL_SCALE for c in before)
+    bpy.context.view_layer.update()
+    return before
+
+
 def check_projection(scene, cam):
     """One tile step must move exactly TILE_W/2 x TILE_H/2 game pixels."""
     bpy.context.view_layer.update()  # make sure the camera's placement has taken effect
@@ -152,8 +166,9 @@ def check_projection(scene, cam):
     gy = px((0, -1, 0))
     step_gx = ((gx[0] - o[0]) / SUPERSAMPLE, (gx[1] - o[1]) / SUPERSAMPLE)
     step_gy = ((gy[0] - o[0]) / SUPERSAMPLE, (gy[1] - o[1]) / SUPERSAMPLE)
-    assert abs(step_gx[0] - 32) < 0.01 and abs(step_gx[1] - 16) < 0.01, step_gx
-    assert abs(step_gy[0] + 32) < 0.01 and abs(step_gy[1] - 16) < 0.01, step_gy
+    half, quarter = TILE_W / 2, TILE_W / 4
+    assert abs(step_gx[0] - half) < 0.01 and abs(step_gx[1] - quarter) < 0.01, step_gx
+    assert abs(step_gy[0] + half) < 0.01 and abs(step_gy[1] - quarter) < 0.01, step_gy
     return o
 
 
@@ -171,6 +186,7 @@ def render_facings(scene, cam, root, name, out_dir, layers=None):
 
     origin_px = check_projection(scene, cam)
     add_outlines(scene, root)
+    old_scale = apply_model_scale(root)
     os.makedirs(out_dir, exist_ok=True)
     layers_at = layers if callable(layers) else (lambda facing: layers or {})
     everything = [o for o in root.children_recursive]
@@ -193,6 +209,7 @@ def render_facings(scene, cam, root, name, out_dir, layers=None):
         for o in everything:
             o.hide_render = False
     root.rotation_euler = (0, 0, 0)
+    root.scale = old_scale
 
     # One shared crop box (the union of all four silhouettes, plus a small
     # margin) so every facing and layer has the same size and anchor point.

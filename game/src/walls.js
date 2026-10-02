@@ -9,12 +9,14 @@
 // tiles long that flows along the whole wall; `frames` must be a multiple
 // of `period`). Every design draws its own baseboard at the bottom.
 
-// Rendered at 2x and drawn at half size. One tile along a wall moves 32 x
-// 16 game pixels on screen; the wall is WALL_HEIGHT (128) tall.
-const STRIP_W = 90; // a tile's true length along the wall, at 2x
-const STRIP_H = 256;
-export const WALL_TEX_W = 64;
-export const WALL_TEX_H = STRIP_H + 32;
+import { TILE_H, TILE_W, WALL_HEIGHT } from './config.js';
+
+// Rendered at 2x and drawn at half size. One tile along a wall moves
+// TILE_W/2 x TILE_H/2 game pixels on screen; the wall is WALL_HEIGHT tall.
+const STRIP_W = Math.round((TILE_W * 2) / Math.SQRT2); // a tile's true length along the wall, at 2x
+const STRIP_H = WALL_HEIGHT * 2;
+export const WALL_TEX_W = TILE_W;
+export const WALL_TEX_H = STRIP_H + TILE_H;
 const BASEBOARD = 10;
 
 function rng(seed) {

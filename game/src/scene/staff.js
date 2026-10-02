@@ -54,13 +54,18 @@ export class StaffMixin {
     const def = PROP_TYPES[rec.type];
     const [ax, ay] = rec.anchor;
     if (!def.footprint) return { counter: [ax, ay], out: null, aisle: [ax, ay] };
+    const last = rec.tiles.length - 1;
     const layouts = {
-      0: { counter: [ax, ay + 2], out: [0, 1] },
-      90: { counter: [ax + 2, ay], out: [1, 0] },
+      0: { counter: [ax, ay + last], out: [0, 1] },
+      90: { counter: [ax + last, ay], out: [1, 0] },
       180: { counter: [ax, ay], out: [0, -1] },
       270: { counter: [ax, ay], out: [-1, 0] },
     };
-    return { ...layouts[rec.facing], aisle: rec.tiles[1] };
+    // The bartender's aisle is the middle of the bar, between the back bar
+    // and the counter (it falls between two tiles).
+    const mid = (rec.tiles.length - 1) / 2;
+    const aisle = [rec.tiles[0][0] + (rec.tiles[last][0] - rec.tiles[0][0]) * (mid / last), rec.tiles[0][1] + (rec.tiles[last][1] - rec.tiles[0][1]) * (mid / last)];
+    return { ...layouts[rec.facing], aisle };
   }
 
   // Where customers line up at a bar: the ordering spot right in front of
@@ -239,7 +244,7 @@ export class StaffMixin {
     } else {
       // The booth's front (crowd side) faces +gy at 0, +gx at 90, -gy at
       // 180 and -gx at 270; the DJ stands on the opposite side.
-      const along = { 0: [0, -0.55], 90: [-0.55, 0], 180: [0, 0.55], 270: [0.55, 0] }[rec.facing] || [0, -0.55];
+      const along = { 0: [0, -0.75], 90: [-0.75, 0], 180: [0, 0.75], 270: [0.75, 0] }[rec.facing] || [0, -0.75];
       const center = rec.tiles.reduce((acc, [x, y]) => [acc[0] + x / rec.tiles.length, acc[1] + y / rec.tiles.length], [0, 0]);
       gx = center[0] + along[0];
       gy = center[1] + along[1];
@@ -358,7 +363,7 @@ export class StaffMixin {
     }
     let booth = booths[0];
     if (!booth) {
-      const mid = Math.floor(this.gridSize / 2) - 1;
+      const mid = Math.floor((this.gridSize - 3) / 2);
       const spots = [];
       for (let gy = 0; gy < this.gridSize; gy++) {
         for (let d = 0; d < this.gridSize; d++) {

@@ -62,7 +62,7 @@ const opening = await page.evaluate(() => {
   return { type: booth && booth.type, anchor: booth && booth.anchor.join(','), dj: !!(booth && booth.staff), music: s.musicPlaying() };
 });
 check('starts with $700 and just the DJ booth', st.cash === 700 && st.placed === 1, `cash ${st.cash}, placed ${st.placed}`);
-check('every club opens with a Wood Booth and a DJ playing', opening.type === 'woodBooth' && opening.anchor === '5,0' && opening.dj && opening.music, JSON.stringify(opening));
+check('every club opens with a Wood Booth and a DJ playing', opening.type === 'woodBooth' && opening.anchor === '6,0' && opening.dj && opening.music, JSON.stringify(opening));
 check('all sprites loaded', st.textures.length === 0, st.textures.join(', ') || 'none missing');
 
 // Tips are paused while the checks below compare exact cash amounts.
@@ -86,7 +86,7 @@ const barWidth = await page.evaluate(() => {
   const s = window.__clubNova.scene.getScene('club');
   return s.placed['2,5'].gameObject.displayWidth;
 });
-check('bar sprite matches its footprint width', barWidth >= 128 && barWidth <= 136, `${barWidth}px for a 128px footprint`);
+check('bar sprite matches its footprint width', barWidth >= 124 && barWidth <= 140, `${barWidth}px for a 1x4 footprint (120px) plus its counter overhang`);
 
 // Draw order: a prop nearer the camera is drawn over one behind it, even
 // when the one behind is bought later.
@@ -124,11 +124,11 @@ st = await state();
 check('occupied tile is refused', st.cash === 600 && st.placed === 2, JSON.stringify({ cash: st.cash, placed: st.placed }));
 
 // Rotate the DJ booth (hover + R).
-const before = await page.evaluate(() => window.__clubNova.scene.getScene('club').placed['5,0'].facing);
-const { x: rx, y: ry } = await tileXY(5, 0);
+const before = await page.evaluate(() => window.__clubNova.scene.getScene('club').placed['6,0'].facing);
+const { x: rx, y: ry } = await tileXY(6, 0);
 await page.mouse.move(rx, ry); await page.mouse.move(rx + 1, ry);
 await page.keyboard.press('r');
-const after = await page.evaluate(() => window.__clubNova.scene.getScene('club').placed['5,0'].facing);
+const after = await page.evaluate(() => window.__clubNova.scene.getScene('club').placed['6,0'].facing);
 check('R rotates the DJ booth', after === (before + 90) % 360, `${before} -> ${after}`);
 
 // The DJ earns fans from the start; the bar needs a bartender.
@@ -230,11 +230,11 @@ await page.reload();
 await waitForScene();
 const restored = await page.evaluate(() => {
   const s = window.__clubNova.scene.getScene('club');
-  const saved = JSON.parse(localStorage.getItem('clubNovaSave_v1'));
+  const saved = JSON.parse(localStorage.getItem('clubNovaSave_v2'));
   return { savedPlaced: saved.placed.length, savedCash: Math.floor(saved.cash), placed: s.placedCount(), cash: Math.floor(s.cash) };
 });
 check('save restores after reload', restored.placed === restored.savedPlaced && Math.abs(restored.cash - restored.savedCash) <= 20, JSON.stringify(restored));
-const djAfterReload = await page.evaluate(() => { const b = window.__clubNova.scene.getScene('club').clubBooth(); return !!b && !!b.staff && b.anchor.join(',') === '5,0'; });
+const djAfterReload = await page.evaluate(() => { const b = window.__clubNova.scene.getScene('club').clubBooth(); return !!b && !!b.staff && b.anchor.join(',') === '6,0'; });
 check('the DJ booth and its DJ come back after reload', djAfterReload);
 
 // The DJ booth can't be sold, only upgraded in place (paying the new price
@@ -244,7 +244,7 @@ const upgrade = await page.evaluate(() => {
   const fans = s.fans;
   s.fans = Math.max(s.fans, 150); // level 2, for the Pro Booth
   const c0 = s.cash;
-  s.sellProp(5, 0);
+  s.sellProp(6, 0);
   const kept = !!s.clubBooth() && s.cash === c0;
   s.cash = 1000;
   const ok = s.upgradeClubBooth('proBooth');
@@ -254,7 +254,7 @@ const upgrade = await page.evaluate(() => {
   return result;
 });
 check('the DJ booth can\'t be sold', upgrade.kept, JSON.stringify(upgrade));
-check('upgrading the booth swaps it in place ($215 - $90)', upgrade.ok && upgrade.type === 'proBooth' && upgrade.anchor === '5,0' && upgrade.dj && upgrade.paid === 125 && upgrade.booths === 1, JSON.stringify(upgrade));
+check('upgrading the booth swaps it in place ($215 - $90)', upgrade.ok && upgrade.type === 'proBooth' && upgrade.anchor === '6,0' && upgrade.dj && upgrade.paid === 125 && upgrade.booths === 1, JSON.stringify(upgrade));
 
 // Drop the Bass: a 90-second boost, then a cooldown.
 const boost = await page.evaluate(() => {
@@ -315,7 +315,7 @@ const wallXY = await page.evaluate(() => {
   s.paintWall = (section) => { const before = s.cash; paint(section); s.paintCosts.push(before - s.cash); };
   // Middle of right-wall section 3, half way up.
   const { x, y } = s.wallSectionOrigin('R3');
-  const lx = x + 16, ly = y + 8 + 64 + 16;
+  const lx = x + 12, ly = y + 80;
   return { x: s.world.x + lx * s.world.scaleX, y: s.world.y + ly * s.world.scaleY, hit: s.wallSectionAt(lx, ly) };
 });
 await page.mouse.move(wallXY.x, wallXY.y);
@@ -323,7 +323,7 @@ await page.mouse.click(wallXY.x, wallXY.y);
 await page.waitForTimeout(150);
 const wall = await page.evaluate(() => {
   const s = window.__clubNova.scene.getScene('club');
-  const saved = JSON.parse(localStorage.getItem('clubNovaSave_v1'));
+  const saved = JSON.parse(localStorage.getItem('clubNovaSave_v2'));
   const img = s.wallImages && s.wallImages.R3;
   s.wallpaper.L1 = 'wpLed'; s.drawWallSection('L1', 'wpLed');
   const frames = new Set();
@@ -332,14 +332,14 @@ const wall = await page.evaluate(() => {
   delete s.paintWall;
   return { costs: s.paintCosts, painted: s.wallpaper.R3, saved: saved.wallpaper && saved.wallpaper.R3, visible: !!img && img.texture.key !== '__MISSING', ledFrames: frames.size };
 });
-check('clicking a wall paints it with wallpaper ($15)', wall.painted === 'wpBrick' && wall.costs.join() === '15' && wall.visible, `${wallXY.hit} -> ${wall.painted}, paid ${wall.costs.join()}`);
+check('clicking a wall paints it with wallpaper ($11)', wall.painted === 'wpBrick' && wall.costs.join() === '11' && wall.visible, `${wallXY.hit} -> ${wall.painted}, paid ${wall.costs.join()}`);
 check('wallpaper is saved', wall.saved === 'wpBrick');
 check('animated wallpaper moves while the DJ plays', wall.ledFrames > 3, `${wall.ledFrames} frames`);
 
 // The doorway tile can't be blocked with furniture (floor tiles are fine).
 const door = await page.evaluate(() => {
   const s = window.__clubNova.scene.getScene('club');
-  return { solid: s.footprintValid([[0, 0]], 'plant'), floor: s.footprintValid([[0, 0]], 'dance') };
+  return { solid: s.footprintValid([[1, 0]], 'plant'), floor: s.footprintValid([[1, 0]], 'dance') };
 });
 check('furniture can\'t block the front door', door.solid === false && door.floor === true, JSON.stringify(door));
 
@@ -376,13 +376,19 @@ const queue = await page.evaluate(() => {
   s.leaveBarQueue(b);
   return { tiles, before, after };
 });
-check('bar customers line up in a straight row', queue.tiles && queue.tiles.join(' ') === '6,9 6,10 6,11', JSON.stringify(queue));
-check('the line steps up when someone is served', queue.before && queue.before[0] === '6,9' && queue.before[1] === '6,10' && queue.after === '6,9', JSON.stringify(queue));
+check('bar customers line up in a straight row', queue.tiles && queue.tiles.join(' ') === '6,10 6,11 6,12 6,13', JSON.stringify(queue));
+check('the line steps up when someone is served', queue.before && queue.before[0] === '6,10' && queue.before[1] === '6,11' && queue.after === '6,10', JSON.stringify(queue));
 
 // Regular floors: pick one and click (or drag across) tiles to paint them.
 // It's saved, and patrons don't dance on it.
-await page.evaluate(() => { const s = window.__clubNova.scene.getScene('club'); s.cash += 500; s.selectProp('fpStone'); });
-const paintCash0 = await page.evaluate(() => window.__clubNova.scene.getScene('club').cash);
+await page.evaluate(() => {
+  const s = window.__clubNova.scene.getScene('club');
+  s.cash += 500;
+  s.selectProp('fpStone');
+  const paint = s.paintFloor.bind(s);
+  s.paintCosts = [];
+  s.paintFloor = (gx, gy) => { const before = s.cash; const done = paint(gx, gy); if (done) s.paintCosts.push(before - s.cash); return done; };
+});
 {
   const a = await tileXY(3, 9);
   const b = await tileXY(4, 9);
@@ -392,14 +398,15 @@ const paintCash0 = await page.evaluate(() => window.__clubNova.scene.getScene('c
   await page.mouse.up();
   await page.waitForTimeout(150);
 }
-const paint = await page.evaluate((cash0) => {
+const paint = await page.evaluate(() => {
   const s = window.__clubNova.scene.getScene('club');
-  const saved = JSON.parse(localStorage.getItem('clubNovaSave_v1')).floorPaint || {};
-  const r = { a: s.floorPaint['3,9'], b: s.floorPaint['4,9'], paid: Math.round(cash0 - s.cash), saved: saved['3,9'], dance: s.isDanceFloorTile(3, 9) };
+  const saved = JSON.parse(localStorage.getItem('clubNovaSave_v2')).floorPaint || {};
+  const r = { a: s.floorPaint['3,9'], b: s.floorPaint['4,9'], costs: s.paintCosts, saved: saved['3,9'], dance: s.isDanceFloorTile(3, 9) };
+  delete s.paintFloor;
   s.deselectProp();
   return r;
-}, paintCash0);
-check('dragging paints a stroke of floor ($8 a tile)', paint.a === 'fpStone' && paint.b === 'fpStone' && paint.paid >= 16 && paint.paid < 30, JSON.stringify(paint));
+});
+check('dragging paints a stroke of floor ($5 a tile)', paint.a === 'fpStone' && paint.b === 'fpStone' && paint.costs.length >= 2 && paint.costs.every((c) => c === 5), JSON.stringify(paint));
 check('painted floor is saved, and isn\'t a dance floor', paint.saved === 'fpStone' && !paint.dance, JSON.stringify(paint));
 
 // Seating: every piece has its art, and a patron can sit on a couch (drawn
@@ -441,7 +448,7 @@ const decor = await page.evaluate(() => {
   return { missing, poolTiles: pool ? pool.tiles.length : 0, poolTex: pool && pool.gameObject.texture.key };
 });
 check('all sixteen decorations have their art', decor.missing.length === 0, decor.missing.join(', ') || '16 of 16');
-check('the pool table takes two tiles', decor.poolTiles === 2 && decor.poolTex === 'decor_pool_90', `${decor.poolTiles} tiles, ${decor.poolTex}`);
+check('the pool table takes three tiles', decor.poolTiles === 3 && decor.poolTex === 'decor_pool_90', `${decor.poolTiles} tiles, ${decor.poolTex}`);
 
 check('no errors in the page', errors.length === 0, errors.join(' | '));
 

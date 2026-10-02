@@ -1,7 +1,7 @@
 {
   "displayWidth": 25.0,
   "originX": 0.5,
-  "originY": 0.826,
+  "originY": 0.8189,
   "imageSize": [
     50,
     84
@@ -16,5 +16,5 @@
       0.0
     ]
   ],
-  "sitLift": 0.27
+  "sitLift": 0.36
 }

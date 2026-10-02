@@ -1,17 +1,19 @@
 // Shared tuning constants: tile geometry, grid size, patron behaviour,
 // save keys. Everything here is plain data with no Phaser dependency.
 
-// Tiles (and everything sized off them) were scaled down from the original
-// 96x48 — the floor was reading too large on screen. Kept at the same 2:1
-// iso ratio, just smaller.
-export const TILE_W = 64;   // tile width in px (matches the 2:1 iso ratio you're using in Blender, x2 for on-screen scale)
-export const TILE_H = 32;
+// Tiles are 48x24 px (2:1 iso). They were 64x32; the grid was made finer to
+// match Nightclub City, where furniture fills more, smaller tiles. Props,
+// characters, walls and text kept their size on screen; only the grid got
+// finer (the art pipeline renders models MODEL_SCALE bigger in tiles, see
+// art/blender/iso_rig.py). Must match TILE_W there.
+export const TILE_W = 48;
+export const TILE_H = 24;
 // Any prop/patron dimension that used to be a fixed pixel number (rather
 // than a formula already built on TILE_W, like the DJ booth's displayWidth)
 // gets multiplied by this instead, so the whole game shrinks/grows together
 // if TILE_W is ever tuned again. 96 is the original tile width those fixed
 // numbers were tuned against.
-export const PROP_SCALE = TILE_W / 96;
+export const PROP_SCALE = 64 / 96; // fixed: sizes in pixels didn't change with the finer grid
 // Fallback-box dimensions for a rotatable prop whose sprites failed to load
 // (see drawFallbackBox()) — pulled out to a shared constant so
 // rotatePlacedProp() can re-anchor that same box/label after a rotation
@@ -23,7 +25,7 @@ export const FALLBACK_PROP_HEIGHT = 40 * PROP_SCALE;
 // code that used to check a fixed GRID_SIZE now reads the scene's own
 // this.gridSize instead, since that's a per-club value that changes at
 // runtime and gets saved/restored (see serializeState()/loadGame()).
-export const BASE_GRID_SIZE = 12;
+export const BASE_GRID_SIZE = 16;
 
 // Enough to open with a staffed bar, a DJ booth with a DJ, and a few dance
 // tiles.
@@ -33,10 +35,10 @@ export const STARTING_CASH = 700;
 // concrete walls with pale top caps, a raised floor slab with dark front
 // edges, and a tiled sidewalk outside. Walls are 4 tile-heights tall,
 // about 1.3x a patron.
-export const WALL_HEIGHT = TILE_H * 4;
-export const WALL_THICKNESS = 0.3; // in tiles
+export const WALL_HEIGHT = 128; // px
+export const WALL_THICKNESS = 0.4; // in tiles
 export const WALL_BASEBOARD = 5;
-export const DOOR_HEIGHT = TILE_H * 3.3;
+export const DOOR_HEIGHT = 106; // px
 export const FLOOR_SLAB_DEPTH = 10; // px from the floor down to the sidewalk
 export const ROOM_COLORS = {
   wallRight: 0x9a9aa3,
@@ -54,7 +56,7 @@ export const ROOM_COLORS = {
   doorWindow: 0x9fb8c9,
   doorBar: 0xb9bac2,
 };
-export const SIDEWALK = { color: 0xb4b5bc, grout: 0x8e8f97, margin: 7, slabTiles: 2 };
+export const SIDEWALK = { color: 0xb4b5bc, grout: 0x8e8f97, margin: 9, slabTiles: 3 };
 
 // Floor tiles: one colour with faint seams, so the floor reads as one
 // surface (like Nightclub City's) rather than a grid of outlined squares.
@@ -83,7 +85,7 @@ export const FACINGS = [0, 90, 180, 270];
 // as ambient "reputation from having a nice venue" growth, on top of
 // this.
 // ---------------------------------------------------------------------
-export const PATRON_SPAWN_TILE = { gx: 0, gy: 0 }; // the "door" — patrons walk in and out here
+export const PATRON_SPAWN_TILE = { gx: 1, gy: 0 }; // the "door" — patrons walk in and out here
 // Capacity is no longer a flat number — an empty club still draws a
 // trickle of curious visitors (PATRON_BASE_CAPACITY), and every prop you
 // place adds room for more (PROP_TYPES[type].capacity), up to a hard
@@ -130,7 +132,7 @@ export const PATRON_Y_OFFSET = 6 * PROP_SCALE;
 // as a bar counter, so props and decorations read at the right size around
 // them. (It was 3.25 at first, which made characters about 2.4 counters
 // tall.)
-export const CHARACTER_DISPLAY_HEIGHT = TILE_H * 2.1;
+export const CHARACTER_DISPLAY_HEIGHT = 67.2; // px: about 1.5x a bar counter
 // How far above a patron's feet their tip / drink popups start.
 export const PATRON_POPUP_Y = CHARACTER_DISPLAY_HEIGHT * 0.8;
 
@@ -144,7 +146,7 @@ export const ZOOM_MAX = 2.2;
 // localStorage key for the save file. Bumping this (v1 -> v2) is the
 // escape hatch if the save shape ever changes incompatibly — old saves
 // under the old key are just ignored rather than crashing on load.
-export const SAVE_KEY = 'clubNovaSave_v1';
+export const SAVE_KEY = 'clubNovaSave_v2'; // v2: the finer grid (v1 saves don't fit it)
 
 // Fraction of a prop's fixed cost refunded when you right-click to sell it
 // back (see sellProp()).

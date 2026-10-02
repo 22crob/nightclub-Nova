@@ -140,7 +140,7 @@ export class WorldMixin {
   drawDoor(w) {
     const gx = PATRON_SPAWN_TILE.gx;
     const P = (x, h) => this.gridPoint(x, -0.5, h);
-    const a = gx - 0.38, b = gx + 0.38, mid = gx;
+    const a = gx - 0.46, b = gx + 0.46, mid = gx;
     const top = DOOR_HEIGHT;
     const quad = (color, x0, x1, h0, h1) => {
       w.fillStyle(color, 1);

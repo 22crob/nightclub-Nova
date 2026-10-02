@@ -40,10 +40,10 @@ import decor_luckyCat from './assets/sprites/decor_luckyCat.json';
 // unlock level differ. The footprint runs back bar, aisle, counter along gy
 // at facings 0/180 and along gx at 90/270.
 const BAR_FOOTPRINT = {
-  0: [[0, 0], [0, 1], [0, 2]],
-  90: [[0, 0], [1, 0], [2, 0]],
-  180: [[0, 0], [0, 1], [0, 2]],
-  270: [[0, 0], [1, 0], [2, 0]],
+  0: [[0, 0], [0, 1], [0, 2], [0, 3]],
+  90: [[0, 0], [1, 0], [2, 0], [3, 0]],
+  180: [[0, 0], [0, 1], [0, 2], [0, 3]],
+  270: [[0, 0], [1, 0], [2, 0], [3, 0]],
 };
 // The DJ booth line-up (art/blender/build_booths.py), paired with the bars:
 // same 2x1 footprint and gameplay, only the look, price and unlock level
@@ -52,10 +52,10 @@ const BAR_FOOTPRINT = {
 // swap it in place (see upgradeClubBooth()). The key 'dj' stays on the
 // tier-3 Club Booth so older saves keep their booth.
 const BOOTH_FOOTPRINT = {
-  0: [[0, 0], [1, 0]],
-  90: [[0, 0], [0, 1]],
-  180: [[0, 0], [1, 0]],
-  270: [[0, 0], [0, 1]],
+  0: [[0, 0], [1, 0], [2, 0]],
+  90: [[0, 0], [0, 1], [0, 2]],
+  180: [[0, 0], [1, 0], [2, 0]],
+  270: [[0, 0], [0, 1], [0, 2]],
 };
 function boothTier(key, label, cost, unlockLevel, spriteBase, meta) {
   return {
@@ -108,7 +108,8 @@ const SEAT_SPRITES = {
   woodStool: seat_woodStool, couch: seat_couch, candleTable: seat_candleTable, stool: seat_stool,
   leatherCouch: seat_leatherCouch, velvetBooth: seat_velvetBooth, blackBooth: seat_blackBooth, goldBooth: seat_goldBooth,
 };
-const BOOTH_2X2 = { 0: [[0, 0], [1, 0], [0, 1], [1, 1]], 90: [[0, 0], [1, 0], [0, 1], [1, 1]], 180: [[0, 0], [1, 0], [0, 1], [1, 1]], 270: [[0, 0], [1, 0], [0, 1], [1, 1]] };
+const SQUARE_3X3 = [[0, 0], [1, 0], [2, 0], [0, 1], [1, 1], [2, 1], [0, 2], [1, 2], [2, 2]];
+const BOOTH_3X3 = { 0: SQUARE_3X3, 90: SQUARE_3X3, 180: SQUARE_3X3, 270: SQUARE_3X3 };
 function seatTier(key, label, cost, unlockLevel, model, fanRate, footprint = null) {
   const meta = SEAT_SPRITES[model];
   const base = `seat_${model}`;
@@ -163,29 +164,29 @@ export const PROP_TYPES = {
   neonBooth: boothTier('neonBooth', 'Neon Booth', 380, 5, 'dj_neon', boothNeonSprite),
   iceBooth: boothTier('iceBooth', 'Ice Booth', 550, 7, 'dj_ice', boothIceSprite),
   // Regular floors, simple to fancy.
-  fpConcrete: paintTier('fpConcrete', 'Concrete', 5, 1, 'concrete'),
-  fpStone: paintTier('fpStone', 'Stone Tiles', 8, 1, 'stone'),
-  fpWood: paintTier('fpWood', 'Wood Planks', 10, 2, 'planks'),
-  fpRedCarpet: paintTier('fpRedCarpet', 'Red Carpet', 12, 2, 'redCarpet'),
-  fpPurpleCarpet: paintTier('fpPurpleCarpet', 'Purple Carpet', 15, 3, 'purpleCarpet'),
-  fpMarble: paintTier('fpMarble', 'Marble', 20, 4, 'marble'),
-  fpBlackGloss: paintTier('fpBlackGloss', 'Black Gloss', 25, 5, 'blackGloss'),
-  fpGoldMarble: paintTier('fpGoldMarble', 'Gold Marble', 35, 7, 'goldMarble'),
+  fpConcrete: paintTier('fpConcrete', 'Concrete', 3, 1, 'concrete'),
+  fpStone: paintTier('fpStone', 'Stone Tiles', 5, 1, 'stone'),
+  fpWood: paintTier('fpWood', 'Wood Planks', 6, 2, 'planks'),
+  fpRedCarpet: paintTier('fpRedCarpet', 'Red Carpet', 7, 2, 'redCarpet'),
+  fpPurpleCarpet: paintTier('fpPurpleCarpet', 'Purple Carpet', 9, 3, 'purpleCarpet'),
+  fpMarble: paintTier('fpMarble', 'Marble', 12, 4, 'marble'),
+  fpBlackGloss: paintTier('fpBlackGloss', 'Black Gloss', 15, 5, 'blackGloss'),
+  fpGoldMarble: paintTier('fpGoldMarble', 'Gold Marble', 20, 7, 'goldMarble'),
   // Dance floors (src/floors.js, drawn in code): simple to fancy across the
   // first ten levels, all with the same gameplay. Floors are the ONLY
   // category that grants patron capacity (see patronCapacity()); a
   // `capacity` field on a Bars/Booths/Decorations item is inert by design.
   // 'dance' and 'neonFloor' are the keys of the two original floors, kept
   // so older saves load them as Checker and Light-Up.
-  plainFloor: floorTier('plainFloor', 'Plain Floor', 30, 1, 'plain'),
-  dance: floorTier('dance', 'Checker Floor', 40, 1, 'checker'),
-  woodFloor: floorTier('woodFloor', 'Wood Floor', 60, 2, 'parquet'),
-  glowFloor: floorTier('glowFloor', 'Glow Floor', 90, 3, 'glow'),
-  neonFloor: floorTier('neonFloor', 'Light-Up Floor', 120, 4, 'lightUp'),
-  ringFloor: floorTier('ringFloor', 'Neon Rings', 150, 5, 'neonRings'),
-  waveFloor: floorTier('waveFloor', 'Color Wave', 180, 6, 'wave'),
-  rainbowFloor: floorTier('rainbowFloor', 'Rainbow Flow', 220, 8, 'rainbow'),
-  stepFloor: floorTier('stepFloor', 'Step Floor', 260, 10, 'step'),
+  plainFloor: floorTier('plainFloor', 'Plain Floor', 20, 1, 'plain'),
+  dance: floorTier('dance', 'Checker Floor', 25, 1, 'checker'),
+  woodFloor: floorTier('woodFloor', 'Wood Floor', 35, 2, 'parquet'),
+  glowFloor: floorTier('glowFloor', 'Glow Floor', 55, 3, 'glow'),
+  neonFloor: floorTier('neonFloor', 'Light-Up Floor', 70, 4, 'lightUp'),
+  ringFloor: floorTier('ringFloor', 'Neon Rings', 90, 5, 'neonRings'),
+  waveFloor: floorTier('waveFloor', 'Color Wave', 110, 6, 'wave'),
+  rainbowFloor: floorTier('rainbowFloor', 'Rainbow Flow', 130, 8, 'rainbow'),
+  stepFloor: floorTier('stepFloor', 'Step Floor', 155, 10, 'step'),
   // Seating, simple to fancy. 'table' and 'vipLounge' are the keys of the
   // original placeholder Table and VIP Lounge, kept for old saves.
   woodStool: seatTier('woodStool', 'Wood Stool', 40, 1, 'woodStool', 0.1),
@@ -193,9 +194,9 @@ export const PROP_TYPES = {
   table: seatTier('table', 'Candle Table', 60, 2, 'candleTable', 0.2),
   barStool: seatTier('barStool', 'Chrome Bar Stool', 70, 3, 'stool', 0.2),
   leatherCouch: seatTier('leatherCouch', 'Leather Couch', 160, 3, 'leatherCouch', 0.3, BOOTH_FOOTPRINT),
-  vipLounge: seatTier('vipLounge', 'Red Velvet Booth', 280, 4, 'velvetBooth', 0.5, BOOTH_2X2),
-  blackBooth: seatTier('blackBooth', 'Black Leather Booth', 360, 6, 'blackBooth', 0.6, BOOTH_2X2),
-  goldBooth: seatTier('goldBooth', 'Gold VIP Booth', 500, 8, 'goldBooth', 0.8, BOOTH_2X2),
+  vipLounge: seatTier('vipLounge', 'Red Velvet Booth', 280, 4, 'velvetBooth', 0.5, BOOTH_3X3),
+  blackBooth: seatTier('blackBooth', 'Black Leather Booth', 360, 6, 'blackBooth', 0.6, BOOTH_3X3),
+  goldBooth: seatTier('goldBooth', 'Gold VIP Booth', 500, 8, 'goldBooth', 0.8, BOOTH_3X3),
   // Decorations, simple to fancy. 'plant', 'discoBall' and 'neonSign' are
   // the keys of the original placeholder decorations, kept for old saves.
   crates: decorTier('crates', 'Beer Crates', 40, 1, 'crates', 0.15),
@@ -216,17 +217,17 @@ export const PROP_TYPES = {
   luckyCat: decorTier('luckyCat', 'Lucky Cat', 550, 9, 'luckyCat', 1.0),
   // Wallpaper (src/walls.js, drawn in code): simple to fancy across the
   // first ten levels.
-  wpPaint: wallTier('wpPaint', 'Paint', 10, 1, 'paint'),
-  wpBrick: wallTier('wpBrick', 'Brick', 15, 1, 'brick'),
-  wpStripes: wallTier('wpStripes', 'Stripes', 20, 2, 'stripes'),
-  wpWainscot: wallTier('wpWainscot', 'Wood Panel', 25, 2, 'wainscot'),
-  wpDots: wallTier('wpDots', 'Retro Dots', 30, 3, 'retroDots'),
-  wpVelvet: wallTier('wpVelvet', 'Velvet', 40, 4, 'damask'),
-  wpNeon: wallTier('wpNeon', 'Neon Strip', 50, 5, 'neonStrip'),
-  wpEq: wallTier('wpEq', 'Equalizer', 60, 6, 'equalizer'),
-  wpMirror: wallTier('wpMirror', 'Mirror Tiles', 75, 7, 'mirror'),
-  wpChevron: wallTier('wpChevron', 'Neon Chevron', 95, 9, 'chevron'),
-  wpLed: wallTier('wpLed', 'LED Wall', 120, 10, 'ledWall'),
+  wpPaint: wallTier('wpPaint', 'Paint', 8, 1, 'paint'),
+  wpBrick: wallTier('wpBrick', 'Brick', 11, 1, 'brick'),
+  wpStripes: wallTier('wpStripes', 'Stripes', 15, 2, 'stripes'),
+  wpWainscot: wallTier('wpWainscot', 'Wood Panel', 19, 2, 'wainscot'),
+  wpDots: wallTier('wpDots', 'Retro Dots', 22, 3, 'retroDots'),
+  wpVelvet: wallTier('wpVelvet', 'Velvet', 30, 4, 'damask'),
+  wpNeon: wallTier('wpNeon', 'Neon Strip', 38, 5, 'neonStrip'),
+  wpEq: wallTier('wpEq', 'Equalizer', 45, 6, 'equalizer'),
+  wpMirror: wallTier('wpMirror', 'Mirror Tiles', 56, 7, 'mirror'),
+  wpChevron: wallTier('wpChevron', 'Neon Chevron', 71, 9, 'chevron'),
+  wpLed: wallTier('wpLed', 'LED Wall', 90, 10, 'ledWall'),
 };
 
 // Mood lighting (see lighting.js): props that give off light cast a soft
@@ -266,10 +267,10 @@ export const STAFF_TYPES = {
 // directly (see patronCapacity()) — more floor just means more room to
 // place more Floors-category items, which is what actually grows capacity.
 export const GRID_EXPANSIONS = [
-  { size: 14, cost: 600, unlockLevel: 2 },
-  { size: 16, cost: 1500, unlockLevel: 4 },
-  { size: 18, cost: 3000, unlockLevel: 6 },
-  { size: 20, cost: 5000, unlockLevel: 8 },
+  { size: 19, cost: 600, unlockLevel: 2 },
+  { size: 21, cost: 1500, unlockLevel: 4 },
+  { size: 24, cost: 3000, unlockLevel: 6 },
+  { size: 27, cost: 5000, unlockLevel: 8 },
 ];
 
 // A 1-5 "Fame" rating shown in the shop instead of raw fan-rate/capacity

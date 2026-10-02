@@ -475,7 +475,7 @@ export class PatronsMixin {
       targets: patron.container,
       x: sx,
       y: this.patronSeatY(sy, patron.container),
-      duration: 650 + Math.random() * 250,
+      duration: 490 + Math.random() * 190, // a tile is 48 px: about the old walking speed
       ease: 'Linear', // constant speed so back-to-back hops below read as one
                        // continuous glide across the floor, not a series of
                        // little decelerate-then-reaccelerate steps

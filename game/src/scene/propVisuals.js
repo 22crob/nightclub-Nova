@@ -156,7 +156,7 @@ export class PropVisualsMixin {
   // or patron standing in the beam's path.
   createDiscoLightRig(sx, sy) {
     const colors = [0xff4de0, 0x4de0ff, 0xfff34d];
-    const radius = TILE_W * 1.8;
+    const radius = TILE_W * 2.4;
     const wedgeHalfAngle = Phaser.Math.DegToRad(13);
     const container = this.add.container(sx, sy);
     colors.forEach((color, i) => {
