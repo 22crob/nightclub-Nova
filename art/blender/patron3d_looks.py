@@ -402,6 +402,8 @@ def hair_locks(style, rng):
                 # Crown: spikes up and back.
                 d = (u + Vector((0, 0.55, 0.2))).normalized()
                 length = (0.12 + 0.08 * u.z) * (0.8 + 0.4 * rng.random())
+            elif abs(th) < 1.4:
+                continue            # nothing hanging over the face
             else:
                 # Sides and back: locks lying down the head, tips flicking out.
                 d = (tangent + u * 0.35).normalized()
@@ -414,9 +416,10 @@ def hair_locks(style, rng):
             length = 0.16 * (0.8 + 0.4 * rng.random())
         locks.append((base, p + d * length, 0.12 + 0.03 * rng.random()))
     # Fringe: locks hanging over the forehead.
-    count = 9
+    count = 7 if style == 'spiky' else 9
+    spread = 1.4 if style == 'spiky' else 1.9
     for i in range(count):
-        th = (i / (count - 1) - 0.5) * 1.9
+        th = (i / (count - 1) - 0.5) * spread
         lean = -0.5 if style == 'spiky' else -1.0
         zf = P.hairline(th) + 0.06
         # Point on the head at that angle and height.
@@ -425,8 +428,8 @@ def hair_locks(style, rng):
         u = Vector((u.x * math.sqrt(max(0, 1 - uz * uz)), u.y * math.sqrt(max(0, 1 - uz * uz)), uz))
         p = on_head(u)
         if style == 'spiky':
-            d = (Vector((0, 0, -1)) + u * 0.5 + Vector((math.sin(th) * 0.3, 0, 0))).normalized()
-            length = 0.12 + 0.04 * rng.random()
+            d = (Vector((0, 0, -1)) + u * 0.7 + Vector((math.sin(th) * 0.4, 0, 0))).normalized()
+            length = 0.08 + 0.03 * rng.random()
         else:
             d = (Vector((lean, 0, -0.55)) + u * 0.45).normalized()
             length = 0.15 + 0.05 * rng.random()
@@ -462,12 +465,12 @@ def add_cap(look, arm):
     bm = bmesh.new()
     bmesh.ops.create_uvsphere(bm, u_segments=32, v_segments=16, radius=1)
     bmesh.ops.delete(bm, geom=[v for v in bm.verts if v.co.z < 0.12], context='VERTS')
-    bmesh.ops.scale(bm, vec=HEAD_R * 1.07, verts=bm.verts)
-    # Brim: a flattened, slightly curved half-disc out in front.
-    geom = bmesh.ops.create_circle(bm, cap_ends=True, segments=24, radius=1)
+    bmesh.ops.scale(bm, vec=HEAD_R * 1.16, verts=bm.verts)
+    # Brim: a thin oval slab sticking out in front (its back half is hidden
+    # inside the crown).
+    geom = bmesh.ops.create_cone(bm, cap_ends=True, segments=32, radius1=1, radius2=1, depth=0.025)
     bmesh.ops.scale(bm, vec=(0.3, 0.26, 1), verts=geom['verts'])
-    bmesh.ops.translate(bm, vec=(0, -0.36, 0.13 * HEAD_R.z * 1.07), verts=geom['verts'])
-    bmesh.ops.delete(bm, geom=[v for v in geom['verts'] if v.co.y > -0.3], context='VERTS')
+    bmesh.ops.translate(bm, vec=(0, -0.36, 0.12 * HEAD_R.z * 1.16), verts=geom['verts'])
     me = bpy.data.meshes.new('Cap')
     bm.to_mesh(me)
     bm.free()
