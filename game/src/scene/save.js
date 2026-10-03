@@ -78,7 +78,10 @@ export class SaveMixin {
       console.error('[Club Nova] could not read save:', e);
       return;
     }
-    if (!raw) return; // first time playing, or storage was cleared
+    if (!raw) { // first time playing, or storage was cleared
+      this.freshClub = true;
+      return;
+    }
 
     let data;
     try {

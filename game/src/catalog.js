@@ -269,10 +269,12 @@ export const STAFF_TYPES = {
 // directly (see patronCapacity()) — more floor just means more room to
 // place more Floors-category items, which is what actually grows capacity.
 export const GRID_EXPANSIONS = [
-  { size: 19, cost: 600, unlockLevel: 2 },
-  { size: 21, cost: 1500, unlockLevel: 4 },
-  { size: 24, cost: 3000, unlockLevel: 6 },
-  { size: 27, cost: 5000, unlockLevel: 8 },
+  { size: 13, cost: 300, unlockLevel: 2 },
+  { size: 16, cost: 700, unlockLevel: 3 },
+  { size: 19, cost: 1200, unlockLevel: 4 },
+  { size: 21, cost: 2000, unlockLevel: 5 },
+  { size: 24, cost: 3500, unlockLevel: 7 },
+  { size: 27, cost: 5500, unlockLevel: 9 },
 ];
 
 // A 1-5 "Fame" rating shown in the shop instead of raw fan-rate/capacity

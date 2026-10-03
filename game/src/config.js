@@ -25,10 +25,10 @@ export const FALLBACK_PROP_HEIGHT = 40 * PROP_SCALE;
 // code that used to check a fixed GRID_SIZE now reads the scene's own
 // this.gridSize instead, since that's a per-club value that changes at
 // runtime and gets saved/restored (see serializeState()/loadGame()).
-export const BASE_GRID_SIZE = 16;
+export const BASE_GRID_SIZE = 11; // a small room to start (half the floor of 16x16); expand to grow
 
-// Enough to open with a staffed bar, a DJ booth with a DJ, and a few dance
-// tiles.
+// A new club opens with its DJ booth and a staffed Starter Bar already in
+// place (see placeStarterBar()); this buys the first dance floor and more.
 export const STARTING_CASH = 700;
 
 // Room shell, modelled on the reference game's rooms: thick light-grey

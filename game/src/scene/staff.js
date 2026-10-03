@@ -379,6 +379,19 @@ export class StaffMixin {
     if (booth && !booth.staff) this.attachStaff(booth);
   }
 
+  // A brand-new club opens with a Starter Bar and a bartender, against the
+  // back wall in the far corner from the door, serving toward the room.
+  placeStarterBar() {
+    for (let gx = this.gridSize - 1; gx >= 0; gx--) {
+      const rec = this.restoreProp('starterBar', 0, [gx, 0]);
+      if (rec) {
+        this.attachStaff(rec);
+        return rec;
+      }
+    }
+    return null;
+  }
+
   // Swaps the club's booth for another tier, in the same spot and facing.
   // Costs the new booth's price, less half the old one's (like selling it).
   upgradeClubBooth(type) {

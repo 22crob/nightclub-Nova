@@ -59,10 +59,27 @@ let st = await state();
 const opening = await page.evaluate(() => {
   const s = window.__clubNova.scene.getScene('club');
   const booth = s.clubBooth();
-  return { type: booth && booth.type, anchor: booth && booth.anchor.join(','), dj: !!(booth && booth.staff), music: s.musicPlaying() };
+  const bar = s.hireableRecords().find((rec) => rec.type === 'starterBar');
+  return { type: booth && booth.type, anchor: booth && booth.anchor.join(','), dj: !!(booth && booth.staff), music: s.musicPlaying(), size: s.gridSize, bar: bar && bar.anchor.join(','), bartender: !!(bar && bar.staff) };
 });
-check('starts with $700 and just the DJ booth', st.cash === 700 && st.placed === 1, `cash ${st.cash}, placed ${st.placed}`);
-check('every club opens with a Wood Booth and a DJ playing', opening.type === 'woodBooth' && opening.anchor === '6,0' && opening.dj && opening.music, JSON.stringify(opening));
+check('starts with $700, an 11x11 room, the DJ booth and a staffed Starter Bar', st.cash === 700 && st.placed === 2 && opening.size === 11 && opening.bar === '10,0' && opening.bartender, `cash ${st.cash}, placed ${st.placed}, ${JSON.stringify(opening)}`);
+check('every club opens with a Wood Booth and a DJ playing', opening.type === 'woodBooth' && opening.anchor === '4,0' && opening.dj && opening.music, JSON.stringify(opening));
+
+// The checks below were written for the old opening (a 16x16 room with just
+// the DJ booth, at 6,0): set that up.
+await page.evaluate(() => {
+  const s = window.__clubNova.scene.getScene('club');
+  const bar = s.hireableRecords().find((rec) => rec.type === 'starterBar');
+  if (bar) s.removeProp(bar);
+  s.gridSize = 16;
+  s.buildTiles(16);
+  s.buildWalls(16);
+  s.removeProp(s.clubBooth());
+  s.attachStaff(s.restoreProp('woodBooth', 0, [6, 0]));
+  s.cash = 700;
+  s.updateUI();
+  s.saveGame();
+});
 check('all sprites loaded', st.textures.length === 0, st.textures.join(', ') || 'none missing');
 
 // Tips are paused while the checks below compare exact cash amounts.
