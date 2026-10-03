@@ -75,6 +75,40 @@ export const WALL_STYLES = {
     },
   },
 
+  // Old, dark, sooty brick: the bare walls of every club (see
+  // drawBareWalls()), like a club in a converted warehouse basement.
+  oldBrick: {
+    frames: 1,
+    draw(ctx, W, H) {
+      ctx.fillStyle = '#1c1a1d'; // mortar
+      ctx.fillRect(0, 0, W, H);
+      const r = rng(11);
+      const bh = 14, bw = W / 2, gap = 3;
+      for (let row = 0; row * bh < H; row++) {
+        const off = row % 2 ? bw / 2 : 0;
+        for (let k = -1; k < 3; k++) {
+          const tone = 46 + Math.floor(r() * 22);
+          const warm = r() * 8;
+          ctx.fillStyle = `rgb(${tone + warm},${tone},${tone + 2})`;
+          ctx.fillRect(k * bw + off + gap / 2, row * bh + gap / 2, bw - gap, bh - gap);
+          // A worn top edge on some bricks.
+          if (r() < 0.5) {
+            ctx.fillStyle = 'rgba(255,255,255,0.05)';
+            ctx.fillRect(k * bw + off + gap / 2, row * bh + gap / 2, bw - gap, 2);
+          }
+        }
+      }
+      // Grime: darker toward the floor.
+      const g = ctx.createLinearGradient(0, 0, 0, H);
+      g.addColorStop(0, 'rgba(0,0,0,0)');
+      g.addColorStop(0.7, 'rgba(0,0,0,0.12)');
+      g.addColorStop(1, 'rgba(0,0,0,0.35)');
+      ctx.fillStyle = g;
+      ctx.fillRect(0, 0, W, H);
+      baseboard(ctx, W, H, '#141316');
+    },
+  },
+
   // Classic vertical stripes with a gold pinstripe.
   stripes: {
     frames: 1,

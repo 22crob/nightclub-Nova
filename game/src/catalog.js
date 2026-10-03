@@ -220,6 +220,7 @@ export const PROP_TYPES = {
   // Wallpaper (src/walls.js, drawn in code): simple to fancy across the
   // first ten levels.
   wpPaint: wallTier('wpPaint', 'Paint', 8, 1, 'paint'),
+  wpOldBrick: wallTier('wpOldBrick', 'Old Brick', 6, 1, 'oldBrick'),
   wpBrick: wallTier('wpBrick', 'Brick', 11, 1, 'brick'),
   wpStripes: wallTier('wpStripes', 'Stripes', 15, 2, 'stripes'),
   wpWainscot: wallTier('wpWainscot', 'Wood Panel', 19, 2, 'wainscot'),

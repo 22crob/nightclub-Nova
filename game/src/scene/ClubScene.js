@@ -115,8 +115,8 @@ export class ClubScene extends Phaser.Scene {
     // but before updateUI() below so the very first render already shows
     // the restored cash/fans instead of flashing the fresh-game defaults.
     this.loadGame();
+    if (this.freshClub) this.placeStarterLayout();
     this.ensureClubBooth(); // every club has its DJ booth, with the DJ playing
-    if (this.freshClub) this.placeStarterBar();
 
     // Baseline for level-up detection (see updateUI()) — set from whatever
     // level the restored save (or a fresh level-1 game) actually starts

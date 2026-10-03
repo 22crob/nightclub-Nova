@@ -379,17 +379,22 @@ export class StaffMixin {
     if (booth && !booth.staff) this.attachStaff(booth);
   }
 
-  // A brand-new club opens with a Starter Bar and a bartender, against the
-  // back wall in the far corner from the door, serving toward the room.
-  placeStarterBar() {
-    for (let gx = this.gridSize - 1; gx >= 0; gx--) {
-      const rec = this.restoreProp('starterBar', 0, [gx, 0]);
-      if (rec) {
-        this.attachStaff(rec);
-        return rec;
+  // A brand-new club opens like Nightclub City's starter room: the DJ booth
+  // against the left wall, toward the front, facing into the room, and a
+  // Starter Bar with its bartender against the right wall, toward the
+  // front, serving into the room. (ensureClubBooth() then gives the booth
+  // its DJ.)
+  placeStarterLayout() {
+    const n = this.gridSize;
+    const booth = this.restoreProp('woodBooth', 90, [0, n - 5]);
+    if (!booth) this.ensureClubBooth();
+    for (const gx of [n - 3, n - 2, n - 4]) {
+      const bar = this.restoreProp('starterBar', 0, [gx, 0]);
+      if (bar) {
+        this.attachStaff(bar);
+        break;
       }
     }
-    return null;
   }
 
   // Swaps the club's booth for another tier, in the same spot and facing.

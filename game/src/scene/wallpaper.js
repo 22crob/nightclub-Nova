@@ -54,6 +54,23 @@ export class WallpaperMixin {
     return this.add.image(x, y, key).setOrigin(0, 0).setDisplaySize(WALL_TEX_W / 2, WALL_TEX_H / 2);
   }
 
+  // The bare walls: old brick on every section, under any wallpaper.
+  // Redrawn whenever the walls are (the club may have grown).
+  drawBareWalls(size) {
+    for (const img of this.bareWallImages || []) img.destroy();
+    this.bareWallImages = [];
+    for (const side of ['R', 'L']) {
+      for (let i = 0; i < size; i++) {
+        const section = `${side}${i}`;
+        const { x, y } = this.wallSectionOrigin(section);
+        const img = this.add.image(x, y, wallTextureKey('oldBrick', 0, SIDES[side]))
+          .setOrigin(0, 0).setDisplaySize(WALL_TEX_W / 2, WALL_TEX_H / 2);
+        this.bareWallLayer.add(img);
+        this.bareWallImages.push(img);
+      }
+    }
+  }
+
   // Shows or replaces the wallpaper on one section.
   drawWallSection(section, type) {
     if (!this.wallImages) this.wallImages = {};

@@ -25,10 +25,10 @@ export const FALLBACK_PROP_HEIGHT = 40 * PROP_SCALE;
 // code that used to check a fixed GRID_SIZE now reads the scene's own
 // this.gridSize instead, since that's a per-club value that changes at
 // runtime and gets saved/restored (see serializeState()/loadGame()).
-export const BASE_GRID_SIZE = 11; // a small room to start (half the floor of 16x16); expand to grow
+export const BASE_GRID_SIZE = 10; // a small room to start, like Nightclub City's; expand to grow
 
 // A new club opens with its DJ booth and a staffed Starter Bar already in
-// place (see placeStarterBar()); this buys the first dance floor and more.
+// place (see placeStarterLayout()); this buys the first dance floor and more.
 export const STARTING_CASH = 700;
 
 // Room shell, modelled on the reference game's rooms: thick light-grey
@@ -64,10 +64,9 @@ export const STREET = {
   msPerTile: 420, admitEveryMs: 1500, passerEveryMs: [3000, 8000],
 };
 
-// Floor tiles: one colour with faint seams, so the floor reads as one
-// surface (like Nightclub City's) rather than a grid of outlined squares.
+// The floor tiles are invisible (the seamless bare floor shows through, see
+// drawBareFloor()); this is only the colour they're reset to.
 export const FLOOR_COLOR = 0x5d5e66;
-export const FLOOR_SEAM = { color: 0x4d4e56, alpha: 1 };
 
 // Each second, the club gains this share of its props' total fanRate in
 // fans. The rest of a club's fans come from patrons: drinks, tips, and how

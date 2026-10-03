@@ -132,7 +132,7 @@ export class PlacementMixin {
     // Un-tint whatever tiles were highlighted for the LAST hover/facing/
     // prop combo before computing the new set — the highlight always
     // tracks the current footprint exactly, nothing else touches tile fills.
-    for (const t of this.highlightedTiles) t.setFillStyle(FLOOR_COLOR, 1);
+    for (const t of this.highlightedTiles) t.setFillStyle(FLOOR_COLOR, 0); // back to invisible
     this.highlightedTiles = [];
 
     // With nothing to place, show the normal system cursor so the player
@@ -257,6 +257,7 @@ export class PlacementMixin {
   // with no refund: used by selling and by swapping the DJ booth.
   removeProp(placed) {
     if (PROP_TYPES[placed.type].seats) this.releaseSeats(placed);
+    if (placed.queue) this.clearBarQueue(placed); // anyone lined up at a bar wanders off
     // The record is stored under every tile a multi-tile prop occupies —
     // free all of them, not just the tile that was clicked.
     for (const [tx, ty] of placed.tiles) delete this.placed[`${tx},${ty}`];

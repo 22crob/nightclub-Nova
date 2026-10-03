@@ -535,3 +535,55 @@ export function floorFrameCanvas(style, frame = 0) {
 export function floorTextureKey(style, frame = 0) {
   return `floor_${style}_${frame}`;
 }
+
+// The bare floor of the room: one seamless sheet of old, plain concrete,
+// worn and stained, with no tile lines. Drawn at 2x for the size x size
+// room, as the room's diamond seen from the game's camera (see
+// drawBareFloor()).
+export function bareFloorCanvas(size) {
+  const W = size * FLOOR_TEX_W;
+  const H = size * FLOOR_TEX_H;
+  const c = document.createElement('canvas');
+  c.width = W;
+  c.height = H;
+  const ctx = c.getContext('2d');
+  ctx.beginPath();
+  ctx.moveTo(W / 2, 0);
+  ctx.lineTo(W, H / 2);
+  ctx.lineTo(W / 2, H);
+  ctx.lineTo(0, H / 2);
+  ctx.closePath();
+  ctx.clip();
+  ctx.fillStyle = '#4f4c4b';
+  ctx.fillRect(0, 0, W, H);
+  const r = rng(29);
+  // Big soft patches of lighter and darker concrete, flattened 2:1 so they
+  // lie on the floor.
+  const blot = (x, y, rad, color) => {
+    ctx.save();
+    ctx.translate(x, y);
+    ctx.scale(1, 0.5);
+    const g = ctx.createRadialGradient(0, 0, 0, 0, 0, rad);
+    g.addColorStop(0, color);
+    g.addColorStop(1, 'rgba(0,0,0,0)');
+    ctx.fillStyle = g;
+    ctx.fillRect(-rad, -rad, rad * 2, rad * 2);
+    ctx.restore();
+  };
+  const area = size * size;
+  for (let i = 0; i < area * 1.2; i++) {
+    const light = r() < 0.45;
+    blot(r() * W, r() * H, 40 + r() * 160, light ? `rgba(255,245,230,${0.03 + r() * 0.04})` : `rgba(10,8,8,${0.05 + r() * 0.08})`);
+  }
+  // Old stains and scuffs.
+  for (let i = 0; i < area * 0.25; i++) {
+    blot(r() * W, r() * H, 10 + r() * 30, `rgba(20,14,10,${0.08 + r() * 0.1})`);
+  }
+  // Fine grit.
+  for (let i = 0; i < area * 260; i++) {
+    const a = r() * 0.1;
+    ctx.fillStyle = r() < 0.5 ? `rgba(255,255,255,${a})` : `rgba(0,0,0,${a})`;
+    ctx.fillRect(r() * W, r() * H, 2, 1);
+  }
+  return c;
+}

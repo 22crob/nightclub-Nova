@@ -41,7 +41,7 @@ The visual and gameplay reference for everything is **Nightclub City** (2010): i
 - HUD restyle: done. Dark glass, chrome rims and neon edges, like Nightclub City's interface.
 - Shop strip: done. The shop is a dark strip along the bottom like Nightclub City's: category buttons on the left, a scrolling row of items with prices, a name bubble on hover, and an OK button. It stays open while you build.
 - Done: image files shrunk to 256-colour palettes (`art/compress_sprites.py`); the game is about 4 MB of the play link's 16 MB
-- Smaller start: done. A new club is 11x11 (half the floor of the old 16x16) and opens with the DJ booth and a staffed Starter Bar; Expand grows it 13, 16, 19, 21, 24, 27.
+- Smaller start: done. A new club is 10x10, like Nightclub City's starter room, with old dark brick walls and a plain, worn concrete floor with no tile lines. It opens with the DJ booth on the left wall and a staffed Starter Bar on the right wall, like the reference; Expand grows it 13, 16, 19, 21, 24, 27.
 - Club nights: done. Each night runs 9 PM to 3 AM in 4 real minutes (clock under the cash). Last call stops new guests; at closing everyone heads home, the music and wages stop and the lights come up, and a summary card shows guests, drinks, tips, wages, profit and fans, with a 1-5 star rating from the night's average vibe (bonus fans for stars). "Open the doors" starts the next night; the night number and best profit are saved.
 - Next: Throw a Party events
 - Then: a bouncer at the door

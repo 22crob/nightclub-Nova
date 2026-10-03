@@ -62,24 +62,19 @@ const opening = await page.evaluate(() => {
   const bar = s.hireableRecords().find((rec) => rec.type === 'starterBar');
   return { type: booth && booth.type, anchor: booth && booth.anchor.join(','), dj: !!(booth && booth.staff), music: s.musicPlaying(), size: s.gridSize, bar: bar && bar.anchor.join(','), bartender: !!(bar && bar.staff) };
 });
-check('starts with $700, an 11x11 room, the DJ booth and a staffed Starter Bar', st.cash === 700 && st.placed === 2 && opening.size === 11 && opening.bar === '10,0' && opening.bartender, `cash ${st.cash}, placed ${st.placed}, ${JSON.stringify(opening)}`);
-check('every club opens with a Wood Booth and a DJ playing', opening.type === 'woodBooth' && opening.anchor === '4,0' && opening.dj && opening.music, JSON.stringify(opening));
+check('starts with $700, a 10x10 room, the DJ booth and a staffed Starter Bar', st.cash === 700 && st.placed === 2 && opening.size === 10 && opening.bar === '7,0' && opening.bartender, `cash ${st.cash}, placed ${st.placed}, ${JSON.stringify(opening)}`);
+check('every club opens with a Wood Booth and a DJ playing', opening.type === 'woodBooth' && opening.anchor === '0,5' && opening.dj && opening.music, JSON.stringify(opening));
 
 // The checks below were written for the old opening (a 16x16 room with just
-// the DJ booth, at 6,0): set that up.
+// the DJ booth, at 6,0): load a club like that.
 await page.evaluate(() => {
-  const s = window.__clubNova.scene.getScene('club');
-  const bar = s.hireableRecords().find((rec) => rec.type === 'starterBar');
-  if (bar) s.removeProp(bar);
-  s.gridSize = 16;
-  s.buildTiles(16);
-  s.buildWalls(16);
-  s.removeProp(s.clubBooth());
-  s.attachStaff(s.restoreProp('woodBooth', 0, [6, 0]));
-  s.cash = 700;
-  s.updateUI();
-  s.saveGame();
+  window.__clubNova.scene.getScene('club').restarting = true; // don't save over it on the way out
+  localStorage.setItem('clubNovaSave_v2', JSON.stringify({
+    cash: 700, fans: 0, gridSize: 16, placed: [{ type: 'woodBooth', facing: 0, anchor: [6, 0], staff: true }], wallpaper: {}, floorPaint: {},
+  }));
 });
+await page.reload();
+await waitForScene();
 check('all sprites loaded', st.textures.length === 0, st.textures.join(', ') || 'none missing');
 
 // Tips are paused while the checks below compare exact cash amounts.
@@ -173,6 +168,7 @@ check('hiring a bartender costs $50', staffed.cash === 550 && staffed.bartenders
 await page.evaluate(() => { delete window.__clubNova.scene.getScene('club').collectPatronTip; });
 
 // Patrons arrive, get thirsty, buy drinks, earn fans and tip.
+const fansBefore = (await state()).fans;
 await page.waitForTimeout(24000);
 st = await state();
 check('patrons arrive', st.patrons > 0, `${st.patrons} on the floor`);
@@ -196,7 +192,7 @@ const facing = await page.evaluate(() => {
   return out;
 });
 check('patrons face the way they walk', facing.downLeft === 'front' && facing.downRight === 'front mirrored' && facing.upRight === 'back' && facing.upLeft === 'back mirrored', JSON.stringify(facing));
-check('fans grow over time', st.fans > 5, `${st.fans.toFixed(1)} fans`);
+check('fans grow over time', st.fans > fansBefore + 3, `${fansBefore.toFixed(1)} -> ${st.fans.toFixed(1)} fans`);
 // Patrons want their first drink 3-18s after arriving, so give it time.
 await page.waitForFunction(() => (window.__clubNova.scene.getScene('club').drinksSold || 0) > 0, null, { timeout: 30000 }).catch(() => {});
 const drinks = await page.evaluate(() => window.__clubNova.scene.getScene('club').drinksSold || 0);

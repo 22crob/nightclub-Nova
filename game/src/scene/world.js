@@ -3,9 +3,10 @@
 // Mixed into ClubScene (see ClubScene.js); `this` is the scene.
 import Phaser from 'phaser';
 import { GRID_EXPANSIONS } from '../catalog.js';
-import { FLOOR_COLOR, FLOOR_SEAM, FLOOR_SLAB_DEPTH, PATRON_SPAWN_TILE, ROOM_COLORS, TILE_H, TILE_W, WALL_BASEBOARD, WALL_HEIGHT, WALL_THICKNESS, ZOOM_DEFAULT, ZOOM_MAX, ZOOM_MIN } from '../config.js';
+import { FLOOR_COLOR, FLOOR_SLAB_DEPTH, PATRON_SPAWN_TILE, ROOM_COLORS, TILE_H, TILE_W, WALL_BASEBOARD, WALL_HEIGHT, WALL_THICKNESS, ZOOM_DEFAULT, ZOOM_MAX, ZOOM_MIN } from '../config.js';
 import { SFX } from '../sfx.js';
 import { WALL_TEX_H, WALL_TEX_W, doorCanvas } from '../walls.js';
+import { bareFloorCanvas } from '../floors.js';
 
 export class WorldMixin {
   gridToScreen(gx, gy) {
@@ -41,15 +42,25 @@ export class WorldMixin {
         const tile = this.add.polygon(
           sx, sy,
           [TILE_W / 2, 0, TILE_W, TILE_H / 2, TILE_W / 2, TILE_H, 0, TILE_H / 2],
-          FLOOR_COLOR, 1
+          FLOOR_COLOR, 0 // invisible: the bare floor shows through (drawBareFloor())
         );
-        tile.setStrokeStyle(1, FLOOR_SEAM.color, FLOOR_SEAM.alpha);
         tile.gx = gx;
         tile.gy = gy;
         this.tileLayer.add(tile);
         this.tiles[key] = tile;
       }
     }
+  }
+
+  // The bare floor: one seamless sheet of old, worn concrete across the
+  // whole room (bareFloorCanvas() in floors.js), with no lines between
+  // tiles. The tiles themselves are invisible until highlighted.
+  drawBareFloor(size) {
+    const key = `bareFloor_${size}`;
+    if (!this.textures.exists(key)) this.textures.addCanvas(key, bareFloorCanvas(size));
+    const [x] = this.gridPoint(-0.5, size - 0.5);
+    const [, y] = this.gridPoint(-0.5, -0.5);
+    this.bareFloor.setTexture(key).setPosition(x, y).setDisplaySize(size * TILE_W, size * TILE_H);
   }
 
   // Screen position of a point in grid space (tile centres are whole
@@ -74,7 +85,12 @@ export class WorldMixin {
       this.tileLayer.addAt(this.groundGraphics, 0); // under the floor tiles
       this.wallGraphics = this.add.graphics();
       this.wallLayer.add(this.wallGraphics);
-      // Wallpaper sits on the plain wall; the door and corner line on top.
+      // The bare brick, then wallpaper on top of it; the door and corner
+      // line over both.
+      this.bareWallLayer = this.add.container(0, 0);
+      this.wallLayer.add(this.bareWallLayer);
+      this.bareFloor = this.add.image(0, 0, '__DEFAULT').setOrigin(0, 0);
+      this.tileLayer.addAt(this.bareFloor, 1); // over the ground, under the tiles
       this.wallpaperLayer = this.add.container(0, 0);
       this.wallLayer.add(this.wallpaperLayer);
       this.wallShade = this.add.graphics(); // mood lighting (see drawMoodShade())
@@ -125,6 +141,8 @@ export class WorldMixin {
     // Shading where the two walls meet.
     trim.lineStyle(2, ROOM_COLORS.corner, 1);
     trim.lineBetween(...P(-0.5, -0.5, 0), ...P(-0.5, -0.5, H));
+    this.drawBareWalls(upToSize);
+    this.drawBareFloor(upToSize);
     this.drawMoodShade(upToSize);
     this.drawDoor();
     this.drawStreetProps(P, t, n, FLOOR_SLAB_DEPTH);
