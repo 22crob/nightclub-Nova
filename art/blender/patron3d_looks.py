@@ -67,20 +67,35 @@ ZOOM = 4                          # stills are rendered this much bigger, to loo
 # Materials
 # --------------------------------------------------------------------------
 
-def make_material(name, hex_color, look, face=None, shine=1.12):
+def make_material(name, hex_color, look, face=None, shine=1.12, layers=(), shade_at=0.5):
     """A material in the look's shading style. `face` is a painted face
-    image laid over the colour through the FaceUV projection."""
+    image laid over the colour through the FaceUV projection. `layers` are
+    (attribute, colour) pairs painted over it wherever that per-vertex
+    attribute is above one half: the attribute varies smoothly, so the
+    edges between colours are clean curves, not the mesh's stair-steps.
+    `shade_at` moves the toon shadow edge (lower: less shadow)."""
     shading = look['shading']
-    if shading == 'soft':
-        return P.material(name, hex_color, skin=hex_color == look['skin'], face=face)
     m = bpy.data.materials.new(name)
     m.use_nodes = True
     nt = m.node_tree
-    nt.nodes.remove(nt.nodes['Principled BSDF'])
+    bsdf = nt.nodes['Principled BSDF']
     out = nt.nodes['Material Output']
     base = nt.nodes.new('ShaderNodeRGB')
     base.outputs[0].default_value = (*P.linear(hex_color), 1)
     colour = base.outputs[0]
+    for attr, hex2 in layers:
+        a = nt.nodes.new('ShaderNodeAttribute')
+        a.attribute_name = attr
+        step = nt.nodes.new('ShaderNodeMath')
+        step.operation = 'GREATER_THAN'
+        step.inputs[1].default_value = 0.5
+        nt.links.new(a.outputs['Fac'], step.inputs[0])
+        mix = nt.nodes.new('ShaderNodeMix')
+        mix.data_type = 'RGBA'
+        mix.inputs['B'].default_value = (*P.linear(hex2), 1)
+        nt.links.new(step.outputs['Value'], mix.inputs['Factor'])
+        nt.links.new(colour, mix.inputs['A'])
+        colour = mix.outputs['Result']
     if face:
         uv = nt.nodes.new('ShaderNodeUVMap')
         uv.uv_map = 'FaceUV'
@@ -95,6 +110,12 @@ def make_material(name, hex_color, look, face=None, shine=1.12):
         nt.links.new(colour, mix.inputs['A'])
         nt.links.new(tex.outputs['Color'], mix.inputs['B'])
         colour = mix.outputs['Result']
+    if shading == 'soft':
+        nt.links.new(colour, bsdf.inputs['Base Color'])
+        bsdf.inputs['Roughness'].default_value = 0.6
+        bsdf.inputs['Specular IOR Level'].default_value = 0.25
+        return m
+    nt.nodes.remove(bsdf)
     if shading == 'toon':
         # One hard shadow edge over the surface normal (N.L), like cel art.
         geo = nt.nodes.new('ShaderNodeNewGeometry')
@@ -107,7 +128,7 @@ def make_material(name, hex_color, look, face=None, shine=1.12):
         els = ramp.color_ramp.elements
         els[0].position = 0.0
         els[0].color = (*SHADOW, 1)
-        els[1].position = 0.5
+        els[1].position = shade_at
         els[1].color = (1, 1, 1, 1)
         hl = els.new(0.93)
         hl.color = (shine, shine, shine, 1)
@@ -127,6 +148,54 @@ def make_material(name, hex_color, look, face=None, shine=1.12):
     nt.links.new(colour, em.inputs['Color'])
     nt.links.new(em.outputs['Emission'], out.inputs['Surface'])
     return m
+
+
+OUTLINE = '#1a1024'
+HULL = 0.02          # outline width, in rest-pose units (about 1.5 px in the game)
+
+
+def outline_material():
+    """For the inflated copy ("inverted hull") behind every part: dark on
+    its far side, which only shows around the part's silhouette, and see-
+    through on its near side. Gives even, inked outlines."""
+    m = bpy.data.materials.get('Outline')
+    if m:
+        return m
+    m = bpy.data.materials.new('Outline')
+    m.use_nodes = True
+    nt = m.node_tree
+    nt.nodes.remove(nt.nodes['Principled BSDF'])
+    geo = nt.nodes.new('ShaderNodeNewGeometry')
+    path = nt.nodes.new('ShaderNodeLightPath')
+    seen = nt.nodes.new('ShaderNodeMath')
+    seen.operation = 'MULTIPLY'
+    nt.links.new(geo.outputs['Backfacing'], seen.inputs[0])
+    nt.links.new(path.outputs['Is Camera Ray'], seen.inputs[1])
+    em = nt.nodes.new('ShaderNodeEmission')
+    em.inputs['Color'].default_value = (*P.linear(OUTLINE), 1)
+    tr = nt.nodes.new('ShaderNodeBsdfTransparent')
+    mix = nt.nodes.new('ShaderNodeMixShader')
+    nt.links.new(seen.outputs['Value'], mix.inputs['Fac'])
+    nt.links.new(tr.outputs['BSDF'], mix.inputs[1])
+    nt.links.new(em.outputs['Emission'], mix.inputs[2])
+    nt.links.new(mix.outputs['Shader'], nt.nodes['Material Output'].inputs['Surface'])
+    return m
+
+
+def add_hulls(arm):
+    """An inflated, outline-coloured copy of every mesh on the character."""
+    mat = outline_material()
+    for o in [c for c in arm.children_recursive if c.type == 'MESH']:
+        h = o.copy()
+        h.name = o.name + '_hull'
+        bpy.context.scene.collection.objects.link(h)
+        for slot in h.material_slots:
+            slot.link = 'OBJECT'
+            slot.material = mat
+        d = h.modifiers.new('Inflate', 'DISPLACE')
+        d.direction = 'NORMAL'
+        d.mid_level = 0
+        d.strength = HULL / o.matrix_world.to_scale().x   # (call before the root is scaled)
 
 
 # --------------------------------------------------------------------------
@@ -231,37 +300,47 @@ def body_region(bone, c, sleeve_x):
     return 'skin'
 
 
+def coverage(w, sleeve_x):
+    """How much each clothing colour covers a rest-pose point, 0..1, as
+    smooth functions so the colour edges come out as clean curves."""
+    ss = P.smoothstep
+    z, ax = w.z, abs(w.x)
+    if 0.6 < z < 0.88 and ax > 0.15:             # arms (T pose), not the head
+        top = 1 - ss(sleeve_x - 0.02, sleeve_x, ax)
+    else:
+        top = ss(0.51, 0.55, z) * (1 - ss(0.845, 0.865, z))
+    return {
+        'cov_bottom': 1 - ss(0.53, 0.57, z),
+        'cov_top': top,
+        'cov_shoe': 1 - ss(0.08, 0.1, z),
+        'cov_sole': 1 - ss(0.012, 0.028, z),
+    }
+
+
 def colour_body(body, look, face_path):
     under = look['inner'] or look['top_color']
-    mats = {
-        'skin': make_material('Skin', look['skin'], look, face=face_path),
-        'top': make_material('Top', under, look),
-        'bottom': make_material('Bottom', look['bottom_color'], look),
-        'shoe': make_material('Shoe', look['shoe_color'], look),
-        'sole': make_material('Sole', look['sole'], look),
-    }
+    mat = make_material('Body', look['skin'], look, face=face_path, shade_at=0.42, layers=(
+        ('cov_bottom', look['bottom_color']), ('cov_top', under),
+        ('cov_shoe', look['shoe_color']), ('cov_sole', look['sole'])))
     me = body.data
     me.materials.clear()
-    order = list(mats)
-    for k in order:
-        me.materials.append(mats[k])
+    me.materials.append(mat)
     mw = body.matrix_world
-    bones = face_bones(body)
     sleeve = SLEEVE[look['top']]
-    for p, b in zip(me.polygons, bones):
-        p.material_index = order.index(body_region(b, mw @ p.center, sleeve))
-        p.use_smooth = True
-    skin_v = set()
+    covs = [coverage(mw @ v.co, sleeve) for v in me.vertices]
+    for name in covs[0]:
+        attr = me.attributes.new(name, 'FLOAT', 'POINT')
+        attr.data.foreach_set('value', [c[name] for c in covs])
     for p in me.polygons:
-        if order[p.material_index] == 'skin':
-            skin_v.update(p.vertices)
+        p.material_index = 0
+        p.use_smooth = True
     x0, z0, size = P.FACE_BOX
     uv = me.uv_layers.new(name='FaceUV')
     for loop in me.loops:
         v = me.vertices[loop.vertex_index]
         w = mw @ v.co
         n = (mw.to_3x3() @ v.normal).normalized()
-        front = loop.vertex_index in skin_v and w.z > 0.9 and w.y < 0 and n.y < -0.3
+        front = w.z > 0.9 and w.y < 0 and n.y < -0.3
         uv.data[loop.index].uv = ((w.x - x0) / size, (w.z - z0) / size) if front else (-1, -1)
 
 
@@ -526,6 +605,7 @@ def build(scene, look, tmpdir):
     if look['cap']:
         add_cap(look, arm)
     arm.data.pose_position = 'POSE'
+    add_hulls(arm)
     root = bpy.data.objects.new('Root', None)
     scene.collection.objects.link(root)
     arm.parent = root
@@ -554,7 +634,8 @@ def render_look(key, out_dir):
     ls = bpy.context.view_layer.freestyle_settings.linesets[0]
     ls.linestyle.thickness = OUTLINE_PX     # Blender scales it with the render size
     scene.render.resolution_percentage = 100 * ZOOM
-    scene.render.use_freestyle = not os.environ.get('NOLINES')
+    scene.render.use_freestyle = bool(os.environ.get('FREESTYLE'))   # the hulls draw the lines
+    scene.cycles.transparent_max_bounces = 64
     ls.select_material_boundary = look['shading'] != 'soft'
     ls.select_crease = False
     iso_rig.apply_model_scale(root)
