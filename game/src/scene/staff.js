@@ -35,6 +35,7 @@ export class StaffMixin {
   // True while the DJ is playing, which is always once the club has its
   // booth: the dance floor only counts, and patrons only dance, with music.
   musicPlaying() {
+    if (!this.clubOpen()) return false; // quiet between nights
     return this.staffableRecords().some((rec) => rec.staff && PROP_TYPES[rec.type].staff === 'dj');
   }
 
@@ -287,6 +288,7 @@ export class StaffMixin {
     this.leaveBarQueue(patron); // served: the line steps up
     const price = PROP_TYPES[rec.type].drinkPrice || 10;
     this.cash += price;
+    this.noteIncome('drinkMoney', price);
     this.fans += 0.3;
     this.drinksSold = (this.drinksSold || 0) + 1;
     this.cheerPatron(patron, MOOD.drinkMood);
@@ -300,6 +302,7 @@ export class StaffMixin {
   // Pays every working staff member. If the club can't cover the whole bill,
   // staff quit (most expensive first) until it can.
   payWages() {
+    if (!this.clubOpen()) return; // nobody works between nights
     const working = this.hireableRecords().filter((rec) => rec.staff);
     if (working.length === 0) return;
     const wageOf = (rec) => STAFF_TYPES[PROP_TYPES[rec.type].staff].wage;
@@ -310,6 +313,7 @@ export class StaffMixin {
       quit.push(STAFF_TYPES[PROP_TYPES[rec.type].staff].label);
       this.detachStaff(rec);
     }
+    this.noteIncome('wages', this.totalWages());
     this.cash -= this.totalWages();
     for (const rec of working) {
       const { x, y } = rec.staff.container;

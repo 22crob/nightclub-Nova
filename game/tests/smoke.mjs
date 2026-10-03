@@ -480,6 +480,47 @@ const street = await page.evaluate(() => {
 });
 check('the street has a line at the rope, a bouncer and lamps; the front of the line goes in', street.inLine > 0 && street.after === street.inLine - 1 && street.bouncer && street.lamps, JSON.stringify(street));
 
+// Club nights: the clock runs, last call shuts the door, closing sends
+// everyone home and shows the summary; between nights the music and wages
+// stop; opening the doors starts the next night, and it's saved.
+const nights = await page.evaluate(async () => {
+  const s = window.__clubNova.scene.getScene('club');
+  const wait = (ms) => new Promise((r) => setTimeout(r, ms));
+  const out = { clock: document.getElementById('nightClockText').textContent, phase: s.nightPhase };
+  const night = s.night;
+  s.nightStartedAt = s.time.now - (4 * 60 * 1000 - 20 * 1000); // jump to 20s before closing: last call
+  s.tickNight();
+  out.lastCall = s.nightPhase === 'lastCall' && !s.doorsOpen();
+  const before = s.patrons.length;
+  s.trySpawnPatron();
+  out.noNewGuests = s.patrons.length === before;
+  s.nightStartedAt = s.time.now - 4 * 60 * 1000 - 1000; // past closing time
+  s.tickNight();
+  out.closing = s.nightPhase === 'closing' && s.patrons.every((p) => p.leaving || p.gone);
+  s.closingAt -= 60 * 1000; // stop waiting for slow walkers
+  s.tickNight();
+  await wait(600);
+  const card = document.getElementById('nightSummary');
+  out.closed = s.nightPhase === 'closed' && s.patrons.length === 0;
+  out.summary = card.classList.contains('open') && /Night \d+ is over/.test(document.getElementById('summaryTitle').textContent);
+  out.stars = s.lastNight.stars;
+  out.quiet = !s.musicPlaying() && document.getElementById('boostLabel').textContent === 'Club closed';
+  const cash = s.cash;
+  s.payWages();
+  out.noWages = s.cash === cash;
+  document.getElementById('summaryLater').click();
+  out.openButton = !card.classList.contains('open') && document.getElementById('openButton').style.display !== 'none';
+  document.getElementById('openButton').click();
+  out.next = s.night === night + 1 && s.nightPhase === 'open' && s.musicPlaying();
+  out.saved = JSON.parse(localStorage.getItem('clubNovaSave_v2')).night === night + 1;
+  return out;
+});
+check('a night has a clock', /^Night \d+ · \d+:\d0 [AP]M/.test(nights.clock) && nights.phase === 'open', nights.clock);
+check('last call lets nobody new in', nights.lastCall && nights.noNewGuests, JSON.stringify(nights));
+check('closing time sends everyone home and shows the summary', nights.closing && nights.closed && nights.summary && nights.stars >= 1, JSON.stringify(nights));
+check('between nights the music and wages stop', nights.quiet && nights.noWages, JSON.stringify(nights));
+check('opening the doors starts the next night, and it is saved', nights.openButton && nights.next && nights.saved, JSON.stringify(nights));
+
 check('no errors in the page', errors.length === 0, errors.join(' | '));
 
 await browser.close();

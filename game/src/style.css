@@ -360,3 +360,80 @@ body.shopOpen #selectedChip { bottom: calc(150px + env(safe-area-inset-bottom, 0
   box-shadow: var(--panel-shadow);
   color: var(--muted); cursor: default;
 }
+
+/* ------------------------------------------------------------------ */
+/* Club nights: the clock under the cash, the open button, and the      */
+/* end-of-night summary card (see scene/nights.js).                     */
+/* ------------------------------------------------------------------ */
+#nightClock {
+  position: fixed; left: 50%; transform: translateX(-50%);
+  top: calc(52px + env(safe-area-inset-top, 0px));
+  z-index: 10; pointer-events: auto;
+  display: flex; flex-direction: column; align-items: center; gap: 3px;
+  padding: 4px 12px 6px; border-radius: var(--radius);
+  background: var(--glass-flat); border: 1px solid #8a94a699;
+  box-shadow: var(--panel-shadow);
+  font-size: 12px; font-weight: 700; text-shadow: var(--outline); white-space: nowrap;
+}
+#nightClock .nightBar {
+  width: 150px; height: 5px; border-radius: 3px; overflow: hidden;
+  background: #05070b; box-shadow: inset 0 1px 2px #000c;
+}
+#nightClockFill {
+  height: 100%; width: 0%;
+  background: linear-gradient(90deg, #6b3fd6, var(--magenta));
+  transition: width 1s linear;
+}
+#nightClock[data-phase="lastCall"] { border-color: var(--gold); color: var(--gold); }
+#nightClock[data-phase="lastCall"] #nightClockFill { background: var(--gold); }
+#nightClock[data-phase="closing"], #nightClock[data-phase="closed"] { color: var(--muted); }
+
+.openButton {
+  position: fixed; left: 50%; transform: translateX(-50%);
+  top: calc(98px + env(safe-area-inset-top, 0px));
+  z-index: 10; cursor: pointer; user-select: none;
+  padding: 9px 20px; border-radius: var(--radius);
+  font-size: 15px; font-weight: 700; letter-spacing: 0.04em; text-shadow: var(--outline);
+  background: linear-gradient(180deg, #2a6a2e 0%, #134a18 55%, #0a300d 100%);
+  border: 2px solid #5dff6a;
+  box-shadow: 0 0 0 1px #000, 0 0 14px #5dff6a8c, inset 0 1px 0 #ffffff59;
+}
+.openButton:hover { box-shadow: 0 0 0 1px #000, 0 0 20px #5dff6acc, inset 0 1px 0 #ffffff59; }
+.openButton:active { transform: translateX(-50%) translateY(1px); }
+
+#nightSummary {
+  display: none; position: fixed; inset: 0; z-index: 50;
+  align-items: center; justify-content: center;
+  background: #05030ab3;
+}
+#nightSummary.open { display: flex; }
+.summaryCard {
+  width: min(360px, calc(100vw - 32px));
+  padding: 18px 20px 16px; border-radius: 12px;
+  background: var(--glass); border: 2px solid var(--neon);
+  box-shadow: 0 0 0 1px #000, 0 0 24px var(--neon-glow), inset 0 1px 0 #fff3;
+  text-align: center; text-shadow: var(--outline);
+  animation: summaryIn 0.35s ease-out;
+}
+@keyframes summaryIn { from { transform: scale(0.9); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+.summaryTitle { font-size: 22px; font-weight: 700; }
+.summaryStars { font-size: 34px; color: var(--gold); letter-spacing: 4px; margin: 4px 0 0; text-shadow: 0 0 10px #ffd24d80, var(--outline); }
+.summaryVerdict { color: var(--muted); font-size: 14px; font-weight: 700; margin-bottom: 12px; }
+.summaryRows { display: flex; flex-direction: column; gap: 5px; font-size: 14px; text-align: left; }
+.summaryRows div { display: flex; justify-content: space-between; gap: 12px; padding: 2px 4px; }
+.summaryRows span { color: #cfd8e6; }
+.summaryRows .total { border-top: 1px solid #8a94a699; margin-top: 4px; padding-top: 7px; font-size: 17px; }
+.summaryRows .total b { color: var(--cash); }
+.summaryRows .total b.loss { color: #ff8a8a; }
+.summaryButtons { display: flex; flex-direction: column; gap: 8px; margin-top: 16px; }
+.summaryButton {
+  cursor: pointer; user-select: none; padding: 11px 14px; border-radius: var(--radius);
+  font-size: 16px; font-weight: 700;
+  background: linear-gradient(180deg, #2a6a2e 0%, #134a18 55%, #0a300d 100%);
+  border: 2px solid #5dff6a; box-shadow: 0 0 0 1px #000, 0 0 12px #5dff6a8c;
+}
+.summaryButton.later {
+  font-size: 13px; padding: 7px 12px; background: var(--glass-flat);
+  border: 1px solid var(--chrome); box-shadow: var(--panel-shadow);
+}
+.summaryButton:active { transform: translateY(1px); }

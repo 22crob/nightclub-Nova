@@ -317,6 +317,7 @@ export class StreetMixin {
   // Runs every couple of seconds: lets the person at the front in if the
   // club has room, and tops up the line now and then.
   admitFromLine() {
+    if (!this.doorsOpen()) return; // the line waits for the doors to open
     const front = this.streetQueue[0];
     const { gx, gy } = PATRON_SPAWN_TILE;
     const roomInside = this.patrons.length < this.patronCapacity() && !this.isBlockingProp(gx, gy) && !this.patronTileOccupied(gx, gy);

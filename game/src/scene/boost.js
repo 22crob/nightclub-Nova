@@ -64,7 +64,10 @@ export class BoostMixin {
     const now = this.time.now;
     let state = 'ready';
     let text = 'Drop the Bass!';
-    if (this.isBoosted()) {
+    if (!this.clubOpen()) {
+      state = 'cooldown';
+      text = 'Club closed';
+    } else if (this.isBoosted()) {
       state = 'active';
       text = `Bass drop ${clock(this.boostUntil - now)}`;
     } else if (now < (this.boostReadyAt || 0)) {

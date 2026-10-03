@@ -21,6 +21,7 @@ import { LightingMixin } from './lighting.js';
 import { BoostMixin } from './boost.js';
 import { FloorPaintMixin } from './floorPaint.js';
 import { StreetMixin } from './street.js';
+import { NightsMixin } from './nights.js';
 import { Music } from '../music.js';
 import { applyMixins } from './applyMixins.js';
 
@@ -233,6 +234,7 @@ export class ClubScene extends Phaser.Scene {
       });
     }
     this.setupBoost();
+    this.setupNights(this.savedNight);
 
     // Outline layer for the "which tiles will this actually occupy" marker
     // — always drawn on top of props/ghost so a tall sprite's artwork can
@@ -245,6 +247,7 @@ export class ClubScene extends Phaser.Scene {
       delay: 1000,
       loop: true,
       callback: () => {
+        if (!this.clubOpen()) return;
         const rate = this.totalFanRate() * PASSIVE_FAN_SHARE;
         if (rate > 0) {
           this.fans += rate;
@@ -322,4 +325,5 @@ applyMixins(ClubScene, [
   BoostMixin,
   FloorPaintMixin,
   StreetMixin,
+  NightsMixin,
 ]);

@@ -38,7 +38,7 @@ export class SaveMixin {
       seen.add(rec);
       placedList.push({ type: rec.type, facing: rec.facing, anchor: rec.anchor, ...(rec.staff ? { staff: true } : {}) });
     }
-    return { cash: this.cash, fans: this.fans, gridSize: this.gridSize, placed: placedList, wallpaper: { ...this.wallpaper }, floorPaint: { ...this.floorPaint } };
+    return { cash: this.cash, fans: this.fans, gridSize: this.gridSize, placed: placedList, wallpaper: { ...this.wallpaper }, floorPaint: { ...this.floorPaint }, night: this.night, nightOver: this.nightPhase === 'closed', bestNightProfit: this.bestNightProfit };
   }
 
   saveGame() {
@@ -83,6 +83,10 @@ export class SaveMixin {
         if (rec && entry.staff && PROP_TYPES[entry.type].staff) this.attachStaff(rec);
       }
     }
+    // The night to open on load: a reload mid-night replays it, a finished
+    // one moves on to the next (see setupNights()).
+    if (typeof data.night === 'number') this.savedNight = data.night + (data.nightOver ? 1 : 0);
+    if (typeof data.bestNightProfit === 'number') this.bestNightProfit = data.bestNightProfit;
     this.restoreWallpaper(data.wallpaper);
     this.restoreFloorPaint(data.floorPaint);
   }

@@ -41,6 +41,7 @@ export class PatronsMixin {
   // Brings a patron in at the door (`character`: their look, from the line
   // outside).
   trySpawnPatron(character) {
+    if (!this.doorsOpen()) return; // last call or closed
     if (this.patrons.length >= this.patronCapacity()) return;
     const { gx, gy } = PATRON_SPAWN_TILE;
     if (this.isBlockingProp(gx, gy)) return; // door tile has a blocking prop on it — skip this attempt
@@ -642,6 +643,7 @@ export class PatronsMixin {
     const boost = this.isBoosted() ? BOOST.tipMultiplier : 1;
     const amount = Math.max(1, Math.round((nearRevenue ? base * 2 : base) * moodFactor * boost));
     this.cash += amount;
+    this.noteIncome('tips', amount);
     this.fans += nearRevenue ? 0.4 : 0.1;
     SFX.tip();
     this.updateUI();

@@ -31,6 +31,36 @@
     <span class="amount" id="cashVal">500</span>
   </div>
 
+  <!-- Under the cash: tonight's clock -->
+  <div id="nightClock" data-phase="open" title="Each night runs 9 PM to 3 AM. Last call stops new guests; at closing you get the night's results.">
+    <span id="nightClockText">Night 1</span>
+    <div class="nightBar"><div id="nightClockFill"></div></div>
+  </div>
+  <div id="openButton" class="openButton" style="display:none" title="Start the next night">🚪 Open the doors</div>
+
+  <!-- End-of-night results -->
+  <div id="nightSummary">
+    <div class="summaryCard">
+      <div class="summaryTitle" id="summaryTitle">Night 1 is over!</div>
+      <div class="summaryStars" id="summaryStars">★★★☆☆</div>
+      <div class="summaryVerdict" id="summaryVerdict">Good night!</div>
+      <div class="summaryRows">
+        <div><span>Guests</span><b id="summaryGuests">0</b></div>
+        <div><span>Biggest crowd</span><b id="summaryCrowd">0</b></div>
+        <div><span>Average vibe</span><b id="summaryVibe">0%</b></div>
+        <div><span>Drinks sold</span><b id="summaryDrinks">0</b></div>
+        <div><span>Tips</span><b id="summaryTips">$0</b></div>
+        <div><span>Staff wages</span><b id="summaryWages">$0</b></div>
+        <div class="total"><span>Profit</span><b id="summaryProfit">$0</b></div>
+        <div><span>Fans</span><b id="summaryFans">+0</b></div>
+      </div>
+      <div class="summaryButtons">
+        <div id="summaryOpen" class="summaryButton">Open the doors</div>
+        <div id="summaryLater" class="summaryButton later">Decorate first</div>
+      </div>
+    </div>
+  </div>
+
   <!-- Top-right: stat buttons -->
   <div id="hudStats">
     <div class="statButton" title="Fans">
@@ -57,7 +87,7 @@
   <!-- Bottom-left: tips box -->
   <div id="hint">
     <div class="hintTitle">Tips</div>
-    Your DJ never stops playing. Hire a bartender in Staff: bars only sell drinks with one. Press Drop the Bass for a 90-second party! Happy patrons tip more and bring fans; thirsty or bored ones leave.<br>
+    Each night runs 9 PM to 3 AM; at closing you see how it went. Your DJ plays all night. Hire a bartender in Staff: bars only sell drinks with one. Press Drop the Bass for a 90-second party! Happy patrons tip more and bring fans; thirsty or bored ones leave.<br>
     Click to place • Right-click to sell • R to rotate • Esc to put down • Drag to move around • Scroll to zoom
   </div>
 

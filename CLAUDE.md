@@ -15,6 +15,7 @@ See ROADMAP.md for the plan. The reference for all art, UI and gameplay is Night
 - Sprite calibration (`displayWidth`, `originX`/`originY`) was measured against the actual rendered PNGs. Re-measure it if a sprite is re-rendered.
 - The street outside (road, sidewalk, buildings, velvet-rope line, bouncer, passers-by) is `src/scene/street.js`, settings in `STREET` in config.js. New patrons join the line there and go in at the door; leavers walk off down the street.
 - The club always has exactly one DJ booth with a permanent DJ (`ensureClubBooth()` / `upgradeClubBooth()` in `staff.js`); only bartenders are hired. Music is `src/music.js`, and the Drop the Bass boost is `src/scene/boost.js`.
+- Club nights are `src/scene/nights.js`, settings in `NIGHT` in config.js. Only `doorsOpen()` lets guests in; `clubOpen()` is false between nights, which stops music, wages and passive fans. Income for the night's summary goes through `noteIncome()`.
 - The save format lives in `src/scene/save.js` under the key `clubNovaSave_v2` (v2 came with the finer grid; v1 saves don't fit it). Don't break existing saves; bump the key only if the format changes incompatibly.
 
 ## Art pipeline

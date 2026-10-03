@@ -180,5 +180,21 @@ export const BOOST = { durationMs: 90000, cooldownMs: 300000, speedUp: 2, tipMul
 // Mood lighting (see lighting.js): how much the floor and walls are dimmed,
 // and the coloured glow under lights. The owner found the glows too strong
 // in spots, so they're off for now (`glows: false`).
+// Club nights (see scene/nights.js): each night runs 9 PM to 3 AM in
+// lengthMs of real time; the last lastCallMs are last call (no new guests).
+// At closing, guests get closeWaitMs to walk out before the summary.
+// Stars come from the night's average vibe: one, plus one for each of
+// starVibes reached; each rating gives starFans bonus fans.
+export const NIGHT = {
+  lengthMs: 4 * 60 * 1000,
+  lastCallMs: 35 * 1000,
+  closeWaitMs: 20 * 1000,
+  startHour: 21,
+  hours: 6,
+  closedShade: 0.25, // the room's dimming between nights (1 = full night dimming)
+  starVibes: [40, 55, 70, 85],
+  starFans: [0, 2, 5, 8, 12],
+  verdicts: ['A quiet one.', 'Not bad.', 'Good night!', 'Great night!', 'Legendary night!'],
+};
 export const MOOD_LIGHTING = { color: 0x0b0418, floorAlpha: 0.3, wallAlpha: 0.2, glows: false, glowAlpha: 0.55 };
 export const SEAT_SIT_TIME = [14000, 24000];

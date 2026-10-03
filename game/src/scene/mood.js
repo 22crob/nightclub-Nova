@@ -106,6 +106,7 @@ export class MoodMixin {
     let emoji;
     if (patron.stormedOut) {
       fans = STORM_OUT_FANS;
+      this.noteStormOut();
       emoji = '😠';
     } else {
       const tier = LEAVING_FANS.find((t) => patron.mood >= t.min);
