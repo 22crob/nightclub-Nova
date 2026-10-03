@@ -21,6 +21,7 @@
         <div id="muteButton" class="squareButton" title="Sound on/off">🔊</div>
         <div id="zoomIn" class="squareButton" title="Zoom in">＋</div>
         <div id="zoomOut" class="squareButton" title="Zoom out">－</div>
+        <div id="restartButton" class="squareButton" title="Start a brand-new club">↺</div>
       </div>
     </div>
   </div>
@@ -37,6 +38,18 @@
     <div class="nightBar"><div id="nightClockFill"></div></div>
   </div>
   <div id="openButton" class="openButton" style="display:none" title="Start the next night">🚪 Open the doors</div>
+
+  <!-- Asked before starting over (see restartClub()) -->
+  <div id="restartConfirm" class="overlay">
+    <div class="summaryCard">
+      <div class="summaryTitle">Start a new club?</div>
+      <div class="summaryVerdict">Your club, money, fans and nights are all wiped, and you start again from Night 1 with $700.</div>
+      <div class="summaryButtons">
+        <div id="restartYes" class="summaryButton danger">Yes, start over</div>
+        <div id="restartNo" class="summaryButton later">Keep my club</div>
+      </div>
+    </div>
+  </div>
 
   <!-- End-of-night results -->
   <div id="nightSummary">

@@ -521,6 +521,23 @@ check('closing time sends everyone home and shows the summary', nights.closing &
 check('between nights the music and wages stop', nights.quiet && nights.noWages, JSON.stringify(nights));
 check('opening the doors starts the next night, and it is saved', nights.openButton && nights.next && nights.saved, JSON.stringify(nights));
 
+// Restart: asks first, then wipes the save and starts a fresh club.
+const restart = await page.evaluate(() => {
+  document.getElementById('restartButton').click();
+  const asked = document.getElementById('restartConfirm').classList.contains('open');
+  document.getElementById('restartNo').click();
+  const kept = !document.getElementById('restartConfirm').classList.contains('open') && !!localStorage.getItem('clubNovaSave_v2');
+  return { asked, kept };
+});
+await page.evaluate(() => document.getElementById('restartYes').click());
+await page.waitForTimeout(500);
+await waitForScene();
+const fresh = await page.evaluate(() => {
+  const s = window.__clubNova.scene.getScene('club');
+  return { cash: s.cash, fans: s.fans, night: s.night };
+});
+check('restart asks first, then starts a brand-new club', restart.asked && restart.kept && fresh.cash === 700 && fresh.fans === 0 && fresh.night === 1, JSON.stringify({ ...restart, ...fresh }));
+
 check('no errors in the page', errors.length === 0, errors.join(' | '));
 
 await browser.close();

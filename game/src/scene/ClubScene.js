@@ -235,6 +235,7 @@ export class ClubScene extends Phaser.Scene {
     }
     this.setupBoost();
     this.setupNights(this.savedNight);
+    this.setupRestart();
 
     // Outline layer for the "which tiles will this actually occupy" marker
     // — always drawn on top of props/ghost so a tall sprite's artwork can

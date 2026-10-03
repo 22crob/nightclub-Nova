@@ -42,6 +42,7 @@ export class SaveMixin {
   }
 
   saveGame() {
+    if (this.restarting) return; // don't write the old club back on the way out
     try {
       localStorage.setItem(SAVE_KEY, JSON.stringify(this.serializeState()));
     } catch (e) {
@@ -49,6 +50,24 @@ export class SaveMixin {
       // best-effort and should never break gameplay if it fails.
       console.error('[Club Nova] save failed:', e);
     }
+  }
+
+  // Wipes the save and reloads into a brand-new club, after asking (see
+  // #restartConfirm in index.html).
+  setupRestart() {
+    const box = document.getElementById('restartConfirm');
+    if (!box) return;
+    document.getElementById('restartButton')?.addEventListener('click', () => box.classList.add('open'));
+    document.getElementById('restartNo')?.addEventListener('click', () => box.classList.remove('open'));
+    document.getElementById('restartYes')?.addEventListener('click', () => this.restartClub());
+  }
+
+  restartClub() {
+    this.restarting = true;
+    try {
+      localStorage.removeItem(SAVE_KEY);
+    } catch (e) { /* storage blocked: the reload just starts as usual */ }
+    window.location.reload();
   }
 
   loadGame() {
