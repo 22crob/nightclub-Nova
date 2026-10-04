@@ -96,7 +96,7 @@ await page.evaluate(() => { const s = window.__clubNova.scene.getScene('club'); 
 const tabs = await page.$$eval('.dockTab', (els) => els.map((e) => e.dataset.tipName));
 await page.click('#tabDecor');
 const storeTabs = await page.$$eval('.storeTab', (els) => els.map((e) => e.dataset.tipName));
-check('the dock has Decorations, Inventory, Edit, Expand and VIP tabs; the store has 7 categories', tabs.join() === 'Decorations,Inventory,Edit,Expand,VIPs' && storeTabs.join() === 'Bars,Seating,Floors,Wallpaper,Decorations,DJ Booths,Staff', `${tabs.join(' / ')} | ${storeTabs.join(' / ')}`);
+check('the dock has Decorations, Inventory, Edit, Staff, Expand and VIP tabs; the store has 6 categories', tabs.join() === 'Decorations,Inventory,Edit,Staff,Expand,VIPs' && storeTabs.join() === 'Bars,Seating,Floors,Wallpaper,Decorations,DJ Booths', `${tabs.join(' / ')} | ${storeTabs.join(' / ')}`);
 check('bar shows its real sprite icon', await page.locator('.propButton .icon').first().evaluate((el) => el.style.backgroundImage.includes('data:image/png')));
 // Floors: dance floors and regular floors in one category, the tip says which.
 await page.click('.storeTab[data-tip-name="Floors"]');
@@ -182,7 +182,8 @@ check('R rotates the DJ booth', after === (before + 90) % 360, `${before} -> ${a
 const openingRate = await page.evaluate(() => window.__clubNova.scene.getScene('club').totalFanRate());
 check('the DJ booth earns fans from the start', openingRate > 0, `rate ${openingRate}`);
 await page.keyboard.press('Escape');
-await page.click('.storeTab[data-tip-name="Staff"]');
+await page.evaluate(() => window.__clubNova.scene.getScene('club').setDockTab('inventory'));
+await page.click('#tabStaff');
 const staffRows = await page.locator('.staffSlot').count();
 check('Staff lists just the bar (the DJ is free)', staffRows === 1, `${staffRows} cards`);
 await page.locator('.staffSlot:not(.staffed)').first().click();
@@ -946,7 +947,7 @@ await page.click('#tabInventory');
 // Buttons are drawn icons with no words on them; hovering one pops up its
 // name and what it does.
 const icons = await page.evaluate(() => {
-  const ids = ['tabDecor', 'tabInventory', 'tabEdit', 'tabExpand', 'tabVip', 'boostButton', 'partyButton', 'songChange', 'songLike', 'tipsButton'];
+  const ids = ['tabDecor', 'tabInventory', 'tabEdit', 'tabStaff', 'tabExpand', 'tabVip', 'boostButton', 'partyButton', 'songChange', 'songLike', 'tipsButton'];
   const bare = ids.filter((id) => {
     const el = document.getElementById(id);
     const words = [...el.childNodes].filter((n) => n.nodeType === 3).map((n) => n.textContent.trim()).join('');
@@ -962,7 +963,7 @@ const hoverTip = await page.evaluate(() => {
   return { shown: !!t && t.classList.contains('show'), name: t?.querySelector('.tipName').textContent, text: t?.querySelector('.tipText').textContent };
 });
 await page.mouse.move(5, 400);
-check('buttons and shop tabs are icons with no words, each with a hover name', icons.bare.length === 0 && icons.tabs === 7 && icons.tabIcons === 7, JSON.stringify(icons));
+check('buttons and shop tabs are icons with no words, each with a hover name', icons.bare.length === 0 && icons.tabs === 6 && icons.tabIcons === 6, JSON.stringify(icons));
 check('hovering Drop the Bass pops up its name and what it does', hoverTip.shown && hoverTip.name === 'Drop the Bass!' && hoverTip.text.length > 10, JSON.stringify(hoverTip));
 
 check('no errors in the page', errors.length === 0, errors.join(' | '));

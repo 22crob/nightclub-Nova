@@ -9,7 +9,7 @@ import { fillIcons } from '../uiIcons.js';
 
 // The shop is a glossy panel docked along the bottom of the screen, like
 // Nightclub City's. Normally drawn tabs stand on its top edge
-// (Decorations, Inventory, Edit, Expand, VIPs) and the panel shows that
+// (Decorations, Inventory, Edit, Staff, Expand, VIPs) and the panel shows that
 // tab's cards. Decorations opens the store: the tabs make way for a row of
 // drawn categories, the items sit on the panel with their prices, and OK
 // goes back. Everything is a picture; names and descriptions are in the
@@ -21,7 +21,6 @@ const CATEGORIES = {
   Wallpaper: { icon: 'catWallpaper', text: 'Paper the walls, section by section.' },
   Decorations: { icon: 'catDecor', text: 'Plants, lights and statues to make the club fancier.' },
   'DJ Booths': { icon: 'catBooths', text: 'Upgrade your DJ booth. A better booth brings more fans.' },
-  Staff: { icon: 'catStaff', text: 'Hire a bartender for each long bar.' },
 };
 const STORE_CATEGORIES = Object.keys(CATEGORIES);
 
@@ -100,7 +99,7 @@ export class ShopMixin {
   }
 
   // Switches the dock to a tab: 'decor' (the store), 'inventory', 'edit',
-  // 'expand' or 'vip'.
+  // 'staff', 'expand' or 'vip'.
   setDockTab(tab) {
     if (tab !== 'decor') this.lastMainTab = tab;
     if (this.dockTab === 'edit' && tab !== 'edit' && this.selectedProp && this.holdingFromInventory) this.deselectProp();
@@ -122,6 +121,7 @@ export class ShopMixin {
     if (tab === 'decor') this.renderShopItems(this.activeShopCategory || STORE_CATEGORIES[0]);
     else if (tab === 'inventory') this.renderInventoryCards();
     else if (tab === 'edit') this.renderEditTools();
+    else if (tab === 'staff') { if (this.shopItemsEl) this.shopItemsEl.dataset.rendered = ''; this.renderStaffCard(); }
     else if (tab === 'expand') { if (this.shopItemsEl) this.shopItemsEl.dataset.rendered = ''; this.renderExpandCard(); }
     else if (tab === 'vip') this.renderVipCards();
   }
@@ -169,10 +169,6 @@ export class ShopMixin {
     this.shopItemsEl.dataset.rendered = '';
     this.shopButtons = {};
     this.shopCosts = {};
-    if (category === 'Staff') {
-      this.renderStaffCard();
-      return;
-    }
 
     const kinds = CATEGORIES[category]?.includes || [category];
     // In unlock order, so mixed categories (Floors) interleave by level.
@@ -235,7 +231,7 @@ export class ShopMixin {
   // plus the "holding" chip.
   updateShopUI() {
     if (this.dockTab === 'expand' && this.shopItemsEl) this.renderExpandCard();
-    if (this.dockTab === 'decor' && this.activeShopCategory === 'Staff' && this.shopItemsEl) this.renderStaffCard();
+    if (this.dockTab === 'staff' && this.shopItemsEl) this.renderStaffCard();
     if (this.dockTab === 'inventory' && this.shopButtons) {
       for (const key in this.shopButtons) this.shopButtons[key].classList.toggle('selected', key === this.selectedProp && !!this.holdingFromInventory);
     }

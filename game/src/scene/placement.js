@@ -246,7 +246,7 @@ export class PlacementMixin {
     this.updateUI();
     this.saveGame();
     const staffKind = def.staff && STAFF_TYPES[def.staff];
-    if (staffKind && !this.isWorked(record)) this.showToast(`Now hire a ${staffKind.label.toLowerCase()} for it: Decorations, then the bartender's shaker.`, 3500);
+    if (staffKind && !this.isWorked(record)) this.showToast(`Now hire a ${staffKind.label.toLowerCase()} for it in the Staff tab.`, 3500);
   }
 
   // Right-clicking a placed prop sells it back for a fraction of its fixed

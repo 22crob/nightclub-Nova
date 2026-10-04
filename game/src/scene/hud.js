@@ -70,7 +70,7 @@ export class HudMixin {
       if (party.unlockLevel === level) out.push({ name: party.label, kind: 'New party', emoji: party.emoji });
     }
     if (level > 1 && BARTENDERS.levels.includes(level)) {
-      out.push({ name: '+1 Bartender', kind: 'You can hire one more bartender (Store, then the shaker)', art: 'catStaff' });
+      out.push({ name: '+1 Bartender', kind: 'You can hire one more bartender in the Staff tab', art: 'catStaff' });
     }
     for (const tier of GRID_EXPANSIONS) {
       if (tier.unlockLevel === level) out.push({ name: `${tier.size}×${tier.size} club`, kind: 'Expand your club', art: 'tabExpand' });

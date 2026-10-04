@@ -520,7 +520,7 @@ export class StaffMixin {
 
   // --- Shop tab -----------------------------------------------------------
 
-  // The store's Staff category: a card per long bar with how many
+  // The dock's Staff tab: a card per long bar with how many
   // bartenders work it; click to hire one more (up to what your level
   // allows), ✕ to let one go. Details are in the hover tip.
   renderStaffCard() {
