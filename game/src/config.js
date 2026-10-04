@@ -52,15 +52,16 @@ export const ROOM_COLORS = {
   slabEdge: 0x3c3c45,
 };
 // The street outside at night (see scene/street.js). Distances are in tiles
-// out from the walls. The line stands lineOut tiles out from the left wall
-// (far enough that the wall doesn't hide it), from the door toward the front.
+// out from the walls. The line stands lineOut tiles out from the left wall,
+// from the door toward the front, where the wall hides about the bottom half
+// of each person (like Nightclub City's line).
 export const STREET = {
-  sidewalk: 6, road: 7,
+  sidewalk: 4.5, road: 7,
   pavement: 0x55535f, grout: 0x46444f, curb: 0x7a7884, asphalt: 0x1d1b24, laneLine: 0xc9a640,
   carpet: 0x8c1426, carpetEdge: 0xd4a53a, rope: 0xb0102a, brass: 0xd4a53a,
   lampPost: 0x2a2a33, lampGlow: 0xffd77a, lampEvery: 6,
   buildings: [0x2a2438, 0x262a3a, 0x30283a, 0x232433], windowLit: 0xf2c75c, windowDark: 0x16141e,
-  lineOut: 4.7, lineLength: 6, startInLine: 3, bouncerCharacter: 0,
+  lineOut: 3.1, lineLength: 6, startInLine: 3, bouncerCharacter: 0,
   msPerTile: 420, admitEveryMs: 1500, passerEveryMs: [1200, 3200],
 };
 

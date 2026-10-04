@@ -56,10 +56,12 @@ export class StreetMixin {
     this.streetRope = this.add.graphics();
     this.streetPassLayer = this.add.container(0, 0);
     this.streetLamps = this.add.graphics();
-    this.streetLayer.add([this.streetQueueLayer, this.streetRope, this.streetPassLayer, this.streetLamps]);
-    this.streetBackLayer = this.add.container(0, 0); // left and back sidewalks, under the walls
+    this.streetLayer.add([this.streetPassLayer, this.streetLamps]);
+    // The left and back sidewalks are behind the walls: drawn under them,
+    // so the wall hides people's legs, like Nightclub City's line.
+    this.streetBackLayer = this.add.container(0, 0);
     this.streetBackPassLayer = this.add.container(0, 0);
-    this.streetBackLayer.add(this.streetBackPassLayer);
+    this.streetBackLayer.add([this.streetRope, this.streetQueueLayer, this.streetBackPassLayer]);
   }
 
   // Ground: road, sidewalk, curb, lane markings, the red carpet, pools of
@@ -274,6 +276,7 @@ export class StreetMixin {
     const sp = this.streetSpots();
     const { sx, sy } = this.gridToScreen(sp.lineX, sp.door - 3);
     this.faceToward(person, sx, sy + DROP);
+    this.setPatronAnimation(person, 'idle'); // show the back-facing pose
   }
 
   makeStreetPerson(at, layer, character) {
@@ -364,7 +367,7 @@ export class StreetMixin {
   streetLeaver(character) {
     if (!this.hasCharacterSprites() || !this.streetPassLayer) return;
     const sp = this.streetSpots();
-    const person = this.makeStreetPerson(sp.exitFrom, this.streetPassLayer, character);
+    const person = this.makeStreetPerson(sp.exitFrom, this.streetBackPassLayer, character);
     this.streetWalkers.push(person);
     person.container.setAlpha(0);
     this.tweens.add({ targets: person.container, alpha: 1, duration: 500 });
@@ -383,7 +386,7 @@ export class StreetMixin {
       { front: true, from: [lo, sp.laneY], to: [hi, sp.laneY] }, // past the line
       { front: true, from: [lo, sp.frontY], to: [hi, sp.frontY] }, // front curb
       { front: true, from: [sp.rightX, lo], to: [sp.rightX, hi] }, // right sidewalk
-      { front: true, from: [sp.leftX, lo], to: [sp.leftX, hi] }, // left sidewalk, past the line
+      { front: false, from: [sp.leftX, lo], to: [sp.leftX, hi] }, // left sidewalk, past the line
       { front: false, from: [lo, sp.backY], to: [hi, sp.backY] }, // back sidewalk
     ];
     const r = routes[Math.floor(Math.random() * routes.length)];

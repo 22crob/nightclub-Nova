@@ -511,6 +511,8 @@ const street = await page.evaluate(() => {
   const s = window.__clubNova.scene.getScene('club');
   const before = s.patrons.length;
   const inLine = s.streetQueue.length;
+  const standing = s.streetQueue.filter((p) => p.arrived && !p.walking);
+  const facing = standing.length > 0 && standing.every((p) => p.container.patronDir === 'back');
   const front = s.streetQueue[0];
   if (front) { front.arrived = true; front.walking = false; front.slot = 0; }
   // Make room inside, and clear the doorway.
@@ -521,11 +523,13 @@ const street = await page.evaluate(() => {
   delete s.patronTileOccupied;
   const sp = s.streetSpots();
   const slot0 = sp.slot(0);
-  // Out on the left sidewalk, clear of the wall, starting at the door.
-  const outside = slot0.gx <= sp.t - 4 && Math.abs(slot0.gy - s.doorTile().gy) < 1 && sp.slot(1).gy > slot0.gy;
+  // Out on the left sidewalk behind the wall (which hides their legs),
+  // starting at the door, everyone facing it.
+  const outside = slot0.gx <= sp.t - 2 && Math.abs(slot0.gy - s.doorTile().gy) < 1 && sp.slot(1).gy > slot0.gy
+    && s.streetBackLayer.list.includes(s.streetQueueLayer) && facing;
   return { inLine, after: s.streetQueue.length, before, bouncer: !!s.streetBouncer, lamps: s.streetLamps.commandBuffer.length > 0, outside };
 });
-check('the line stands outside the left wall leading to the door, with a bouncer and lamps; the front goes in', street.inLine > 0 && street.after === street.inLine - 1 && street.bouncer && street.lamps && street.outside, JSON.stringify(street));
+check('the line stands behind the left wall facing the door, with a bouncer and lamps; the front goes in', street.inLine > 0 && street.after === street.inLine - 1 && street.bouncer && street.lamps && street.outside, JSON.stringify(street));
 
 // Guests have names; clicking one opens their card. A thirsty guest shows a
 // drink bubble. Clicking a bartender shows Bottoms Up!, which serves the
