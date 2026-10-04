@@ -184,30 +184,33 @@ export const PROP_TYPES = {
   dj: boothTier('dj', 'Club Booth', 250, 3, 'dj_club', boothClubSprite),
   neonBooth: boothTier('neonBooth', 'Neon Booth', 380, 5, 'dj_neon', boothNeonSprite),
   iceBooth: boothTier('iceBooth', 'Ice Booth', 550, 7, 'dj_ice', boothIceSprite),
-  // Regular floors, simple to fancy.
+  // Floors take turns unlocking, one a level: a regular floor on odd
+  // levels and a dance floor on even ones (the last two are both dance
+  // floors), simple to fancy, so they sit side by side in the shop.
+  // Regular floors:
   fpConcrete: paintTier('fpConcrete', 'Concrete', 3, 1, 'concrete'),
-  fpStone: paintTier('fpStone', 'Stone Tiles', 5, 1, 'stone'),
-  fpWood: paintTier('fpWood', 'Wood Planks', 6, 2, 'planks'),
-  fpRedCarpet: paintTier('fpRedCarpet', 'Red Carpet', 7, 2, 'redCarpet'),
-  fpPurpleCarpet: paintTier('fpPurpleCarpet', 'Purple Carpet', 9, 3, 'purpleCarpet'),
-  fpMarble: paintTier('fpMarble', 'Marble', 12, 4, 'marble'),
-  fpBlackGloss: paintTier('fpBlackGloss', 'Black Gloss', 15, 5, 'blackGloss'),
-  fpGoldMarble: paintTier('fpGoldMarble', 'Gold Marble', 20, 7, 'goldMarble'),
-  // Dance floors (src/floors.js, drawn in code): simple to fancy across the
-  // first ten levels, all with the same gameplay. Floors are the ONLY
+  fpStone: paintTier('fpStone', 'Stone Tiles', 5, 3, 'stone'),
+  fpWood: paintTier('fpWood', 'Wood Planks', 6, 5, 'planks'),
+  fpRedCarpet: paintTier('fpRedCarpet', 'Red Carpet', 7, 7, 'redCarpet'),
+  fpPurpleCarpet: paintTier('fpPurpleCarpet', 'Purple Carpet', 9, 9, 'purpleCarpet'),
+  fpMarble: paintTier('fpMarble', 'Marble', 12, 11, 'marble'),
+  fpBlackGloss: paintTier('fpBlackGloss', 'Black Gloss', 15, 13, 'blackGloss'),
+  fpGoldMarble: paintTier('fpGoldMarble', 'Gold Marble', 20, 15, 'goldMarble'),
+  // Dance floors (src/floors.js, drawn in code): simple to fancy, all with
+  // the same gameplay. Floors are the ONLY
   // category that grants patron capacity (see patronCapacity()); a
   // `capacity` field on a Bars/Booths/Decorations item is inert by design.
   // 'dance' and 'neonFloor' are the keys of the two original floors, kept
   // so older saves load them as Checker and Light-Up.
-  plainFloor: floorTier('plainFloor', 'Plain Floor', 20, 1, 'plain'),
-  dance: floorTier('dance', 'Checker Floor', 25, 1, 'checker'),
-  woodFloor: floorTier('woodFloor', 'Wood Floor', 35, 2, 'parquet'),
-  glowFloor: floorTier('glowFloor', 'Glow Floor', 55, 3, 'glow'),
-  neonFloor: floorTier('neonFloor', 'Light-Up Floor', 70, 4, 'lightUp'),
-  ringFloor: floorTier('ringFloor', 'Neon Rings', 90, 5, 'neonRings'),
-  waveFloor: floorTier('waveFloor', 'Color Wave', 110, 6, 'wave'),
-  rainbowFloor: floorTier('rainbowFloor', 'Rainbow Flow', 130, 8, 'rainbow'),
-  stepFloor: floorTier('stepFloor', 'Step Floor', 155, 10, 'step'),
+  plainFloor: floorTier('plainFloor', 'Plain Floor', 20, 2, 'plain'),
+  dance: floorTier('dance', 'Checker Floor', 25, 4, 'checker'),
+  woodFloor: floorTier('woodFloor', 'Wood Floor', 35, 6, 'parquet'),
+  glowFloor: floorTier('glowFloor', 'Glow Floor', 55, 8, 'glow'),
+  neonFloor: floorTier('neonFloor', 'Light-Up Floor', 70, 10, 'lightUp'),
+  ringFloor: floorTier('ringFloor', 'Neon Rings', 90, 12, 'neonRings'),
+  waveFloor: floorTier('waveFloor', 'Color Wave', 110, 14, 'wave'),
+  rainbowFloor: floorTier('rainbowFloor', 'Rainbow Flow', 130, 16, 'rainbow'),
+  stepFloor: floorTier('stepFloor', 'Step Floor', 155, 17, 'step'),
   // Seating, simple to fancy. 'table' and 'vipLounge' are the keys of the
   // original placeholder Table and VIP Lounge, kept for old saves.
   woodStool: seatTier('woodStool', 'Wood Stool', 40, 1, 'woodStool', 0.1),

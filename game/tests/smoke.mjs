@@ -97,6 +97,9 @@ check('bar shows its real sprite icon', await page.locator('.propButton .icon').
 await page.click('.storeTab[data-tip-name="Floors"]');
 const floorTips = await page.$$eval('#shopItems .propSlot', (els) => els.map((e) => e.dataset.tipText));
 check('dance floors and regular floors share one category, and the tip says which', floorTips.some((t) => /^Dance floor/.test(t)) && floorTips.some((t) => /^Regular floor/.test(t)) && floorTips.every((t) => /Luxury: \d+/.test(t)), floorTips.length + ' floors');
+// Floors unlock one a level, taking turns: regular, dance, regular, ...
+const floorOrder = await page.$$eval('#shopItems .propSlot', (els) => els.map((e) => /^Dance/.test(e.dataset.tipText) ? 'D' : 'R').join(''));
+check('floors alternate regular and dance floors, one per level', floorOrder === 'RDRDRDRDRDRDRDRDD', floorOrder);
 // Clicking a card picks the item up; clicking it again puts it down.
 await page.click('.storeTab[data-tip-name="Seating"]');
 await page.locator('.propSlot').first().click();
@@ -423,7 +426,7 @@ check('the line steps up when someone is served', queue.before && queue.before[0
 await page.evaluate(() => {
   const s = window.__clubNova.scene.getScene('club');
   s.cash += 500;
-  s.selectProp('fpStone');
+  s.selectProp('fpConcrete');
   const paint = s.paintFloor.bind(s);
   s.paintCosts = [];
   s.paintFloor = (gx, gy) => { const before = s.cash; const done = paint(gx, gy); if (done) s.paintCosts.push(before - s.cash); return done; };
@@ -445,8 +448,8 @@ const paint = await page.evaluate(() => {
   s.deselectProp();
   return r;
 });
-check('dragging paints a stroke of floor ($5 a tile)', paint.a === 'fpStone' && paint.b === 'fpStone' && paint.costs.length >= 2 && paint.costs.every((c) => c === 5), JSON.stringify(paint));
-check('painted floor is saved, and isn\'t a dance floor', paint.saved === 'fpStone' && !paint.dance, JSON.stringify(paint));
+check('dragging paints a stroke of floor ($3 a tile)', paint.a === 'fpConcrete' && paint.b === 'fpConcrete' && paint.costs.length >= 2 && paint.costs.every((c) => c === 3), JSON.stringify(paint));
+check('painted floor is saved, and isn\'t a dance floor', paint.saved === 'fpConcrete' && !paint.dance, JSON.stringify(paint));
 
 // Seating: every piece has its art, and a patron can sit on a couch (drawn
 // on top of it when facing the camera, else between its two layers), feel better for it, and get up again.

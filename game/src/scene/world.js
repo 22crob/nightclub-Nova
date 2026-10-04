@@ -274,7 +274,7 @@ export class WorldMixin {
     const bottom = (this.gridSize - 1) * TILE_H + TILE_H / 2 + FLOOR_SLAB_DEPTH;
     const halfWidth = (this.gridSize + WALL_THICKNESS) * TILE_W / 2;
     const areaTop = 110; // below the profile and cash
-    const areaBottom = this.scale.height - 165; // above the shop dock
+    const areaBottom = this.scale.height - 200; // above the shop dock
     const fit = Math.min((areaBottom - areaTop) / (bottom - top), (this.scale.width - 40) / (2 * halfWidth));
     const zoom = Phaser.Math.Clamp(Math.min(ZOOM_DEFAULT, fit), ZOOM_MIN, ZOOM_MAX);
     this.world.setScale(zoom);

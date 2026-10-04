@@ -173,7 +173,9 @@ export class ShopMixin {
     }
 
     const kinds = CATEGORIES[category]?.includes || [category];
-    const keysInCategory = Object.keys(PROP_TYPES).filter((k) => kinds.includes(PROP_TYPES[k].category));
+    // In unlock order, so mixed categories (Floors) interleave by level.
+    const keysInCategory = Object.keys(PROP_TYPES).filter((k) => kinds.includes(PROP_TYPES[k].category))
+      .sort((a, b) => (PROP_TYPES[a].unlockLevel || 1) - (PROP_TYPES[b].unlockLevel || 1));
     for (const key of keysInCategory) {
       const def = PROP_TYPES[key];
       const lines = [];
