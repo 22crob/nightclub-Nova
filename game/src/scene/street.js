@@ -247,7 +247,8 @@ export class StreetMixin {
 
   // Someone walks up the street to join the line, if it isn't full. With
   // `already`, they're standing in line from the start.
-  streetArrival(already = false) {
+  // `info` marks a party guest ({ partyGuest, celeb }; see parties.js).
+  streetArrival(already = false, info = null) {
     if (!this.hasCharacterSprites() || this.streetQueue.length >= this.streetSpots().len) {
       if (!this.hasCharacterSprites()) this.trySpawnPatron();
       return;
@@ -256,9 +257,11 @@ export class StreetMixin {
     const k = this.streetQueue.length;
     // New arrivals walk up the left sidewalk from the front of the block.
     const start = already ? sp.slot(k) : { gx: sp.leftX, gy: sp.laneEnds[1] };
-    const vip = already ? null : this.pickReturningVip(); // now and then a regular comes back
+    const vip = already || info ? null : this.pickReturningVip(); // now and then a regular comes back
     const person = this.makeStreetPerson(start, this.streetQueueLayer, vip ? vip.character : undefined);
     person.vip = vip;
+    person.info = info;
+    if (info && info.celeb) this.addStarIcon(person.container); // a celebrity in the line
     person.slot = k;
     this.streetQueue.push(person);
     if (already) {
@@ -346,11 +349,20 @@ export class StreetMixin {
   // club has room, and tops up the line now and then.
   admitFromLine() {
     if (!this.doorsOpen()) return; // the line waits for the doors to open
+    this.callPartyCrowd(); // party guests keep coming while there's room in the line
+    // At a party the bouncer lets people in a few at a time.
+    const now = this.time.now;
+    if (this.currentParty() && now < (this.lastAdmitAt || 0) + STREET.partyAdmitMs) return;
     const front = this.streetQueue[0];
     const { gx, gy } = this.doorTile();
     const roomInside = this.patrons.length < this.patronCapacity() && !this.isBlockingProp(gx, gy) && !this.patronTileOccupied(gx, gy);
     if (!front || !front.arrived || front.walking || front.slot !== 0 || !roomInside) return;
     this.streetQueue.shift();
+    this.lastAdmitAt = now;
+    if (this.streetBouncer) {
+      const b = this.streetBouncer.container;
+      this.floatText(b.x, b.y - 92, '👍', '#ffffff');
+    }
     this.streetQueue.forEach((p) => { if (p.arrived) this.walkStreetQueue(p); });
     const sp = this.streetSpots();
     // Up past the bouncer and in at the door.
@@ -358,7 +370,7 @@ export class StreetMixin {
     this.streetWalkTo(front, [{ gx: sp.lineX, gy: sp.door }, sp.enterTo], () => {
       const character = front.container.patronCharacter;
       front.container.destroy();
-      this.trySpawnPatron(character, front.vip);
+      this.trySpawnPatron(character, front.vip, front.info);
     });
   }
 

@@ -746,11 +746,14 @@ check('your level sets how many bartenders you can hire (1, then 2 at level 4, 3
 check('a long bar can take more bartenders, spread along it, and let one go', longBar.second && longBar.letGo, JSON.stringify(longBar));
 check('a long bar keeps its bartender when the unit they stood at is sold', longBar.split && longBar.kept, JSON.stringify(longBar));
 
-// Throw a Party: the picker lists every party, a House Party costs $60 and
-// lets more guests in with bigger tips, one at a time, with a banner
-// counting down; it ends after 3 minutes.
+// Throw a Party: the picker lists every party; a House Party costs $60,
+// counts down first, then a crowd (with maybe a celebrity) lines up outside
+// and is let in a few at a time; it lets more guests in with bigger tips;
+// one at a time; after 3 minutes its guests drift home and it earns fans.
 const party = await page.evaluate(() => {
   const s = window.__clubNova.scene.getScene('club');
+  const later = s.time.delayedCall.bind(s.time);
+  s.time.delayedCall = (ms, fn) => fn(); // the crowd's staggered arrival, straight away
   const labelAtStart = document.getElementById('partyButton').dataset.tipName;
   s.cash = Math.max(s.cash, 1000);
   const cap0 = s.patronCapacity();
@@ -762,22 +765,60 @@ const party = await page.evaluate(() => {
   const out = {
     rows, locked,
     paid: cash0 - s.cash,
-    capacity: s.patronCapacity() - cap0,
-    tips: s.partyEffect('tips', 1),
     closed: !document.getElementById('partyPicker').classList.contains('open'),
-    button: document.getElementById('partyButton').dataset.state,
     labelAtStart,
-    banner: document.getElementById('partyBanner').classList.contains('open') && /House Party/.test(document.getElementById('bannerName').textContent) && /Ends in: \d+:\d\d/.test(document.getElementById('bannerLeft').textContent),
+    countdown: s.partyPhase === 'countdown' && s.partyEffect('tips', 1) === 1 && /Starts in: 0:\d\d/.test(document.getElementById('bannerLeft').textContent),
   };
+  // The countdown ends: the party starts and the crowd turns up.
+  s.streetQueue.slice().forEach((p) => p.container.destroy());
+  s.streetQueue.length = 0;
+  s.partyStartsAt = s.time.now - 1;
+  s.updatePartyButton();
+  out.running = s.partyPhase === 'running';
+  out.capacity = s.patronCapacity() - cap0;
+  out.tips = s.partyEffect('tips', 1);
+  out.button = document.getElementById('partyButton').dataset.state;
+  out.banner = document.getElementById('partyBanner').classList.contains('open') && /House Party/.test(document.getElementById('bannerName').textContent) && /Ends in: \d+:\d\d/.test(document.getElementById('bannerLeft').textContent);
+  out.crowdInLine = s.streetQueue.filter((p) => p.info && p.info.partyGuest).length;
+  out.crowdWaiting = (s.partyCrowd || []).length;
+  // The bouncer lets them in a few at a time, not all at once.
+  s.streetQueue.forEach((p) => { p.arrived = true; p.walking = false; });
+  s.streetQueue[0].slot = 0;
+  const cap = s.patronCapacity;
+  s.patronCapacity = () => 99;
+  const occ = s.patronTileOccupied;
+  s.patronTileOccupied = () => false;
+  const inLine = s.streetQueue.length;
+  s.lastAdmitAt = 0;
+  s.admitFromLine();
+  s.admitFromLine(); // too soon for the next one
+  out.gradual = s.streetQueue.length >= inLine - 1;
+  s.patronCapacity = cap;
+  s.patronTileOccupied = occ;
+  // A celebrity wears a star and gets a welcome.
+  const guest = s.patrons.find((p) => !p.leaving && !p.gone);
+  if (guest) {
+    s.notePartyGuest(guest, { partyGuest: true, celeb: 'Nova Starr' });
+    out.celeb = guest.celeb && guest.name === 'Nova Starr' && !!guest.container.starIcon && s.vipTipFactor(guest) >= 3;
+  }
   out.second = s.throwParty('hiphop');
-  s.partyStartedAt -= 3 * 60 * 1000 + 1000; // time's up
+  // Time's up: party guests head home over the next minute; fans for the party.
+  const fans = s.fans;
+  if (guest) guest.despawnAt = s.time.now + 10 * 60000;
+  s.partyStartedAt -= 3 * 60 * 1000 + 1000;
   s.updatePartyButton();
   out.ended = s.party === null && s.partyEffect('capacity', 0) === 0 && !document.getElementById('partyBanner').classList.contains('open');
+  out.drift = !guest || (guest.despawnAt <= s.time.now + 71000 && guest.despawnAt > s.time.now);
+  out.fans = s.fans >= fans;
+  s.time.delayedCall = later;
   return out;
 });
 check('the party picker lists four parties, the fancy ones locked at first', party.labelAtStart === 'Throw a Party' && party.rows === 4 && party.locked >= 1, JSON.stringify(party));
-check('a House Party costs $60, lets 2 more guests in and raises tips', party.paid === 60 && party.capacity === 2 && party.tips > 1 && party.closed, JSON.stringify(party));
-check('one party at a time, with a countdown banner, over after 3 minutes', party.banner && party.second === false && party.button === 'active' && party.ended, JSON.stringify(party));
+check('a House Party costs $60 and counts down before it starts', party.paid === 60 && party.closed && party.countdown, JSON.stringify(party));
+check('when it starts, a crowd lines up outside and gets let in a few at a time', party.running && party.crowdInLine > 0 && party.crowdInLine + party.crowdWaiting >= 6 && party.gradual, JSON.stringify(party));
+check('during the party 2 more guests fit and tips are higher, with a timer banner', party.capacity === 2 && party.tips > 1 && party.banner && party.button === 'active', JSON.stringify(party));
+check('celebrities wear a star and tip big', party.celeb, JSON.stringify(party));
+check('one party at a time; at the end its guests drift home over a minute and it earns fans', party.second === false && party.ended && party.drift && party.fans, JSON.stringify(party));
 
 // Guest visits: 4-8 minutes, each guest a type with their own tastes,
 // moving through activities (dance 30-90 s, drink 20-45 s, chat with

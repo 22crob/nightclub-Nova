@@ -40,7 +40,7 @@ export class PatronsMixin {
 
   // Brings a patron in at the door (`character`: their look, from the line
   // outside).
-  trySpawnPatron(character, vip) {
+  trySpawnPatron(character, vip, info) {
     if (!this.doorsOpen()) return; // last call or closed
     if (this.patrons.length >= this.patronCapacity()) return;
     const { gx, gy } = this.doorTile();
@@ -79,6 +79,7 @@ export class PatronsMixin {
     this.startVisit(patron); // their visit length and personality (see activities.js)
     this.patrons.push(patron);
     if (vip) this.welcomeVip(patron, vip);
+    if (info) this.notePartyGuest(patron, info); // came for the party (maybe a celebrity)
     this.chargeCover(patron);
     this.setPatronDepth(patron, gx + gy);
     this.updateUI(); // refresh the patrons-on-floor readout right away, not on the next tip/tick

@@ -5,7 +5,7 @@
 // shows them with how many times they've been.
 // Mixed into ClubScene (see ClubScene.js); `this` is the scene.
 import { PATRON_META, PATRON_SHEETS } from '../assets.js';
-import { VIP } from '../config.js';
+import { CELEB, VIP } from '../config.js';
 import { SFX } from '../sfx.js';
 
 export class VipsMixin {
@@ -46,8 +46,9 @@ export class VipsMixin {
     this.saveGame();
   }
 
+  // VIPs and celebrities tip extra.
   vipTipFactor(patron) {
-    return patron.vip ? VIP.tipMultiplier : 1;
+    return (patron.vip ? VIP.tipMultiplier : 1) * (patron.celeb ? CELEB.tip : 1);
   }
 
   // The dock's VIP tab: a card per regular, their face and how many times
