@@ -304,20 +304,38 @@ const upgrade = await page.evaluate(() => {
 check('the DJ booth can\'t be sold', upgrade.kept, JSON.stringify(upgrade));
 check('upgrading the booth swaps it in place ($215 - $90)', upgrade.ok && upgrade.type === 'proBooth' && upgrade.anchor === '6,1' && upgrade.dj && upgrade.paid === 125 && upgrade.booths === 1, JSON.stringify(upgrade));
 
-// Drop the Bass: a 90-second boost, then a cooldown.
+// Bass Boost and Drink Rush: each runs for a while, then needs to recharge.
+// Starting one sends a share of the crowd off (one by one) to dance or to
+// the bars, and makes dancing / drinking much more likely meanwhile.
 const boost = await page.evaluate(() => {
   const s = window.__clubNova.scene.getScene('club');
+  // Run the staggered "off they go" calls straight away for the check.
+  const later = s.time.delayedCall.bind(s.time);
+  s.time.delayedCall = (ms, fn) => fn();
+  const guests = s.patrons.filter((p) => !p.leaving && !p.gone && !p.queue && !p.stoolBar);
+  guests.forEach((p) => { p.activity = { kind: 'wander', until: s.time.now + 60000 }; p.thirstyAt = s.time.now + 1e6; });
   const started = s.startBoost();
-  const during = { boosted: s.isBoosted(), factor: s.boostFactor(), button: document.getElementById('boostButton').dataset.state, label: document.getElementById('boostLabel').textContent };
+  const during = { boosted: s.isBoosted(), factor: s.boostFactor(), danceWeight: s.boostDanceFactor(), button: document.getElementById('boostButton').dataset.state, label: document.getElementById('boostLabel').textContent };
+  during.rallied = guests.length === 0 || guests.some((p) => p.activity === null);
   const again = s.startBoost();
   s.boostUntil = s.time.now - 1; // skip to the end
   s.tickBoost();
   const afterEnd = { boosted: s.isBoosted(), button: document.getElementById('boostButton').dataset.state, canBoost: s.canBoost() };
   s.boostReadyAt = 0; s.tickBoost(); // skip the cooldown so later checks aren't affected
-  return { started, during, again, afterEnd };
+  guests.forEach((p) => { p.activity = { kind: 'wander', until: s.time.now + 60000 }; p.thirstyAt = s.time.now + 1e6; });
+  const rush = { started: s.startRush(), rushing: s.isRushing(), drinkWeight: s.rushDrinkFactor(), button: document.getElementById('rushButton').dataset.state };
+  rush.thirsty = guests.length === 0 || guests.some((p) => p.thirstyAt <= s.time.now);
+  rush.again = s.startRush();
+  s.rushUntil = s.time.now - 1;
+  s.tickBoost();
+  rush.cooldown = document.getElementById('rushButton').dataset.state === 'cooldown' && !s.canRush();
+  s.rushReadyAt = 0; s.tickBoost();
+  s.time.delayedCall = later;
+  return { started, during, again, afterEnd, rush };
 });
-check('Drop the Bass starts a 90-second boost', boost.started && boost.during.boosted && boost.during.factor === 2 && boost.during.button === 'active' && /1:(30|29)/.test(boost.during.label), JSON.stringify(boost.during));
+check('Bass Boost runs for a minute, more guests want to dance, and some head for the floor', boost.started && boost.during.boosted && boost.during.factor > 1 && boost.during.danceWeight > 1 && boost.during.rallied && boost.during.button === 'active' && /1:00|0:59/.test(boost.during.label), JSON.stringify(boost.during));
 check('the boost can\'t be stacked, and has a cooldown after', !boost.again && !boost.afterEnd.boosted && boost.afterEnd.button === 'cooldown' && !boost.afterEnd.canBoost, JSON.stringify(boost.afterEnd));
+check('Drink Rush makes guests want a drink, then recharges', boost.rush.started && boost.rush.rushing && boost.rush.drinkWeight > 1 && boost.rush.thirsty && boost.rush.button === 'active' && !boost.rush.again && boost.rush.cooldown, JSON.stringify(boost.rush));
 
 // Zoom buttons change the zoom and stay within limits.
 const zoom0 = await page.evaluate(() => window.__clubNova.scene.getScene('club').world.scaleX);
@@ -1033,7 +1051,7 @@ await page.click('#tabInventory');
 // Buttons are drawn icons with no words on them; hovering one pops up its
 // name and what it does.
 const icons = await page.evaluate(() => {
-  const ids = ['tabDecor', 'tabInventory', 'tabEdit', 'tabStaff', 'tabExpand', 'tabVip', 'boostButton', 'partyButton', 'songChange', 'songLike', 'tipsButton'];
+  const ids = ['tabDecor', 'tabInventory', 'tabEdit', 'tabStaff', 'tabExpand', 'tabVip', 'boostButton', 'rushButton', 'partyButton', 'songChange', 'songLike', 'tipsButton'];
   const bare = ids.filter((id) => {
     const el = document.getElementById(id);
     const words = [...el.childNodes].filter((n) => n.nodeType === 3).map((n) => n.textContent.trim()).join('');
@@ -1050,7 +1068,7 @@ const hoverTip = await page.evaluate(() => {
 });
 await page.mouse.move(5, 400);
 check('buttons and shop tabs are icons with no words, each with a hover name', icons.bare.length === 0 && icons.tabs === 6 && icons.tabIcons === 6, JSON.stringify(icons));
-check('hovering Drop the Bass pops up its name and what it does', hoverTip.shown && hoverTip.name === 'Drop the Bass!' && hoverTip.text.length > 10, JSON.stringify(hoverTip));
+check('hovering Bass Boost pops up its name and what it does', hoverTip.shown && hoverTip.name === 'Bass Boost!' && hoverTip.text.length > 10, JSON.stringify(hoverTip));
 
 check('no errors in the page', errors.length === 0, errors.join(' | '));
 

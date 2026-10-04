@@ -10,7 +10,7 @@ const CYAN = '#5fe3ff';
 const INK = '#0a0d14';
 
 const ICONS = {
-  // Drop the Bass: a speaker with sound waves.
+  // Bass Boost: a speaker with sound waves.
   bass: `<rect x="2.5" y="4" width="11" height="16" rx="2.2" fill="${W}"/>
     <circle cx="8" cy="14.2" r="3.4" fill="${INK}"/><circle cx="8" cy="14.2" r="1.4" fill="${PINK}"/>
     <circle cx="8" cy="7.8" r="1.5" fill="${INK}"/>

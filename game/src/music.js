@@ -1,6 +1,6 @@
 // The club's music: a simple house beat made with Web Audio (no audio
 // files, so the game stays one self-contained page). It plays while the DJ
-// does, which is always once the club is open. During a Drop the Bass
+// does, which is always once the club is open. During a Bass Boost
 // boost (see boost.js) a low-shelf filter turns the bass way up and a sub
 // bass joins in.
 //

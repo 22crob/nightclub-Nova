@@ -200,11 +200,15 @@ export const BAR_QUEUE_LENGTH = 4;
 // another bar or join a long bar that already has one.
 export const BARTENDERS = { levels: [1, 4, 7, 11, 15] };
 
-// Drop the Bass (see boost.js): a free party boost with a cooldown. During
-// it, tips and thirst run `speedUp` times faster, tips are `tipMultiplier`
-// times bigger, and patrons head for the dance floor `danceChance` of the
-// time.
-export const BOOST = { durationMs: 90000, cooldownMs: 300000, speedUp: 2, tipMultiplier: 2, danceChance: 0.75 };
+// Bass Boost (see boost.js): for durationMs, guests are danceWeight times
+// as keen to dance, dancers tip `speedUp` times as often and `tipMultiplier`
+// times as much, and about joinShare of the crowd heads for the dance floor
+// over the first few seconds (staggerMs). Then cooldownMs before it's ready.
+export const BOOST = { durationMs: 60000, cooldownMs: 180000, speedUp: 1.5, tipMultiplier: 1.5, danceChance: 0.75, danceWeight: 5, joinShare: 0.6, staggerMs: [300, 5000] };
+// Drink Rush (see scene/boost.js): for durationMs, guests are drinkWeight
+// times as keen on a drink, and about joinShare of them head for the bars
+// over the first few seconds (staggerMs). Then cooldownMs before it's ready.
+export const RUSH = { durationMs: 45000, cooldownMs: 180000, drinkWeight: 5, joinShare: 0.55, staggerMs: [300, 5000] };
 
 // Mood lighting (see lighting.js): how much the floor and walls are dimmed,
 // and the coloured glow under lights. The owner found the glows too strong
