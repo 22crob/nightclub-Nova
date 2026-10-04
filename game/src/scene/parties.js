@@ -7,6 +7,7 @@
 // Mixed into ClubScene (see ClubScene.js); `this` is the scene.
 import { NIGHT, PARTIES } from '../config.js';
 import { SFX } from '../sfx.js';
+import { refreshTip } from '../tooltips.js';
 
 export class PartiesMixin {
   // Tonight's party, or null.
@@ -63,17 +64,21 @@ export class PartiesMixin {
     const button = this.partyButton;
     if (!button) return;
     const party = this.currentParty();
+    // Icon only; the state is in the hover tip.
     let state = 'ready';
-    let text = 'Throw a Party';
+    let text = 'Pay for a themed party tonight: more guests, bigger tips, more fans.';
     if (party) {
       state = 'active';
-      text = `${party.label} tonight`;
+      text = `${party.emoji} ${party.label} is on tonight, until closing time.`;
     } else if (!this.doorsOpen()) {
       state = 'off';
-      text = this.clubOpen() ? 'Party: too late tonight' : 'Party: club closed';
+      text = this.clubOpen() ? 'Too late tonight: parties start while the doors are open.' : 'Club closed. Open the doors for the next night first.';
     }
     if (button.dataset.state !== state) button.dataset.state = state;
-    if (this.partyLabel.textContent !== text) this.partyLabel.textContent = text;
+    if (button.dataset.tipText !== text) {
+      button.dataset.tipText = text;
+      refreshTip(button);
+    }
     this.updatePartyBanner();
   }
 
@@ -86,7 +91,6 @@ export class PartiesMixin {
     const party = this.currentParty();
     const on = !!party && (this.nightPhase === 'open' || this.nightPhase === 'lastCall');
     banner.classList.toggle('open', on);
-    if (this.partyButton) this.partyButton.style.display = on ? 'none' : '';
     if (!on) return;
     const end = this.nightStartedAt + NIGHT.lengthMs;
     const left = Math.max(0, end - this.time.now);

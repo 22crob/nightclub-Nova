@@ -2,6 +2,11 @@
 import Phaser from 'phaser';
 import './style.css';
 import { ClubScene } from './scene/ClubScene.js';
+import { fillIcons } from './uiIcons.js';
+import { setupTooltips } from './tooltips.js';
+
+fillIcons();
+setupTooltips();
 
 const config = {
   type: Phaser.AUTO,

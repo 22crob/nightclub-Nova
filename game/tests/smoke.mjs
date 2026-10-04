@@ -87,12 +87,12 @@ await page.evaluate(() => { const s = window.__clubNova.scene.getScene('club'); 
 
 // Shop opens with every tab.
 await page.click('#shopToggle');
-const tabs = await page.locator('.shopTab').allTextContents();
+const tabs = await page.$$eval('.shopTab', (els) => els.map((e) => e.dataset.tipName));
 check('shop opens with 9 tabs', tabs.length === 9 && tabs.includes('Staff'), tabs.join(' / '));
 check('bar shows its real sprite icon', await page.locator('.propButton .icon').first().evaluate((el) => el.style.backgroundImage.includes('data:image/png')));
 // Picking an item keeps the shop open (build mode); OK puts it away and
 // puts the item down.
-await page.click('.shopTab:has-text("Seating")');
+await page.click('.shopTab[data-tip-name="Seating"]');
 await page.locator('.propButton').first().click();
 const picked = await page.evaluate(() => ({ open: document.getElementById('shopOverlay').classList.contains('open'), held: window.__clubNova.scene.getScene('club').selectedProp }));
 await page.click('#shopClose');
@@ -685,7 +685,7 @@ check('a long bar keeps its bartender when the unit they stood at is sold', long
 // the clock.
 const party = await page.evaluate(() => {
   const s = window.__clubNova.scene.getScene('club');
-  const labelAtStart = document.getElementById('partyLabel').textContent;
+  const labelAtStart = document.getElementById('partyButton').dataset.tipName;
   s.cash = Math.max(s.cash, 1000);
   const cap0 = s.patronCapacity();
   const cash0 = s.cash;
@@ -748,7 +748,7 @@ const nights = await page.evaluate(async () => {
   out.stars = s.lastNight.stars;
   out.partyRow = document.getElementById('summaryParty').textContent;
   out.partyOver = s.party === null && s.partyEffect('capacity', 0) === 0;
-  out.quiet = !s.musicPlaying() && document.getElementById('boostLabel').textContent === 'Club closed';
+  out.quiet = !s.musicPlaying() && /Club closed/.test(document.getElementById('boostButton').dataset.tipText);
   const cash = s.cash;
   s.payWages();
   out.noWages = s.cash === cash;
@@ -782,6 +782,28 @@ const fresh = await page.evaluate(() => {
   return { cash: s.cash, fans: s.fans, night: s.night };
 });
 check('restart asks first, then starts a brand-new club', restart.asked && restart.kept && fresh.cash === 700 && fresh.fans === 0 && fresh.night === 1, JSON.stringify({ ...restart, ...fresh }));
+
+// Buttons are drawn icons with no words on them; hovering one pops up its
+// name and what it does.
+const icons = await page.evaluate(() => {
+  const ids = ['shopToggle', 'decorateButton', 'expandButton', 'staffButton', 'vipButton', 'boostButton', 'partyButton', 'songChange', 'songLike', 'tipsButton'];
+  const bare = ids.filter((id) => {
+    const el = document.getElementById(id);
+    const words = [...el.childNodes].filter((n) => n.nodeType === 3).map((n) => n.textContent.trim()).join('');
+    return !el.querySelector('svg.uiGlyph') || words !== '' || !el.dataset.tipName;
+  });
+  const tabs = [...document.querySelectorAll('.shopTab')];
+  return { bare, tabs: tabs.length, tabIcons: tabs.filter((t) => t.querySelector('svg.uiGlyph') && t.dataset.tipName && !t.textContent.trim()).length };
+});
+await page.hover('#boostButton');
+await page.waitForTimeout(200);
+const hoverTip = await page.evaluate(() => {
+  const t = document.getElementById('hoverTip');
+  return { shown: !!t && t.classList.contains('show'), name: t?.querySelector('.tipName').textContent, text: t?.querySelector('.tipText').textContent };
+});
+await page.mouse.move(5, 400);
+check('buttons and shop tabs are icons with no words, each with a hover name', icons.bare.length === 0 && icons.tabs === 9 && icons.tabIcons === 9, JSON.stringify(icons));
+check('hovering Drop the Bass pops up its name and what it does', hoverTip.shown && hoverTip.name === 'Drop the Bass!' && hoverTip.text.length > 10, JSON.stringify(hoverTip));
 
 check('no errors in the page', errors.length === 0, errors.join(' | '));
 

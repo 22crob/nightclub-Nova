@@ -4,11 +4,21 @@ import { FLOOR_DECAL_PROPS, PROP_TYPES, SHOP_CATEGORIES, fameStars } from '../ca
 import { SELL_REFUND_RATIO } from '../config.js';
 import { realSpriteIconFor, renderIsoIcon } from '../icons.js';
 import { SFX } from '../sfx.js';
+import { hideTip } from '../tooltips.js';
+import { fillIcons } from '../uiIcons.js';
 
-// Category buttons on the left of the shop strip.
-const CATEGORY_ICONS = {
-  Bars: '🍸', 'DJ Booths': '🎧', Seating: '🛋️', Floors: '🟫', 'Dance Floors': '💃',
-  Decorations: '🪴', Wallpaper: '🖼️', Staff: '🧑‍🍳', Expand: '📐',
+// Category buttons on the left of the shop strip: a drawn icon each (see
+// uiIcons.js), with the name and what's in it in the hover tip.
+const CATEGORIES = {
+  Bars: { icon: 'bars', text: 'Bars sell drinks. Each long bar needs one bartender.' },
+  'DJ Booths': { icon: 'booths', text: 'Upgrade your DJ booth. A better booth brings more fans.' },
+  Seating: { icon: 'seating', text: 'Couches and booths where guests sit down and relax.' },
+  Floors: { icon: 'floors', text: 'Paint the floor, tile by tile.' },
+  'Dance Floors': { icon: 'dance', text: 'Where your guests dance. More dance floor fits more guests.' },
+  Decorations: { icon: 'decor', text: 'Plants, lights and statues to make the club fancier.' },
+  Wallpaper: { icon: 'wallpaper', text: 'Paper the walls, section by section.' },
+  Staff: { icon: 'staff', text: 'Hire bartenders for your bars.' },
+  Expand: { icon: 'expand', text: 'Make the club bigger.' },
 };
 
 export class ShopMixin {
@@ -47,8 +57,6 @@ export class ShopMixin {
     this.shopClose = document.getElementById('shopClose');
     this.shopTabsEl = document.getElementById('shopTabs');
     this.shopItemsEl = document.getElementById('shopItems');
-    this.shopCatName = document.getElementById('shopCatName');
-    this.shopTip = document.getElementById('shopTip');
     this.selectedChip = document.getElementById('selectedChip');
     if (!this.shopToggle || !this.shopOverlay || !this.shopTabsEl || !this.shopItemsEl) return; // older/debug HTML — skip silently
 
@@ -57,16 +65,14 @@ export class ShopMixin {
     for (const category of SHOP_CATEGORIES) {
       const tab = document.createElement('div');
       tab.className = 'shopTab';
-      tab.dataset.icon = CATEGORY_ICONS[category] || '•';
-      tab.title = category;
-      const name = document.createElement('span');
-      name.className = 'tabName';
-      name.textContent = category;
-      tab.appendChild(name);
+      tab.dataset.icon = CATEGORIES[category]?.icon || '';
+      tab.dataset.tipName = category;
+      tab.dataset.tipText = CATEGORIES[category]?.text || '';
       tab.addEventListener('click', () => this.setShopCategory(category));
       this.shopTabsEl.appendChild(tab);
       this.shopTabButtons[category] = tab;
     }
+    fillIcons(this.shopTabsEl);
 
     this.shopToggle.addEventListener('click', () => this.openShop());
     // Toolbar shortcuts into specific shop categories.
@@ -103,21 +109,7 @@ export class ShopMixin {
   closeShop() {
     if (this.shopOverlay) this.shopOverlay.classList.remove('open');
     document.body.classList.remove('shopOpen');
-    this.hideShopTip();
-  }
-
-  // The name bubble over an item in the strip.
-  showShopTip(slot, text) {
-    if (!this.shopTip) return;
-    this.shopTip.textContent = text;
-    const r = slot.getBoundingClientRect();
-    this.shopTip.style.left = `${r.left + r.width / 2}px`;
-    this.shopTip.style.top = `${r.top - 10}px`;
-    this.shopTip.classList.add('show');
-  }
-
-  hideShopTip() {
-    if (this.shopTip) this.shopTip.classList.remove('show');
+    hideTip();
   }
 
   // Switches the active tab and re-renders that category's items. Item
@@ -125,8 +117,7 @@ export class ShopMixin {
   // showing — updateShopUI() below only needs to keep those in sync.
   setShopCategory(category) {
     this.activeShopCategory = category;
-    if (this.shopCatName) this.shopCatName.textContent = `${CATEGORY_ICONS[category] || ''} ${category}`;
-    this.hideShopTip();
+    hideTip();
     if (this.shopItemsEl) this.shopItemsEl.scrollLeft = 0;
     if (this.shopTabButtons) {
       for (const cat in this.shopTabButtons) {
@@ -225,9 +216,10 @@ export class ShopMixin {
       if (def.category === 'Dance Floors' && def.capacity) statsText += `  🧱 +${def.capacity} floor space`;
       stats.textContent = statsText;
       slot.appendChild(stats);
-      // Name bubble on hover (the label and stats are hidden in the strip).
-      slot.addEventListener('mouseenter', () => this.showShopTip(slot, `${def.label}   ${statsText}`));
-      slot.addEventListener('mouseleave', () => this.hideShopTip());
+      // Name and description in the hover tip (the label and stats are
+      // hidden in the strip).
+      slot.dataset.tipName = def.label;
+      slot.dataset.tipText = `${CATEGORIES[category]?.text || ''} ${statsText}`.trim();
 
       this.shopItemsEl.appendChild(slot);
       this.shopButtons[key] = button;
@@ -252,42 +244,33 @@ export class ShopMixin {
     this.shopItemsEl.innerHTML = '';
     const tier = this.nextExpansion();
 
-    const card = document.createElement('div');
-    card.className = 'expandCard';
-
-    const current = document.createElement('div');
-    current.className = 'expandCurrent';
-    current.textContent = `Current floor: ${this.gridSize}×${this.gridSize}`;
-    card.appendChild(current);
-
-    if (!tier) {
-      const maxed = document.createElement('div');
-      maxed.className = 'expandMaxed';
-      maxed.textContent = '🏆 Maximum club size reached!';
-      card.appendChild(maxed);
-      this.shopItemsEl.appendChild(card);
-      return;
-    }
-
-    const unlocked = this.levelInfo().level >= tier.unlockLevel;
-    const afford = this.cash >= tier.cost;
-
-    const next = document.createElement('div');
-    next.className = 'expandNext';
-    next.textContent = `Next size: ${tier.size}×${tier.size}`;
-    card.appendChild(next);
-
+    // One icon like a shop item: the price under it, the sizes in its tip.
+    const slot = document.createElement('div');
+    slot.className = 'propSlot expandSlot';
     const button = document.createElement('div');
-    button.className = 'expandButton';
-    button.classList.toggle('unaffordable', unlocked && !afford);
-    button.classList.toggle('locked', !unlocked);
-    button.textContent = unlocked ? `Expand for $${tier.cost}` : `🔒 Unlocks at Lv ${tier.unlockLevel}`;
-    button.addEventListener('click', () => {
-      if (this.expandClub()) this.closeShop(); // successful purchase — get out of the way so the player can see the new floor
-    });
-    card.appendChild(button);
-
-    this.shopItemsEl.appendChild(card);
+    button.className = 'propButton expandIcon';
+    button.dataset.icon = 'expand';
+    slot.appendChild(button);
+    const cost = document.createElement('div');
+    cost.className = 'propCost';
+    slot.appendChild(cost);
+    slot.dataset.tipName = 'Expand the club';
+    if (!tier) {
+      button.classList.add('locked');
+      cost.textContent = '🏆 Max';
+      slot.dataset.tipText = `Your club is ${this.gridSize}×${this.gridSize}, the biggest it can be.`;
+    } else {
+      const unlocked = this.levelInfo().level >= tier.unlockLevel;
+      button.classList.toggle('unaffordable', unlocked && this.cash < tier.cost);
+      button.classList.toggle('locked', !unlocked);
+      cost.textContent = unlocked ? `$${tier.cost}` : `🔒 Lv ${tier.unlockLevel}`;
+      slot.dataset.tipText = `Grow from ${this.gridSize}×${this.gridSize} to ${tier.size}×${tier.size} tiles.`;
+      button.addEventListener('click', () => {
+        if (this.expandClub()) this.closeShop(); // get out of the way so the player can see the new floor
+      });
+    }
+    fillIcons(slot);
+    this.shopItemsEl.appendChild(slot);
   }
 
   // Keeps the active tab's "selected" highlight, "can't afford it" dim
@@ -337,7 +320,7 @@ export class ShopMixin {
     const key = this.selectedProp;
     const def = PROP_TYPES[key];
     if (!def) {
-      this.selectedChip.textContent = 'Nothing selected — open the shop to build';
+      this.selectedChip.textContent = '';
       return;
     }
 

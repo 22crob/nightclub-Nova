@@ -6,6 +6,7 @@
 import { BOOST } from '../config.js';
 import { Music } from '../music.js';
 import { SFX } from '../sfx.js';
+import { refreshTip } from '../tooltips.js';
 
 const randRange = (min, max) => min + Math.random() * (max - min);
 const clock = (ms) => {
@@ -62,20 +63,29 @@ export class BoostMixin {
     const button = this.boostButton;
     if (!button) return;
     const now = this.time.now;
+    // The button shows only its icon and a small timer; what it's doing
+    // is in its hover tip.
     let state = 'ready';
-    let text = 'Drop the Bass!';
+    let timer = '';
+    let tip = 'A free 90-second party: bigger, faster tips, more drinks and dancing, and heavy bass. Ready now!';
     if (!this.clubOpen()) {
       state = 'cooldown';
-      text = 'Club closed';
+      tip = 'Club closed. Open the doors for the next night first.';
     } else if (this.isBoosted()) {
       state = 'active';
-      text = `Bass drop ${clock(this.boostUntil - now)}`;
+      timer = clock(this.boostUntil - now);
+      tip = `The bass is dropping! ${timer} left.`;
     } else if (now < (this.boostReadyAt || 0)) {
       state = 'cooldown';
-      text = `Ready in ${clock(this.boostReadyAt - now)}`;
+      timer = clock(this.boostReadyAt - now);
+      tip = `Recharging. Ready again in ${timer}.`;
     }
     if (button.dataset.state !== state) button.dataset.state = state;
-    if (this.boostLabel.textContent !== text) this.boostLabel.textContent = text;
+    if (this.boostLabel.textContent !== timer) this.boostLabel.textContent = timer;
+    if (button.dataset.tipText !== tip) {
+      button.dataset.tipText = tip;
+      refreshTip(button);
+    }
   }
 
   // Wires up the HUD button (see index.html) and the music.

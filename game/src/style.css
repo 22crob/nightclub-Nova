@@ -112,7 +112,7 @@ body { font-family: var(--ui-font); color: var(--ink); }
   display: flex; gap: 6px; z-index: 10;
 }
 .statButton {
-  min-width: 74px; padding: 4px 10px 4px; border-radius: var(--radius); text-align: center;
+  min-width: 64px; padding: 6px 10px; cursor: default; border-radius: var(--radius); text-align: center;
   background: linear-gradient(180deg, #0f2338 0%, #081321 60%, #050b14 100%);
   border: 2px solid var(--neon);
   box-shadow: 0 0 0 1px #000, 0 0 10px var(--neon-glow), inset 0 1px 0 rgba(255, 255, 255, 0.2), inset 0 0 12px rgba(63, 212, 255, 0.15);
@@ -121,8 +121,7 @@ body { font-family: var(--ui-font); color: var(--ink); }
   display: flex; align-items: center; justify-content: center; gap: 5px;
   font-size: 19px; font-weight: 700; text-shadow: var(--outline); font-variant-numeric: tabular-nums;
 }
-.statIcon { color: var(--neon); font-size: 14px; }
-.statLabel { font-size: 9px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; color: #cfe9ff; text-shadow: var(--outline); }
+.statIcon { display: inline-flex; width: 19px; height: 19px; }
 
 /* ---------- Bottom: toolbar, a dark metal strip with icons on it ---------- */
 #toolbar {
@@ -134,7 +133,7 @@ body { font-family: var(--ui-font); color: var(--ink); }
   box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.45), 0 0 0 1px #000, 0 6px 16px rgba(0, 0, 0, 0.6);
 }
 .toolButton {
-  width: 70px; height: 56px; border-radius: var(--radius);
+  width: 58px; height: 52px; padding: 8px; box-sizing: border-box; border-radius: var(--radius);
   display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px;
   cursor: pointer; user-select: none;
   background: transparent; border: 1px solid transparent;
@@ -143,9 +142,8 @@ body { font-family: var(--ui-font); color: var(--ink); }
 .toolButton:hover { background: rgba(63, 212, 255, 0.08); border-color: var(--neon); box-shadow: 0 0 8px var(--neon-glow); }
 .toolButton:active { transform: translateY(1px); }
 .toolButton.disabled { filter: grayscale(0.6) brightness(0.75); }
-.toolIcon { font-size: 26px; line-height: 1; filter: drop-shadow(0 2px 2px rgba(0, 0, 0, 0.7)); }
-.toolLabel { font-size: 10px; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; text-shadow: var(--outline); }
 
+#selectedChip:empty { display: none; }
 #selectedChip {
   position: fixed; bottom: calc(84px + env(safe-area-inset-bottom, 0px)); left: 50%; transform: translateX(-50%);
   display: flex; align-items: center; gap: 8px; z-index: 10;
@@ -160,18 +158,6 @@ body { font-family: var(--ui-font); color: var(--ink); }
   background-color: #000; background-size: cover; background-position: center;
 }
 #selectedChip .chipCost { color: var(--gold); }
-
-/* ---------- Bottom-left: tips box ---------- */
-#hint {
-  position: fixed; left: 12px; bottom: calc(12px + env(safe-area-inset-bottom, 0px));
-  max-width: min(250px, 30vw); z-index: 10; pointer-events: none;
-  padding: 8px 11px 9px; border-radius: var(--radius);
-  background: var(--glass-flat); border: 1px solid rgba(138, 148, 166, 0.6);
-  box-shadow: var(--panel-shadow);
-  font-size: 11px; line-height: 1.45; color: #dfe6f0; text-shadow: var(--outline);
-}
-.hintTitle { font-size: 11px; font-weight: 700; color: var(--neon); letter-spacing: 0.08em; text-transform: uppercase; margin-bottom: 3px; }
-@media (max-width: 900px) { #hint { display: none; } }
 
 /* ---------- Toast (level up, expansions) ---------- */
 #toast {
@@ -191,7 +177,7 @@ body { font-family: var(--ui-font); color: var(--ink); }
    and a big OK button. It stays open while you build. */
 #shopOverlay { display: none; }
 #shopOverlay.open { display: block; }
-body.shopOpen #toolbar, body.shopOpen #hint { display: none; }
+body.shopOpen #toolbar { display: none; }
 body.shopOpen #selectedChip { bottom: calc(150px + env(safe-area-inset-bottom, 0px)); }
 
 #shopTabs {
@@ -204,18 +190,12 @@ body.shopOpen #selectedChip { bottom: calc(150px + env(safe-area-inset-bottom, 0
   background: var(--glass); border: 1px solid var(--chrome);
   box-shadow: var(--panel-shadow);
 }
-.shopTab::before { content: attr(data-icon); font-size: 21px; line-height: 1; filter: drop-shadow(0 2px 2px rgba(0, 0, 0, 0.7)); }
+.shopTab .uiGlyph { width: 26px; height: 26px; }
 .shopTab .tabName { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
 .shopTab:hover { border-color: var(--neon); }
 .shopTab.active {
   border: 2px solid var(--neon); background: linear-gradient(180deg, #123a55, #0a1d2e);
   box-shadow: 0 0 0 1px #000, 0 0 10px var(--neon-glow);
-}
-#shopCatName {
-  position: fixed; left: 120px; bottom: calc(130px + env(safe-area-inset-bottom, 0px)); z-index: 30;
-  padding: 4px 14px 5px; border-radius: var(--radius) var(--radius) 0 0;
-  background: linear-gradient(180deg, #2a303c, #12151d); border: 1px solid var(--chrome); border-bottom: none;
-  font-size: 12px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; text-shadow: var(--outline);
 }
 #shopStrip {
   position: fixed; left: 112px; right: 140px; bottom: calc(12px + env(safe-area-inset-bottom, 0px)); z-index: 30;
@@ -261,21 +241,6 @@ body.shopOpen #selectedChip { bottom: calc(150px + env(safe-area-inset-bottom, 0
 .propCost {
   font-size: 12px; font-weight: 700; color: var(--gold); white-space: nowrap; text-shadow: var(--outline);
   padding: 1px 8px; border-radius: 4px; background: #000; border: 1px solid #4a5263;
-}
-
-/* The name bubble over the hovered item. */
-#shopTip {
-  position: fixed; z-index: 40; transform: translate(-50%, -100%); pointer-events: none;
-  padding: 6px 12px; border-radius: var(--radius); white-space: nowrap;
-  background: var(--glass); border: 1px solid var(--neon);
-  box-shadow: 0 0 0 1px #000, 0 0 10px var(--neon-glow);
-  font-size: 13px; font-weight: 700; text-shadow: var(--outline);
-  opacity: 0; transition: opacity 0.12s ease;
-}
-#shopTip.show { opacity: 1; }
-#shopTip::after {
-  content: ''; position: absolute; left: 50%; bottom: -7px; margin-left: -6px;
-  border: 6px solid transparent; border-top-color: var(--neon); border-bottom: 0;
 }
 
 #shopClose {
@@ -333,33 +298,6 @@ body.shopOpen #selectedChip { bottom: calc(150px + env(safe-area-inset-bottom, 0
 .staffButton { flex: 0 0 auto; padding: 8px 14px; font-size: 12px; }
 .staffButton.fire { border-color: var(--chrome); box-shadow: var(--panel-shadow); }
 .staffButton:active { transform: translateY(1px); }
-
-/* Drop the Bass: the party boost button, under the stats (see boost.js).
-   Dark glass with a magenta neon edge; orange while the boost runs. */
-.boostButton {
-  position: fixed; top: calc(70px + env(safe-area-inset-top, 0px)); right: 12px; z-index: 10;
-  display: flex; align-items: center; gap: 8px; padding: 7px 14px 7px 10px; border-radius: var(--radius);
-  font-size: 13px; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase;
-  color: #fff; text-shadow: var(--outline); cursor: pointer; user-select: none;
-  background: linear-gradient(180deg, #3a1236 0%, #1a0718 60%, #0d040c 100%);
-  border: 2px solid var(--magenta);
-  box-shadow: 0 0 0 1px #000, 0 0 12px rgba(255, 61, 220, 0.6), inset 0 1px 0 rgba(255, 255, 255, 0.2);
-  font-variant-numeric: tabular-nums;
-}
-.boostButton:hover { box-shadow: 0 0 0 1px #000, 0 0 18px rgba(255, 61, 220, 0.85), inset 0 1px 0 rgba(255, 255, 255, 0.2); }
-.boostButton:active { transform: translateY(1px); }
-.boostIcon { font-size: 18px; }
-.boostButton[data-state="active"] {
-  background: linear-gradient(180deg, #3e2208 0%, #1e1004 60%, #0e0802 100%);
-  border-color: #ffa040;
-  box-shadow: 0 0 0 1px #000, 0 0 16px rgba(255, 160, 64, 0.85), inset 0 1px 0 rgba(255, 255, 255, 0.2);
-  cursor: default;
-}
-.boostButton[data-state="cooldown"] {
-  background: var(--glass); border-color: #4a5263;
-  box-shadow: var(--panel-shadow);
-  color: var(--muted); cursor: default;
-}
 
 /* ------------------------------------------------------------------ */
 /* Club nights: the clock under the cash, the open button, and the      */
@@ -442,21 +380,6 @@ body.shopOpen #selectedChip { bottom: calc(150px + env(safe-area-inset-bottom, 0
 /* ------------------------------------------------------------------ */
 /* Throw a Party: the button under Drop the Bass, and the picker.       */
 /* ------------------------------------------------------------------ */
-.partyButton {
-  position: fixed; top: calc(118px + env(safe-area-inset-top, 0px)); right: 12px; z-index: 10;
-  display: flex; align-items: center; gap: 8px; padding: 7px 14px 7px 10px;
-  border-radius: var(--radius); cursor: pointer; user-select: none;
-  font-size: 13px; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase;
-  color: #fff; text-shadow: var(--outline);
-  background: linear-gradient(180deg, #3a2a08 0%, #1e1504 60%, #0e0a02 100%);
-  border: 2px solid var(--gold);
-  box-shadow: 0 0 0 1px #000, 0 0 12px #ffd24d80, inset 0 1px 0 #fff3;
-}
-.partyButton:hover { box-shadow: 0 0 0 1px #000, 0 0 18px #ffd24dcc, inset 0 1px 0 #fff3; }
-.partyButton:active { transform: translateY(1px); }
-.partyButton[data-state="active"] { background: linear-gradient(180deg, #4a1250 0%, #26082a 60%, #120414 100%); border-color: var(--magenta); box-shadow: 0 0 0 1px #000, 0 0 16px #ff3ddcb3; cursor: default; }
-.partyButton[data-state="off"] { background: var(--glass); border-color: #4a5263; box-shadow: var(--panel-shadow); color: var(--muted); cursor: default; }
-
 .partyCard { width: min(440px, calc(100vw - 32px)); }
 #partyList { display: flex; flex-direction: column; gap: 8px; text-align: left; }
 .partyRow {
@@ -534,7 +457,7 @@ body.shopOpen #selectedChip { bottom: calc(150px + env(safe-area-inset-bottom, 0
 .actionTip:after { content: ""; position: absolute; left: 50%; bottom: -7px; margin-left: -7px; border: 7px solid transparent; border-top-color: #fff; border-bottom: 0; }
 
 .partyBanner {
-  display: none; position: fixed; top: calc(118px + env(safe-area-inset-top, 0px)); right: 12px; z-index: 10;
+  display: none; position: fixed; top: calc(138px + env(safe-area-inset-top, 0px)); right: 12px; z-index: 10;
   width: 210px; padding: 6px 12px 8px; border-radius: var(--radius); text-align: right;
   background: linear-gradient(180deg, #2a0b30 0%, #160418 100%);
   border: 2px solid var(--magenta); box-shadow: 0 0 0 1px #000, 0 0 14px #ff3ddc99;
@@ -581,3 +504,90 @@ body.shopOpen #selectedChip { bottom: calc(150px + env(safe-area-inset-bottom, 0
 .vipHere { font-size: 11px; color: var(--cash); margin-left: 6px; }
 .vipVisits { font-size: 12px; color: var(--muted); font-weight: 700; }
 .vipEmpty { font-size: 13px; color: #cfd8e6; text-align: center; padding: 10px; }
+
+/* ------------------------------------------------------------------ */
+/* Drawn icons (uiIcons.js) and the hover tip (tooltips.js): buttons    */
+/* show an icon, and hovering one names it and says what it does.       */
+/* ------------------------------------------------------------------ */
+.uiGlyph {
+  display: block; width: 100%; height: 100%; overflow: visible;
+  /* A dark outline all round, like drawn cartoon art, and a soft drop. */
+  filter: drop-shadow(1px 0 0 #000) drop-shadow(-1px 0 0 #000) drop-shadow(0 1px 0 #000) drop-shadow(0 -1px 0 #000) drop-shadow(0 2px 2px rgba(0, 0, 0, 0.6));
+}
+.squareButton.iconOnly { padding: 5px; box-sizing: border-box; }
+.songButton.iconOnly { width: 26px; height: 22px; padding: 3px 5px; box-sizing: border-box; }
+
+#hoverTip {
+  position: fixed; z-index: 100; pointer-events: none; max-width: 260px;
+  padding: 7px 12px 8px; border-radius: var(--radius);
+  background: var(--glass); border: 1px solid var(--neon);
+  box-shadow: 0 0 0 1px #000, 0 0 12px var(--neon-glow);
+  text-shadow: var(--outline); opacity: 0; transition: opacity 0.12s ease;
+}
+#hoverTip.show { opacity: 1; }
+#hoverTip .tipName { font-size: 14px; font-weight: 700; color: #fff; white-space: nowrap; }
+#hoverTip .tipText { margin-top: 3px; font-size: 12px; line-height: 1.4; color: #cfd8e6; }
+#hoverTip::after {
+  content: ''; position: absolute; left: var(--arrow-x, 50%); margin-left: -6px;
+  border: 6px solid transparent;
+}
+#hoverTip[data-side="above"]::after { bottom: -12px; border-top-color: var(--neon); }
+#hoverTip[data-side="below"]::after { top: -12px; border-bottom-color: var(--neon); }
+
+/* Round icon buttons (Drop the Bass, Throw a Party, Open the doors): a
+   glossy disc with a coloured neon ring. */
+#actionButtons {
+  position: fixed; top: calc(66px + env(safe-area-inset-top, 0px)); right: 12px; z-index: 10;
+  display: flex; gap: 12px;
+}
+.roundButton {
+  position: relative; width: 58px; height: 58px; box-sizing: border-box; padding: 12px;
+  border-radius: 50%; cursor: pointer; user-select: none;
+  background: radial-gradient(circle at 50% 30%, #4a2650 0%, #1a0820 60%, #0a030c 100%);
+  border: 3px solid var(--magenta);
+  box-shadow: 0 0 0 1px #000, 0 0 14px rgba(255, 61, 220, 0.65), inset 0 2px 0 rgba(255, 255, 255, 0.25), inset 0 -6px 10px rgba(0, 0, 0, 0.5);
+  transition: transform 0.12s ease, box-shadow 0.12s ease, filter 0.2s ease;
+}
+.roundButton:hover { transform: scale(1.07); }
+.roundButton:active { transform: scale(0.97); }
+/* A small timer pill under the button (Drop the Bass running or recharging). */
+.roundTimer {
+  position: absolute; left: 50%; bottom: -9px; transform: translateX(-50%);
+  padding: 1px 6px; border-radius: 8px; background: #000; border: 1px solid #4a5263;
+  font-size: 11px; font-weight: 700; color: #fff; white-space: nowrap; font-variant-numeric: tabular-nums;
+}
+.roundTimer:empty { display: none; }
+
+.boostButton[data-state="ready"] { animation: readyPulse 1.6s ease-in-out infinite; }
+.boostButton[data-state="active"] {
+  background: radial-gradient(circle at 50% 30%, #6a3a10 0%, #2a1404 60%, #100702 100%);
+  border-color: #ffa040; box-shadow: 0 0 0 1px #000, 0 0 18px rgba(255, 160, 64, 0.9), inset 0 2px 0 rgba(255, 255, 255, 0.25);
+  cursor: default;
+}
+.boostButton[data-state="cooldown"], .partyButton[data-state="off"] {
+  background: radial-gradient(circle at 50% 30%, #2c3240 0%, #12151d 70%);
+  border-color: #4a5263; box-shadow: var(--panel-shadow);
+  filter: grayscale(0.85) brightness(0.75); cursor: default;
+}
+.partyButton {
+  background: radial-gradient(circle at 50% 30%, #5a4410 0%, #261a04 60%, #0e0a02 100%);
+  border-color: var(--gold); box-shadow: 0 0 0 1px #000, 0 0 14px #ffd24d99, inset 0 2px 0 rgba(255, 255, 255, 0.25), inset 0 -6px 10px rgba(0, 0, 0, 0.5);
+}
+.partyButton[data-state="active"] {
+  border-color: var(--magenta); box-shadow: 0 0 0 1px #000, 0 0 18px #ff3ddcb3, inset 0 2px 0 rgba(255, 255, 255, 0.25);
+  animation: readyPulse 1.2s ease-in-out infinite; cursor: default;
+}
+@keyframes readyPulse {
+  0%, 100% { filter: brightness(1); }
+  50% { filter: brightness(1.25) drop-shadow(0 0 6px rgba(255, 255, 255, 0.35)); }
+}
+.openButton.roundButton {
+  position: fixed; width: 54px; height: 54px; padding: 11px;
+  background: radial-gradient(circle at 50% 30%, #2f7a34 0%, #104014 60%, #062008 100%);
+  border-color: #5dff6a; box-shadow: 0 0 0 1px #000, 0 0 16px #5dff6aa6, inset 0 2px 0 rgba(255, 255, 255, 0.3);
+  animation: readyPulse 1.4s ease-in-out infinite;
+}
+.openButton.roundButton:hover { transform: translateX(-50%) scale(1.07); }
+.openButton.roundButton:active { transform: translateX(-50%) scale(0.97); }
+.propButton.expandIcon { width: 64px; height: 64px; padding: 6px; box-sizing: border-box; }
+.propButton.expandIcon.locked::after { content: none; }

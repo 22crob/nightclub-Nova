@@ -18,10 +18,12 @@
         <div class="xpText" id="xpText">Level 1</div>
       </div>
       <div class="utilityRow">
-        <div id="muteButton" class="squareButton" title="Sound on/off">🔊</div>
-        <div id="zoomIn" class="squareButton" title="Zoom in">＋</div>
-        <div id="zoomOut" class="squareButton" title="Zoom out">－</div>
-        <div id="restartButton" class="squareButton" title="Start a brand-new club">↺</div>
+        <div id="muteButton" class="squareButton" data-tip-name="Sound" data-tip-text="Turn the music and sounds on or off">🔊</div>
+        <div id="zoomIn" class="squareButton" data-tip-name="Zoom in">＋</div>
+        <div id="zoomOut" class="squareButton" data-tip-name="Zoom out">－</div>
+        <div id="restartButton" class="squareButton" data-tip-name="New club" data-tip-text="Start a brand-new club from scratch">↺</div>
+        <div id="tipsButton" class="squareButton iconOnly" data-icon="tips" data-tip-name="How to play"
+          data-tip-text="Each night runs 9 PM to 3 AM. Happy guests tip and bring fans; thirsty or bored ones leave. Click a guest or bartender for their card. Click to place, right-click to sell, R to rotate, Esc to put down, drag to move around, scroll to zoom."></div>
       </div>
     </div>
   </div>
@@ -33,8 +35,8 @@
       <div class="songTitle" id="songTitle">Basement Lights</div>
       <div class="songArtist" id="songArtist">DJ Nova</div>
       <div class="songButtons">
-        <div id="songChange" class="songButton" title="Skip to the DJ's next track">Change</div>
-        <div id="songLike" class="songButton like" title="Like this song (+1 fan, once a song)">👍 Like</div>
+        <div id="songChange" class="songButton iconOnly" data-icon="next" data-tip-name="Change song" data-tip-text="Skip to the DJ's next track"></div>
+        <div id="songLike" class="songButton like iconOnly" data-icon="like" data-tip-name="Like this song" data-tip-text="+1 fan, once a song"></div>
       </div>
       <div class="songEnds" id="songEnds">Ends: 9:10 PM</div>
     </div>
@@ -47,11 +49,11 @@
   </div>
 
   <!-- Under the cash: tonight's clock -->
-  <div id="nightClock" data-phase="open" title="Each night runs 9 PM to 3 AM. Last call stops new guests; at closing you get the night's results.">
+  <div id="nightClock" data-phase="open" data-tip-name="Tonight" data-tip-text="Each night runs 9 PM to 3 AM. Last call stops new guests; at closing you get the night's results.">
     <span id="nightClockText">Night 1</span>
     <div class="nightBar"><div id="nightClockFill"></div></div>
   </div>
-  <div id="openButton" class="openButton" style="display:none" title="Start the next night">🚪 Open the doors</div>
+  <div id="openButton" class="openButton roundButton" style="display:none" data-icon="door" data-tip-name="Open the doors" data-tip-text="Start the next night"></div>
 
   <!-- Asked before starting over (see restartClub()) -->
   <div id="restartConfirm" class="overlay">
@@ -102,32 +104,32 @@
 
   <!-- Top-right: stat buttons -->
   <div id="hudStats">
-    <div class="statButton" title="Fans">
-      <div class="statValue"><span class="statIcon">★</span><span id="fansVal">0</span></div>
-      <div class="statLabel">Fans</div>
+    <div class="statButton" data-tip-name="Fans" data-tip-text="Happy guests become fans. Fans raise your level, which unlocks new items.">
+      <div class="statValue"><span class="statIcon" data-icon="fans"></span><span id="fansVal">0</span></div>
     </div>
-    <div class="statButton" title="Luxury: how fancy your club is. Everything you place, paint and paper adds to it, and a fancier club earns bigger tips.">
-      <div class="statValue"><span class="statIcon">💎</span><span id="luxuryVal">0</span></div>
-      <div class="statLabel">Luxury</div>
+    <div class="statButton" data-tip-name="Luxury" data-tip-text="How fancy your club is. Everything you place, paint and paper adds to it, and a fancier club earns bigger tips.">
+      <div class="statValue"><span class="statIcon" data-icon="luxury"></span><span id="luxuryVal">0</span></div>
     </div>
-    <div class="statButton" title="Club rating: the average stars of your last five nights. A better-rated club draws guests faster.">
-      <div class="statValue"><span class="statIcon">⭐</span><span id="ratingVal">–</span></div>
-      <div class="statLabel">Rating</div>
+    <div class="statButton" data-tip-name="Club rating" data-tip-text="The average stars of your last five nights. A better-rated club draws guests faster.">
+      <div class="statValue"><span class="statIcon" data-icon="rating"></span><span id="ratingVal">–</span></div>
     </div>
-    <div class="statButton" title="Patrons in the club / capacity">
-      <div class="statValue"><span class="statIcon">☺</span><span id="placedVal">0/0</span></div>
-      <div class="statLabel">Patrons</div>
+    <div class="statButton" data-tip-name="Guests" data-tip-text="Guests in the club now, out of how many fit">
+      <div class="statValue"><span class="statIcon" data-icon="patrons"></span><span id="placedVal">0/0</span></div>
     </div>
   </div>
 
-  <!-- Top-right, under the stats: the Drop the Bass party boost -->
-  <div id="boostButton" class="boostButton" data-state="ready" title="A free 90-second party: bigger, faster tips, more drinks and dancing, and heavy bass">
-    <span class="boostIcon">🔊</span><span id="boostLabel">Drop the Bass!</span>
-  </div>
-
-  <!-- Under it: Throw a Party (see scene/parties.js) -->
-  <div id="partyButton" class="partyButton" data-state="ready" title="Pay for a themed party tonight: more guests, bigger tips, more fans">
-    <span class="boostIcon">🎉</span><span id="partyLabel">Throw a Party</span>
+  <!-- Top-right, under the stats: round icon buttons for Drop the Bass and
+       Throw a Party. Their names and state are in the hover tip; a small
+       timer shows under Drop the Bass while it runs or recharges. -->
+  <div id="actionButtons">
+    <div id="boostButton" class="boostButton roundButton" data-state="ready" data-icon="bass" data-tip-name="Drop the Bass!"
+      data-tip-text="A free 90-second party: bigger, faster tips, more drinks and dancing, and heavy bass">
+      <span id="boostLabel" class="roundTimer"></span>
+    </div>
+    <div id="partyButton" class="partyButton roundButton" data-state="ready" data-icon="party" data-tip-name="Throw a Party"
+      data-tip-text="Pay for a themed party tonight: more guests, bigger tips, more fans">
+      <span id="partyLabel" class="roundTimer"></span>
+    </div>
   </div>
   <div id="partyPicker" class="overlay">
     <div class="summaryCard partyCard">
@@ -148,13 +150,13 @@
 
   <!-- A guest's or bartender's card (see guests.js) -->
   <div id="infoCard">
-    <div id="infoClose" class="infoClose" title="Close">✕</div>
+    <div id="infoClose" class="infoClose" data-tip-name="Close">✕</div>
     <!-- Stat bubbles across the top, like Nightclub City's guest card -->
     <div id="infoGuestStats" class="statBubbles">
-      <div class="statBubble" title="Mood"><div class="bubbleIcon" id="infoMoodIcon">🙂</div><div class="bubbleNum" id="infoMood">60%</div></div>
-      <div class="statBubble" title="Fun"><div class="bubbleIcon">🎵</div><div class="bubbleNum" id="infoFun">40%</div></div>
-      <div class="statBubble" title="Drinks"><div class="bubbleIcon">🍹</div><div class="bubbleNum" id="infoDrinks">0</div></div>
-      <div class="statBubble" title="Money spent"><div class="bubbleIcon">💵</div><div class="bubbleNum" id="infoSpent">$0</div></div>
+      <div class="statBubble" data-tip-name="Mood"><div class="bubbleIcon" id="infoMoodIcon">🙂</div><div class="bubbleNum" id="infoMood">60%</div></div>
+      <div class="statBubble" data-tip-name="Fun"><div class="bubbleIcon">🎵</div><div class="bubbleNum" id="infoFun">40%</div></div>
+      <div class="statBubble" data-tip-name="Drinks"><div class="bubbleIcon">🍹</div><div class="bubbleNum" id="infoDrinks">0</div></div>
+      <div class="statBubble" data-tip-name="Money spent"><div class="bubbleIcon">💵</div><div class="bubbleNum" id="infoSpent">$0</div></div>
     </div>
     <div class="infoTop">
       <div id="infoPortrait" class="infoPortrait"></div>
@@ -178,31 +180,14 @@
 
   <div id="toast"></div>
 
-  <!-- Bottom-left: tips box -->
-  <div id="hint">
-    <div class="hintTitle">Tips</div>
-    Each night runs 9 PM to 3 AM; at closing you see how it went. Your DJ plays all night, and your first bar has a bartender; new bars need one hired in Staff. Press Drop the Bass for a 90-second party! Happy patrons tip more and bring fans; thirsty or bored ones leave.<br>
-    Click a guest or bartender to see their card (bartenders have Bottoms Up!). Click to place • Right-click to sell • R to rotate • Esc to put down • Drag to move around • Scroll to zoom
-  </div>
-
   <!-- Bottom-centre: what you're holding, and the toolbar -->
   <div id="selectedChip"></div>
   <div id="toolbar">
-    <div id="shopToggle" class="toolButton" title="Buy furniture">
-      <div class="toolIcon">🛍️</div><div class="toolLabel">Shop</div>
-    </div>
-    <div id="decorateButton" class="toolButton" title="Floors and decorations">
-      <div class="toolIcon">🪣</div><div class="toolLabel">Decorate</div>
-    </div>
-    <div id="expandButton" class="toolButton" title="Make the club bigger">
-      <div class="toolIcon">📐</div><div class="toolLabel">Expand</div>
-    </div>
-    <div id="staffButton" class="toolButton" title="Hire staff">
-      <div class="toolIcon">🧑‍🍳</div><div class="toolLabel">Staff</div>
-    </div>
-    <div id="vipButton" class="toolButton" title="Your VIP regulars">
-      <div class="toolIcon">⭐</div><div class="toolLabel">VIPs</div>
-    </div>
+    <div id="shopToggle" class="toolButton" data-icon="shop" data-tip-name="Shop" data-tip-text="Buy bars, seating, dance floors and decorations"></div>
+    <div id="decorateButton" class="toolButton" data-icon="decorate" data-tip-name="Decorate" data-tip-text="Paint the floor and paper the walls"></div>
+    <div id="expandButton" class="toolButton" data-icon="expand" data-tip-name="Expand" data-tip-text="Make the club bigger"></div>
+    <div id="staffButton" class="toolButton" data-icon="staff" data-tip-name="Staff" data-tip-text="Hire bartenders for your bars"></div>
+    <div id="vipButton" class="toolButton" data-icon="vip" data-tip-name="VIPs" data-tip-text="Your VIP regulars: famous guests who come back"></div>
   </div>
 
   <!-- The shop: a strip along the bottom of the screen, like Nightclub
@@ -213,12 +198,12 @@
     <div id="shopTabs"></div>
     <div id="shopCatName"></div>
     <div id="shopStrip">
-      <div id="shopPrev" class="shopArrow" title="Scroll left">◀</div>
+      <div id="shopPrev" class="shopArrow">◀</div>
       <div id="shopItems"></div>
-      <div id="shopNext" class="shopArrow" title="Scroll right">▶</div>
+      <div id="shopNext" class="shopArrow">▶</div>
     </div>
     <div id="shopTip"></div>
-    <div id="shopClose" title="Done building">OK</div>
+    <div id="shopClose" data-tip-name="Done" data-tip-text="Close the shop">OK</div>
   </div>
 
   <script type="module" src="/src/main.js"></script>
