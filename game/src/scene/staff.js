@@ -282,8 +282,10 @@ export class StaffMixin {
     } else {
       // The booth's front (crowd side) faces +gy at 0, +gx at 90, -gy at
       // 180 and -gx at 270; the DJ stands on the opposite side.
-      const along = { 0: [0, -0.75], 90: [-0.75, 0], 180: [0, 0.75], 270: [0.75, 0] }[rec.facing] || [0, -0.75];
-      const center = rec.tiles.reduce((acc, [x, y]) => [acc[0] + x / rec.tiles.length, acc[1] + y / rec.tiles.length], [0, 0]);
+      // The DJ stands on the booth's own tiles behind the desk.
+      const along = { 0: [0, -1], 90: [-1, 0], 180: [0, 1], 270: [1, 0] }[rec.facing] || [0, -1];
+      const desk = this.deskTiles(rec.tiles);
+      const center = desk.reduce((acc, [x, y]) => [acc[0] + x / desk.length, acc[1] + y / desk.length], [0, 0]);
       gx = center[0] + along[0];
       gy = center[1] + along[1];
       faceOut = [-Math.sign(along[0]), -Math.sign(along[1])];
@@ -437,9 +439,9 @@ export class StaffMixin {
   // serving into the room. (ensureClubBooth() then gives the booth its DJ.)
   placeStarterLayout() {
     const n = this.gridSize;
-    const booth = this.restoreProp('woodBooth', 90, [0, n - 5]);
+    const booth = this.restoreProp('woodBooth', 90, [1, n - 5]); // the DJ's tiles are against the wall
     if (!booth) this.ensureClubBooth();
-    for (let gx = 1; gx <= 3; gx++) {
+    for (let gx = 2; gx <= 4; gx++) {
       for (let gy = n - 5; gy <= n - 3; gy++) this.restoreProp('dance', 0, [gx, gy]);
     }
     const units = [];

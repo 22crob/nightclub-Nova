@@ -9,11 +9,26 @@ export class PlacementMixin {
   // Grid tiles a prop occupies, given the tile that was clicked/hovered
   // (the "anchor") and the current facing. Single-tile props just occupy
   // the one tile they were placed on.
+  // A DJ booth also takes the tiles behind its desk, where the DJ stands
+  // (def.backTiles); those are tagged .back, and the art and draw order go
+  // by the desk tiles alone (see deskTiles()).
   getFootprint(propType, facing, gx, gy) {
     const def = PROP_TYPES[propType];
     if (!def.footprint) return [[gx, gy]];
     const offsets = def.footprint[facing] || [[0, 0]];
-    return offsets.map(([dx, dy]) => [gx + dx, gy + dy]);
+    const tiles = offsets.map(([dx, dy]) => [gx + dx, gy + dy]);
+    for (const [dx, dy] of (def.backTiles && def.backTiles[facing]) || []) {
+      const t = [gx + dx, gy + dy];
+      t.back = true;
+      tiles.push(t);
+    }
+    return tiles;
+  }
+
+  // The tiles a prop's art stands on (all of them, less a booth's DJ tiles).
+  deskTiles(tiles) {
+    const desk = tiles.filter((t) => !t.back);
+    return desk.length ? desk : tiles;
   }
 
   // True only if every tile in the footprint is on the grid and empty. The
@@ -31,7 +46,8 @@ export class PlacementMixin {
   // Screen position at the center of a footprint (the midpoint between
   // tile centers for a multi-tile prop, or just that tile's center for a
   // single-tile one) — this is where the sprite's origin point gets drawn.
-  footprintCenter(tiles) {
+  footprintCenter(allTiles) {
+    const tiles = this.deskTiles(allTiles);
     const avgGx = tiles.reduce((s, [tx]) => s + tx, 0) / tiles.length;
     const avgGy = tiles.reduce((s, [, ty]) => s + ty, 0) / tiles.length;
     return this.gridToScreen(avgGx, avgGy);

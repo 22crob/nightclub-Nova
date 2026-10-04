@@ -99,9 +99,21 @@ export class SaveMixin {
     // shrinks it, since a corrupt/missing value just leaves it as-is.
     if (typeof data.gridSize === 'number' && data.gridSize > this.gridSize) this.gridSize = data.gridSize;
     if (Array.isArray(data.placed)) {
-      for (const entry of data.placed) {
+      // The DJ booth goes last, so if it has to move (see below) it can't
+      // take the place of something else.
+      const isBooth = (e) => (e && PROP_TYPES[e.type] && PROP_TYPES[e.type].staff === 'dj' ? 1 : 0);
+      const entries = [...data.placed].sort((a, b) => isBooth(a) - isBooth(b));
+      for (const entry of entries) {
         if (!entry || !PROP_TYPES[entry.type] || !Array.isArray(entry.anchor)) continue;
-        const rec = this.restoreProp(entry.type, entry.facing, entry.anchor);
+        let rec = this.restoreProp(entry.type, entry.facing, entry.anchor);
+        // A DJ booth saved against the wall, from before the DJ had their
+        // own tiles: move it out into the room until it fits.
+        if (!rec && PROP_TYPES[entry.type].staff === 'dj') {
+          const out = { 0: [0, 1], 90: [1, 0], 180: [0, -1], 270: [-1, 0] }[entry.facing] || [0, 1];
+          for (let k = 1; k <= 3 && !rec; k++) {
+            rec = this.restoreProp(entry.type, entry.facing, [entry.anchor[0] + out[0] * k, entry.anchor[1] + out[1] * k]);
+          }
+        }
         if (rec && entry.staff && PROP_TYPES[entry.type].staff) this.attachStaff(rec);
       }
     }

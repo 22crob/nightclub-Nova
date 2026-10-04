@@ -62,13 +62,14 @@ const opening = await page.evaluate(() => {
   const units = s.hireableRecords().filter((rec) => rec.type === 'starterBar');
   const bar = units.find((rec) => rec.staff);
   const floor = Object.keys(s.placed).filter((k) => s.placed[k].type === 'dance').sort();
-  return { floor: floor.join(' '), dancing: s.isDanceFloorTile(2, 6), type: booth && booth.type, anchor: booth && booth.anchor.join(','), dj: !!(booth && booth.staff), music: s.musicPlaying(), size: s.gridSize, bar: units.map((r) => r.anchor.join(',')).sort().join(' '), bartender: !!bar, staffed: units.filter((r) => r.staff).length, worked: units.every((r) => s.isWorked(r)), boothTiles: booth && booth.tiles.length };
+  return { floor: floor.join(' '), dancing: s.isDanceFloorTile(2, 6), type: booth && booth.type, anchor: booth && booth.anchor.join(','), dj: !!(booth && booth.staff), music: s.musicPlaying(), size: s.gridSize, bar: units.map((r) => r.anchor.join(',')).sort().join(' '), bartender: !!bar, staffed: units.filter((r) => r.staff).length, worked: units.every((r) => s.isWorked(r)), boothTiles: booth && booth.tiles.length, djOnTile: !!booth && (() => { const p = s.gridToScreen(0, 5.5); return Math.abs(booth.staff.container.x - p.sx) < 1 && Math.abs(booth.staff.container.y - p.sy) < 1 && booth.tiles.filter((t) => t.back).length === 2; })() };
 });
-check('starts with $700, a 10x10 room, a 2-tile DJ booth, a 3x3 dance floor and a 4-long bar with one bartender', st.cash === 700 && st.placed === 14 && opening.boothTiles === 2 && opening.floor === '1,5 1,6 1,7 2,5 2,6 2,7 3,5 3,6 3,7' && opening.dancing && opening.size === 10 && opening.bar === '6,0 7,0 8,0 9,0' && opening.bartender && opening.staffed === 1 && opening.worked, `cash ${st.cash}, placed ${st.placed}, ${JSON.stringify(opening)}`);
-check('every club opens with a Wood Booth and a DJ playing', opening.type === 'woodBooth' && opening.anchor === '0,5' && opening.dj && opening.music, JSON.stringify(opening));
+check('starts with $700, a 10x10 room, a 2-tile DJ booth, a 3x3 dance floor and a 4-long bar with one bartender', st.cash === 700 && st.placed === 14 && opening.boothTiles === 4 && opening.djOnTile && opening.floor === '2,5 2,6 2,7 3,5 3,6 3,7 4,5 4,6 4,7' && opening.dancing && opening.size === 10 && opening.bar === '6,0 7,0 8,0 9,0' && opening.bartender && opening.staffed === 1 && opening.worked, `cash ${st.cash}, placed ${st.placed}, ${JSON.stringify(opening)}`);
+check('every club opens with a Wood Booth and a DJ playing', opening.type === 'woodBooth' && opening.anchor === '1,5' && opening.dj && opening.music, JSON.stringify(opening));
 
 // The checks below were written for the old opening (a 16x16 room with just
-// the DJ booth, at 6,0): load a club like that.
+// the DJ booth, saved at 6,0 against the wall, from before the DJ had
+// their own tiles: loading moves it out to 6,1).
 await page.evaluate(() => {
   window.__clubNova.scene.getScene('club').restarting = true; // don't save over it on the way out
   localStorage.setItem('clubNovaSave_v2', JSON.stringify({
@@ -146,11 +147,13 @@ st = await state();
 check('occupied tile is refused', st.cash === 600 && st.placed === 2, JSON.stringify({ cash: st.cash, placed: st.placed }));
 
 // Rotate the DJ booth (hover + R).
-const before = await page.evaluate(() => window.__clubNova.scene.getScene('club').placed['6,0'].facing);
-const { x: rx, y: ry } = await tileXY(6, 0);
+const moved = await page.evaluate(() => { const b = window.__clubNova.scene.getScene('club').clubBooth(); return b && b.anchor.join(','); });
+check('an old booth against the wall moves out a tile, so the DJ has room behind it', moved === '6,1', moved);
+const before = await page.evaluate(() => window.__clubNova.scene.getScene('club').placed['6,1'].facing);
+const { x: rx, y: ry } = await tileXY(6, 1);
 await page.mouse.move(rx, ry); await page.mouse.move(rx + 1, ry);
 await page.keyboard.press('r');
-const after = await page.evaluate(() => window.__clubNova.scene.getScene('club').placed['6,0'].facing);
+const after = await page.evaluate(() => window.__clubNova.scene.getScene('club').placed['6,1'].facing);
 check('R rotates the DJ booth', after === (before + 90) % 360, `${before} -> ${after}`);
 
 // The DJ earns fans from the start; the bar needs a bartender.
@@ -257,7 +260,7 @@ const restored = await page.evaluate(() => {
   return { savedPlaced: saved.placed.length, savedCash: Math.floor(saved.cash), placed: s.placedCount(), cash: Math.floor(s.cash) };
 });
 check('save restores after reload', restored.placed === restored.savedPlaced && Math.abs(restored.cash - restored.savedCash) <= 20, JSON.stringify(restored));
-const djAfterReload = await page.evaluate(() => { const b = window.__clubNova.scene.getScene('club').clubBooth(); return !!b && !!b.staff && b.anchor.join(',') === '6,0'; });
+const djAfterReload = await page.evaluate(() => { const b = window.__clubNova.scene.getScene('club').clubBooth(); return !!b && !!b.staff && b.anchor.join(',') === '6,1'; });
 check('the DJ booth and its DJ come back after reload', djAfterReload);
 
 // The DJ booth can't be sold, only upgraded in place (paying the new price
@@ -277,7 +280,7 @@ const upgrade = await page.evaluate(() => {
   return result;
 });
 check('the DJ booth can\'t be sold', upgrade.kept, JSON.stringify(upgrade));
-check('upgrading the booth swaps it in place ($215 - $90)', upgrade.ok && upgrade.type === 'proBooth' && upgrade.anchor === '6,0' && upgrade.dj && upgrade.paid === 125 && upgrade.booths === 1, JSON.stringify(upgrade));
+check('upgrading the booth swaps it in place ($215 - $90)', upgrade.ok && upgrade.type === 'proBooth' && upgrade.anchor === '6,1' && upgrade.dj && upgrade.paid === 125 && upgrade.booths === 1, JSON.stringify(upgrade));
 
 // Drop the Bass: a 90-second boost, then a cooldown.
 const boost = await page.evaluate(() => {

@@ -67,12 +67,23 @@ const DJ_FOOTPRINT = {
   180: [[0, 0], [1, 0]],
   270: [[0, 0], [0, 1]],
 };
+// The DJ's own tiles, behind the desk (the opposite side from the crowd,
+// which faces +gy at 0, +gx at 90, -gy at 180, -gx at 270): part of the
+// booth's footprint, so nobody walks or builds there, but not part of the
+// desk's art (see getFootprint()).
+const DJ_BACK = {
+  0: [[0, -1], [1, -1]],
+  90: [[-1, 0], [-1, 1]],
+  180: [[0, 1], [1, 1]],
+  270: [[1, 0], [1, 1]],
+};
 function boothTier(key, label, cost, unlockLevel, spriteBase, meta) {
   return {
     key, label, cost, unlockLevel, category: 'DJ Booths', fanRate: 1.2,
     staff: 'dj', rotatable: true,
     sprites: { 0: `${spriteBase}_0`, 90: `${spriteBase}_90`, 180: `${spriteBase}_180`, 270: `${spriteBase}_270` },
     footprint: DJ_FOOTPRINT,
+    backTiles: DJ_BACK,
     displayWidth: meta.displayWidth, originX: meta.originX, originY: meta.originY,
   };
 }

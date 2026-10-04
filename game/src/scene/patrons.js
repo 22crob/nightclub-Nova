@@ -305,6 +305,7 @@ export class PatronsMixin {
       if (FLOOR_DECAL_PROPS.has(rec.type)) {
         danceTiles.push([tx, ty]);
       } else if (def.category === 'DJ Booths') {
+        if (rec.tiles && rec.tiles.some((t) => t.back && t[0] === tx && t[1] === ty)) continue; // not round the DJ's side
         for (const [dx, dy] of [[1, 0], [-1, 0], [0, 1], [0, -1]]) {
           const nx = tx + dx;
           const ny = ty + dy;
