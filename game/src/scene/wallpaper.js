@@ -32,13 +32,13 @@ export class WallpaperMixin {
     if (x >= 0) {
       const gx = x / half - 0.5;
       const h = (gx - 0.5) * (TILE_H / 2) - y;
-      if (gx < -0.5 || gx > this.gridSize - 0.5 || h < 0 || h > WALL_HEIGHT) return null;
-      return `R${Math.min(this.gridSize - 1, Math.round(gx))}`;
+      if (gx < -0.5 || gx > this.gridW - 0.5 || h < 0 || h > WALL_HEIGHT) return null;
+      return `R${Math.min(this.gridW - 1, Math.round(gx))}`;
     }
     const gy = -x / half - 0.5;
     const h = (gy - 0.5) * (TILE_H / 2) - y;
-    if (gy < -0.5 || gy > this.gridSize - 0.5 || h < 0 || h > WALL_HEIGHT) return null;
-    return `L${Math.min(this.gridSize - 1, Math.round(gy))}`;
+    if (gy < -0.5 || gy > this.gridH - 0.5 || h < 0 || h > WALL_HEIGHT) return null;
+    return `L${Math.min(this.gridH - 1, Math.round(gy))}`;
   }
 
   // Top-left screen position of a section's wallpaper image.
@@ -56,11 +56,11 @@ export class WallpaperMixin {
 
   // The bare walls: old brick on every section, under any wallpaper.
   // Redrawn whenever the walls are (the club may have grown).
-  drawBareWalls(size) {
+  drawBareWalls() {
     for (const img of this.bareWallImages || []) img.destroy();
     this.bareWallImages = [];
     for (const side of ['R', 'L']) {
-      for (let i = 0; i < size; i++) {
+      for (let i = 0; i < (side === 'R' ? this.gridW : this.gridH); i++) {
         const section = `${side}${i}`;
         const { x, y } = this.wallSectionOrigin(section);
         // One of the torn paper's variations, picked by section.
@@ -131,7 +131,7 @@ export class WallpaperMixin {
     if (!saved || typeof saved !== 'object') return;
     for (const [section, type] of Object.entries(saved)) {
       if (!/^[RL]\d+$/.test(section) || !PROP_TYPES[type] || !PROP_TYPES[type].wallStyle) continue;
-      if (Number(section.slice(1)) >= this.gridSize) continue;
+      if (Number(section.slice(1)) >= (section[0] === 'R' ? this.gridW : this.gridH)) continue;
       this.wallpaper[section] = type;
       this.drawWallSection(section, type);
     }

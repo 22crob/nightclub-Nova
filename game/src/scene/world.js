@@ -2,8 +2,8 @@
 // grid math, hover tracking, zoom and club expansion.
 // Mixed into ClubScene (see ClubScene.js); `this` is the scene.
 import Phaser from 'phaser';
-import { GRID_EXPANSIONS } from '../catalog.js';
-import { FLOOR_COLOR, FLOOR_SLAB_DEPTH, ROOM_COLORS, TILE_H, TILE_W, WALL_BASEBOARD, WALL_HEIGHT, WALL_THICKNESS, ZOOM_DEFAULT, ZOOM_MAX, ZOOM_MIN } from '../config.js';
+import { EXPANSION } from '../catalog.js';
+import { BASE_GRID_SIZE, FLOOR_COLOR, FLOOR_SLAB_DEPTH, ROOM_COLORS, TILE_H, TILE_W, WALL_BASEBOARD, WALL_HEIGHT, WALL_THICKNESS, ZOOM_DEFAULT, ZOOM_MAX, ZOOM_MIN } from '../config.js';
 import { SFX } from '../sfx.js';
 import { WALL_TEX_H, WALL_TEX_W, doorCanvas } from '../walls.js';
 import { bareFloorCanvas } from '../floors.js';
@@ -16,14 +16,20 @@ export class WorldMixin {
     };
   }
 
+  // True if (gx, gy) is a floor tile of the club. The room is gridW tiles
+  // along gx (the right wall) by gridH along gy (the left wall).
+  inGrid(gx, gy) {
+    return gx >= 0 && gy >= 0 && gx < this.gridW && gy < this.gridH;
+  }
+
   // Builds any tile in [0, upToSize) x [0, upToSize) that doesn't already
   // exist in this.tiles yet. Called once for the whole starting grid in
   // create(), and again with a bigger upToSize from expandClub() — in that
   // second case every already-built tile is skipped, so this only ever
   // adds the newly exposed strip of floor rather than rebuilding anything.
-  buildTiles(upToSize) {
-    for (let gx = 0; gx < upToSize; gx++) {
-      for (let gy = 0; gy < upToSize; gy++) {
+  buildTiles() {
+    for (let gx = 0; gx < this.gridW; gx++) {
+      for (let gy = 0; gy < this.gridH; gy++) {
         const key = `${gx},${gy}`;
         if (this.tiles[key]) continue;
         const { sx, sy } = this.gridToScreen(gx, gy);
@@ -55,12 +61,14 @@ export class WorldMixin {
   // The bare floor: one seamless sheet of old, worn concrete across the
   // whole room (bareFloorCanvas() in floors.js), with no lines between
   // tiles. The tiles themselves are invisible until highlighted.
-  drawBareFloor(size) {
-    const key = `bareFloor_${size}`;
-    if (!this.textures.exists(key)) this.textures.addCanvas(key, bareFloorCanvas(size));
-    const [x] = this.gridPoint(-0.5, size - 0.5);
+  drawBareFloor() {
+    const w = this.gridW;
+    const h = this.gridH;
+    const key = `bareFloor_${w}x${h}`;
+    if (!this.textures.exists(key)) this.textures.addCanvas(key, bareFloorCanvas(w, h));
+    const [x] = this.gridPoint(-0.5, h - 0.5);
     const [, y] = this.gridPoint(-0.5, -0.5);
-    this.bareFloor.setTexture(key).setPosition(x, y).setDisplaySize(size * TILE_W, size * TILE_H);
+    this.bareFloor.setTexture(key).setPosition(x, y).setDisplaySize((w + h) * TILE_W / 2, (w + h) * TILE_H / 2);
   }
 
   // Screen position of a point in grid space (tile centres are whole
@@ -79,7 +87,7 @@ export class WorldMixin {
   // stand outside that along the gy = -0.5 edge (right wall) and the
   // gx = -0.5 edge (left wall), WALL_THICKNESS tiles thick, so they never
   // take up floor tiles.
-  buildWalls(upToSize) {
+  buildWalls() {
     if (!this.groundGraphics) {
       this.groundGraphics = this.add.graphics();
       this.tileLayer.addAt(this.groundGraphics, 0); // under the floor tiles
@@ -98,7 +106,8 @@ export class WorldMixin {
       this.wallTrimGraphics = this.add.graphics();
       this.wallLayer.add(this.wallTrimGraphics);
     }
-    const n = upToSize - 0.5; // far floor edge
+    const nx = this.gridW - 0.5; // far floor edges
+    const ny = this.gridH - 0.5;
     const t = -0.5 - WALL_THICKNESS; // outer edge of the walls
     const P = (gx, gy, h) => this.gridPoint(gx, gy, h);
     const fill = (g, color, pts) => {
@@ -110,42 +119,42 @@ export class WorldMixin {
     const g = this.groundGraphics;
     g.clear();
     const drop = FLOOR_SLAB_DEPTH; // the sidewalk sits this far below the floor
-    this.drawStreetGround(g, P, t, n, drop);
-    fill(g, ROOM_COLORS.slabRight, [P(n, t, 0), P(n, n, 0), P(n, n, -drop), P(n, t, -drop)]);
-    fill(g, ROOM_COLORS.slabLeft, [P(t, n, 0), P(n, n, 0), P(n, n, -drop), P(t, n, -drop)]);
+    this.drawStreetGround(g, P, t, nx, ny, drop);
+    fill(g, ROOM_COLORS.slabRight, [P(nx, t, 0), P(nx, ny, 0), P(nx, ny, -drop), P(nx, t, -drop)]);
+    fill(g, ROOM_COLORS.slabLeft, [P(t, ny, 0), P(nx, ny, 0), P(nx, ny, -drop), P(t, ny, -drop)]);
     g.lineStyle(1, ROOM_COLORS.slabEdge, 1);
-    g.lineBetween(...P(t, n, 0), ...P(n, n, 0));
-    g.lineBetween(...P(n, n, 0), ...P(n, t, 0));
+    g.lineBetween(...P(t, ny, 0), ...P(nx, ny, 0));
+    g.lineBetween(...P(nx, ny, 0), ...P(nx, t, 0));
 
     // --- Walls ---
     const w = this.wallGraphics;
     w.clear();
     const H = WALL_HEIGHT;
     // Inner faces.
-    fill(w, ROOM_COLORS.wallRight, [P(-0.5, -0.5, 0), P(n, -0.5, 0), P(n, -0.5, H), P(-0.5, -0.5, H)]);
-    fill(w, ROOM_COLORS.wallLeft, [P(-0.5, -0.5, 0), P(-0.5, n, 0), P(-0.5, n, H), P(-0.5, -0.5, H)]);
+    fill(w, ROOM_COLORS.wallRight, [P(-0.5, -0.5, 0), P(nx, -0.5, 0), P(nx, -0.5, H), P(-0.5, -0.5, H)]);
+    fill(w, ROOM_COLORS.wallLeft, [P(-0.5, -0.5, 0), P(-0.5, ny, 0), P(-0.5, ny, H), P(-0.5, -0.5, H)]);
     // Baseboards.
     const bb = WALL_BASEBOARD;
-    fill(w, ROOM_COLORS.baseboard, [P(-0.5, -0.5, 0), P(n, -0.5, 0), P(n, -0.5, bb), P(-0.5, -0.5, bb)]);
-    fill(w, ROOM_COLORS.baseboard, [P(-0.5, -0.5, 0), P(-0.5, n, 0), P(-0.5, n, bb), P(-0.5, -0.5, bb)]);
+    fill(w, ROOM_COLORS.baseboard, [P(-0.5, -0.5, 0), P(nx, -0.5, 0), P(nx, -0.5, bb), P(-0.5, -0.5, bb)]);
+    fill(w, ROOM_COLORS.baseboard, [P(-0.5, -0.5, 0), P(-0.5, ny, 0), P(-0.5, ny, bb), P(-0.5, -0.5, bb)]);
     // End faces at the open ends of each wall.
-    fill(w, ROOM_COLORS.wallEnd, [P(n, t, 0), P(n, -0.5, 0), P(n, -0.5, H), P(n, t, H)]);
-    fill(w, ROOM_COLORS.wallEnd, [P(t, n, 0), P(-0.5, n, 0), P(-0.5, n, H), P(t, n, H)]);
+    fill(w, ROOM_COLORS.wallEnd, [P(nx, t, 0), P(nx, -0.5, 0), P(nx, -0.5, H), P(nx, t, H)]);
+    fill(w, ROOM_COLORS.wallEnd, [P(t, ny, 0), P(-0.5, ny, 0), P(-0.5, ny, H), P(t, ny, H)]);
     // Top caps.
-    fill(w, ROOM_COLORS.cap, [P(t, t, H), P(n, t, H), P(n, -0.5, H), P(-0.5, -0.5, H), P(-0.5, n, H), P(t, n, H)]);
+    fill(w, ROOM_COLORS.cap, [P(t, t, H), P(nx, t, H), P(nx, -0.5, H), P(-0.5, -0.5, H), P(-0.5, ny, H), P(t, ny, H)]);
     w.lineStyle(1, ROOM_COLORS.capEdge, 1);
-    w.strokePoints([P(t, t, H), P(n, t, H), P(n, -0.5, H), P(-0.5, -0.5, H), P(-0.5, n, H), P(t, n, H)].map(([x, y]) => ({ x, y })), true);
+    w.strokePoints([P(t, t, H), P(nx, t, H), P(nx, -0.5, H), P(-0.5, -0.5, H), P(-0.5, ny, H), P(t, ny, H)].map(([x, y]) => ({ x, y })), true);
 
     const trim = this.wallTrimGraphics;
     trim.clear();
     // Shading where the two walls meet.
     trim.lineStyle(2, ROOM_COLORS.corner, 1);
     trim.lineBetween(...P(-0.5, -0.5, 0), ...P(-0.5, -0.5, H));
-    this.drawBareWalls(upToSize);
-    this.drawBareFloor(upToSize);
-    this.drawMoodShade(upToSize);
+    this.drawBareWalls();
+    this.drawBareFloor();
+    this.drawMoodShade();
     this.drawDoor();
-    this.drawStreetProps(P, t, n, FLOOR_SLAB_DEPTH);
+    this.drawStreetProps(P, t, nx, ny, FLOOR_SLAB_DEPTH);
   }
 
   // The tile inside the club's front door, near the back of the left wall,
@@ -183,7 +192,7 @@ export class WorldMixin {
     const localX = (pointer.x - this.world.x) / this.world.scaleX;
     const localY = (pointer.y - this.world.y) / this.world.scaleY;
     const { gx, gy } = this.screenToGrid(localX, localY);
-    const onGrid = gx >= 0 && gx < this.gridSize && gy >= 0 && gy < this.gridSize;
+    const onGrid = this.inGrid(gx, gy);
     const next = onGrid ? { gx, gy } : null;
     const wall = this.wallSectionAt(localX, localY);
     if (wall !== this.hoverWall) {
@@ -225,34 +234,86 @@ export class WorldMixin {
     this.hoveredPropLabel = nextLabel;
   }
 
-  // The next not-yet-reached tier in GRID_EXPANSIONS, or null once the club
-  // is already at (or somehow past) the largest defined size.
-  nextExpansion() {
-    return GRID_EXPANSIONS.find((tier) => tier.size > this.gridSize) || null;
+  // The longest a wall may be at a level (see EXPANSION in catalog.js).
+  maxWallAt(level) {
+    let size = BASE_GRID_SIZE;
+    for (const limit of EXPANSION.limits) if (limit.level <= level) size = Math.max(size, limit.size);
+    return size;
   }
 
-  // Buys the next grid-size tier, if there is one, it's unlocked, and it's
-  // affordable — an instant purchase (no placement step) triggered from the
-  // shop's Expand tab (see renderExpandCard()). Returns true on a
-  // successful expansion so the caller can react (closing the shop, etc.).
-  expandClub() {
-    const tier = this.nextExpansion();
-    if (!tier) return false; // already at max size
+  // What adding one row on a side would be: 'left' adds a row along the
+  // front-left edge (the left wall gets a tile longer), 'right' one along
+  // the front-right edge (the right wall gets longer). Null once that wall
+  // is as long as it can ever be.
+  expansionFor(side) {
+    const wall = side === 'left' ? this.gridH : this.gridW; // the wall that grows
+    const tiles = side === 'left' ? this.gridW : this.gridH; // tiles in the new row
+    const newLen = wall + 1;
+    const top = EXPANSION.limits[EXPANSION.limits.length - 1].size;
+    if (newLen > top) return null;
+    const unlockLevel = EXPANSION.limits.find((l) => l.size >= newLen).level;
+    const perTile = EXPANSION.perTile + (newLen - BASE_GRID_SIZE - 1) * EXPANSION.perTileGrowth;
+    const cost = Math.max(5, Math.round((tiles * perTile) / 5) * 5);
+    return { side, tiles, newLen, cost, unlockLevel };
+  }
+
+  // The floor tiles a row on `side` would add.
+  expansionTiles(side) {
+    const out = [];
+    if (side === 'left') for (let gx = 0; gx < this.gridW; gx++) out.push([gx, this.gridH]);
+    else for (let gy = 0; gy < this.gridH; gy++) out.push([this.gridW, gy]);
+    return out;
+  }
+
+  // Shows the strip of floor a row on `side` would add, glowing green
+  // beyond the room's edge, so you can see it before you buy it.
+  showExpandPreview(side) {
+    if (!this.expandPreview) {
+      this.expandPreview = this.add.graphics();
+      this.ghostLayer.add(this.expandPreview);
+      this.tweens.add({ targets: this.expandPreview, alpha: { from: 1, to: 0.55 }, duration: 600, yoyo: true, repeat: -1 });
+    }
+    const g = this.expandPreview;
+    g.clear();
+    this.expandPreviewSide = side;
+    if (!side || !this.expansionFor(side)) return;
+    const P = (gx, gy) => { const [x, y] = this.gridPoint(gx, gy); return { x, y }; };
+    for (const [gx, gy] of this.expansionTiles(side)) {
+      const pts = [P(gx - 0.5, gy - 0.5), P(gx + 0.5, gy - 0.5), P(gx + 0.5, gy + 0.5), P(gx - 0.5, gy + 0.5)];
+      g.fillStyle(0x5dff6a, 0.38);
+      g.fillPoints(pts, true);
+      g.lineStyle(1, 0xd8ffd0, 0.7);
+      g.strokePoints(pts, true);
+    }
+    // A bright outline round the whole strip.
+    const [x0, y0, x1, y1] = side === 'left'
+      ? [-0.5, this.gridH - 0.5, this.gridW - 0.5, this.gridH + 0.5]
+      : [this.gridW - 0.5, -0.5, this.gridW + 0.5, this.gridH - 0.5];
+    g.lineStyle(3, 0x9dff8a, 1);
+    g.strokePoints([P(x0, y0), P(x1, y0), P(x1, y1), P(x0, y1)], true);
+  }
+
+  clearExpandPreview() {
+    this.expandPreviewSide = null;
+    if (this.expandPreview) this.expandPreview.clear();
+  }
+
+  // Buys one more row of floor on `side` ('left' or 'right'), if it's
+  // unlocked and affordable. Returns true if the club grew.
+  expandClub(side) {
+    const tier = this.expansionFor(side);
+    if (!tier) return false; // that wall is as long as it gets
     if (this.levelInfo().level < tier.unlockLevel) { SFX.denied(); return false; }
     if (this.cash < tier.cost) { SFX.denied(); return false; }
 
     this.cash -= tier.cost;
-    this.gridSize = tier.size;
-    this.buildTiles(this.gridSize);
-    this.buildWalls(this.gridSize); // extend the back walls to the newly exposed edge
-
-    // This is a bigger, rarer purchase than any single prop — give it its
-    // own sound and a celebration banner (same showToast() used for
-    // leveling up) instead of the same quiet blip every $50 dance tile
-    // gets, so spending $600-5000 on more floor actually feels like
-    // something happened.
+    if (side === 'left') this.gridH += 1;
+    else this.gridW += 1;
+    this.buildTiles();
+    this.buildWalls(); // the walls, floor and street follow the new edge
+    this.clearExpandPreview();
     SFX.expand();
-    this.showToast(`🏗️ Club expanded to ${tier.size}×${tier.size}!`);
+    this.showToast(`🏗️ Club expanded: now ${this.gridW}×${this.gridH}!`);
     this.updateUI();
     this.saveGame();
     return true;
@@ -277,14 +338,15 @@ export class WorldMixin {
   // Zooms out from ZOOM_DEFAULT if needed so the whole room fits.
   centerView() {
     const top = -TILE_H / 2 - WALL_HEIGHT - WALL_THICKNESS * TILE_H;
-    const bottom = (this.gridSize - 1) * TILE_H + TILE_H / 2 + FLOOR_SLAB_DEPTH;
-    const halfWidth = (this.gridSize + WALL_THICKNESS) * TILE_W / 2;
+    const bottom = (this.gridW + this.gridH - 1) * TILE_H / 2 + FLOOR_SLAB_DEPTH;
+    const left = -(this.gridH + WALL_THICKNESS) * TILE_W / 2;
+    const right = (this.gridW + WALL_THICKNESS) * TILE_W / 2;
     const areaTop = 110; // below the profile and cash
     const areaBottom = this.scale.height - 200; // above the shop dock
-    const fit = Math.min((areaBottom - areaTop) / (bottom - top), (this.scale.width - 40) / (2 * halfWidth));
+    const fit = Math.min((areaBottom - areaTop) / (bottom - top), (this.scale.width - 40) / (right - left));
     const zoom = Phaser.Math.Clamp(Math.min(ZOOM_DEFAULT, fit), ZOOM_MIN, ZOOM_MAX);
     this.world.setScale(zoom);
-    this.world.x = this.scale.width / 2;
+    this.world.x = this.scale.width / 2 - ((left + right) / 2) * zoom;
     this.world.y = (areaTop + areaBottom) / 2 - ((top + bottom) / 2) * zoom;
   }
 }

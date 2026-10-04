@@ -48,8 +48,9 @@ export class LightingMixin {
 
   // Redraws the dimming to fit the room (on create and when it expands).
   // The wall shade goes over the wallpaper but under the door.
-  drawMoodShade(size) {
-    const n = size - 0.5;
+  drawMoodShade() {
+    const nx = this.gridW - 0.5;
+    const ny = this.gridH - 0.5;
     const P = (gx, gy, h = 0) => {
       const [x, y] = this.gridPoint(gx, gy, h);
       return { x, y };
@@ -58,16 +59,16 @@ export class LightingMixin {
     const color = this.moodColor ?? MOOD_LIGHTING.color; // a party tints it
     this.floorShade.clear();
     this.floorShade.fillStyle(color, floorAlpha);
-    this.floorShade.fillPoints([P(-0.5, -0.5), P(n, -0.5), P(n, n), P(-0.5, n)], true);
+    this.floorShade.fillPoints([P(-0.5, -0.5), P(nx, -0.5), P(nx, ny), P(-0.5, ny)], true);
     this.lightMaskShape.clear();
     this.lightMaskShape.fillStyle(0xffffff, 1);
-    this.lightMaskShape.fillPoints([P(-0.5, -0.5), P(n, -0.5), P(n, n), P(-0.5, n)], true);
+    this.lightMaskShape.fillPoints([P(-0.5, -0.5), P(nx, -0.5), P(nx, ny), P(-0.5, ny)], true);
     const w = this.wallShade;
     if (!w) return;
     w.clear();
     w.fillStyle(color, wallAlpha);
-    w.fillPoints([P(-0.5, -0.5), P(n, -0.5), P(n, -0.5, WALL_HEIGHT), P(-0.5, -0.5, WALL_HEIGHT)], true);
-    w.fillPoints([P(-0.5, -0.5), P(-0.5, n), P(-0.5, n, WALL_HEIGHT), P(-0.5, -0.5, WALL_HEIGHT)], true);
+    w.fillPoints([P(-0.5, -0.5), P(nx, -0.5), P(nx, -0.5, WALL_HEIGHT), P(-0.5, -0.5, WALL_HEIGHT)], true);
+    w.fillPoints([P(-0.5, -0.5), P(-0.5, ny), P(-0.5, ny, WALL_HEIGHT), P(-0.5, -0.5, WALL_HEIGHT)], true);
   }
 
   // The glow a placed prop casts on the floor, if it gives off light.

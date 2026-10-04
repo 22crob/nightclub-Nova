@@ -83,6 +83,19 @@ const ICONS = {
 // dock's tabs and the money stack. Gradients, a white shine and dark
 // outlines.
 const O = '#10233d';
+function expandArt(mirror) {
+  const flip = mirror ? ' transform="translate(48 0) scale(-1 1)"' : '';
+  return `<defs><linearGradient id="gRow" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#b6ff8a"/><stop offset="1" stop-color="#2fae2a"/></linearGradient></defs>
+    <g${flip}>
+    <path d="M27 6 45 15 27 24 9 15Z" fill="#3a4a6e" stroke="${O}" stroke-width="1.6" stroke-linejoin="round"/>
+    <path d="M18 10.5 36 19.5M36 10.5 18 19.5" stroke="#5a6d96" stroke-width="1.2"/>
+    <path d="M9 15 27 24v3L9 18Z" fill="#26304a" stroke="${O}" stroke-width="1.4" stroke-linejoin="round"/>
+    <path d="M27 24 45 15v3L27 27Z" fill="#1b2236" stroke="${O}" stroke-width="1.4" stroke-linejoin="round"/>
+    <path d="M9 18 27 27 21 30 3 21Z" fill="url(#gRow)" stroke="${O}" stroke-width="1.6" stroke-linejoin="round"/>
+    <path d="M9 18 27 27" stroke="#fff" stroke-width="1.2" stroke-dasharray="2 2" opacity=".8"/>
+    <path transform="translate(10 35) rotate(-117)" d="M0-8 7 0H2.8v7H-2.8V0H-7Z" fill="url(#gRow)" stroke="${O}" stroke-width="1.4" stroke-linejoin="round"/>
+    </g>`;
+}
 const ART = {
   // Decorations: a paint can brimming with purple paint, dripping down.
   tabDecor: `<defs><linearGradient id="gCan" x1="0" x2="1"><stop offset="0" stop-color="#8a95a8"/><stop offset=".3" stop-color="#f4f7fb"/><stop offset=".65" stop-color="#b8c2d2"/><stop offset="1" stop-color="#6d7890"/></linearGradient>
@@ -102,6 +115,10 @@ const ART = {
     <path d="M24 26 37 19.5V34L24 40.5Z" fill="#b97f36" stroke="${O}" stroke-width="1.6" stroke-linejoin="round"/>
     <path d="M17.5 16.25 30.5 22.75" stroke="#c99a52" stroke-width="2.2"/>
     ${[[9, 8, -45], [39, 8, 45], [41, 41, 135], [7, 41, -135]].map(([x, y, a]) => `<path transform="translate(${x} ${y}) rotate(${a})" d="M0-7.5 6.5 0H2.6v6.5h-5.2V0h-3.9Z" fill="url(#gArrow)" stroke="${O}" stroke-width="1.4" stroke-linejoin="round"/>`).join('')}`,
+  // Expand on the left / right: a floor with a new green row along its
+  // front-left (or front-right) edge and an arrow pushing it out.
+  expandLeft: expandArt(false),
+  expandRight: expandArt(true),
   // VIPs: a gold star in shades, grinning.
   tabVip: `<defs><radialGradient id="gStar" cx=".4" cy=".3" r=".8"><stop offset="0" stop-color="#fff6b0"/><stop offset=".5" stop-color="#ffcf2a"/><stop offset="1" stop-color="#e38a00"/></radialGradient></defs>
     <path d="M24.0 5.0 L29.6 18.2 L44.0 19.5 L33.1 29.0 L36.3 43.0 L24.0 35.6 L11.7 43.0 L14.9 29.0 L4.0 19.5 L18.4 18.2Z" fill="url(#gStar)" stroke="${O}" stroke-width="1.8" stroke-linejoin="round"/>

@@ -317,7 +317,7 @@ export class PatronsMixin {
         for (const [dx, dy] of [[1, 0], [-1, 0], [0, 1], [0, -1]]) {
           const nx = tx + dx;
           const ny = ty + dy;
-          if (nx >= 0 && nx < this.gridSize && ny >= 0 && ny < this.gridSize && !this.isBlockingProp(nx, ny)) {
+          if (this.inGrid(nx, ny) && !this.isBlockingProp(nx, ny)) {
             hangoutTiles.push([nx, ny]);
           }
         }
@@ -480,13 +480,13 @@ export class PatronsMixin {
           // forever waiting for it to clear, just leave from right there) —
           // NOT meant to cut off a legitimately long walk. It has to scale
           // with the club's current floor size: the longest possible walk
-          // to the door is (gridSize-1)*2 hops (opposite corner, on the
+          // to the door is gridW+gridH-2 hops (opposite corner, on the
           // BASE 10x10 floor that's 18), and a maxed-out expanded club
           // (18x18) needs up to 34. A fixed cap of 20 used to make patrons
           // on the far side of an expanded club simply vanish mid-walk,
           // nowhere near the door yet — a real, visible bug, not just an
           // edge case.
-          const maxDepartureHops = (this.gridSize - 1) * 2 + 10;
+          const maxDepartureHops = this.gridW + this.gridH - 2 + 10;
           if (arrived || patron.departureHops > maxDepartureHops) {
             // Actually reached the door on foot — now it can vanish.
             this.finalizeDeparture(patron);
@@ -536,9 +536,8 @@ export class PatronsMixin {
     if (avoidPatrons) {
       for (const p of this.patrons) if (!p.leaving && !p.gone && !(p.gx === fx && p.gy === fy)) crowd.add(`${p.gx},${p.gy}`);
     }
-    const n = this.gridSize;
     const prev = new Map();
-    const key = (x, y) => y * n + x;
+    const key = (x, y) => y * this.gridW + x;
     const queue = [[fx, fy]];
     prev.set(key(fx, fy), null);
     while (queue.length) {
@@ -546,7 +545,7 @@ export class PatronsMixin {
       for (const [dx, dy] of [[1, 0], [-1, 0], [0, 1], [0, -1]]) {
         const nx = x + dx;
         const ny = y + dy;
-        if (nx < 0 || ny < 0 || nx >= n || ny >= n) continue;
+        if (!this.inGrid(nx, ny)) continue;
         const k = key(nx, ny);
         if (prev.has(k)) continue;
         if ((this.isBlockingProp(nx, ny) || crowd.has(`${nx},${ny}`)) && !(nx === tx && ny === ty)) continue;

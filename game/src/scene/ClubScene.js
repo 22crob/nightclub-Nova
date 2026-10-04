@@ -42,11 +42,12 @@ export class ClubScene extends Phaser.Scene {
     this.wallpaper = {}; // wall section -> wallpaper type (see wallpaper.js)
     this.floorPaint = {}; // "gx,gy" -> regular floor type (see floorPaint.js)
     this.placed = {}; // "gx,gy" -> { type, facing, gameObject, label }
-    // The club's current floor size — grows via expandClub()/GRID_EXPANSIONS
+    // The club's current floor size — grows a row at a time via expandClub()
     // and is saved/restored like any other piece of club state. Set for
     // real (possibly from a save) in create(), before the tile grid below
     // is built.
-    this.gridSize = BASE_GRID_SIZE;
+    this.gridW = BASE_GRID_SIZE; // tiles along gx (the right wall)
+    this.gridH = BASE_GRID_SIZE; // tiles along gy (the left wall)
     this.hoverTile = null; // { gx, gy } currently under the mouse, or null
     this.ghost = null; // preview sprite shown while hovering an empty tile with a rotatable prop selected
     this.highlightedTiles = []; // tile polygons currently tinted as "this is what will be placed on"
@@ -111,11 +112,12 @@ export class ClubScene extends Phaser.Scene {
     // BASE_GRID_SIZE and only reach its real size after loadGame() (further
     // down) re-runs the expansion, which would work but momentarily builds
     // (and throws away) a smaller grid than the save actually has.
-    this.gridSize = this.peekSavedGridSize() || BASE_GRID_SIZE;
+    const saved = this.peekSavedGridSize();
+    if (saved) [this.gridW, this.gridH] = saved;
 
     this.tiles = {};
-    this.buildTiles(this.gridSize);
-    this.buildWalls(this.gridSize);
+    this.buildTiles();
+    this.buildWalls();
     this.centerView();
 
     // Restore a previous save, if there is one — must happen after the

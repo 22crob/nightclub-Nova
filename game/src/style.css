@@ -518,6 +518,10 @@ body { font-family: var(--ui-font); color: var(--ink); }
 .propSlot:has(.propButton.locked):hover { transform: none; }
 .propButton.locked .icon { filter: grayscale(1) brightness(0.5); }
 .propSlot.emptySlot { cursor: default; opacity: 0.75; }
+/* Expand: the green "Build it!" card that confirms the row shown in green. */
+.propSlot.confirmSlot { box-shadow: 0 0 0 3px #7dff6a, 0 0 16px #5dff6aa6, 0 3px 5px rgba(0, 0, 0, 0.45); }
+.propSlot.confirmSlot .propButton { background: var(--shine), linear-gradient(180deg, #8af27a 0%, #2fae2a 55%, #17701a 100%); }
+.propSlot.confirmSlot .icon { inset: 18px; }
 .propSlot.emptySlot:hover { transform: none; }
 .propSlot.emptySlot .propButton::after {
   content: '?'; position: absolute; inset: 0; display: flex; align-items: center; justify-content: center;

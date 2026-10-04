@@ -22,13 +22,15 @@ export class StreetMixin {
   // edge is at gy = n; the walls' outer face is at t. The line runs along
   // the left sidewalk from the door (at gy = door) toward the front.
   streetSpots() {
-    const n = this.gridSize - 0.5;
+    const nx = this.gridW - 0.5; // the room's far edges
+    const ny = this.gridH - 0.5;
     const t = -0.5 - WALL_THICKNESS; // the walls' outer face
     const door = this.doorTile().gy;
     const lineX = t - STREET.lineOut;
-    const len = Math.max(2, Math.min(STREET.lineLength, Math.floor(n - door)));
+    const len = Math.max(2, Math.min(STREET.lineLength, Math.floor(ny - door)));
     return {
-      n,
+      nx,
+      ny,
       t,
       door,
       lineX,
@@ -40,11 +42,11 @@ export class StreetMixin {
       enterTo: { gx: t - 0.6, gy: door }, // to the door, where they slip in
       exitFrom: { gx: lineX - 0.95, gy: door - 0.9 },
       bouncer: { gx: lineX + 0.35, gy: door - 0.85 },
-      laneY: n + STREET.sidewalk - 1.6, // walking lanes round the block
-      frontY: n + STREET.sidewalk - 0.8,
-      rightX: n + STREET.sidewalk - 1.2,
+      laneY: ny + STREET.sidewalk - 1.6, // walking lanes round the block
+      frontY: ny + STREET.sidewalk - 0.8,
+      rightX: nx + STREET.sidewalk - 1.2,
       backY: t - STREET.sidewalk + 1.2,
-      laneEnds: [t - STREET.sidewalk - 1, n + STREET.sidewalk + 1],
+      laneEnds: [t - STREET.sidewalk - 1, ny + STREET.sidewalk + 1],
     };
   }
 
@@ -67,7 +69,7 @@ export class StreetMixin {
   // Ground: road, sidewalk, curb, lane markings, the red carpet, pools of
   // lamplight and the buildings across the back roads. Drawn into the
   // floor's ground graphics, under everything.
-  drawStreetGround(g, P, t, n, drop) {
+  drawStreetGround(g, P, t, nx, ny, drop) {
     const fill = (color, pts, alpha = 1) => {
       g.fillStyle(color, alpha);
       g.fillPoints(pts.map(([x, y]) => ({ x, y })), true);
@@ -77,21 +79,21 @@ export class StreetMixin {
     const R = STREET.road + STREET.sidewalk; // road's outer edge, from the walls
     const S = STREET.sidewalk;
 
-    this.drawStreetBuildings(g, P, t, n, drop, R);
-    quad(STREET.asphalt, t - R, t - R, n + R, n + R);
-    quad(STREET.curb, t - S - 0.25, t - S - 0.25, n + S + 0.25, n + S + 0.25);
-    quad(STREET.pavement, t - S, t - S, n + S, n + S);
+    this.drawStreetBuildings(g, P, t, nx, ny, drop, R);
+    quad(STREET.asphalt, t - R, t - R, nx + R, ny + R);
+    quad(STREET.curb, t - S - 0.25, t - S - 0.25, nx + S + 0.25, ny + S + 0.25);
+    quad(STREET.pavement, t - S, t - S, nx + S, ny + S);
     g.lineStyle(1, STREET.grout, 1);
-    for (let k = Math.ceil(t - S); k <= n + S; k += 2) {
-      g.lineBetween(...P(k, t - S, -drop), ...P(k, n + S, -drop));
-      g.lineBetween(...P(t - S, k, -drop), ...P(n + S, k, -drop));
-    }
+    for (let k = Math.ceil(t - S); k <= nx + S; k += 2) g.lineBetween(...P(k, t - S, -drop), ...P(k, ny + S, -drop));
+    for (let k = Math.ceil(t - S); k <= ny + S; k += 2) g.lineBetween(...P(t - S, k, -drop), ...P(nx + S, k, -drop));
     // Dashed centre lines down the middle of each road.
     const mid = S + STREET.road / 2;
-    for (let k = t - R; k < n + R; k += 2) {
-      quad(STREET.laneLine, k, n + mid - 0.08, k + 1, n + mid + 0.08);
-      quad(STREET.laneLine, n + mid - 0.08, k, n + mid + 0.08, k + 1);
+    for (let k = t - R; k < nx + R; k += 2) {
+      quad(STREET.laneLine, k, ny + mid - 0.08, k + 1, ny + mid + 0.08);
       quad(STREET.laneLine, k, t - mid - 0.08, k + 1, t - mid + 0.08);
+    }
+    for (let k = t - R; k < ny + R; k += 2) {
+      quad(STREET.laneLine, nx + mid - 0.08, k, nx + mid + 0.08, k + 1);
       quad(STREET.laneLine, t - mid - 0.08, k, t - mid + 0.08, k + 1);
     }
     // Red carpet under the line, from the door toward the front, with gold
@@ -106,7 +108,7 @@ export class StreetMixin {
     g.lineBetween(...P(cx0, cy1, -drop), ...P(cx1, cy1, -drop));
     g.lineBetween(...P(cx0, cy0, -drop), ...P(cx1, cy0, -drop));
     // Warm pools of light under the street lamps.
-    for (const [lx, ly] of this.streetLampSpots(t, n)) {
+    for (const [lx, ly] of this.streetLampSpots(t, nx, ny)) {
       const [cx, cy] = P(lx, ly, -drop);
       g.fillStyle(STREET.lampGlow, 0.04);
       g.fillEllipse(cx, cy, 150, 75);
@@ -116,19 +118,16 @@ export class StreetMixin {
   }
 
   // Lamp posts along the front curbs, in grid coordinates.
-  streetLampSpots(t, n) {
-    const curb = n + STREET.sidewalk - 0.4;
+  streetLampSpots(t, nx, ny) {
     const spots = [];
-    for (let k = t + 1; k <= n + 2; k += STREET.lampEvery) {
-      spots.push([k, curb]);
-      spots.push([curb, k]);
-    }
+    for (let k = t + 1; k <= nx + 2; k += STREET.lampEvery) spots.push([k, ny + STREET.sidewalk - 0.4]);
+    for (let k = t + 1; k <= ny + 2; k += STREET.lampEvery) spots.push([nx + STREET.sidewalk - 0.4, k]);
     return spots;
   }
 
   // A row of dark buildings with lit windows across each back road. Only
   // the two faces turned to the camera are drawn, far ones first.
-  drawStreetBuildings(g, P, t, n, drop, R) {
+  drawStreetBuildings(g, P, t, nx, ny, drop, R) {
     const fill = (color, pts) => {
       g.fillStyle(color, 1);
       g.fillPoints(pts.map(([x, y]) => ({ x, y })), true);
@@ -137,13 +136,15 @@ export class StreetMixin {
     const rand = () => { seed = (seed * 16807) % 2147483647; return seed / 2147483647; };
     const blocks = [];
     const far = t - R;
-    for (let k = far; k < n + R; ) {
-      const w = 3 + Math.floor(rand() * 4);
-      const h = 120 + Math.floor(rand() * 160);
-      const shade = STREET.buildings[Math.floor(rand() * STREET.buildings.length)];
-      blocks.push({ x0: k, x1: Math.min(k + w, n + R), y0: far - 5, y1: far, h, shade, seed: rand() }); // behind the right wall
-      blocks.push({ x0: far - 5, x1: far, y0: k, y1: Math.min(k + w, n + R), h, shade, seed: rand() }); // behind the left wall
-      k += w;
+    for (const [side, end] of [['right', nx + R], ['left', ny + R]]) {
+      for (let k = far; k < end; ) {
+        const w = 3 + Math.floor(rand() * 4);
+        const h = 120 + Math.floor(rand() * 160);
+        const shade = STREET.buildings[Math.floor(rand() * STREET.buildings.length)];
+        if (side === 'right') blocks.push({ x0: k, x1: Math.min(k + w, end), y0: far - 5, y1: far, h, shade, seed: rand() }); // behind the right wall
+        else blocks.push({ x0: far - 5, x1: far, y0: k, y1: Math.min(k + w, end), h, shade, seed: rand() }); // behind the left wall
+        k += w;
+      }
     }
     blocks.sort((a, b) => (a.x1 + a.y1) - (b.x1 + b.y1));
     for (const b of blocks) {
@@ -169,7 +170,7 @@ export class StreetMixin {
 
   // Velvet rope, street lamps and the bouncer. Called from buildWalls(), so
   // it follows the club when it expands.
-  drawStreetProps(P, t, n, drop) {
+  drawStreetProps(P, t, nx, ny, drop) {
     const sp = this.streetSpots();
     const rope = this.streetRope;
     rope.clear();
@@ -201,7 +202,7 @@ export class StreetMixin {
 
     const lamps = this.streetLamps;
     lamps.clear();
-    for (const [lx, ly] of this.streetLampSpots(t, n)) {
+    for (const [lx, ly] of this.streetLampSpots(t, nx, ny)) {
       const [x, y] = P(lx, ly, -drop);
       const top = y - 78;
       lamps.fillStyle(0x000000, 0.35);
@@ -393,13 +394,14 @@ export class StreetMixin {
     if (!this.hasCharacterSprites()) return;
     const sp = this.streetSpots();
     const lo = sp.t - STREET.sidewalk - 1;
-    const hi = sp.n + STREET.sidewalk + 1;
+    const hiX = sp.nx + STREET.sidewalk + 1;
+    const hiY = sp.ny + STREET.sidewalk + 1;
     const routes = [
-      { front: true, from: [lo, sp.laneY], to: [hi, sp.laneY] }, // past the line
-      { front: true, from: [lo, sp.frontY], to: [hi, sp.frontY] }, // front curb
-      { front: true, from: [sp.rightX, lo], to: [sp.rightX, hi] }, // right sidewalk
-      { front: false, from: [sp.leftX, lo], to: [sp.leftX, hi] }, // left sidewalk, past the line
-      { front: false, from: [lo, sp.backY], to: [hi, sp.backY] }, // back sidewalk
+      { front: true, from: [lo, sp.laneY], to: [hiX, sp.laneY] }, // past the line
+      { front: true, from: [lo, sp.frontY], to: [hiX, sp.frontY] }, // front curb
+      { front: true, from: [sp.rightX, lo], to: [sp.rightX, hiY] }, // right sidewalk
+      { front: false, from: [sp.leftX, lo], to: [sp.leftX, hiY] }, // left sidewalk, past the line
+      { front: false, from: [lo, sp.backY], to: [hiX, sp.backY] }, // back sidewalk
     ];
     const r = routes[Math.floor(Math.random() * routes.length)];
     const [a, b] = Math.random() < 0.5 ? [r.from, r.to] : [r.to, r.from];

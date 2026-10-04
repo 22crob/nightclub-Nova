@@ -44,7 +44,7 @@ export class FloorPaintMixin {
     const type = this.selectedProp;
     const def = PROP_TYPES[type];
     if (!def || !def.paintStyle) return false;
-    if (gx < 0 || gy < 0 || gx >= this.gridSize || gy >= this.gridSize) return false;
+    if (!this.inGrid(gx, gy)) return false;
     if (!this.isUnlocked(type)) { SFX.denied(); return false; }
     const key = `${gx},${gy}`;
     if (this.floorPaint[key] === type) return false; // already this floor
@@ -77,7 +77,7 @@ export class FloorPaintMixin {
     for (const [key, type] of Object.entries(saved)) {
       const [gx, gy] = key.split(',').map(Number);
       if (!PROP_TYPES[type] || !PROP_TYPES[type].paintStyle) continue;
-      if (!(gx >= 0 && gy >= 0 && gx < this.gridSize && gy < this.gridSize)) continue;
+      if (!this.inGrid(gx, gy)) continue;
       this.floorPaint[key] = type;
       this.drawFloorPaint(gx, gy, type);
     }

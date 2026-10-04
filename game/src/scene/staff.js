@@ -116,7 +116,7 @@ export class StaffMixin {
     for (let k = 1; k <= BAR_QUEUE_LENGTH; k++) {
       const x = counter[0] + dx * k;
       const y = counter[1] + dy * k;
-      if (x < 0 || y < 0 || x >= this.gridSize || y >= this.gridSize || this.isBlockingProp(x, y)) break;
+      if (!this.inGrid(x, y) || this.isBlockingProp(x, y)) break;
       tiles.push([x, y]);
     }
     return tiles;
@@ -463,11 +463,11 @@ export class StaffMixin {
     }
     let booth = booths[0];
     if (!booth) {
-      const mid = Math.floor((this.gridSize - 3) / 2);
+      const mid = Math.floor((this.gridW - 3) / 2);
       const spots = [];
-      for (let gy = 0; gy < this.gridSize; gy++) {
-        for (let d = 0; d < this.gridSize; d++) {
-          for (const gx of [mid + d, mid - d]) if (gx >= 0 && gx < this.gridSize - 1) spots.push([gx, gy]);
+      for (let gy = 0; gy < this.gridH; gy++) {
+        for (let d = 0; d < this.gridW; d++) {
+          for (const gx of [mid + d, mid - d]) if (gx >= 0 && gx < this.gridW - 1) spots.push([gx, gy]);
         }
       }
       for (const [gx, gy] of spots) {
@@ -484,14 +484,14 @@ export class StaffMixin {
   // Bar units with one bartender against the right wall, toward the front,
   // serving into the room. (ensureClubBooth() then gives the booth its DJ.)
   placeStarterLayout() {
-    const n = this.gridSize;
+    const n = this.gridH; // along the left wall
     const booth = this.restoreProp('woodBooth', 90, [1, n - 5]); // the DJ's tiles are against the wall
     if (!booth) this.ensureClubBooth();
     for (let gx = 2; gx <= 4; gx++) {
       for (let gy = n - 5; gy <= n - 3; gy++) this.restoreProp('basicFloor', 0, [gx, gy]);
     }
     const units = [];
-    for (let gx = n - 4; gx < n; gx++) {
+    for (let gx = this.gridW - 4; gx < this.gridW; gx++) {
       const bar = this.restoreProp('starterBar', 0, [gx, 0]);
       if (bar) units.push(bar);
     }

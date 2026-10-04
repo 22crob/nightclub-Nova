@@ -38,7 +38,7 @@ export class PlacementMixin {
   footprintValid(tiles, type = this.selectedProp, allowDoor = false) {
     const solid = !allowDoor && !(PROP_TYPES[type] && PROP_TYPES[type].floorStyle);
     return tiles.every(([tx, ty]) => (
-      tx >= 0 && tx < this.gridSize && ty >= 0 && ty < this.gridSize && !this.placed[`${tx},${ty}`] &&
+      this.inGrid(tx, ty) && !this.placed[`${tx},${ty}`] &&
       !(solid && tx === this.doorTile().gx && ty === this.doorTile().gy)
     ));
   }

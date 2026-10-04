@@ -31,8 +31,8 @@ export class SecurityMixin {
     const want = [door.gx + 1, door.gy + 1];
     let best = null;
     let bestD = Infinity;
-    for (let x = 0; x < this.gridSize; x++) {
-      for (let y = 0; y < this.gridSize; y++) {
+    for (let x = 0; x < this.gridW; x++) {
+      for (let y = 0; y < this.gridH; y++) {
         if (this.isBlockingProp(x, y) || (x === door.gx && y === door.gy)) continue;
         const d = Math.abs(x - want[0]) + Math.abs(y - want[1]);
         if (d < bestD) { bestD = d; best = [x, y]; }
@@ -166,7 +166,7 @@ export class SecurityMixin {
       for (const [dx, dy] of [[1, 0], [-1, 0], [0, 1], [0, -1], [1, 1], [-1, -1], [1, -1], [-1, 1]]) {
         const x = p.gx + dx;
         const y = p.gy + dy;
-        if (x < 0 || y < 0 || x >= this.gridSize || y >= this.gridSize || this.isBlockingProp(x, y)) continue;
+        if (!this.inGrid(x, y) || this.isBlockingProp(x, y)) continue;
         if ((x === a.gx && y === a.gy) || (x === b.gx && y === b.gy)) continue;
         spots.push([x, y]);
       }

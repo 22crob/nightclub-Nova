@@ -102,6 +102,7 @@ export class ShopMixin {
   // 'staff', 'expand' or 'vip'.
   setDockTab(tab) {
     if (tab !== 'decor') this.lastMainTab = tab;
+    if (tab !== 'expand') { this.pendingExpand = null; this.clearExpandPreview?.(); }
     if (this.dockTab === 'edit' && tab !== 'edit' && this.selectedProp && this.holdingFromInventory) this.deselectProp();
     this.dockTab = tab;
     for (const key in this.dockTabs || {}) this.dockTabs[key].classList.toggle('active', key === tab);
@@ -198,32 +199,66 @@ export class ShopMixin {
     this.updateShopUI();
   }
 
-  // The Expand tab: one card for the next size up, bought on click.
+  // The Expand tab: a card for each open edge of the room, each adding one
+  // row of floor. Hovering or clicking a card shows the new row glowing
+  // green in the club; a click picks it and a green confirm card buys it.
   renderExpandCard() {
     if (!this.shopItemsEl) return;
-    const tier = this.nextExpansion();
-    // Only rebuild when the card would change (this runs often).
-    const key = `expand:${this.gridSize}:${this.levelInfo().level}:${tier ? this.cash >= tier.cost : ''}`;
+    const level = this.levelInfo().level;
+    const tiers = { left: this.expansionFor('left'), right: this.expansionFor('right') };
+    const pending = tiers[this.pendingExpand] ? this.pendingExpand : null;
+    // Only rebuild when the cards would change (this runs often).
+    const afford = ['left', 'right'].map((k) => (tiers[k] ? this.cash >= tiers[k].cost : '')).join();
+    const key = `expand:${this.gridW}x${this.gridH}:${level}:${afford}:${pending}`;
     if (this.shopItemsEl.dataset.rendered === key) return;
     this.shopItemsEl.innerHTML = '';
     this.shopItemsEl.dataset.rendered = key;
-    const { slot, button, icon, cost } = this.makeCard('Expand the club', '', null);
-    slot.classList.add('expandSlot');
-    icon.dataset.icon = 'tabExpand';
-    if (!tier) {
-      button.classList.add('locked');
-      cost.textContent = '🏆 Max';
-      slot.dataset.tipText = `Your club is ${this.gridSize}×${this.gridSize}, the biggest it can be.`;
-    } else {
-      const unlocked = this.levelInfo().level >= tier.unlockLevel;
-      button.classList.toggle('unaffordable', unlocked && this.cash < tier.cost);
-      button.classList.toggle('locked', !unlocked);
-      cost.textContent = unlocked ? `$${tier.cost}` : `🔒 Lv ${tier.unlockLevel}`;
-      slot.dataset.tipText = `Grow from ${this.gridSize}×${this.gridSize} to ${tier.size}×${tier.size} tiles.`;
-      slot.addEventListener('click', () => this.expandClub());
+    const wallName = { left: 'left', right: 'right' };
+    for (const side of ['left', 'right']) {
+      const tier = tiers[side];
+      const { slot, button, icon, cost } = this.makeCard(`Add a row on the ${wallName[side]}`, '', null);
+      slot.classList.add('expandSlot');
+      slot.dataset.side = side;
+      icon.dataset.icon = side === 'left' ? 'expandLeft' : 'expandRight';
+      const wall = side === 'left' ? this.gridH : this.gridW;
+      if (!tier) {
+        button.classList.add('locked');
+        cost.textContent = '🏆 Max';
+        slot.dataset.tipText = `The ${side} wall is ${wall} tiles, as long as it gets.`;
+      } else {
+        const unlocked = level >= tier.unlockLevel;
+        button.classList.toggle('unaffordable', unlocked && this.cash < tier.cost);
+        button.classList.toggle('locked', !unlocked);
+        button.classList.toggle('selected', pending === side);
+        cost.textContent = unlocked ? `$${tier.cost}` : `🔒 Lv ${tier.unlockLevel}`;
+        slot.dataset.tipText = `${tier.tiles} more floor tiles along the front-${side} edge: the ${side} wall grows from ${wall} to ${tier.newLen} tiles.`
+          + (unlocked ? ' Click to see it, then confirm.' : ` Reach level ${tier.unlockLevel} to build it.`);
+        slot.addEventListener('mouseenter', () => this.showExpandPreview(side));
+        slot.addEventListener('mouseleave', () => this.showExpandPreview(this.pendingExpand));
+        slot.addEventListener('click', () => {
+          if (!unlocked) { SFX.denied(); return; }
+          this.pendingExpand = this.pendingExpand === side ? null : side;
+          this.showExpandPreview(this.pendingExpand || side);
+          this.renderExpandCard();
+        });
+      }
+      fillIcons(slot);
+      this.shopItemsEl.appendChild(slot);
     }
-    fillIcons(slot);
-    this.shopItemsEl.appendChild(slot);
+    if (pending) {
+      const tier = tiers[pending];
+      const { slot, button, icon, cost } = this.makeCard('Build it!', `Add the row shown in green for $${tier.cost}.`, null);
+      slot.classList.add('confirmSlot');
+      icon.dataset.icon = 'check';
+      button.classList.toggle('unaffordable', this.cash < tier.cost);
+      cost.textContent = `Buy $${tier.cost}`;
+      slot.addEventListener('click', () => {
+        if (this.expandClub(pending)) this.pendingExpand = null;
+        this.renderExpandCard();
+      });
+      fillIcons(slot);
+      this.shopItemsEl.appendChild(slot);
+    }
   }
 
   // Keeps the cards' selected / can't-afford / locked looks and prices

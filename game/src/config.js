@@ -20,11 +20,9 @@ export const PROP_SCALE = 64 / 96; // fixed: sizes in pixels didn't change with 
 // without its geometry drifting out of sync with drawFallbackBox() itself.
 export const FALLBACK_PROP_WIDTH = TILE_W * 0.7;
 export const FALLBACK_PROP_HEIGHT = 40 * PROP_SCALE;
-// The club's floor starts at BASE_GRID_SIZE x BASE_GRID_SIZE and can grow
-// from there — see GRID_EXPANSIONS below and ClubScene.expandClub(). Any
-// code that used to check a fixed GRID_SIZE now reads the scene's own
-// this.gridSize instead, since that's a per-club value that changes at
-// runtime and gets saved/restored (see serializeState()/loadGame()).
+// The club's floor starts at BASE_GRID_SIZE x BASE_GRID_SIZE and grows a
+// row at a time (EXPANSION in catalog.js, expandClub() in world.js) into
+// this.gridW x this.gridH, saved with the club.
 export const BASE_GRID_SIZE = 10; // a small room to start, like Nightclub City's; expand to grow
 
 // A new club opens with its DJ booth and a staffed Starter Bar already in
@@ -61,7 +59,7 @@ export const STREET = {
   carpet: 0x8c1426, carpetEdge: 0xd4a53a, rope: 0xb0102a, brass: 0xd4a53a,
   lampPost: 0x2a2a33, lampGlow: 0xffd77a, lampEvery: 6,
   buildings: [0x2a2438, 0x262a3a, 0x30283a, 0x232433], windowLit: 0xf2c75c, windowDark: 0x16141e,
-  lineOut: 3.1, lineLength: 6, startInLine: 3, bouncerCharacter: 0,
+  lineOut: 3.1, lineLength: 6, startInLine: 3, bouncerCharacter: 4,
   msPerTile: 420, admitEveryMs: 1500, partyAdmitMs: 3000, passerEveryMs: [1200, 3200],
 };
 
@@ -232,7 +230,7 @@ export const PARTY_COUNTDOWN_MS = 10 * 1000; // from paying to the party startin
 // (fightMs) and security throws one of them out. At most one at a time,
 // and never within cooldownMs of the last.
 export const SECURITY = {
-  character: 0, scale: 1.08, stepMs: 380,
+  character: 4, scale: 1.12, stepMs: 380, // all in black, like the bouncer
   argueChance: 0.12, cooldownMs: 90 * 1000, argueMs: [8000, 12000],
   settleChance: 0.7, fightMs: 3500, moodHit: 12,
   danceTogetherChance: 0.35,

@@ -71,7 +71,7 @@ export class PartiesMixin {
     this.partyStartedAt = this.time.now;
     this.partyStats = { guests: 0, celebs: 0 };
     this.moodColor = def.shade;
-    this.drawMoodShade(this.gridSize);
+    this.drawMoodShade();
     SFX.levelUp();
     this.showToast(`${def.emoji} The ${def.label} has started! Here comes the crowd.`);
     // The crowd: everyone waits their turn in the line outside, and the
@@ -106,7 +106,7 @@ export class PartiesMixin {
     this.partyPhase = null;
     this.partyCrowd = [];
     this.moodColor = undefined;
-    this.drawMoodShade(this.gridSize);
+    this.drawMoodShade();
     if (def && running) {
       const now = this.time.now;
       for (const p of this.patrons) {

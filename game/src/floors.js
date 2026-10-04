@@ -572,18 +572,18 @@ export function floorTextureKey(style, frame = 0) {
 // worn and stained, with no tile lines. Drawn at 2x for the size x size
 // room, as the room's diamond seen from the game's camera (see
 // drawBareFloor()).
-export function bareFloorCanvas(size) {
-  const W = size * FLOOR_TEX_W;
-  const H = size * FLOOR_TEX_H;
+export function bareFloorCanvas(w, h = w) {
+  const W = (w + h) * FLOOR_TEX_W / 2;
+  const H = (w + h) * FLOOR_TEX_H / 2;
   const c = document.createElement('canvas');
   c.width = W;
   c.height = H;
   const ctx = c.getContext('2d');
   ctx.beginPath();
-  ctx.moveTo(W / 2, 0);
-  ctx.lineTo(W, H / 2);
-  ctx.lineTo(W / 2, H);
-  ctx.lineTo(0, H / 2);
+  ctx.moveTo(h * FLOOR_TEX_W / 2, 0);
+  ctx.lineTo(W, w * FLOOR_TEX_H / 2);
+  ctx.lineTo(w * FLOOR_TEX_W / 2, H);
+  ctx.lineTo(0, h * FLOOR_TEX_H / 2);
   ctx.closePath();
   ctx.clip();
   ctx.fillStyle = '#4f4c4b';
@@ -602,7 +602,7 @@ export function bareFloorCanvas(size) {
     ctx.fillRect(-rad, -rad, rad * 2, rad * 2);
     ctx.restore();
   };
-  const area = size * size;
+  const area = w * h;
   for (let i = 0; i < area * 1.2; i++) {
     const light = r() < 0.45;
     blot(r() * W, r() * H, 40 + r() * 160, light ? `rgba(255,245,230,${0.03 + r() * 0.04})` : `rgba(10,8,8,${0.05 + r() * 0.08})`);

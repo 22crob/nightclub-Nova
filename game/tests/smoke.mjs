@@ -69,7 +69,7 @@ const opening = await page.evaluate(() => {
   const units = s.hireableRecords().filter((rec) => rec.type === 'starterBar');
   const bar = units.find((rec) => rec.staff);
   const floor = Object.keys(s.placed).filter((k) => s.placed[k].type === 'basicFloor').sort();
-  return { floor: floor.join(' '), dancing: s.isDanceFloorTile(2, 6), type: booth && booth.type, anchor: booth && booth.anchor.join(','), dj: !!(booth && booth.staff), music: s.musicPlaying(), size: s.gridSize, bar: units.map((r) => r.anchor.join(',')).sort().join(' '), bartender: !!bar, staffed: units.filter((r) => r.staff).length, worked: units.every((r) => s.isWorked(r)), boothTiles: booth && booth.tiles.length, djOnTile: !!booth && (() => { const p = s.gridToScreen(0, 5.5); return Math.abs(booth.staff.container.x - p.sx) < 1 && Math.abs(booth.staff.container.y - p.sy) < 1 && booth.tiles.filter((t) => t.back).length === 2; })() };
+  return { floor: floor.join(' '), dancing: s.isDanceFloorTile(2, 6), type: booth && booth.type, anchor: booth && booth.anchor.join(','), dj: !!(booth && booth.staff), music: s.musicPlaying(), size: s.gridW === s.gridH ? s.gridW : -1, bar: units.map((r) => r.anchor.join(',')).sort().join(' '), bartender: !!bar, staffed: units.filter((r) => r.staff).length, worked: units.every((r) => s.isWorked(r)), boothTiles: booth && booth.tiles.length, djOnTile: !!booth && (() => { const p = s.gridToScreen(0, 5.5); return Math.abs(booth.staff.container.x - p.sx) < 1 && Math.abs(booth.staff.container.y - p.sy) < 1 && booth.tiles.filter((t) => t.back).length === 2; })() };
 });
 check('starts with $700, a 10x10 room, a 2-tile DJ booth, a 3x3 dance floor and a 4-long bar with one bartender', st.cash === 700 && st.placed === 14 && opening.boothTiles === 4 && opening.djOnTile && opening.floor === '2,5 2,6 2,7 3,5 3,6 3,7 4,5 4,6 4,7' && opening.dancing && opening.size === 10 && opening.bar === '6,0 7,0 8,0 9,0' && opening.bartender && opening.staffed === 1 && opening.worked, `cash ${st.cash}, placed ${st.placed}, ${JSON.stringify(opening)}`);
 check('every club opens with a Wood Booth and a DJ playing', opening.type === 'woodBooth' && opening.anchor === '1,5' && opening.dj && opening.music, JSON.stringify(opening));
@@ -113,10 +113,46 @@ await page.locator('.propSlot').first().click();
 const closed = await page.evaluate(() => ({ held: window.__clubNova.scene.getScene('club').selectedProp }));
 check('clicking a shop card picks the item up, clicking again puts it down', picked.held === 'woodStool' && picked.glow && !closed.held, JSON.stringify({ picked, closed }));
 await page.click('#storeOk');
-// Expand: one card with the next size and its price.
+// Expand: a card for each open edge, each adding one row of floor. Hovering
+// or clicking one shows the new row in green; a confirm card buys it.
 await page.click('#tabExpand');
-const expandCard = await page.evaluate(() => ({ cards: document.querySelectorAll('#shopItems .propSlot').length, tip: document.querySelector('#shopItems .propSlot')?.dataset.tipText, price: document.querySelector('#shopItems .propCost')?.textContent }));
-check('the Expand tab shows the next size up and its price', expandCard.cards === 1 && /Grow from \d+×\d+ to \d+×\d+/.test(expandCard.tip) && /\$|Lv/.test(expandCard.price), JSON.stringify(expandCard));
+const expandCard = await page.evaluate(() => {
+  const slots = [...document.querySelectorAll('#shopItems .expandSlot')];
+  return { cards: slots.length, sides: slots.map((e) => e.dataset.side).join(), tip: slots[0]?.dataset.tipText, price: slots[0]?.querySelector('.propCost')?.textContent };
+});
+const unlockAll = () => page.evaluate(() => {
+  const s = window.__clubNova.scene.getScene('club');
+  const real = s.levelInfo.bind(s);
+  s.__realLevelInfo = real;
+  s.levelInfo = () => ({ ...real(), level: 9 });
+  s.__cash = s.cash;
+  s.cash = 99999;
+  s.shopItemsEl.dataset.rendered = '';
+  s.renderExpandCard();
+});
+await unlockAll();
+const sizeBefore = await page.evaluate(() => { const s = window.__clubNova.scene.getScene('club'); return [s.gridW, s.gridH]; });
+await page.hover('#shopItems .expandSlot[data-side="left"]');
+const hovered = await page.evaluate(() => { const s = window.__clubNova.scene.getScene('club'); return s.expandPreviewSide; });
+await page.click('#shopItems .expandSlot[data-side="left"]');
+const picked2 = await page.evaluate(() => {
+  const s = window.__clubNova.scene.getScene('club');
+  return { pending: s.pendingExpand, preview: s.expandPreviewSide, strip: s.expansionTiles('left').length, grid: [s.gridW, s.gridH], confirm: !!document.querySelector('#shopItems .confirmSlot') };
+});
+await page.click('#shopItems .confirmSlot');
+const bought = await page.evaluate(() => {
+  const s = window.__clubNova.scene.getScene('club');
+  const saved = JSON.parse(localStorage.getItem('clubNovaSave_v2'));
+  const out = { grid: [s.gridW, s.gridH], spent: 99999 - s.cash, tile: !!s.tiles[`0,${s.gridH - 1}`], saved: [saved.gridW, saved.gridH], preview: s.expandPreviewSide, confirm: !!document.querySelector('#shopItems .confirmSlot') };
+  s.levelInfo = s.__realLevelInfo;
+  s.cash = s.__cash;
+  s.shopItemsEl.dataset.rendered = '';
+  s.renderExpandCard();
+  return out;
+});
+check('the Expand tab has a card for each side, with its price', expandCard.cards === 2 && expandCard.sides === 'left,right' && /more floor tiles/.test(expandCard.tip) && /\$|Lv|Max/.test(expandCard.price), JSON.stringify(expandCard));
+check('picking a side shows the new row in green sizeBefore you buy it', hovered === 'left' && picked2.pending === 'left' && picked2.preview === 'left' && picked2.strip === sizeBefore[0] && picked2.grid.join() === sizeBefore.join() && picked2.confirm, JSON.stringify({ hovered, picked2 }));
+check('confirming adds just one row on that side', bought.grid[0] === sizeBefore[0] && bought.grid[1] === sizeBefore[1] + 1 && bought.spent > 0 && bought.tile && bought.saved.join() === bought.grid.join() && !bought.preview && !bought.confirm, JSON.stringify({ sizeBefore, bought }));
 await page.click('#tabDecor');
 await page.evaluate(() => window.__clubNova.scene.getScene('club').selectProp('starterBar'));
 
@@ -408,7 +444,7 @@ const door = await page.evaluate(() => {
   const s = window.__clubNova.scene.getScene('club');
   const d = s.doorTile();
   const free = !s.placed[`${d.gx},${d.gy}`];
-  return { at: [d.gx, d.gy], size: s.gridSize, solid: s.footprintValid([[d.gx, d.gy]], 'plant'), floor: !free || s.footprintValid([[d.gx, d.gy]], 'dance') };
+  return { at: [d.gx, d.gy], size: [s.gridW, s.gridH], solid: s.footprintValid([[d.gx, d.gy]], 'plant'), floor: !free || s.footprintValid([[d.gx, d.gy]], 'dance') };
 });
 check('the door is near the back of the left wall, and furniture can\'t block it', door.at[0] === 0 && door.at[1] === 1 && door.solid === false && door.floor === true, JSON.stringify(door));
 
@@ -887,7 +923,7 @@ const fight = await page.evaluate(() => {
   const s = window.__clubNova.scene.getScene('club');
   const out = {};
   const g = s.guard;
-  out.guard = !!g && g.gx >= 0 && g.gy >= 0 && g.gx < s.gridSize && g.gy < s.gridSize && g.container.visible;
+  out.guard = !!g && g.gx >= 0 && g.gy >= 0 && s.inGrid(g.gx, g.gy) && g.container.visible;
   const cap = s.patronCapacity;
   s.patronCapacity = () => 99;
   const door = s.doorTile();
@@ -1049,7 +1085,7 @@ const inv = await page.evaluate(() => {
   s.cash = Math.max(s.cash, 500);
   // A stool to play with, on a free tile.
   let spot = null;
-  for (let gy = 1; gy < s.gridSize - 1 && !spot; gy++) for (let gx = 1; gx < s.gridSize - 1 && !spot; gx++) {
+  for (let gy = 1; gy < s.gridH - 1 && !spot; gy++) for (let gx = 1; gx < s.gridW - 1 && !spot; gx++) {
     if (s.footprintValid(s.getFootprint('woodStool', 0, gx, gy), 'woodStool')) spot = [gx, gy];
   }
   s.selectProp('woodStool');
@@ -1097,7 +1133,7 @@ const inv = await page.evaluate(() => {
   const back = s.clubBooth();
   out.boothBack = !!back && back.anchor.join() === home.join() && !!back.staff && s.inventoryCount(booth.type) === 0;
   let free = null;
-  for (let gy = 1; gy < s.gridSize - 1 && !free; gy++) for (let gx = 1; gx < s.gridSize - 1 && !free; gx++) {
+  for (let gy = 1; gy < s.gridH - 1 && !free; gy++) for (let gx = 1; gx < s.gridW - 1 && !free; gx++) {
     if (gx === home[0] && gy === home[1]) continue;
     s.editClick(home[0], home[1]);
     const ok = s.footprintValid(s.getFootprint(booth.type, s.currentFacing, gx, gy), booth.type);
@@ -1127,7 +1163,7 @@ const handSpot = await page.evaluate(() => {
   s.cardOpened = 0;
   s.clickPersonReal = s.clickPerson;
   s.clickPerson = (p) => { s.cardOpened += 1; return true; };
-  for (let gy = 2; gy < s.gridSize - 2; gy++) for (let gx = 2; gx < s.gridSize - 2; gx++) {
+  for (let gy = 2; gy < s.gridH - 2; gy++) for (let gx = 2; gx < s.gridW - 2; gx++) {
     if (s.footprintValid(s.getFootprint('woodStool', 0, gx, gy), 'woodStool')) { s.selectProp('woodStool'); return [gx, gy]; }
   }
   return null;
@@ -1155,7 +1191,7 @@ const lvl = await page.evaluate(() => {
   out.closed = !document.getElementById('levelUp').classList.contains('open');
   return out;
 });
-check('levelling up shows a menu of everything unlocked, each with a picture', lvl.open && lvl.title === 'Level 5!' && lvl.names.includes('Old Brick') && lvl.names.includes('Brick') && lvl.names.some((n) => /club/.test(n)) && lvl.pictures && lvl.closed && lvl.bartender, JSON.stringify(lvl));
+check('levelling up shows a menu of everything unlocked, each with a picture', lvl.open && lvl.title === 'Level 5!' && lvl.names.includes('Old Brick') && lvl.names.includes('Brick') && lvl.names.some((n) => /Walls up to/.test(n)) && lvl.pictures && lvl.closed && lvl.bartender, JSON.stringify(lvl));
 
 // A new club's walls are beaten-up torn wallpaper; brick is a level 5 wallpaper.
 const walls = await page.evaluate(() => {

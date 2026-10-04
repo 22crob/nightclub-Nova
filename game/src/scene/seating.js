@@ -47,7 +47,7 @@ export class SeatingMixin {
       for (const [dx, dy] of [[1, 0], [-1, 0], [0, 1], [0, -1]]) {
         const nx = tx + dx;
         const ny = ty + dy;
-        if (nx < 0 || ny < 0 || nx >= this.gridSize || ny >= this.gridSize || this.isBlockingProp(nx, ny)) continue;
+        if (!this.inGrid(nx, ny) || this.isBlockingProp(nx, ny)) continue;
         const d = (nx - aimX) ** 2 + (ny - aimY) ** 2;
         if (d < bestDist) { bestDist = d; best = [nx, ny]; }
       }

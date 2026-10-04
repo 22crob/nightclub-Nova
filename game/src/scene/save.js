@@ -4,7 +4,8 @@ import { PROP_TYPES } from '../catalog.js';
 import { BASE_GRID_SIZE, SAVE_KEY } from '../config.js';
 
 export class SaveMixin {
-  // A lightweight peek at the save file for just its gridSize, called
+  // A lightweight peek at the save file for just the room's size [gridW,
+  // gridH] (older saves have one square gridSize), called
   // before the tile grid is built (see create()) — reading the WHOLE save
   // that early isn't possible yet (loadGame() needs the grid/layers to
   // already exist so restoreProp() has somewhere to draw into). Returns
@@ -15,7 +16,10 @@ export class SaveMixin {
       const raw = localStorage.getItem(SAVE_KEY);
       if (!raw) return null;
       const data = JSON.parse(raw);
-      if (typeof data.gridSize === 'number' && data.gridSize >= BASE_GRID_SIZE) return data.gridSize;
+      const ok = (v) => typeof v === 'number' && v >= BASE_GRID_SIZE;
+      if (ok(data.gridW) && ok(data.gridH)) return [data.gridW, data.gridH];
+      if (ok(data.gridSize)) return [data.gridSize, data.gridSize]; // from when the room was always square
+
     } catch (e) { /* corrupted save — loadGame() below will also hit and log this */ }
     return null;
   }
@@ -45,7 +49,7 @@ export class SaveMixin {
       inventory[this.movingBooth.type] -= 1;
       if (inventory[this.movingBooth.type] <= 0) delete inventory[this.movingBooth.type];
     }
-    return { cash: this.cash, fans: this.fans, gridSize: this.gridSize, placed: placedList, wallpaper: { ...this.wallpaper }, floorPaint: { ...this.floorPaint }, vips: this.vips || [], nightStars: this.nightStars || [], inventory };
+    return { cash: this.cash, fans: this.fans, gridW: this.gridW, gridH: this.gridH, placed: placedList, wallpaper: { ...this.wallpaper }, floorPaint: { ...this.floorPaint }, vips: this.vips || [], nightStars: this.nightStars || [], inventory };
   }
 
   saveGame() {
@@ -102,9 +106,15 @@ export class SaveMixin {
     if (typeof data.fans === 'number') this.fans = data.fans;
     // Already set once, before the tile grid was built, by
     // peekSavedGridSize() in create() — re-applying it here is just
-    // defensive (e.g. if this.gridSize somehow got out of sync) and never
-    // shrinks it, since a corrupt/missing value just leaves it as-is.
-    if (typeof data.gridSize === 'number' && data.gridSize > this.gridSize) this.gridSize = data.gridSize;
+    // defensive and never shrinks it, since a corrupt/missing value just
+    // leaves it as-is.
+    const size = this.peekSavedGridSize();
+    if (size && (size[0] > this.gridW || size[1] > this.gridH)) {
+      this.gridW = Math.max(this.gridW, size[0]);
+      this.gridH = Math.max(this.gridH, size[1]);
+      this.buildTiles();
+      this.buildWalls();
+    }
     if (Array.isArray(data.placed)) {
       // The DJ booth goes last, so if it has to move (see below) it can't
       // take the place of something else.

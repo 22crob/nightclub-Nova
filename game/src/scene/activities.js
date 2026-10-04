@@ -152,7 +152,7 @@ export class ActivitiesMixin {
       for (let dy = -3; dy <= 3; dy++) {
         const x = near[0] + dx;
         const y = near[1] + dy;
-        if (x < 0 || y < 0 || x >= this.gridSize || y >= this.gridSize) continue;
+        if (!this.inGrid(x, y)) continue;
         if (Math.abs(dx) + Math.abs(dy) < 2 || this.isBlockingProp(x, y) || lines.has(`${x},${y}`)) continue;
         if (this.patronTileOccupied(x, y) && !(x === patron.gx && y === patron.gy)) continue;
         spots.push([x, y]);
@@ -190,8 +190,8 @@ export class ActivitiesMixin {
       return;
     }
     for (let i = 0; i < 20; i++) {
-      const tx = Phaser.Math.Between(0, this.gridSize - 1);
-      const ty = Phaser.Math.Between(0, this.gridSize - 1);
+      const tx = Phaser.Math.Between(0, this.gridW - 1);
+      const ty = Phaser.Math.Between(0, this.gridH - 1);
       if (!this.isBlockingProp(tx, ty) && !lines.has(`${tx},${ty}`)) {
         patron.targetGx = tx;
         patron.targetGy = ty;
@@ -214,7 +214,7 @@ export class ActivitiesMixin {
     for (const other of near.sort((a, b) => (Math.abs(a.gx - patron.gx) + Math.abs(a.gy - patron.gy)) - (Math.abs(b.gx - patron.gx) + Math.abs(b.gy - patron.gy)))) {
       const spot = [[1, 0], [-1, 0], [0, 1], [0, -1]]
         .map(([dx, dy]) => [other.gx + dx, other.gy + dy])
-        .find(([x, y]) => x >= 0 && y >= 0 && x < this.gridSize && y < this.gridSize && !this.isBlockingProp(x, y)
+        .find(([x, y]) => this.inGrid(x, y) && !this.isBlockingProp(x, y)
           && (!this.patronTileOccupied(x, y) || (x === patron.gx && y === patron.gy)));
       if (!spot) continue;
       patron.activity = { kind: 'chat' };
