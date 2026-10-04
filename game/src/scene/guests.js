@@ -6,8 +6,9 @@
 // whole line at once; the game suggests it when a bar is slammed.
 // Mixed into ClubScene (see ClubScene.js); `this` is the scene.
 import { PATRON_META, PATRON_SHEETS } from '../assets.js';
-import { PROP_TYPES } from '../catalog.js';
-import { BOTTOMS_UP, CHARACTER_DISPLAY_HEIGHT } from '../config.js';
+import { PROP_TYPES, VIP_BOOTHS } from '../catalog.js';
+import { BOTTOMS_UP, CHARACTER_DISPLAY_HEIGHT, THIRST_INTERVAL } from '../config.js';
+import { MOOD } from './mood.js';
 import { SFX } from '../sfx.js';
 
 const FIRST = ['Marsha', 'Trina', 'Dev', 'Jordan', 'Kai', 'Rosa', 'Marcus', 'Lena', 'Andre', 'Mia', 'Theo', 'Nina', 'Omar', 'Jade',
@@ -144,21 +145,33 @@ export class GuestsMixin {
       const el = document.getElementById(id);
       if (el) el.style.display = on ? '' : 'none';
     };
+    // A round action button: greyed out with the reason as its tip when it
+    // can't be used right now.
+    const action = (id, why, tip) => {
+      const el = document.getElementById(id);
+      if (!el) return;
+      el.classList.toggle('disabled', !!why);
+      el.dataset.tip = why ? `${tip} (${why})` : tip;
+    };
     if (card.kind === 'guest') {
       const p = card.target;
       if (p.gone) { this.closeInfoCard(); return; }
       this.setPortrait(document.getElementById('infoPortrait'), p.container.patronCharacter);
       set('infoName', p.name || 'Guest');
       set('infoRole', p.leaving ? 'Heading home' : (p.vip ? `⭐ VIP · visit ${p.vip.visits}` : 'Guest'));
-      const seatBtn = document.getElementById('seatGuest');
-      if (seatBtn) seatBtn.textContent = p.sitting || p.seat ? '🛋️ Seated' : '🛋️ Seat at a booth';
       set('infoQuote', `"${this.guestQuote(p)}"`);
-      set('infoMood', `${this.vibeEmoji(p.mood)} ${Math.round(p.mood)}%`);
-      set('infoFun', `🎵 ${Math.round(p.fun)}%`);
-      set('infoDrinks', `🍹 ${p.drinks || 0}`);
-      set('infoSpent', `Spent: $${Math.round(p.spent || 0)}`);
+      set('infoMoodIcon', this.vibeEmoji(p.mood));
+      set('infoMood', `${Math.round(p.mood)}%`);
+      set('infoFun', `${Math.round(p.fun)}%`);
+      set('infoDrinks', `${p.drinks || 0}`);
+      set('infoSpent', `$${Math.round(p.spent || 0)}`);
+      action('seatGuest', this.seatBlocker(p), 'Seat this guest at one of your VIP booths');
+      action('danceGuest', this.danceBlocker(p), 'Send this guest to the dance floor');
+      action('drinkGuest', this.drinkBlocker(p), 'Give this guest a drink on the house');
       show('infoGuestStats', true);
+      show('infoGuestActions', true);
       show('infoBarStats', false);
+      this.refreshActionTip();
       return;
     }
     const rec = card.target;
@@ -167,40 +180,125 @@ export class GuestsMixin {
     this.setPortrait(document.getElementById('infoPortrait'), rec.staff.container.staffCharacter);
     const waiting = (rec.queue || []).length;
     set('infoName', rec.staff.name);
-    set('infoRole', `Bartender · ${PROP_TYPES[rec.type].label}`);
+    set('infoRole', `Bartender · ${waiting} waiting for a drink`);
     set('infoQuote', waiting >= 3 ? '"The bar is slammed!"' : (waiting ? '"Coming right up!"' : '"Who\'s thirsty?"'));
-    set('infoQueue', `${waiting} waiting for a drink`);
     const ready = this.bottomsUpReady(rec);
-    const button = document.getElementById('bottomsUp');
-    if (button) {
-      button.classList.toggle('cooling', !ready);
-      const text = ready ? '🍹 Bottoms Up!' : `Bottoms Up in ${Math.ceil((rec.staff.bottomsUpAt - this.time.now) / 1000)}s`;
-      if (button.textContent !== text) button.textContent = text;
-    }
+    action('bottomsUp', !ready ? 'recovering' : (waiting ? null : 'nobody is waiting'), 'Bottoms Up! Serve everyone in this bartender\'s line at once');
+    set('bottomsUpTimer', ready ? '' : `${Math.ceil((rec.staff.bottomsUpAt - this.time.now) / 1000)}s`);
     show('infoGuestStats', false);
+    show('infoGuestActions', false);
     show('infoBarStats', true);
+    this.refreshActionTip();
   }
 
-  // --- Seating a guest --------------------------------------------------------
+  // The speech-bubble tip over whichever action button the mouse is on.
+  showActionTip(el) {
+    this.tipButton = el;
+    this.refreshActionTip();
+  }
 
-  // Sends a guest to a free seat (a couch, booth or stool), like Nightclub
-  // City's "Seat a guest at one of your booths". Being shown to a seat
-  // cheers them up.
-  seatGuest(patron) {
-    if (!patron || patron.gone || patron.leaving) { SFX.denied(); return false; }
-    if (patron.sitting || patron.seat) { SFX.denied(); this.showToast('🛋️ They already have a seat.'); return false; }
-    if (patron.queue) this.leaveBarQueue(patron);
-    if (!this.claimSeat(patron)) {
-      SFX.denied();
-      this.showToast('🛋️ No free seats! Buy a couch or booth in the Shop (Seating).');
-      return false;
+  refreshActionTip() {
+    const tip = document.getElementById('actionTip');
+    const el = this.tipButton;
+    if (!tip) return;
+    if (!el || !this.infoCard || el.offsetParent === null) {
+      tip.classList.remove('show');
+      return;
     }
+    if (tip.textContent !== el.dataset.tip) tip.textContent = el.dataset.tip;
+    tip.classList.add('show');
+    const card = document.getElementById('infoCard').getBoundingClientRect();
+    const b = el.getBoundingClientRect();
+    tip.style.left = `${Math.max(4, b.left - card.left + b.width / 2 - tip.offsetWidth / 2)}px`;
+    tip.style.top = `${b.top - card.top - tip.offsetHeight - 10}px`;
+  }
+
+  // --- Guest actions -----------------------------------------------------------
+
+  // Why a guest can't be seated at a VIP booth right now, or null.
+  seatBlocker(patron) {
+    if (patron.leaving) return 'they\'re heading home';
+    if (patron.sitting || patron.seat) return 'already seated';
+    const booths = Object.values(this.placed).some((rec) => VIP_BOOTHS.has(rec.type));
+    if (!booths) return 'you have no VIP booth yet';
+    if (this.freeSeats(VIP_BOOTHS).length === 0) return 'every booth seat is taken';
+    return null;
+  }
+
+  // Sends a guest to a free seat at a VIP booth, like Nightclub City's
+  // "Seat a guest at one of your booths". Being shown to a booth cheers
+  // them up.
+  seatGuest(patron) {
+    if (!patron || patron.gone || this.seatBlocker(patron)) { SFX.denied(); return false; }
+    if (patron.queue) this.leaveBarQueue(patron);
+    if (!this.claimSeat(patron, VIP_BOOTHS)) { SFX.denied(); return false; }
     patron.mood = Math.min(100, patron.mood + 10);
     patron.nextMoveAt = this.time.now;
     const c = patron.container;
     this.floatText(c.x, c.y - 80, 'THX!', '#ffffff');
     SFX.tip();
     if (!patron.moving) this.movePatronRandomly(patron);
+    this.refreshInfoCard();
+    return true;
+  }
+
+  // A free dance-floor tile, or null.
+  freeDanceTile() {
+    const tiles = [];
+    for (let gx = 0; gx < this.gridSize; gx++) {
+      for (let gy = 0; gy < this.gridSize; gy++) {
+        if (this.isDanceFloorTile(gx, gy) && !this.patronTileOccupied(gx, gy)) tiles.push([gx, gy]);
+      }
+    }
+    return tiles.length ? tiles[Math.floor(Math.random() * tiles.length)] : null;
+  }
+
+  danceBlocker(patron) {
+    if (patron.leaving) return 'they\'re heading home';
+    if (!this.musicPlaying()) return 'the music is off';
+    const anyFloor = Object.values(this.placed).some((rec) => this.isDanceFloorTile(rec.anchor[0], rec.anchor[1]));
+    if (!anyFloor) return 'you have no dance floor yet';
+    if (!this.freeDanceTile()) return 'the dance floor is full';
+    return null;
+  }
+
+  // Sends a guest to dance; they're glad of the invitation.
+  danceGuest(patron) {
+    if (!patron || patron.gone || this.danceBlocker(patron)) { SFX.denied(); return false; }
+    if (patron.queue) this.leaveBarQueue(patron);
+    if (patron.sitting) { SFX.denied(); this.showToast('💃 Let them finish sitting first.'); return false; }
+    this.releaseSeat(patron);
+    [patron.targetGx, patron.targetGy] = this.freeDanceTile();
+    patron.path = null;
+    patron.nextMoveAt = this.time.now;
+    patron.fun = Math.min(100, patron.fun + 10);
+    const c = patron.container;
+    this.floatText(c.x, c.y - 80, "Let's dance!", '#ff7ae0');
+    SFX.tip();
+    if (!patron.moving) this.movePatronRandomly(patron);
+    this.refreshInfoCard();
+    return true;
+  }
+
+  drinkBlocker(patron) {
+    if (patron.leaving) return 'they\'re heading home';
+    if (patron.onTheHouse) return 'they already had one on the house';
+    const bar = this.staffableRecords().find((rec) => rec.staff && rec.staff.kind === 'bartender');
+    if (!bar) return 'you need a bar with a bartender';
+    return null;
+  }
+
+  // A free drink, once a visit: it costs you the drink, and cheers them up.
+  drinkGuest(patron) {
+    if (!patron || patron.gone || this.drinkBlocker(patron)) { SFX.denied(); return false; }
+    patron.onTheHouse = true;
+    if (patron.queue) this.leaveBarQueue(patron);
+    this.cheerPatron(patron, MOOD.drinkMood + 10);
+    patron.drinks = (patron.drinks || 0) + 1;
+    patron.thirstyAt = this.time.now + THIRST_INTERVAL[0];
+    const c = patron.container;
+    this.floatText(c.x, c.y - 80, '🍹 On the house!', '#7dffc4');
+    SFX.tip();
     this.refreshInfoCard();
     return true;
   }
@@ -244,9 +342,16 @@ export class GuestsMixin {
   // Wires up the card (see index.html) and its refresh.
   setupGuests() {
     document.getElementById('infoClose')?.addEventListener('click', () => this.closeInfoCard());
-    document.getElementById('seatGuest')?.addEventListener('click', () => {
-      if (this.infoCard && this.infoCard.kind === 'guest') this.seatGuest(this.infoCard.target);
+    const guestAction = (id, fn) => document.getElementById(id)?.addEventListener('click', () => {
+      if (this.infoCard && this.infoCard.kind === 'guest') fn.call(this, this.infoCard.target);
     });
+    guestAction('seatGuest', this.seatGuest);
+    guestAction('danceGuest', this.danceGuest);
+    guestAction('drinkGuest', this.drinkGuest);
+    for (const el of document.querySelectorAll('#infoCard .actionButton')) {
+      el.addEventListener('mouseenter', () => this.showActionTip(el));
+      el.addEventListener('mouseleave', () => this.showActionTip(null));
+    }
     document.getElementById('bottomsUp')?.addEventListener('click', () => {
       if (this.infoCard && this.infoCard.kind === 'bartender') this.bottomsUp(this.infoCard.target);
     });

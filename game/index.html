@@ -149,23 +149,31 @@
   <!-- A guest's or bartender's card (see guests.js) -->
   <div id="infoCard">
     <div id="infoClose" class="infoClose" title="Close">✕</div>
+    <!-- Stat bubbles across the top, like Nightclub City's guest card -->
+    <div id="infoGuestStats" class="statBubbles">
+      <div class="statBubble" title="Mood"><div class="bubbleIcon" id="infoMoodIcon">🙂</div><div class="bubbleNum" id="infoMood">60%</div></div>
+      <div class="statBubble" title="Fun"><div class="bubbleIcon">🎵</div><div class="bubbleNum" id="infoFun">40%</div></div>
+      <div class="statBubble" title="Drinks"><div class="bubbleIcon">🍹</div><div class="bubbleNum" id="infoDrinks">0</div></div>
+      <div class="statBubble" title="Money spent"><div class="bubbleIcon">💵</div><div class="bubbleNum" id="infoSpent">$0</div></div>
+    </div>
     <div class="infoTop">
       <div id="infoPortrait" class="infoPortrait"></div>
       <div class="infoText">
+        <div class="infoQuote" id="infoQuote">"Nice place!"</div>
         <div class="infoName" id="infoName">Guest</div>
         <div class="infoRole" id="infoRole">Guest</div>
-        <div class="infoQuote" id="infoQuote">"Nice place!"</div>
       </div>
     </div>
-    <div id="infoGuestStats" class="infoStats">
-      <span id="infoMood" title="Mood">🙂 60%</span><span id="infoFun" title="Fun">🎵 40%</span><span id="infoDrinks" title="Drinks">🍹 0</span>
-      <div id="infoSpent" class="infoSpent">Spent: $0</div>
-      <div id="seatGuest" class="bottomsUp seatGuest" title="Show this guest to a free seat. They'll like that.">🛋️ Seat at a booth</div>
+    <!-- Round action buttons under the avatar; hovering shows what each does -->
+    <div id="infoGuestActions" class="infoActions">
+      <div id="seatGuest" class="actionButton" data-tip="Seat this guest at one of your VIP booths">🛋️</div>
+      <div id="danceGuest" class="actionButton" data-tip="Send this guest to the dance floor">💃</div>
+      <div id="drinkGuest" class="actionButton" data-tip="Give this guest a drink on the house">🍹</div>
     </div>
-    <div id="infoBarStats" class="infoStats" style="display:none">
-      <div id="infoQueue" class="infoSpent">0 waiting</div>
-      <div id="bottomsUp" class="bottomsUp" title="Serve everyone in this bartender's line at once">🍹 Bottoms Up!</div>
+    <div id="infoBarStats" class="infoActions" style="display:none">
+      <div id="bottomsUp" class="actionButton" data-tip="Bottoms Up! Serve everyone in this bartender's line at once">🍹<span class="actionTimer" id="bottomsUpTimer"></span></div>
     </div>
+    <div id="actionTip" class="actionTip"></div>
   </div>
 
   <div id="toast"></div>

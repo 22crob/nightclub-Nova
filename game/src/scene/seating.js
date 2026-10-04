@@ -52,21 +52,9 @@ export class SeatingMixin {
 
   // Reserves a random free seat for the patron and sends them toward it.
   // Returns false if there's nowhere to sit.
-  claimSeat(patron) {
-    const free = [];
-    const seen = new Set();
-    for (const key in this.placed) {
-      const rec = this.placed[key];
-      if (seen.has(rec)) continue;
-      seen.add(rec);
-      const seats = PROP_TYPES[rec.type].seats;
-      if (!seats) continue;
-      seats.forEach((_, i) => {
-        if (rec.seatTaken && rec.seatTaken[i]) return;
-        const access = this.seatAccessTile(rec, i);
-        if (access && !this.patronTileOccupied(access[0], access[1])) free.push({ rec, i, access });
-      });
-    }
+  // `types`, if given, limits it to those seating types.
+  claimSeat(patron, types) {
+    const free = this.freeSeats(types);
     if (free.length === 0) return false;
     const seat = free[Math.floor(Math.random() * free.length)];
     seat.rec.seatTaken = seat.rec.seatTaken || [];
@@ -75,6 +63,25 @@ export class SeatingMixin {
     [patron.targetGx, patron.targetGy] = seat.access;
     patron.path = null;
     return true;
+  }
+
+  // Every free, reachable seat ({ rec, i, access }), of `types` if given.
+  freeSeats(types) {
+    const free = [];
+    const seen = new Set();
+    for (const key in this.placed) {
+      const rec = this.placed[key];
+      if (seen.has(rec)) continue;
+      seen.add(rec);
+      const seats = PROP_TYPES[rec.type].seats;
+      if (!seats || (types && !types.has(rec.type))) continue;
+      seats.forEach((_, i) => {
+        if (rec.seatTaken && rec.seatTaken[i]) return;
+        const access = this.seatAccessTile(rec, i);
+        if (access && !this.patronTileOccupied(access[0], access[1])) free.push({ rec, i, access });
+      });
+    }
+    return free;
   }
 
   // Drops a patron's seat reservation (not while seated).

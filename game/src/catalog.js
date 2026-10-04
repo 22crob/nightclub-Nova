@@ -269,6 +269,10 @@ export const STAFF_TYPES = {
 // thing that increases the floor itself; it never grants patron capacity
 // directly (see patronCapacity()) — more floor just means more room to
 // place more Floors-category items, which is what actually grows capacity.
+// The VIP booths: the only seats you can show a guest to from their card
+// (see seatGuest() in scene/guests.js), like Nightclub City's booths.
+export const VIP_BOOTHS = new Set(['vipLounge', 'blackBooth', 'goldBooth']);
+
 export const GRID_EXPANSIONS = [
   { size: 13, cost: 300, unlockLevel: 2 },
   { size: 16, cost: 700, unlockLevel: 3 },

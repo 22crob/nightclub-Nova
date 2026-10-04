@@ -557,16 +557,29 @@ const extras = await page.evaluate(async () => {
   document.getElementById('songLike').click();
   document.getElementById('songLike').click();
   out.liked = Math.round((s.fans - fans0) * 10) / 10;
-  // Seating: none free, then a couch.
+  // Seating: only at VIP booths. With just a couch the button is greyed
+  // out; with a Red Velvet Booth the guest goes to it.
   const p = s.patrons.find((q) => !q.leaving && !q.gone && !q.sitting && !q.seat);
-  s.claimSeat = () => false; // pretend every seat is taken
-  out.noSeat = p ? s.seatGuest(p) === false : null;
-  delete s.claimSeat;
-  const couch = s.restoreProp('couch', 0, [12, 12]);
-  const mood0 = p ? p.mood : 0;
-  out.seated = p ? s.seatGuest(p) && !!p.seat && p.mood > mood0 : null;
-  if (p) s.releaseSeat(p);
+  const couch = s.restoreProp('couch', 0, [12, 9]);
+  s.openInfoCard('guest', p);
+  out.greyed = document.getElementById('seatGuest').classList.contains('disabled') && /no VIP booth/.test(document.getElementById('seatGuest').dataset.tip);
+  out.couchOnly = s.seatGuest(p) === false && !p.seat;
+  const booth = s.restoreProp('vipLounge', 0, [11, 11]);
+  s.refreshInfoCard();
+  out.lit = !document.getElementById('seatGuest').classList.contains('disabled');
+  const mood0 = p.mood;
+  out.seated = s.seatGuest(p) && !!p.seat && p.seat.rec === booth && p.mood > mood0;
+  s.releaseSeat(p);
+  // Drink on the house: once a visit.
+  p.onTheHouse = false;
+  const drinks0 = p.drinks || 0;
+  out.onHouse = s.drinkGuest(p) && p.drinks === drinks0 + 1 && s.drinkGuest(p) === false;
+  // Dancing needs a dance floor.
+  out.danceReason = s.danceBlocker(p);
+  out.danced = out.danceReason === null && s.danceGuest(p) && s.isDanceFloorTile(p.targetGx, p.targetGy);
+  s.closeInfoCard();
   if (couch) s.removeProp(couch);
+  if (booth) s.removeProp(booth);
   // VIPs: a very happy leaver joins; a returning VIP keeps their name and tips double.
   const before = (s.vips || []).length;
   s.maybeJoinVips({ name: 'Test Guest', mood: 95, container: { patronCharacter: 2 } });
@@ -592,7 +605,9 @@ const extras = await page.evaluate(async () => {
   return out;
 });
 check('the song box changes tracks, and Like gives a fan once a song', extras.changed && extras.liked === 1, JSON.stringify(extras));
-check('you can seat a guest at a free seat, which cheers them up', extras.noSeat === true && extras.seated === true, JSON.stringify(extras));
+check('guests can only be seated at a VIP booth; the button is greyed out without one', extras.greyed && extras.couchOnly && extras.lit && extras.seated, JSON.stringify(extras));
+check('a drink on the house, once a visit', extras.onHouse, JSON.stringify(extras));
+check('a guest can be sent to the dance floor', extras.danced, JSON.stringify(extras));
 check('happy guests join the VIP list, come back by name and tip double', extras.joined && extras.welcomed && extras.listed, JSON.stringify(extras));
 check('the club rating is the average of recent nights, shown at the top', extras.rating === 3.5 && extras.ratingShown === '3.5' && extras.faster, JSON.stringify(extras));
 check('VIPs and night ratings are saved', extras.saved, JSON.stringify(extras));

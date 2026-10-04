@@ -492,28 +492,46 @@ body.shopOpen #selectedChip { bottom: calc(150px + env(safe-area-inset-bottom, 0
   display: flex; align-items: center; justify-content: center; font-size: 13px; font-weight: 700;
   background: linear-gradient(180deg, #c0303c, #7a121c); border: 1px solid #000;
 }
+.statBubbles { display: flex; gap: 8px; justify-content: center; margin: 0 26px 8px 0; }
+.statBubble { display: flex; flex-direction: column; align-items: center; min-width: 46px; }
+.bubbleIcon {
+  width: 34px; height: 34px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 19px;
+  background: radial-gradient(circle at 35% 30%, #ffffff 0%, #bfe8ff 35%, #3a8fd0 100%);
+  border: 2px solid #0b2a44; box-shadow: 0 2px 4px #000a, inset 0 -2px 3px #0004;
+}
+.bubbleNum { font-size: 12px; font-weight: 700; margin-top: 2px; }
 .infoTop { display: flex; gap: 10px; align-items: flex-start; }
 .infoPortrait {
-  flex: none; width: 76px; height: 92px; border-radius: 8px; background-repeat: no-repeat;
-  background-color: #10131a; border: 1px solid #4a5263; box-shadow: inset 0 0 12px #000;
+  flex: none; width: 86px; height: 104px; border-radius: 10px; background-repeat: no-repeat;
+  background-color: #10131a; border: 2px solid #3a8fd0; box-shadow: inset 0 0 14px #000, 0 0 8px #3a8fd066;
 }
-.infoText { flex: 1; min-width: 0; padding-right: 18px; }
-.infoName { font-size: 16px; font-weight: 700; }
-.infoRole { font-size: 11px; color: var(--muted); font-weight: 700; margin-bottom: 6px; }
+.infoText { flex: 1; min-width: 0; }
+.infoName { font-size: 16px; font-weight: 700; margin-top: 6px; }
+.infoRole { font-size: 11px; color: var(--muted); font-weight: 700; }
 .infoQuote {
   position: relative; font-size: 12px; color: #1a1024; text-shadow: none; font-weight: 700;
-  background: #fff; border-radius: 10px; padding: 6px 8px; box-shadow: 0 2px 6px #0008;
+  background: #fff; border-radius: 12px; padding: 7px 9px; box-shadow: 0 2px 6px #0008;
 }
-.infoStats { margin-top: 10px; display: flex; flex-wrap: wrap; gap: 6px 14px; font-size: 14px; font-weight: 700; }
-.infoSpent { width: 100%; color: var(--cash); font-size: 14px; }
-.bottomsUp {
-  width: 100%; text-align: center; cursor: pointer; user-select: none; padding: 9px 12px; border-radius: var(--radius);
-  font-size: 16px; font-weight: 700; letter-spacing: 0.03em;
-  background: linear-gradient(180deg, #7a2a7a 0%, #4a0f4a 60%, #2a072a 100%);
-  border: 2px solid var(--magenta); box-shadow: 0 0 0 1px #000, 0 0 12px #ff3ddcaa;
+.infoQuote:after { content: ""; position: absolute; left: -7px; top: 14px; border: 7px solid transparent; border-right-color: #fff; border-left: 0; }
+.infoActions { display: flex; gap: 10px; justify-content: center; margin-top: 10px; }
+.actionButton {
+  position: relative; width: 46px; height: 46px; border-radius: 50%; cursor: pointer; user-select: none;
+  display: flex; align-items: center; justify-content: center; font-size: 24px;
+  background: radial-gradient(circle at 35% 28%, #ffffff 0%, #d8c4ff 30%, #7a44d8 75%, #3a1a7a 100%);
+  border: 2px solid #1a0b3a; box-shadow: 0 3px 6px #000b, inset 0 -3px 4px #0005;
+  transition: transform 0.1s;
 }
-.bottomsUp:active { transform: translateY(1px); }
-.bottomsUp.cooling { filter: grayscale(0.8) brightness(0.7); cursor: default; }
+.actionButton:hover { transform: translateY(-2px) scale(1.06); box-shadow: 0 3px 6px #000b, 0 0 12px #ff3ddcaa, inset 0 -3px 4px #0005; }
+.actionButton.disabled { filter: grayscale(1) brightness(0.55); cursor: default; }
+.actionButton.disabled:hover { transform: none; box-shadow: 0 3px 6px #000b, inset 0 -3px 4px #0005; }
+.actionTimer { position: absolute; bottom: -14px; font-size: 10px; font-weight: 700; white-space: nowrap; color: #ffd24d; }
+.actionTip {
+  display: none; position: absolute; z-index: 2; max-width: 190px; padding: 6px 9px; border-radius: 10px;
+  background: #fff; color: #1a1024; text-shadow: none; font-size: 12px; font-weight: 700; text-align: center;
+  box-shadow: 0 2px 8px #000a; pointer-events: none;
+}
+.actionTip.show { display: block; }
+.actionTip:after { content: ""; position: absolute; left: 50%; bottom: -7px; margin-left: -7px; border: 7px solid transparent; border-top-color: #fff; border-bottom: 0; }
 
 .partyBanner {
   display: none; position: fixed; top: calc(118px + env(safe-area-inset-top, 0px)); right: 12px; z-index: 10;
