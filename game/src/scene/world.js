@@ -3,7 +3,7 @@
 // Mixed into ClubScene (see ClubScene.js); `this` is the scene.
 import Phaser from 'phaser';
 import { GRID_EXPANSIONS } from '../catalog.js';
-import { FLOOR_COLOR, FLOOR_SLAB_DEPTH, PATRON_SPAWN_TILE, ROOM_COLORS, TILE_H, TILE_W, WALL_BASEBOARD, WALL_HEIGHT, WALL_THICKNESS, ZOOM_DEFAULT, ZOOM_MAX, ZOOM_MIN } from '../config.js';
+import { FLOOR_COLOR, FLOOR_SLAB_DEPTH, ROOM_COLORS, TILE_H, TILE_W, WALL_BASEBOARD, WALL_HEIGHT, WALL_THICKNESS, ZOOM_DEFAULT, ZOOM_MAX, ZOOM_MIN } from '../config.js';
 import { SFX } from '../sfx.js';
 import { WALL_TEX_H, WALL_TEX_W, doorCanvas } from '../walls.js';
 import { bareFloorCanvas } from '../floors.js';
@@ -148,13 +148,20 @@ export class WorldMixin {
     this.drawStreetProps(P, t, n, FLOOR_SLAB_DEPTH);
   }
 
+  // The tile inside the club's front door: at the front end of the left
+  // wall, next to the line outside (see street.js). It moves forward when
+  // the club expands.
+  doorTile() {
+    return { gx: 0, gy: this.gridSize - 1 };
+  }
+
   // The club's front door (see doorCanvas() in walls.js), set into the left
-  // wall at the entrance tile (PATRON_SPAWN_TILE), like Nightclub City's.
+  // wall at the door tile, like Nightclub City's.
   // Drawn over the wallpaper and the mood shading.
   drawDoor() {
     if (!this.textures.exists('clubDoor')) this.textures.addCanvas('clubDoor', doorCanvas('left'));
     if (this.doorImage) this.doorImage.destroy();
-    const { x, y } = this.wallSectionOrigin(`L${PATRON_SPAWN_TILE.gy}`);
+    const { x, y } = this.wallSectionOrigin(`L${this.doorTile().gy}`);
     this.doorImage = this.add.image(x, y, 'clubDoor').setOrigin(0, 0).setDisplaySize(WALL_TEX_W / 2, WALL_TEX_H / 2);
     this.wallLayer.add(this.doorImage);
   }

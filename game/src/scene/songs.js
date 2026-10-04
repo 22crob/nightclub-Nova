@@ -64,9 +64,8 @@ export class SongsMixin {
     };
     set('songTitle', song.title);
     set('songArtist', song.artist);
-    const open = this.clubOpen() && this.nightStartedAt !== undefined;
-    set('songEnds', open ? `Ends: ${this.nightTimeLabel(this.songStartedAt + SONGS.lengthMs)}` : 'The DJ is off tonight');
-    box.classList.toggle('off', !open);
+    const left = Math.max(0, Math.ceil((this.songStartedAt + SONGS.lengthMs - this.time.now) / 1000));
+    set('songEnds', `Ends in ${Math.floor(left / 60)}:${String(left % 60).padStart(2, '0')}`);
     const like = document.getElementById('songLike');
     if (like) like.classList.toggle('liked', !!this.songLiked);
   }

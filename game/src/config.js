@@ -52,7 +52,8 @@ export const ROOM_COLORS = {
   slabEdge: 0x3c3c45,
 };
 // The street outside at night (see scene/street.js). Distances are in tiles
-// out from the walls; lineStartGx is where the front of the line stands.
+// out from the walls; lineStartGx is where the front of the line stands, by
+// the door at the front end of the left wall.
 export const STREET = {
   sidewalk: 4.5, road: 7,
   pavement: 0x55535f, grout: 0x46444f, curb: 0x7a7884, asphalt: 0x1d1b24, laneLine: 0xc9a640,
@@ -60,7 +61,7 @@ export const STREET = {
   lampPost: 0x2a2a33, lampGlow: 0xffd77a, lampEvery: 6,
   buildings: [0x2a2438, 0x262a3a, 0x30283a, 0x232433], windowLit: 0xf2c75c, windowDark: 0x16141e,
   lineStartGx: -1.4, lineLength: 6, startInLine: 3, bouncerCharacter: 0,
-  msPerTile: 420, admitEveryMs: 1500, passerEveryMs: [3000, 8000],
+  msPerTile: 420, admitEveryMs: 1500, passerEveryMs: [1200, 3200],
 };
 
 // The floor tiles are invisible (the seamless bare floor shows through, see
@@ -89,7 +90,6 @@ export const FACINGS = [0, 90, 180, 270];
 // as ambient "reputation from having a nice venue" growth, on top of
 // this.
 // ---------------------------------------------------------------------
-export const PATRON_SPAWN_TILE = { gx: 0, gy: 1 }; // the door, on the left wall like Nightclub City's: patrons walk in and out here
 // Capacity is no longer a flat number — an empty club still draws a
 // trickle of curious visitors (PATRON_BASE_CAPACITY), and every prop you
 // place adds room for more (PROP_TYPES[type].capacity), up to a hard
@@ -189,27 +189,12 @@ export const BOOST = { durationMs: 90000, cooldownMs: 300000, speedUp: 2, tipMul
 // Mood lighting (see lighting.js): how much the floor and walls are dimmed,
 // and the coloured glow under lights. The owner found the glows too strong
 // in spots, so they're off for now (`glows: false`).
-// Club nights (see scene/nights.js): each night runs 9 PM to 3 AM in
-// lengthMs of real time; the last lastCallMs are last call (no new guests).
-// At closing, guests get closeWaitMs to walk out before the summary.
-// Stars come from the night's average vibe: one, plus one for each of
-// starVibes reached; each rating gives starFans bonus fans.
-export const NIGHT = {
-  lengthMs: 4 * 60 * 1000,
-  lastCallMs: 35 * 1000,
-  closeWaitMs: 20 * 1000,
-  startHour: 21,
-  hours: 6,
-  closedShade: 0.25, // the room's dimming between nights (1 = full night dimming)
-  starVibes: [40, 55, 70, 85],
-  starFans: [0, 2, 5, 8, 12],
-  verdicts: ['A quiet one.', 'Not bad.', 'Good night!', 'Great night!', 'Legendary night!'],
-};
-// Parties (see scene/parties.js): thrown once a night while the doors are
-// open, they last the rest of it. capacity: extra guests allowed in;
+// Parties (see scene/parties.js): one at a time, each lasting
+// PARTY_LENGTH_MS. capacity: extra guests allowed in;
 // arrivals/tips/thirst/fans: multipliers (arrivals: guests come this much
 // faster; thirst: they want drinks this much sooner; fans: fans from happy
 // leavers). shade tints the room's mood lighting.
+export const PARTY_LENGTH_MS = 3 * 60 * 1000;
 export const PARTIES = [
   { key: 'house', label: 'House Party', emoji: '🏠', cost: 60, unlockLevel: 1, capacity: 2, arrivals: 1.3, tips: 1.25, thirst: 1.1, fans: 1.2, shade: 0x1a0b2e,
     blurb: 'Invite the neighbours. A couple more guests and a friendly crowd.' },
@@ -236,9 +221,11 @@ export const SONGS = { lengthMs: 60 * 1000, likeFans: 1, newSongFun: 10 };
 // joins the VIP list (up to max). Each new arrival has returnChance of
 // being a VIP coming back; VIPs tip tipMultiplier times as much.
 export const VIP = { joinMood: 85, max: 12, returnChance: 0.2, tipMultiplier: 2 };
-// The club's star rating (see clubRating() in nights.js): the average of
-// the last `nights` nights' stars. Each star above 3 brings guests
-// arrivalsPerStar faster (and each below, slower).
-export const RATING = { nights: 5, arrivalsPerStar: 0.08 };
+// The club's star rating (see rating.js). The club runs one endless night;
+// every sampleMs it gets stars for how happy the crowd was (one, plus one
+// for each of starVibes its average vibe reached) and starFans bonus fans.
+// The rating is the average of the last `samples` of those. Each star above
+// 3 brings guests arrivalsPerStar faster (and each below, slower).
+export const RATING = { samples: 5, sampleMs: 60 * 1000, starVibes: [40, 55, 70, 85], starFans: [0, 1, 2, 3, 5], arrivalsPerStar: 0.08 };
 export const MOOD_LIGHTING = { color: 0x0b0418, floorAlpha: 0.3, wallAlpha: 0.2, glows: false, glowAlpha: 0.55 };
 export const SEAT_SIT_TIME = [14000, 24000];

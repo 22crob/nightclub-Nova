@@ -23,7 +23,7 @@
         <div id="zoomOut" class="squareButton" data-tip-name="Zoom out">－</div>
         <div id="restartButton" class="squareButton" data-tip-name="New club" data-tip-text="Start a brand-new club from scratch">↺</div>
         <div id="tipsButton" class="squareButton iconOnly" data-icon="tips" data-tip-name="How to play"
-          data-tip-text="Each night runs 9 PM to 3 AM. Happy guests tip and bring fans; thirsty or bored ones leave. Click a guest or bartender for their card. Click to place, right-click to sell, R to rotate, Esc to put down, drag to move around, scroll to zoom."></div>
+          data-tip-text="The club never closes. Happy guests tip and bring fans; thirsty or bored ones leave. Click a guest or bartender for their card. Click to place, right-click to sell, R to rotate, Esc to put down, drag to move around, scroll to zoom."></div>
       </div>
     </div>
   </div>
@@ -48,18 +48,11 @@
     <span class="amount" id="cashVal">500</span>
   </div>
 
-  <!-- Under the cash: tonight's clock -->
-  <div id="nightClock" data-phase="open" data-tip-name="Tonight" data-tip-text="Each night runs 9 PM to 3 AM. Last call stops new guests; at closing you get the night's results.">
-    <span id="nightClockText">Night 1</span>
-    <div class="nightBar"><div id="nightClockFill"></div></div>
-  </div>
-  <div id="openButton" class="openButton roundButton" style="display:none" data-icon="door" data-tip-name="Open the doors" data-tip-text="Start the next night"></div>
-
   <!-- Asked before starting over (see restartClub()) -->
   <div id="restartConfirm" class="overlay">
     <div class="summaryCard">
       <div class="summaryTitle">Start a new club?</div>
-      <div class="summaryVerdict">Your club, money, fans and nights are all wiped, and you start again from Night 1 with $700.</div>
+      <div class="summaryVerdict">Your club, money and fans are all wiped, and you start again with $700.</div>
       <div class="summaryButtons">
         <div id="restartYes" class="summaryButton danger">Yes, start over</div>
         <div id="restartNo" class="summaryButton later">Keep my club</div>
@@ -82,31 +75,6 @@
     </div>
   </div>
 
-  <!-- End-of-night results -->
-  <div id="nightSummary">
-    <div class="summaryCard">
-      <div class="summaryTitle" id="summaryTitle">Night 1 is over!</div>
-      <div class="summaryStars" id="summaryStars">★★★☆☆</div>
-      <div class="summaryVerdict" id="summaryVerdict">Good night!</div>
-      <div class="summaryRows">
-        <div><span>Guests</span><b id="summaryGuests">0</b></div>
-        <div><span>Biggest crowd</span><b id="summaryCrowd">0</b></div>
-        <div><span>Happy crowd</span><b id="summaryVibe">0%</b></div>
-        <div><span>Cover charges</span><b id="summaryCover">$0</b></div>
-        <div><span>Drinks sold</span><b id="summaryDrinks">0</b></div>
-        <div><span>Tips</span><b id="summaryTips">$0</b></div>
-        <div><span>Staff wages</span><b id="summaryWages">$0</b></div>
-        <div><span>Party</span><b id="summaryParty">None</b></div>
-        <div class="total"><span>Profit</span><b id="summaryProfit">$0</b></div>
-        <div><span>Fans</span><b id="summaryFans">+0</b></div>
-      </div>
-      <div class="summaryButtons">
-        <div id="summaryOpen" class="summaryButton">Open the doors</div>
-        <div id="summaryLater" class="summaryButton later">Decorate first</div>
-      </div>
-    </div>
-  </div>
-
   <!-- Top-right: stat buttons -->
   <div id="hudStats">
     <div class="statButton" data-tip-name="Fans" data-tip-text="Happy guests become fans. Fans raise your level, which unlocks new items.">
@@ -115,7 +83,7 @@
     <div class="statButton" data-tip-name="Luxury" data-tip-text="How fancy your club is. Everything you place, paint and paper adds to it, and a fancier club earns bigger tips.">
       <div class="statValue"><span class="statIcon" data-icon="luxury"></span><span id="luxuryVal">0</span></div>
     </div>
-    <div class="statButton" data-tip-name="Club rating" data-tip-text="The average stars of your last five nights. A better-rated club draws guests faster.">
+    <div class="statButton" data-tip-name="Club rating" data-tip-text="How happy your crowd has been lately: the club gets stars every minute, and this is the average of the last five. A better-rated club draws guests faster.">
       <div class="statValue"><span class="statIcon" data-icon="rating"></span><span id="ratingVal">–</span></div>
     </div>
     <div class="statButton" data-tip-name="Guests" data-tip-text="Guests in the club now, out of how many fit">
@@ -132,16 +100,16 @@
       <span id="boostLabel" class="roundTimer"></span>
     </div>
     <div id="partyButton" class="partyButton roundButton" data-state="ready" data-icon="party" data-tip-name="Throw a Party"
-      data-tip-text="Pay for a themed party tonight: more guests, bigger tips, more fans">
+      data-tip-text="Pay for a themed party: more guests, bigger tips, more fans">
       <span id="partyLabel" class="roundTimer"></span>
     </div>
   </div>
   <div id="partyPicker" class="overlay">
     <div class="summaryCard partyCard">
       <div class="summaryTitle">Throw a Party</div>
-      <div class="summaryVerdict">One party a night. It lasts until closing time.</div>
+      <div class="summaryVerdict">One party at a time. Each lasts 3 minutes.</div>
       <div id="partyList"></div>
-      <div class="summaryButtons"><div id="partyCancel" class="summaryButton later">Not tonight</div></div>
+      <div class="summaryButtons"><div id="partyCancel" class="summaryButton later">Not now</div></div>
     </div>
   </div>
 

@@ -3,7 +3,7 @@
 import Phaser from 'phaser';
 import { PATRON_META, PATRON_SHEETS } from '../assets.js';
 import { FLOOR_DECAL_PROPS, PROP_TYPES, STAFF_TYPES } from '../catalog.js';
-import { BOOST, CHARACTER_DISPLAY_HEIGHT, DRINK_RUN_CHANCE, PATRON_DANCE_LINGER, HAIR_STYLES, PATRON_HAIR_COLORS, PATRON_LIFETIME, PATRON_MOVE_INTERVAL, PATRON_OUTFIT_COLORS, PATRON_POI_LINGER, PATRON_POPUP_Y, PATRON_SKIN_TONES, PATRON_SPAWN_INTERVAL, PATRON_SPAWN_TILE, MONEY, PATRON_TIP_INTERVAL, PATRON_Y_OFFSET, PROP_SCALE } from '../config.js';
+import { BOOST, CHARACTER_DISPLAY_HEIGHT, DRINK_RUN_CHANCE, PATRON_DANCE_LINGER, HAIR_STYLES, PATRON_HAIR_COLORS, PATRON_LIFETIME, PATRON_MOVE_INTERVAL, PATRON_OUTFIT_COLORS, PATRON_POI_LINGER, PATRON_POPUP_Y, PATRON_SKIN_TONES, PATRON_SPAWN_INTERVAL, MONEY, PATRON_TIP_INTERVAL, PATRON_Y_OFFSET, PROP_SCALE } from '../config.js';
 import { SFX } from '../sfx.js';
 import { MOOD } from './mood.js';
 import { randRange } from '../util.js';
@@ -43,7 +43,7 @@ export class PatronsMixin {
   trySpawnPatron(character, vip) {
     if (!this.doorsOpen()) return; // last call or closed
     if (this.patrons.length >= this.patronCapacity()) return;
-    const { gx, gy } = PATRON_SPAWN_TILE;
+    const { gx, gy } = this.doorTile();
     if (this.isBlockingProp(gx, gy)) return; // door tile has a blocking prop on it — skip this attempt
     if (this.patronTileOccupied(gx, gy)) return; // someone's already standing right there
 
@@ -686,8 +686,8 @@ export class PatronsMixin {
     if (patron.leaving) return; // already on its way out
     patron.leaving = true;
     this.leaveBarQueue(patron);
-    patron.targetGx = PATRON_SPAWN_TILE.gx;
-    patron.targetGy = PATRON_SPAWN_TILE.gy;
+    patron.targetGx = this.doorTile().gx;
+    patron.targetGy = this.doorTile().gy;
     patron.path = null;
     if (patron.sitting) {
       // Get up first; standUp() carries on toward the door.

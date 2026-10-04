@@ -1,7 +1,7 @@
 // ClubScene methods: Footprints, the placement ghost, and placing / rotating / selling / restoring props.
 // Mixed into ClubScene (see ClubScene.js); `this` is the scene.
 import { PROP_TYPES, STAFF_TYPES } from '../catalog.js';
-import { FACINGS, FALLBACK_PROP_HEIGHT, FLOOR_COLOR, PATRON_SPAWN_TILE, SELL_REFUND_RATIO, TILE_H, TILE_W } from '../config.js';
+import { FACINGS, FALLBACK_PROP_HEIGHT, FLOOR_COLOR, SELL_REFUND_RATIO, TILE_H, TILE_W } from '../config.js';
 import { floorTextureKey } from '../floors.js';
 import { SFX } from '../sfx.js';
 
@@ -39,7 +39,7 @@ export class PlacementMixin {
     const solid = !allowDoor && !(PROP_TYPES[type] && PROP_TYPES[type].floorStyle);
     return tiles.every(([tx, ty]) => (
       tx >= 0 && tx < this.gridSize && ty >= 0 && ty < this.gridSize && !this.placed[`${tx},${ty}`] &&
-      !(solid && tx === PATRON_SPAWN_TILE.gx && ty === PATRON_SPAWN_TILE.gy)
+      !(solid && tx === this.doorTile().gx && ty === this.doorTile().gy)
     ));
   }
 

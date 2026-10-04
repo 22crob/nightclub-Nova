@@ -384,12 +384,15 @@ check('clicking a wall paints it with wallpaper ($8)', wall.painted === 'wpPaint
 check('wallpaper is saved', wall.saved === 'wpPaint');
 check('animated wallpaper moves while the DJ plays', wall.ledFrames > 3, `${wall.ledFrames} frames`);
 
-// The doorway tile can't be blocked with furniture (floor tiles are fine).
+// The door is at the front end of the left wall, by the line outside; its
+// tile can't be blocked with furniture (floor tiles are fine).
 const door = await page.evaluate(() => {
   const s = window.__clubNova.scene.getScene('club');
-  return { solid: s.footprintValid([[0, 1]], 'plant'), floor: s.footprintValid([[0, 1]], 'dance') };
+  const d = s.doorTile();
+  const free = !s.placed[`${d.gx},${d.gy}`];
+  return { at: [d.gx, d.gy], size: s.gridSize, solid: s.footprintValid([[d.gx, d.gy]], 'plant'), floor: !free || s.footprintValid([[d.gx, d.gy]], 'dance') };
 });
-check('furniture can\'t block the front door', door.solid === false && door.floor === true, JSON.stringify(door));
+check('the door is at the front of the left wall, and furniture can\'t block it', door.at[0] === 0 && door.at[1] === door.size - 1 && door.solid === false && door.floor === true, JSON.stringify(door));
 
 // Mood lighting: the room is dimmed. Glows under lights are switched off
 // for now (MOOD_LIGHTING.glows), so a lava lamp casts none.
@@ -618,7 +621,7 @@ const extras = await page.evaluate(async () => {
   document.getElementById('tabVip').click();
   out.listed = [...document.querySelectorAll('#shopItems .vipSlot')].some((c) => /Test Guest/.test(c.dataset.tipName));
   document.getElementById('tabDecor').click();
-  // Rating: the average of recent nights' stars.
+  // Rating: the average of recent ratings.
   const stars0 = s.nightStars;
   s.nightStars = [3, 4];
   s.updateUI();
@@ -636,8 +639,8 @@ check('guests can only be seated at a VIP booth; the button is greyed out withou
 check('a drink on the house, once a visit', extras.onHouse, JSON.stringify(extras));
 check('a guest can be sent to the dance floor', extras.danced, JSON.stringify(extras));
 check('happy guests join the VIP list, come back by name and tip double', extras.joined && extras.welcomed && extras.listed, JSON.stringify(extras));
-check('the club rating is the average of recent nights, shown at the top', extras.rating === 3.5 && extras.ratingShown === '3.5' && extras.faster, JSON.stringify(extras));
-check('VIPs and night ratings are saved', extras.saved, JSON.stringify(extras));
+check('the club rating is the average of recent ratings, shown at the top', extras.rating === 3.5 && extras.ratingShown === '3.5' && extras.faster, JSON.stringify(extras));
+check('VIPs and ratings are saved', extras.saved, JSON.stringify(extras));
 
 // Money comes in like Nightclub City: a cover charge at the door, each
 // drink with a tip on top, and tips from dancers now and then (not from
@@ -717,8 +720,8 @@ check('a long bar can take more bartenders, spread along it, and let one go', lo
 check('a long bar keeps its bartender when the unit they stood at is sold', longBar.split && longBar.kept, JSON.stringify(longBar));
 
 // Throw a Party: the picker lists every party, a House Party costs $60 and
-// lets more guests in with bigger tips, only one a night, and it shows on
-// the clock.
+// lets more guests in with bigger tips, one at a time, with a banner
+// counting down; it ends after 3 minutes.
 const party = await page.evaluate(() => {
   const s = window.__clubNova.scene.getScene('club');
   const labelAtStart = document.getElementById('partyButton').dataset.tipName;
@@ -736,16 +739,18 @@ const party = await page.evaluate(() => {
     tips: s.partyEffect('tips', 1),
     closed: !document.getElementById('partyPicker').classList.contains('open'),
     button: document.getElementById('partyButton').dataset.state,
-    clock: document.getElementById('nightClockText').textContent,
     labelAtStart,
     banner: document.getElementById('partyBanner').classList.contains('open') && /House Party/.test(document.getElementById('bannerName').textContent) && /Ends in: \d+:\d\d/.test(document.getElementById('bannerLeft').textContent),
   };
   out.second = s.throwParty('hiphop');
+  s.partyStartedAt -= 3 * 60 * 1000 + 1000; // time's up
+  s.updatePartyButton();
+  out.ended = s.party === null && s.partyEffect('capacity', 0) === 0 && !document.getElementById('partyBanner').classList.contains('open');
   return out;
 });
 check('the party picker lists four parties, the fancy ones locked at first', party.labelAtStart === 'Throw a Party' && party.rows === 4 && party.locked >= 1, JSON.stringify(party));
 check('a House Party costs $60, lets 2 more guests in and raises tips', party.paid === 60 && party.capacity === 2 && party.tips > 1 && party.closed, JSON.stringify(party));
-check('only one party a night, and it shows on the clock and a banner', party.banner && party.second === false && party.button === 'active' && /House Party/.test(party.clock), JSON.stringify(party));
+check('one party at a time, with a countdown banner, over after 3 minutes', party.banner && party.second === false && party.button === 'active' && party.ended, JSON.stringify(party));
 
 // Levels get slower: 150 fans for level 2, 250 more for level 3.
 const levels = await page.evaluate(() => {
@@ -758,49 +763,27 @@ const levels = await page.evaluate(() => {
 });
 check('levels need more fans each time', levels.join() === '1,1,2,2,3,5', levels.join());
 
-// Club nights: the clock runs, last call shuts the door, closing sends
-// everyone home and shows the summary; between nights the music and wages
-// stop; opening the doors starts the next night, and it's saved.
-const nights = await page.evaluate(async () => {
+// One endless night: no night clock or summary, the doors and the music
+// never stop, wages keep being paid, and every minute the club gets stars
+// for how happy the crowd has been (with a few bonus fans).
+const endless = await page.evaluate(() => {
   const s = window.__clubNova.scene.getScene('club');
-  const wait = (ms) => new Promise((r) => setTimeout(r, ms));
-  const out = { clock: document.getElementById('nightClockText').textContent, phase: s.nightPhase };
-  const night = s.night;
-  s.nightStartedAt = s.time.now - (4 * 60 * 1000 - 20 * 1000); // jump to 20s before closing: last call
-  s.tickNight();
-  out.lastCall = s.nightPhase === 'lastCall' && !s.doorsOpen();
-  const before = s.patrons.length;
-  s.trySpawnPatron();
-  out.noNewGuests = s.patrons.length === before;
-  s.nightStartedAt = s.time.now - 4 * 60 * 1000 - 1000; // past closing time
-  s.tickNight();
-  out.closing = s.nightPhase === 'closing' && s.patrons.every((p) => p.leaving || p.gone);
-  s.closingAt -= 60 * 1000; // stop waiting for slow walkers
-  s.tickNight();
-  await wait(600);
-  const card = document.getElementById('nightSummary');
-  out.closed = s.nightPhase === 'closed' && s.patrons.length === 0;
-  out.summary = card.classList.contains('open') && /Night \d+ is over/.test(document.getElementById('summaryTitle').textContent);
-  out.stars = s.lastNight.stars;
-  out.partyRow = document.getElementById('summaryParty').textContent;
-  out.partyOver = s.party === null && s.partyEffect('capacity', 0) === 0;
-  out.quiet = !s.musicPlaying() && /Club closed/.test(document.getElementById('boostButton').dataset.tipText);
-  const cash = s.cash;
-  s.payWages();
-  out.noWages = s.cash === cash;
-  document.getElementById('summaryLater').click();
-  out.openButton = !card.classList.contains('open') && document.getElementById('openButton').style.display !== 'none';
-  document.getElementById('openButton').click();
-  out.next = s.night === night + 1 && s.nightPhase === 'open' && s.musicPlaying();
-  out.saved = JSON.parse(localStorage.getItem('clubNovaSave_v2')).night === night + 1;
+  const out = { noClock: !document.getElementById('nightClock') && !document.getElementById('nightSummary'), open: s.doorsOpen() && s.musicPlaying() };
+  const stars0 = [...(s.nightStars || [])];
+  const fans0 = s.fans;
+  s.vibeSum = 90 * 10;
+  s.vibeCount = 10;
+  s.ratedAt = s.time.now - 61 * 1000;
+  s.tickRating();
+  out.rated = s.nightStars[s.nightStars.length - 1] === 5 && s.fans >= fans0 + 5 && s.vibeCount === 0;
+  out.notYet = (() => { const n = s.nightStars.length; s.vibeCount = 1; s.vibeSum = 50; s.tickRating(); return s.nightStars.length === n; })();
+  out.songEnds = /^Ends in \d+:\d\d$/.test(document.getElementById('songEnds').textContent);
+  s.nightStars = stars0;
   return out;
 });
-check('a night has a clock', /^Night \d+ · \d+:\d0 [AP]M/.test(nights.clock) && nights.phase === 'open', nights.clock);
-check('last call lets nobody new in', nights.lastCall && nights.noNewGuests, JSON.stringify(nights));
-check('closing time sends everyone home and shows the summary', nights.closing && nights.closed && nights.summary && nights.stars >= 1, JSON.stringify(nights));
-check('the summary lists the party, and it ends with the night', /House Party/.test(nights.partyRow) && nights.partyOver, JSON.stringify(nights));
-check('between nights the music and wages stop', nights.quiet && nights.noWages, JSON.stringify(nights));
-check('opening the doors starts the next night, and it is saved', nights.openButton && nights.next && nights.saved, JSON.stringify(nights));
+check('the club runs one endless night: no clock or summary, doors and music always on', endless.noClock && endless.open, JSON.stringify(endless));
+check('every minute the club is rated on its crowd, with bonus fans for a good one', endless.rated && endless.notYet, JSON.stringify(endless));
+check('the song box counts down to the next song', endless.songEnds, JSON.stringify(endless));
 
 // Restart: asks first, then wipes the save and starts a fresh club.
 const restart = await page.evaluate(() => {
@@ -815,9 +798,9 @@ await page.waitForTimeout(500);
 await waitForScene();
 const fresh = await page.evaluate(() => {
   const s = window.__clubNova.scene.getScene('club');
-  return { cash: s.cash, fans: s.fans, night: s.night };
+  return { cash: s.cash, fans: s.fans };
 });
-check('restart asks first, then starts a brand-new club', restart.asked && restart.kept && fresh.cash === 700 && fresh.fans === 0 && fresh.night === 1, JSON.stringify({ ...restart, ...fresh }));
+check('restart asks first, then starts a brand-new club', restart.asked && restart.kept && fresh.cash === 700 && fresh.fans === 0, JSON.stringify({ ...restart, ...fresh }));
 
 // Edit and Inventory: Move picks a placed item up to place again for
 // free; Put away sends one to the inventory, which lists it, and placing

@@ -68,10 +68,7 @@ export class BoostMixin {
     let state = 'ready';
     let timer = '';
     let tip = 'A free 90-second party: bigger, faster tips, more drinks and dancing, and heavy bass. Ready now!';
-    if (!this.clubOpen()) {
-      state = 'cooldown';
-      tip = 'Club closed. Open the doors for the next night first.';
-    } else if (this.isBoosted()) {
+    if (this.isBoosted()) {
       state = 'active';
       timer = clock(this.boostUntil - now);
       tip = `The bass is dropping! ${timer} left.`;

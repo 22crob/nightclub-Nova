@@ -1,11 +1,10 @@
-// ClubScene methods: Throw a Party. Once a night, while the doors are open,
-// the player can pay for a themed party (PARTIES in config.js) that lasts
-// the rest of the night: more guests allowed in, arriving faster, tipping
-// more, drinking more and bringing more fans. The room's mood lighting
-// takes the party's colour, the night clock shows it, and the night's
-// summary counts its cost.
+// ClubScene methods: Throw a Party. One at a time, the player can pay for a
+// themed party (PARTIES in config.js) that lasts PARTY_LENGTH_MS: more
+// guests allowed in, arriving faster, tipping more, drinking more and
+// bringing more fans. The room's mood lighting takes the party's colour,
+// and a banner counts down to the end.
 // Mixed into ClubScene (see ClubScene.js); `this` is the scene.
-import { NIGHT, PARTIES } from '../config.js';
+import { PARTIES, PARTY_LENGTH_MS } from '../config.js';
 import { SFX } from '../sfx.js';
 import { refreshTip } from '../tooltips.js';
 
@@ -24,8 +23,7 @@ export class PartiesMixin {
 
   // Why a party can't be thrown right now, or null if it can.
   partyBlocker(def) {
-    if (!this.doorsOpen()) return 'The doors are closed';
-    if (this.party) return 'One party a night';
+    if (this.party) return 'One party at a time';
     if (def && this.levelInfo().level < def.unlockLevel) return `Unlocks at level ${def.unlockLevel}`;
     if (def && this.cash < def.cost) return 'Not enough cash';
     return null;
@@ -47,12 +45,11 @@ export class PartiesMixin {
     for (let i = 0; i < 3; i++) this.time.delayedCall(400 + i * 700, () => this.streetArrival());
     this.updateUI();
     this.updatePartyButton();
-    this.updateNightClock();
     this.saveGame();
     return true;
   }
 
-  // The party is over when the night is.
+  // The party is over when its time is up.
   endParty() {
     this.party = null;
     this.moodColor = undefined;
@@ -65,14 +62,17 @@ export class PartiesMixin {
     if (!button) return;
     const party = this.currentParty();
     // Icon only; the state is in the hover tip.
+    // A party ends when its time is up.
+    if (party && this.time.now >= this.partyStartedAt + PARTY_LENGTH_MS) {
+      this.endParty();
+      this.showToast(`${party.emoji} The ${party.label} is over. Throw another whenever you like!`);
+      return;
+    }
     let state = 'ready';
-    let text = 'Pay for a themed party tonight: more guests, bigger tips, more fans.';
+    let text = 'Pay for a themed party: more guests, bigger tips, more fans, for 3 minutes.';
     if (party) {
       state = 'active';
-      text = `${party.emoji} ${party.label} is on tonight, until closing time.`;
-    } else if (!this.doorsOpen()) {
-      state = 'off';
-      text = this.clubOpen() ? 'Too late tonight: parties start while the doors are open.' : 'Club closed. Open the doors for the next night first.';
+      text = `${party.emoji} ${party.label} is on!`;
     }
     if (button.dataset.state !== state) button.dataset.state = state;
     if (button.dataset.tipText !== text) {
@@ -89,10 +89,10 @@ export class PartiesMixin {
     const banner = document.getElementById('partyBanner');
     if (!banner) return;
     const party = this.currentParty();
-    const on = !!party && (this.nightPhase === 'open' || this.nightPhase === 'lastCall');
+    const on = !!party;
     banner.classList.toggle('open', on);
     if (!on) return;
-    const end = this.nightStartedAt + NIGHT.lengthMs;
+    const end = this.partyStartedAt + PARTY_LENGTH_MS;
     const left = Math.max(0, end - this.time.now);
     const s = Math.ceil(left / 1000);
     const name = `${party.emoji} ${party.label}`;
@@ -135,7 +135,7 @@ export class PartiesMixin {
     this.partyButton?.addEventListener('click', () => {
       SFX.unlock();
       const blocked = this.partyBlocker();
-      if (blocked) { SFX.denied(); this.showToast(this.party ? `${this.currentParty().emoji} ${this.currentParty().label} is on tonight!` : `🎉 ${blocked}: throw a party while the doors are open.`); return; }
+      if (blocked) { SFX.denied(); this.showToast(`${this.currentParty().emoji} ${this.currentParty().label} is on!`); return; }
       this.showPartyPicker();
     });
     document.getElementById('partyCancel')?.addEventListener('click', () => this.hidePartyPicker());

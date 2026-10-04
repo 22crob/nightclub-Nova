@@ -45,7 +45,7 @@ export class SaveMixin {
       inventory[this.movingBooth.type] -= 1;
       if (inventory[this.movingBooth.type] <= 0) delete inventory[this.movingBooth.type];
     }
-    return { cash: this.cash, fans: this.fans, gridSize: this.gridSize, placed: placedList, wallpaper: { ...this.wallpaper }, floorPaint: { ...this.floorPaint }, night: this.night, nightOver: this.nightPhase === 'closed', bestNightProfit: this.bestNightProfit, vips: this.vips || [], nightStars: this.nightStars || [], inventory };
+    return { cash: this.cash, fans: this.fans, gridSize: this.gridSize, placed: placedList, wallpaper: { ...this.wallpaper }, floorPaint: { ...this.floorPaint }, vips: this.vips || [], nightStars: this.nightStars || [], inventory };
   }
 
   saveGame() {
@@ -75,6 +75,18 @@ export class SaveMixin {
       localStorage.removeItem(SAVE_KEY);
     } catch (e) { /* storage blocked: the reload just starts as usual */ }
     window.location.reload();
+  }
+
+  // The door moved to the front end of the left wall: anything a saved
+  // club had standing on that tile (a dance floor can stay) goes into the
+  // inventory so guests can get in.
+  clearDoorway() {
+    const { gx, gy } = this.doorTile();
+    const rec = this.placed[`${gx},${gy}`];
+    if (!rec || PROP_TYPES[rec.type].floorStyle || PROP_TYPES[rec.type].staff === 'dj') return;
+    this.removeProp(rec);
+    this.addToInventory(rec.type);
+    this.doorwayCleared = PROP_TYPES[rec.type].label;
   }
 
   loadGame() {
@@ -124,10 +136,8 @@ export class SaveMixin {
         if (rec && entry.staff && PROP_TYPES[entry.type].staff) this.attachStaff(rec);
       }
     }
-    // The night to open on load: a reload mid-night replays it, a finished
-    // one moves on to the next (see setupNights()).
-    if (typeof data.night === 'number') this.savedNight = data.night + (data.nightOver ? 1 : 0);
-    if (typeof data.bestNightProfit === 'number') this.bestNightProfit = data.bestNightProfit;
+    // (Saves from when the club had separate nights also have night,
+    // nightOver and bestNightProfit; they're no longer used.)
     if (Array.isArray(data.vips)) {
       this.vips = data.vips.filter((v) => v && typeof v.name === 'string' && typeof v.character === 'number')
         .map((v) => ({ name: v.name, character: v.character, visits: Number(v.visits) || 1 }));
@@ -136,6 +146,7 @@ export class SaveMixin {
       this.inventory = {};
       for (const [type, n] of Object.entries(data.inventory)) if (PROP_TYPES[type] && n > 0) this.inventory[type] = Math.floor(n);
     }
+    this.clearDoorway();
     if (Array.isArray(data.nightStars)) this.nightStars = data.nightStars.filter((n) => n >= 1 && n <= 5).slice(-5);
     this.restoreWallpaper(data.wallpaper);
     this.restoreFloorPaint(data.floorPaint);

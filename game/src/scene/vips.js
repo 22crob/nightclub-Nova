@@ -1,6 +1,6 @@
 // ClubScene methods: the VIP list. Nightclub City's VIP list was friends you
 // invited; here it's your regulars. A guest who leaves very happy joins the
-// list (by name and look), and VIPs come back on later nights: they queue
+// list (by name and look), and VIPs come back later: they queue
 // outside like anyone else, glow gold, and tip double. The dock's VIP tab
 // shows them with how many times they've been.
 // Mixed into ClubScene (see ClubScene.js); `this` is the scene.
@@ -62,7 +62,7 @@ export class VipsMixin {
     for (const v of vips) {
       const inside = this.patrons.some((p) => p.vip && p.vip.name === v.name && !p.gone);
       const { slot, icon, cost } = this.makeCard(`⭐ ${v.name}`,
-        `${v.visits} visit${v.visits === 1 ? '' : 's'}${inside ? ' · in the club now' : ''}. VIPs come back on later nights and tip double.`, null);
+        `${v.visits} visit${v.visits === 1 ? '' : 's'}${inside ? ' · in the club now' : ''}. VIPs come back later and tip double.`, null);
       slot.classList.add('vipSlot');
       const url = PATRON_SHEETS[v.character];
       if (url) {
@@ -78,7 +78,7 @@ export class VipsMixin {
     }
     for (let i = vips.length; i < VIP.max; i++) {
       const { slot, cost } = this.makeCard('Empty VIP spot',
-        'Guests who leave really happy join your VIP list, then come back on later nights to tip double.', null);
+        'Guests who leave really happy join your VIP list, then come back later to tip double.', null);
       slot.classList.add('vipSlot', 'emptySlot');
       cost.textContent = `${i + 1}/${VIP.max}`;
       el.appendChild(slot);

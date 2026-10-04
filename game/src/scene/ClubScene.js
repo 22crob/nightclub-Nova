@@ -21,7 +21,7 @@ import { LightingMixin } from './lighting.js';
 import { BoostMixin } from './boost.js';
 import { FloorPaintMixin } from './floorPaint.js';
 import { StreetMixin } from './street.js';
-import { NightsMixin } from './nights.js';
+import { RatingMixin } from './rating.js';
 import { PartiesMixin } from './parties.js';
 import { GuestsMixin } from './guests.js';
 import { SongsMixin } from './songs.js';
@@ -94,10 +94,11 @@ export class ClubScene extends Phaser.Scene {
     this.createFloorPaintLayer(); // regular floors, over the bare floor
     this.registerLightTexture();
     this.createLightingLayers(); // dimming and glows, between the floor and the walls
+    this.createStreetLayers(); // the street outside
+    this.world.add(this.streetBackLayer); // walkers behind the walls
     this.world.add(this.wallLayer);
     this.world.add(this.propLayer);
-    this.createStreetLayers(); // the street outside, in front of the room
-    this.world.add(this.streetLayer);
+    this.world.add(this.streetLayer); // walkers in front of the room
     this.world.add(this.patronLayer);
     this.registerFloorTextures();
     this.registerWallTextures();
@@ -121,6 +122,7 @@ export class ClubScene extends Phaser.Scene {
     // the restored cash/fans instead of flashing the fresh-game defaults.
     this.loadGame();
     if (this.freshClub) this.placeStarterLayout();
+    if (this.doorwayCleared) this.time.delayedCall(1500, () => this.showToast(`🚪 The door moved to the front of the left wall: your ${this.doorwayCleared} is in your inventory.`, 6000));
     this.ensureClubBooth(); // every club has its DJ booth, with the DJ playing
 
     // Baseline for level-up detection (see updateUI()) — set from whatever
@@ -250,7 +252,7 @@ export class ClubScene extends Phaser.Scene {
     this.setupSongs();
     this.setupVips();
     this.setupLevelUp();
-    this.setupNights(this.savedNight);
+    this.setupClubHours();
     this.setupRestart();
 
     // Outline layer for the "which tiles will this actually occupy" marker
@@ -343,7 +345,7 @@ applyMixins(ClubScene, [
   BoostMixin,
   FloorPaintMixin,
   StreetMixin,
-  NightsMixin,
+  RatingMixin,
   PartiesMixin,
   GuestsMixin,
   SongsMixin,

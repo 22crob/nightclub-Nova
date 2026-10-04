@@ -1,36 +1,45 @@
 // ClubScene methods: the street outside, like Nightclub City's. The club
 // sits on a city block at night: a sidewalk all round, roads beyond it and
-// dark buildings across the back roads. On the front-left sidewalk, by the
-// corner nearest the door, people line up behind a velvet rope with a
-// bouncer at the front; they go in one at a time while the club has room.
-// Others just walk past, and patrons who leave walk off down the street.
+// dark buildings across the back roads. The door is at the front end of the
+// left wall (doorTile() in world.js), and people line up from it along the
+// front sidewalk behind a velvet rope, with a bouncer at the door; they go
+// in one at a time while the club has room. Others walk round the block on
+// every side, and patrons who leave come out of the door and walk off.
 //
-// Street people are drawn on streetLayer (above the room, since they're
-// nearer the camera than anything inside) and aren't in this.patrons until
-// they go in. Going in, they fade out at the corner and fade in at the door
-// (the walk along the outside of the left wall would be hidden anyway).
+// Street people aren't in this.patrons until they go in. Those on the front
+// and right sidewalks are drawn on streetLayer (over the room, since they're
+// nearer the camera); those on the left and back ones on streetBackLayer,
+// under the walls.
 // Mixed into ClubScene (see ClubScene.js); `this` is the scene.
-import { FLOOR_SLAB_DEPTH as DROP, PATRON_SPAWN_TILE, STREET } from '../config.js';
+import { FLOOR_SLAB_DEPTH as DROP, STREET, WALL_THICKNESS } from '../config.js';
 
 const randRange = (min, max) => min + Math.random() * (max - min);
 
 export class StreetMixin {
   // Where things go on the front-left sidewalk, in grid coordinates. The
-  // room's front-left edge is at gy = n.
+  // room's front-left edge is at gy = n; the door is just round the corner,
+  // at the front end of the left wall.
   streetSpots() {
     const n = this.gridSize - 0.5;
+    const t = -0.5 - WALL_THICKNESS; // the walls' outer face
     const lineY = n + 1.2;
     return {
       n,
+      t,
       lineY,
       ropeY: n + 2,
       laneY: n + 3,
       slot: (k) => ({ gx: STREET.lineStartGx + k, gy: lineY }),
       tailGx: STREET.lineStartGx + STREET.lineLength + 0.6,
-      enterTo: { gx: STREET.lineStartGx, gy: n + 0.2 },
-      exitFrom: { gx: STREET.lineStartGx - 1.8, gy: n + 0.4 },
+      corner: { gx: t - 0.35, gy: n + 0.35 }, // just outside the door
+      enterTo: { gx: t + 0.2, gy: n - 0.5 }, // in through the door
+      exitFrom: { gx: t - 0.35, gy: n + 0.35 },
       bouncer: { gx: STREET.lineStartGx - 1, gy: n + 1.5 },
       laneEnds: [STREET.lineStartGx - 8, this.gridSize + 4],
+      frontY: n + STREET.sidewalk - 1.2, // walking lanes round the block
+      rightX: n + STREET.sidewalk - 1.2,
+      leftX: t - STREET.sidewalk + 1.2,
+      backY: t - STREET.sidewalk + 1.2,
     };
   }
 
@@ -43,6 +52,9 @@ export class StreetMixin {
     this.streetPassLayer = this.add.container(0, 0);
     this.streetLamps = this.add.graphics();
     this.streetLayer.add([this.streetQueueLayer, this.streetRope, this.streetPassLayer, this.streetLamps]);
+    this.streetBackLayer = this.add.container(0, 0); // left and back sidewalks, under the walls
+    this.streetBackPassLayer = this.add.container(0, 0);
+    this.streetBackLayer.add(this.streetBackPassLayer);
   }
 
   // Ground: road, sidewalk, curb, lane markings, the red carpet, pools of
@@ -321,21 +333,22 @@ export class StreetMixin {
   admitFromLine() {
     if (!this.doorsOpen()) return; // the line waits for the doors to open
     const front = this.streetQueue[0];
-    const { gx, gy } = PATRON_SPAWN_TILE;
+    const { gx, gy } = this.doorTile();
     const roomInside = this.patrons.length < this.patronCapacity() && !this.isBlockingProp(gx, gy) && !this.patronTileOccupied(gx, gy);
     if (!front || !front.arrived || front.walking || front.slot !== 0 || !roomInside) return;
     this.streetQueue.shift();
     this.streetQueue.forEach((p) => { if (p.arrived) this.walkStreetQueue(p); });
     const sp = this.streetSpots();
-    this.tweens.add({ targets: front.container, alpha: 0, duration: 700 });
-    this.streetWalkTo(front, [sp.enterTo], () => {
+    // Round the corner and in through the door, past the bouncer.
+    this.tweens.add({ targets: front.container, alpha: 0, delay: 500, duration: 500 });
+    this.streetWalkTo(front, [sp.corner, sp.enterTo], () => {
       const character = front.container.patronCharacter;
       front.container.destroy();
       this.trySpawnPatron(character, front.vip);
     });
   }
 
-  // A patron has left through the door: they reappear round the corner
+  // A patron has left through the door: they step out round the corner
   // and walk off down the street.
   streetLeaver(character) {
     if (!this.hasCharacterSprites() || !this.streetPassLayer) return;
@@ -345,37 +358,44 @@ export class StreetMixin {
     person.container.setAlpha(0);
     this.tweens.add({ targets: person.container, alpha: 1, duration: 500 });
     const end = sp.laneEnds[Math.random() < 0.5 ? 0 : 1];
-    this.streetWalkTo(person, [{ gx: sp.exitFrom.gx, gy: sp.laneY }, { gx: end, gy: sp.laneY }], () => this.removeStreetWalker(person));
-    this.fadeOutNearEnd(person, end);
+    this.walkAndVanish(person, [{ gx: sp.exitFrom.gx, gy: sp.laneY }, { gx: end, gy: sp.laneY }]);
   }
 
-  // Someone who just walks past the club.
+  // Someone walking round the block, never going in: along one of the four
+  // sidewalks, either way. The left and back ones are behind the walls.
   spawnPasserBy() {
     if (!this.hasCharacterSprites()) return;
     const sp = this.streetSpots();
-    const [a, b] = Math.random() < 0.5 ? sp.laneEnds : [...sp.laneEnds].reverse();
-    const lane = sp.laneY + randRange(-0.2, 0.3);
-    const person = this.makeStreetPerson({ gx: a, gy: lane }, this.streetPassLayer);
+    const lo = sp.t - STREET.sidewalk - 1;
+    const hi = sp.n + STREET.sidewalk + 1;
+    const routes = [
+      { front: true, from: [lo, sp.laneY], to: [hi, sp.laneY] }, // past the line
+      { front: true, from: [lo, sp.frontY], to: [hi, sp.frontY] }, // front curb
+      { front: true, from: [sp.rightX, lo], to: [sp.rightX, hi] }, // right sidewalk
+      { front: false, from: [sp.leftX, lo], to: [sp.leftX, sp.n - 0.5] }, // left sidewalk
+      { front: false, from: [lo, sp.backY], to: [hi, sp.backY] }, // back sidewalk
+    ];
+    const r = routes[Math.floor(Math.random() * routes.length)];
+    const [a, b] = Math.random() < 0.5 ? [r.from, r.to] : [r.to, r.from];
+    const wobble = randRange(-0.3, 0.3);
+    const off = a[0] === b[0] ? [wobble, 0] : [0, wobble];
+    const person = this.makeStreetPerson({ gx: a[0] + off[0], gy: a[1] + off[1] }, r.front ? this.streetPassLayer : this.streetBackPassLayer);
     this.streetWalkers.push(person);
     person.container.setAlpha(0);
     this.tweens.add({ targets: person.container, alpha: 1, duration: 600 });
-    this.streetWalkTo(person, [{ gx: b, gy: lane }], () => this.removeStreetWalker(person));
-    this.fadeOutNearEnd(person, b);
+    this.walkAndVanish(person, [{ gx: b[0] + off[0], gy: b[1] + off[1] }]);
   }
 
-  fadeOutNearEnd(person, endGx) {
-    const timer = this.time.addEvent({
-      delay: 200,
-      loop: true,
-      callback: () => {
-        if (!person.container.active) { timer.remove(); return; }
-        const { sx } = this.gridToScreen(endGx, person.gy);
-        if (Math.abs(person.container.x - sx) < 40) {
-          timer.remove();
-          this.tweens.add({ targets: person.container, alpha: 0, duration: 400 });
-        }
-      },
+  // Walks a street person along `points`, fading them out as they reach
+  // the end, then removes them.
+  walkAndVanish(person, points) {
+    let tiles = 0;
+    let at = person;
+    for (const p of points) { tiles += Math.hypot(p.gx - at.gx, p.gy - at.gy); at = p; }
+    this.time.delayedCall(Math.max(0, tiles * STREET.msPerTile - 500), () => {
+      if (person.container.active) this.tweens.add({ targets: person.container, alpha: 0, duration: 450 });
     });
+    this.streetWalkTo(person, points, () => this.removeStreetWalker(person));
   }
 
   removeStreetWalker(person) {
