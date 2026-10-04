@@ -26,6 +26,7 @@ import { PartiesMixin } from './parties.js';
 import { GuestsMixin } from './guests.js';
 import { SongsMixin } from './songs.js';
 import { VipsMixin } from './vips.js';
+import { InventoryMixin } from './inventory.js';
 import { Music } from '../music.js';
 import { applyMixins } from './applyMixins.js';
 
@@ -185,6 +186,9 @@ export class ClubScene extends Phaser.Scene {
         if (p.event.button === 0 && this.hoverWall) this.paintWall(this.hoverWall);
         return;
       }
+      // The Edit tab's tools act on whatever was clicked.
+      if (p.event.button === 0 && this.dockTab === 'edit' && !this.selectedProp && this.hoverTile
+        && this.editClick(this.hoverTile.gx, this.hoverTile.gy)) return;
       if (p.event.button === 0 && this.clickPerson(p)) return; // a guest's or bartender's card
       if (!this.hoverTile) return;
       if (p.event.button === 0) {
@@ -319,6 +323,7 @@ export class ClubScene extends Phaser.Scene {
 }
 
 applyMixins(ClubScene, [
+  InventoryMixin,
   WorldMixin,
   PlacementMixin,
   PropVisualsMixin,

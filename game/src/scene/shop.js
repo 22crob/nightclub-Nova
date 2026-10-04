@@ -1,28 +1,29 @@
 // ClubScene methods: The shop panel, item selection, unlocks and prices.
 // Mixed into ClubScene (see ClubScene.js); `this` is the scene.
-import { FLOOR_DECAL_PROPS, PROP_TYPES, fameStars } from '../catalog.js';
-import { SELL_REFUND_RATIO } from '../config.js';
+import { FLOOR_DECAL_PROPS, PROP_TYPES } from '../catalog.js';
+import { LUXURY, SELL_REFUND_RATIO } from '../config.js';
 import { realSpriteIconFor, renderIsoIcon } from '../icons.js';
 import { SFX } from '../sfx.js';
 import { hideTip } from '../tooltips.js';
 import { fillIcons } from '../uiIcons.js';
 
 // The shop is a glossy panel docked along the bottom of the screen, like
-// Nightclub City's: three drawn tabs stand on its top edge (Decorations,
-// Expand, VIP), and the panel shows that tab's cards in a scrolling row.
-// Decorations also has a small grid of category buttons on the left.
-// Everything is an icon; names and descriptions are in the hover tips.
+// Nightclub City's. Normally drawn tabs stand on its top edge
+// (Decorations, Inventory, Edit, Expand, VIPs) and the panel shows that
+// tab's cards. Decorations opens the store: the tabs make way for a row of
+// drawn categories, the items sit on the panel with their prices, and OK
+// goes back. Everything is a picture; names and descriptions are in the
+// hover tips.
 const CATEGORIES = {
-  Bars: { icon: 'bars', text: 'Bars sell drinks. Each long bar needs one bartender.' },
-  Seating: { icon: 'seating', text: 'Couches and booths where guests sit down and relax.' },
-  'Dance Floors': { icon: 'dance', text: 'Where your guests dance. More dance floor fits more guests.' },
-  Floors: { icon: 'floors', text: 'Paint the floor, tile by tile.' },
-  Wallpaper: { icon: 'wallpaper', text: 'Paper the walls, section by section.' },
-  Decorations: { icon: 'decor', text: 'Plants, lights and statues to make the club fancier.' },
-  'DJ Booths': { icon: 'booths', text: 'Upgrade your DJ booth. A better booth brings more fans.' },
-  Staff: { icon: 'staff', text: 'Hire a bartender for each long bar.' },
+  Bars: { icon: 'catBars', text: 'Bars sell drinks. Each long bar needs one bartender.' },
+  Seating: { icon: 'catSeating', text: 'Couches and booths where guests sit down and relax.' },
+  Floors: { icon: 'catFloors', text: 'Dance floors, where guests dance, and regular floors, painted tile by tile.', includes: ['Dance Floors', 'Floors'] },
+  Wallpaper: { icon: 'catWallpaper', text: 'Paper the walls, section by section.' },
+  Decorations: { icon: 'catDecor', text: 'Plants, lights and statues to make the club fancier.' },
+  'DJ Booths': { icon: 'catBooths', text: 'Upgrade your DJ booth. A better booth brings more fans.' },
+  Staff: { icon: 'catStaff', text: 'Hire a bartender for each long bar.' },
 };
-const DECOR_CATEGORIES = Object.keys(CATEGORIES);
+const STORE_CATEGORIES = Object.keys(CATEGORIES);
 
 export class ShopMixin {
   // True once the player's level has reached this prop's unlockLevel
@@ -34,45 +35,53 @@ export class ShopMixin {
 
   // Picking the item you're already holding puts it down again.
   selectProp(key) {
-    if (this.selectedProp === key) { this.deselectProp(); return; }
+    if (this.selectedProp === key && !this.holdingFromInventory) { this.deselectProp(); return; }
     if (!this.isUnlocked(key)) { SFX.denied(); return; } // can't select something you haven't unlocked yet
     this.selectedProp = key;
+    this.holdingFromInventory = false;
+    this.carryStaff = null;
     this.updateGhost();
     this.updateShopUI();
   }
 
   deselectProp() {
     this.selectedProp = null;
+    this.holdingFromInventory = false;
+    this.carryStaff = null;
     this.updateGhost();
     this.updateShopUI();
   }
 
-  // Builds the dock once (see index.html): the three tabs, the category
-  // grid and the scroll arrows. Opens on Decorations > Bars.
+  // Builds the dock once (see index.html): the main tabs, the store's
+  // category row and OK, and the scroll arrows.
   buildShop() {
     this.shopItemsEl = document.getElementById('shopItems');
-    this.dockGrid = document.getElementById('dockGrid');
+    this.dockEl = document.getElementById('dock');
     this.selectedChip = document.getElementById('selectedChip');
-    if (!this.shopItemsEl || !this.dockGrid) return; // older/debug HTML — skip silently
+    if (!this.shopItemsEl || !this.dockEl) return; // older/debug HTML — skip silently
 
     this.dockTabs = {};
     for (const tab of document.querySelectorAll('.dockTab')) {
       this.dockTabs[tab.dataset.tab] = tab;
       tab.addEventListener('click', () => { SFX.unlock(); this.setDockTab(tab.dataset.tab); });
     }
-    this.dockGrid.innerHTML = '';
-    this.subTabButtons = {};
-    for (const category of DECOR_CATEGORIES) {
+    const row = document.getElementById('storeTabs');
+    this.storeTabButtons = {};
+    for (const category of STORE_CATEGORIES) {
       const sub = document.createElement('div');
-      sub.className = 'subTab';
+      sub.className = 'storeTab';
       sub.dataset.icon = CATEGORIES[category].icon;
       sub.dataset.tipName = category;
       sub.dataset.tipText = CATEGORIES[category].text;
       sub.addEventListener('click', () => this.setShopCategory(category));
-      this.dockGrid.appendChild(sub);
-      this.subTabButtons[category] = sub;
+      row.appendChild(sub);
+      this.storeTabButtons[category] = sub;
     }
-    fillIcons(this.dockGrid);
+    fillIcons(row);
+    document.getElementById('storeOk')?.addEventListener('click', () => {
+      if (this.selectedProp) this.deselectProp();
+      this.setDockTab(this.lastMainTab || 'inventory');
+    });
 
     // Arrows (and the mouse wheel) scroll the row of cards.
     const scrollBy = (dir) => this.shopItemsEl.scrollBy({ left: dir * this.shopItemsEl.clientWidth * 0.8, behavior: 'smooth' });
@@ -83,26 +92,43 @@ export class ShopMixin {
       this.shopItemsEl.scrollLeft += e.deltaY + e.deltaX;
     }, { passive: false });
 
-    this.setShopCategory((PROP_TYPES[this.selectedProp] && PROP_TYPES[this.selectedProp].category) || DECOR_CATEGORIES[0]);
+    this.activeShopCategory = STORE_CATEGORIES[0];
+    this.setDockTab('inventory');
     this.updateSelectedChip();
   }
 
-  // Switches the dock to one of its tabs: 'decor', 'expand' or 'vip'.
+  // Switches the dock to a tab: 'decor' (the store), 'inventory', 'edit',
+  // 'expand' or 'vip'.
   setDockTab(tab) {
+    if (tab !== 'decor') this.lastMainTab = tab;
+    if (this.dockTab === 'edit' && tab !== 'edit' && this.selectedProp && this.holdingFromInventory) this.deselectProp();
     this.dockTab = tab;
     for (const key in this.dockTabs || {}) this.dockTabs[key].classList.toggle('active', key === tab);
-    document.getElementById('dock')?.setAttribute('data-tab', tab);
+    if (this.dockEl) {
+      this.dockEl.dataset.tab = tab;
+      this.dockEl.dataset.mode = tab === 'decor' ? 'store' : 'main';
+    }
+    document.body.classList.toggle('editing', tab === 'edit');
     hideTip();
     if (this.shopItemsEl) this.shopItemsEl.scrollLeft = 0;
-    if (tab === 'decor') this.renderShopItems(this.activeShopCategory || DECOR_CATEGORIES[0]);
-    else if (tab === 'expand') this.renderExpandCard();
+    this.refreshDock();
+  }
+
+  // Redraws the open tab's cards.
+  refreshDock() {
+    const tab = this.dockTab;
+    if (tab === 'decor') this.renderShopItems(this.activeShopCategory || STORE_CATEGORIES[0]);
+    else if (tab === 'inventory') this.renderInventoryCards();
+    else if (tab === 'edit') this.renderEditTools();
+    else if (tab === 'expand') { if (this.shopItemsEl) this.shopItemsEl.dataset.rendered = ''; this.renderExpandCard(); }
     else if (tab === 'vip') this.renderVipCards();
   }
 
-  // Shows one Decorations category (also used to jump to one from code).
+  // Opens the store on one category (also used to jump to one from code).
   setShopCategory(category) {
+    if (category === 'Dance Floors') category = 'Floors';
     this.activeShopCategory = category;
-    for (const cat in this.subTabButtons || {}) this.subTabButtons[cat].classList.toggle('active', cat === category);
+    for (const cat in this.storeTabButtons || {}) this.storeTabButtons[cat].classList.toggle('active', cat === category);
     if (this.dockTab !== 'decor') {
       this.setDockTab('decor');
       return;
@@ -112,9 +138,8 @@ export class ShopMixin {
     this.renderShopItems(category);
   }
 
-  // A card for the row: a picture on a dark panel and a strip under it
-  // (the price); name and description go in its hover tip. Returns
-  // { slot, button, cost }.
+  // A card for the row: a picture and a strip under it (the price); name
+  // and description go in its hover tip. Returns { slot, button, icon, cost }.
   makeCard(name, text, picture) {
     const slot = document.createElement('div');
     slot.className = 'propSlot';
@@ -132,10 +157,12 @@ export class ShopMixin {
     return { slot, button, icon, cost };
   }
 
-  // Renders one Decorations category's items as cards — click one to hold
-  // it, then click in the club to place it.
+  // The store's items in one category — click one to hold it, then click
+  // in the club to place it. The tip gives its name and Luxury (and, for
+  // floors, which kind it is), like Nightclub City's.
   renderShopItems(category) {
     if (!this.shopItemsEl) return;
+    for (const cat in this.storeTabButtons || {}) this.storeTabButtons[cat].classList.toggle('active', cat === category);
     this.shopItemsEl.innerHTML = '';
     this.shopItemsEl.dataset.rendered = '';
     this.shopButtons = {};
@@ -145,16 +172,16 @@ export class ShopMixin {
       return;
     }
 
-    const keysInCategory = Object.keys(PROP_TYPES).filter((k) => PROP_TYPES[k].category === category);
+    const kinds = CATEGORIES[category]?.includes || [category];
+    const keysInCategory = Object.keys(PROP_TYPES).filter((k) => kinds.includes(PROP_TYPES[k].category));
     for (const key of keysInCategory) {
       const def = PROP_TYPES[key];
-      // A qualitative "Fame" rating instead of raw stat numbers; dance
-      // floors also say how many more guests they fit.
-      const stars = fameStars(def.cost);
-      let statsText = '✨ ' + '★'.repeat(stars) + '☆'.repeat(5 - stars);
-      if (def.category === 'Dance Floors' && def.capacity) statsText += `  🧱 +${def.capacity} floor space`;
+      const lines = [];
+      if (def.category === 'Dance Floors') lines.push(`Dance floor: guests dance on it${def.capacity ? `, and ${def.capacity} more fit in your club` : ''}.`);
+      if (def.category === 'Floors') lines.push('Regular floor: paint it tile by tile.');
+      lines.push(`Luxury: ${Math.round((def.cost || 0) * LUXURY.perDollar)}`);
       const picture = realSpriteIconFor(key) || renderIsoIcon(def.color, FLOOR_DECAL_PROPS.has(key));
-      const { slot, button, cost } = this.makeCard(def.label, `${CATEGORIES[category]?.text || ''} ${statsText}`.trim(), picture);
+      const { slot, button, cost } = this.makeCard(def.label, lines.join(' '), picture);
       cost.textContent = this.isUnlocked(key) ? `$${this.currentCost(key)}` : `🔒 Lv ${def.unlockLevel || 1}`;
       slot.addEventListener('click', () => {
         // DJ booths aren't placed: buying one swaps the club's booth.
@@ -205,6 +232,9 @@ export class ShopMixin {
   updateShopUI() {
     if (this.dockTab === 'expand' && this.shopItemsEl) this.renderExpandCard();
     if (this.dockTab === 'decor' && this.activeShopCategory === 'Staff' && this.shopItemsEl) this.renderStaffCard();
+    if (this.dockTab === 'inventory' && this.shopButtons) {
+      for (const key in this.shopButtons) this.shopButtons[key].classList.toggle('selected', key === this.selectedProp && !!this.holdingFromInventory);
+    }
     if (this.dockTab === 'decor' && this.shopButtons) {
       for (const key in this.shopButtons) {
         const unlocked = this.isUnlocked(key);
@@ -214,7 +244,7 @@ export class ShopMixin {
         const booth = PROP_TYPES[key].category === 'DJ Booths' ? this.clubBooth() : null;
         const current = !!booth && booth.type === key;
         const swapCost = booth ? cost - Math.round(PROP_TYPES[booth.type].cost * SELL_REFUND_RATIO) : cost;
-        this.shopButtons[key].classList.toggle('selected', unlocked && (booth ? current : key === this.selectedProp));
+        this.shopButtons[key].classList.toggle('selected', unlocked && (booth ? current : key === this.selectedProp && !this.holdingFromInventory));
         this.shopButtons[key].classList.toggle('unaffordable', unlocked && !current && this.cash < swapCost);
         this.shopButtons[key].classList.toggle('locked', !unlocked);
         if (this.shopCosts[key]) {
@@ -248,7 +278,9 @@ export class ShopMixin {
 
     const text = document.createElement('span');
     const unlocked = this.isUnlocked(key);
-    text.innerHTML = unlocked
+    text.innerHTML = this.holdingFromInventory
+      ? `${def.label} <span class="chipCost">📦 ×${this.inventoryCount(key)}</span>`
+      : unlocked
       ? `${def.label} <span class="chipCost">$${this.currentCost(key)}</span>`
       : `${def.label} <span class="chipCost">🔒 Lv ${def.unlockLevel || 1}</span>`;
 

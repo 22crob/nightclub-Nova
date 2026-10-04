@@ -85,19 +85,26 @@ check('all sprites loaded', st.textures.length === 0, st.textures.join(', ') || 
 // Tips are paused while the checks below compare exact cash amounts.
 await page.evaluate(() => { const s = window.__clubNova.scene.getScene('club'); s.collectPatronTip = () => {}; s.chargeCover = () => {}; });
 
-// The shop dock: three tabs (Decorations, Expand, VIPs), and Decorations
-// has a grid of eight categories, Staff among them.
+// The shop dock: five tabs. Decorations opens the store: a row of seven
+// drawn categories (floors and dance floors together, Staff among them)
+// and OK to go back.
 const tabs = await page.$$eval('.dockTab', (els) => els.map((e) => e.dataset.tipName));
-const subTabs = await page.$$eval('.subTab', (els) => els.map((e) => e.dataset.tipName));
-check('the shop dock has Decorations, Expand and VIP tabs, and 8 decoration categories', tabs.join() === 'Decorations,Expand,VIPs' && subTabs.length === 8 && subTabs.includes('Staff'), `${tabs.join(' / ')} | ${subTabs.join(' / ')}`);
+await page.click('#tabDecor');
+const storeTabs = await page.$$eval('.storeTab', (els) => els.map((e) => e.dataset.tipName));
+check('the dock has Decorations, Inventory, Edit, Expand and VIP tabs; the store has 7 categories', tabs.join() === 'Decorations,Inventory,Edit,Expand,VIPs' && storeTabs.join() === 'Bars,Seating,Floors,Wallpaper,Decorations,DJ Booths,Staff', `${tabs.join(' / ')} | ${storeTabs.join(' / ')}`);
 check('bar shows its real sprite icon', await page.locator('.propButton .icon').first().evaluate((el) => el.style.backgroundImage.includes('data:image/png')));
+// Floors: dance floors and regular floors in one category, the tip says which.
+await page.click('.storeTab[data-tip-name="Floors"]');
+const floorTips = await page.$$eval('#shopItems .propSlot', (els) => els.map((e) => e.dataset.tipText));
+check('dance floors and regular floors share one category, and the tip says which', floorTips.some((t) => /^Dance floor/.test(t)) && floorTips.some((t) => /^Regular floor/.test(t)) && floorTips.every((t) => /Luxury: \d+/.test(t)), floorTips.length + ' floors');
 // Clicking a card picks the item up; clicking it again puts it down.
-await page.click('.subTab[data-tip-name="Seating"]');
+await page.click('.storeTab[data-tip-name="Seating"]');
 await page.locator('.propSlot').first().click();
 const picked = await page.evaluate(() => ({ held: window.__clubNova.scene.getScene('club').selectedProp, glow: !!document.querySelector('.propButton.selected') }));
 await page.locator('.propSlot').first().click();
 const closed = await page.evaluate(() => ({ held: window.__clubNova.scene.getScene('club').selectedProp }));
 check('clicking a shop card picks the item up, clicking again puts it down', picked.held === 'woodStool' && picked.glow && !closed.held, JSON.stringify({ picked, closed }));
+await page.click('#storeOk');
 // Expand: one card with the next size and its price.
 await page.click('#tabExpand');
 const expandCard = await page.evaluate(() => ({ cards: document.querySelectorAll('#shopItems .propSlot').length, tip: document.querySelector('#shopItems .propSlot')?.dataset.tipText, price: document.querySelector('#shopItems .propCost')?.textContent }));
@@ -167,7 +174,7 @@ check('R rotates the DJ booth', after === (before + 90) % 360, `${before} -> ${a
 const openingRate = await page.evaluate(() => window.__clubNova.scene.getScene('club').totalFanRate());
 check('the DJ booth earns fans from the start', openingRate > 0, `rate ${openingRate}`);
 await page.keyboard.press('Escape');
-await page.click('.subTab[data-tip-name="Staff"]');
+await page.click('.storeTab[data-tip-name="Staff"]');
 const staffRows = await page.locator('.staffSlot').count();
 check('Staff lists just the bar (the DJ is free)', staffRows === 1, `${staffRows} cards`);
 await page.locator('.staffSlot:not(.staffed)').first().click();
@@ -787,17 +794,65 @@ const fresh = await page.evaluate(() => {
 });
 check('restart asks first, then starts a brand-new club', restart.asked && restart.kept && fresh.cash === 700 && fresh.fans === 0 && fresh.night === 1, JSON.stringify({ ...restart, ...fresh }));
 
+// Edit and Inventory: Move picks a placed item up to place again for
+// free; Put away sends one to the inventory, which lists it, and placing
+// it from there costs nothing. The inventory is saved.
+const inv = await page.evaluate(() => {
+  const s = window.__clubNova.scene.getScene('club');
+  const out = {};
+  s.cash = Math.max(s.cash, 500);
+  // A stool to play with, on a free tile.
+  let spot = null;
+  for (let gy = 1; gy < s.gridSize - 1 && !spot; gy++) for (let gx = 1; gx < s.gridSize - 1 && !spot; gx++) {
+    if (s.footprintValid(s.getFootprint('woodStool', 0, gx, gy), 'woodStool')) spot = [gx, gy];
+  }
+  s.selectProp('woodStool');
+  s.placeProp(spot[0], spot[1]);
+  s.deselectProp();
+  document.getElementById('tabEdit').click();
+  out.tools = [...document.querySelectorAll('#shopItems .toolSlot')].map((e) => e.dataset.tool).join();
+  // Move: picked up and held, from the inventory.
+  const cash0 = s.cash;
+  s.editTool = 'move';
+  out.moved = s.editClick(spot[0], spot[1]) && !s.placed[`${spot[0]},${spot[1]}`] && s.selectedProp === 'woodStool' && s.holdingFromInventory;
+  s.placeProp(spot[0], spot[1]);
+  out.placedFree = !!s.placed[`${spot[0]},${spot[1]}`] && s.cash === cash0 && s.inventoryCount('woodStool') === 0 && !s.selectedProp;
+  // Put away, then it's in the Inventory tab.
+  s.editTool = 'store';
+  s.editClick(spot[0], spot[1]);
+  out.stored = !s.placed[`${spot[0]},${spot[1]}`] && s.inventoryCount('woodStool') === 1;
+  out.saved = JSON.parse(localStorage.getItem('clubNovaSave_v2')).inventory.woodStool === 1;
+  document.getElementById('tabInventory').click();
+  const card = document.querySelector('#shopItems .propSlot');
+  out.listed = card && /Stool/i.test(card.dataset.tipName) && /×1/.test(card.textContent);
+  card.click();
+  s.placeProp(spot[0], spot[1]);
+  out.fromInventory = !!s.placed[`${spot[0]},${spot[1]}`] && s.cash === cash0 && s.inventoryCount('woodStool') === 0;
+  // The DJ booth can't be picked up.
+  s.editTool = 'move';
+  const booth = s.clubBooth();
+  s.editClick(booth.anchor[0], booth.anchor[1]);
+  out.boothStays = s.clubBooth() === booth && s.inventoryCount(booth.type) === 0;
+  s.sellProp(spot[0], spot[1]);
+  return out;
+});
+check('Edit has Move, Turn, Put away and Sell', inv.tools === 'move,rotate,store,sell', inv.tools);
+check('Move picks an item up and it goes back down for free', inv.moved && inv.placedFree, JSON.stringify(inv));
+check('Put away sends an item to the saved inventory, and it places from there for free', inv.stored && inv.saved && inv.listed && inv.fromInventory, JSON.stringify(inv));
+check('the DJ booth cannot be picked up', inv.boothStays, JSON.stringify(inv));
+await page.click('#tabInventory');
+
 // Buttons are drawn icons with no words on them; hovering one pops up its
 // name and what it does.
 const icons = await page.evaluate(() => {
-  const ids = ['tabDecor', 'tabExpand', 'tabVip', 'boostButton', 'partyButton', 'songChange', 'songLike', 'tipsButton'];
+  const ids = ['tabDecor', 'tabInventory', 'tabEdit', 'tabExpand', 'tabVip', 'boostButton', 'partyButton', 'songChange', 'songLike', 'tipsButton'];
   const bare = ids.filter((id) => {
     const el = document.getElementById(id);
     const words = [...el.childNodes].filter((n) => n.nodeType === 3).map((n) => n.textContent.trim()).join('');
     return !el.querySelector('svg.uiGlyph, svg.uiArt') || words !== '' || !el.dataset.tipName;
   });
-  const tabs = [...document.querySelectorAll('.subTab')];
-  return { bare, tabs: tabs.length, tabIcons: tabs.filter((t) => t.querySelector('svg.uiGlyph') && t.dataset.tipName && !t.textContent.trim()).length };
+  const tabs = [...document.querySelectorAll('.storeTab')];
+  return { bare, tabs: tabs.length, tabIcons: tabs.filter((t) => t.querySelector('svg.uiGlyph, svg.uiArt') && t.dataset.tipName && !t.textContent.trim()).length };
 });
 await page.hover('#boostButton');
 await page.waitForTimeout(200);
@@ -806,7 +861,7 @@ const hoverTip = await page.evaluate(() => {
   return { shown: !!t && t.classList.contains('show'), name: t?.querySelector('.tipName').textContent, text: t?.querySelector('.tipText').textContent };
 });
 await page.mouse.move(5, 400);
-check('buttons and shop tabs are icons with no words, each with a hover name', icons.bare.length === 0 && icons.tabs === 8 && icons.tabIcons === 8, JSON.stringify(icons));
+check('buttons and shop tabs are icons with no words, each with a hover name', icons.bare.length === 0 && icons.tabs === 7 && icons.tabIcons === 7, JSON.stringify(icons));
 check('hovering Drop the Bass pops up its name and what it does', hoverTip.shown && hoverTip.name === 'Drop the Bass!' && hoverTip.text.length > 10, JSON.stringify(hoverTip));
 
 check('no errors in the page', errors.length === 0, errors.join(' | '));

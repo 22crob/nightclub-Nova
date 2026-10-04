@@ -212,7 +212,9 @@ export class PlacementMixin {
     if (!this.isUnlocked(this.selectedProp)) { SFX.denied(); return; } // shouldn't normally be reachable — selectProp() already blocks this — but never place something not yet unlocked
     const def = PROP_TYPES[this.selectedProp];
     if (def.wallStyle || def.paintStyle) return; // painted with paintWall() / paintFloor()
-    const cost = this.currentCost(this.selectedProp); // fixed price for this item — see currentCost()
+    // Things from the inventory are already paid for.
+    const fromInventory = this.holdingFromInventory && this.inventoryCount(this.selectedProp) > 0;
+    const cost = fromInventory ? 0 : this.currentCost(this.selectedProp); // fixed price for this item — see currentCost()
     if (this.cash < cost) { SFX.denied(); return; }
 
     const tiles = this.getFootprint(this.selectedProp, this.currentFacing, gx, gy);
@@ -236,13 +238,14 @@ export class PlacementMixin {
     for (const [tx, ty] of tiles) {
       this.placed[`${tx},${ty}`] = record;
     }
+    if (fromInventory) this.placedFromInventory(record);
 
     SFX.place();
     this.updateGhost();
     this.updateUI();
     this.saveGame();
     const staffKind = def.staff && STAFF_TYPES[def.staff];
-    if (staffKind) this.showToast(`Now hire a ${staffKind.label.toLowerCase()} for it: tap Staff!`, 3500);
+    if (staffKind && !this.isWorked(record)) this.showToast(`Now hire a ${staffKind.label.toLowerCase()} for it: Decorations, then the bartender's shaker.`, 3500);
   }
 
   // Right-clicking a placed prop sells it back for a fraction of its fixed

@@ -38,7 +38,7 @@ export class SaveMixin {
       seen.add(rec);
       placedList.push({ type: rec.type, facing: rec.facing, anchor: rec.anchor, ...(rec.staff ? { staff: true } : {}) });
     }
-    return { cash: this.cash, fans: this.fans, gridSize: this.gridSize, placed: placedList, wallpaper: { ...this.wallpaper }, floorPaint: { ...this.floorPaint }, night: this.night, nightOver: this.nightPhase === 'closed', bestNightProfit: this.bestNightProfit, vips: this.vips || [], nightStars: this.nightStars || [] };
+    return { cash: this.cash, fans: this.fans, gridSize: this.gridSize, placed: placedList, wallpaper: { ...this.wallpaper }, floorPaint: { ...this.floorPaint }, night: this.night, nightOver: this.nightPhase === 'closed', bestNightProfit: this.bestNightProfit, vips: this.vips || [], nightStars: this.nightStars || [], inventory: { ...(this.inventory || {}) } };
   }
 
   saveGame() {
@@ -124,6 +124,10 @@ export class SaveMixin {
     if (Array.isArray(data.vips)) {
       this.vips = data.vips.filter((v) => v && typeof v.name === 'string' && typeof v.character === 'number')
         .map((v) => ({ name: v.name, character: v.character, visits: Number(v.visits) || 1 }));
+    }
+    if (data.inventory && typeof data.inventory === 'object') {
+      this.inventory = {};
+      for (const [type, n] of Object.entries(data.inventory)) if (PROP_TYPES[type] && n > 0) this.inventory[type] = Math.floor(n);
     }
     if (Array.isArray(data.nightStars)) this.nightStars = data.nightStars.filter((n) => n >= 1 && n <= 5).slice(-5);
     this.restoreWallpaper(data.wallpaper);

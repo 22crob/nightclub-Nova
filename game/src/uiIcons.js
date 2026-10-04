@@ -52,6 +52,7 @@ const ICONS = {
   tips: `<circle cx="12" cy="12" r="9.5" fill="${CYAN}"/>
     <path d="M9.2 9.4a2.9 2.9 0 1 1 4.3 2.5c-1 .6-1.5 1.2-1.5 2.4" fill="none" stroke="${INK}" stroke-width="2.4" stroke-linecap="round"/>
     <circle cx="12" cy="17.6" r="1.4" fill="${INK}"/>`,
+  check: `<path d="M4.5 12.5l5 5L20 7" fill="none" stroke="${W}" stroke-width="3.6" stroke-linecap="round" stroke-linejoin="round"/>`,
   // Shop categories.
   bars: `<path d="M3 4h18l-9 9.4Z" fill="${CYAN}"/><path d="M5.6 6.6h12.8" stroke="${W}" stroke-width="1.2"/>
     <path d="M12 13.2v6.4M8 20.6h8" stroke="${W}" stroke-width="2.2" stroke-linecap="round"/>
@@ -118,6 +119,86 @@ const ART = {
     <path d="M14 18.6 31.4 9.4l4 1.5L18 20.3Z" fill="#f6ecc4" stroke="#0d3a10" stroke-width="1" stroke-linejoin="round"/>
     <ellipse cx="29.5" cy="17.2" rx="4.2" ry="2.4" fill="#3aa336" stroke="#0d3a10" stroke-width=".8"/>
     <text x="29.5" y="18.9" font-family="Arial Black,Arial" font-weight="900" font-size="5" text-anchor="middle" fill="#eaffdf">$</text>`,
+
+  // Inventory: a wooden storage crate.
+  tabInventory: `<path d="M8 15 24 8l16 7-16 7Z" fill="#e8b46a" stroke="${O}" stroke-width="1.6" stroke-linejoin="round"/>
+    <path d="M8 15l16 7v19L8 34Z" fill="#c98b3e" stroke="${O}" stroke-width="1.6" stroke-linejoin="round"/>
+    <path d="M24 22l16-7v19l-16 7Z" fill="#a96f2a" stroke="${O}" stroke-width="1.6" stroke-linejoin="round"/>
+    <path d="M8 21.3l16 7M8 27.6l16 7M24 28.3l16-7M24 34.6l16-7M12 11.2l16 7M20 11.5l16 7" stroke="#7a4a17" stroke-width="1"/>
+    <path d="M25 23.4 39 33" stroke="#7a4a17" stroke-width="2.4" stroke-linecap="round"/>
+    <ellipse cx="16" cy="28" rx="3.2" ry="3.8" fill="#e5483e" stroke="${O}" stroke-width="1"/>`,
+  // Edit: a hammer crossed over a wrench.
+  tabEdit: `<defs><linearGradient id="gSteel" x1="0" x2="1"><stop offset="0" stop-color="#7f8aa0"/><stop offset=".45" stop-color="#eef2f7"/><stop offset="1" stop-color="#8d98ad"/></linearGradient>
+    <mask id="mJaw"><rect width="48" height="48" fill="#fff"/><rect x="21.4" y="1" width="5.2" height="9.5" fill="#000"/></mask></defs>
+    <g transform="rotate(42 24 24)"><rect x="21.6" y="14" width="4.8" height="29" rx="2.4" fill="url(#gSteel)" stroke="${O}" stroke-width="1.5"/>
+      <circle cx="24" cy="11" r="7.6" fill="url(#gSteel)" stroke="${O}" stroke-width="1.5" mask="url(#mJaw)"/></g>
+    <g transform="rotate(-40 24 24)"><rect x="21.8" y="15" width="4.4" height="28" rx="2" fill="#c98b3e" stroke="${O}" stroke-width="1.5"/>
+      <path d="M13 8.5h20.5a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2H13c-2.4 0-4-1.2-5-3.4l-.6-1.6c.8-2.6 2.8-4 5.6-4Z" fill="#5d6b80" stroke="${O}" stroke-width="1.5"/>
+      <path d="M14 10.5h18" stroke="#a7b3c6" stroke-width="1.4" stroke-linecap="round"/></g>`,
+  // Store categories.
+  catBars: `<defs><linearGradient id="gDrink" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#ff9ad0"/><stop offset="1" stop-color="#e0217f"/></linearGradient></defs>
+    <path d="M27 5.5 37.5 17" stroke="#fff" stroke-width="1.4"/><circle cx="31.5" cy="10.8" r="3.2" fill="#7be36b" stroke="${O}" stroke-width="1.2"/>
+    <path d="M7 9h34L24 27Z" fill="#e8f6ff" fill-opacity=".85" stroke="${O}" stroke-width="1.6" stroke-linejoin="round"/>
+    <path d="M10.6 12.4h26.8L24 25Z" fill="url(#gDrink)"/>
+    <path d="M22.6 26.4h2.8v11h-2.8Z" fill="#dfe6ef" stroke="${O}" stroke-width="1.2"/>
+    <ellipse cx="24" cy="39.4" rx="9" ry="2.8" fill="#dfe6ef" stroke="${O}" stroke-width="1.5"/>
+    <path d="M13.5 13.6 18 18" stroke="#fff" stroke-width="1.8" stroke-linecap="round" opacity=".8"/>`,
+  catSeating: `<defs><linearGradient id="gRed" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#ff7a7a"/><stop offset="1" stop-color="#c41a1a"/></linearGradient></defs>
+    <path d="M11 11c8-5 18-5 26 0v16H11Z" fill="url(#gRed)" stroke="${O}" stroke-width="1.6" stroke-linejoin="round"/>
+    <circle cx="18" cy="16" r="1.1" fill="#8e0e0e"/><circle cx="24" cy="14.6" r="1.1" fill="#8e0e0e"/><circle cx="30" cy="16" r="1.1" fill="#8e0e0e"/>
+    <rect x="10" y="32" width="28" height="6" rx="2" fill="#a51414" stroke="${O}" stroke-width="1.5"/>
+    <rect x="12" y="24.5" width="24" height="9" rx="3.5" fill="#ec4040" stroke="${O}" stroke-width="1.5"/>
+    <rect x="5.5" y="20" width="9" height="17" rx="4" fill="url(#gRed)" stroke="${O}" stroke-width="1.5"/>
+    <rect x="33.5" y="20" width="9" height="17" rx="4" fill="url(#gRed)" stroke="${O}" stroke-width="1.5"/>
+    <path d="M11 38v4M37 38v4" stroke="${O}" stroke-width="2.6" stroke-linecap="round"/>
+    <path d="M14 12.6c4-2 9-2.6 13-2" stroke="#fff" stroke-width="1.8" stroke-linecap="round" opacity=".7"/>`,
+  catFloors: `<path d="M4 18v4l20 10 20-10v-4L24 28Z" fill="#26304a" stroke="${O}" stroke-width="1.5" stroke-linejoin="round"/>
+    <path d="M24 8 34 13 24 18 14 13Z" fill="#62e6ff"/><path d="M34 13 44 18 34 23 24 18Z" fill="#ff6fd0"/>
+    <path d="M24 18 34 23 24 28 14 23Z" fill="#62e6ff"/><path d="M14 13 24 18 14 23 4 18Z" fill="#ff6fd0"/>
+    <path d="M24 8 44 18 24 28 4 18Z M14 13 34 23 M34 13 14 23" fill="none" stroke="${O}" stroke-width="1.5" stroke-linejoin="round"/>
+    <path d="M22 11.4 26 13.4M32 16.4 36 18.4" stroke="#fff" stroke-width="1.4" stroke-linecap="round" opacity=".85"/>`,
+  catWallpaper: `<path d="M9 12h22v29H9Z" fill="#ff9a3c" stroke="${O}" stroke-width="1.6" stroke-linejoin="round"/>
+    <path d="M14 17l2.5 3-2.5 3-2.5-3ZM24 17l2.5 3-2.5 3-2.5-3ZM19 25l2.5 3-2.5 3-2.5-3ZM14 33l2.5 3-2.5 3-2.5-3ZM24 33l2.5 3-2.5 3-2.5-3Z" fill="#ffd08a"/>
+    <rect x="7" y="5.5" width="31" height="9" rx="4.5" fill="#f07f1c" stroke="${O}" stroke-width="1.6"/>
+    <ellipse cx="38" cy="10" rx="3.2" ry="4.5" fill="#ffd0a0" stroke="${O}" stroke-width="1.4"/><ellipse cx="38" cy="10" rx="1.2" ry="1.7" fill="#a5520e"/>
+    <path d="M10 8.5h20" stroke="#fff" stroke-width="1.6" stroke-linecap="round" opacity=".6"/>`,
+  catDecor: `<defs><linearGradient id="gLava" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#ff9ad8"/><stop offset="1" stop-color="#b8166f"/></linearGradient></defs>
+    <path d="M17 12.5c2-6 12-6 14 0l3 21.5H14Z" fill="url(#gLava)" stroke="${O}" stroke-width="1.6" stroke-linejoin="round"/>
+    <ellipse cx="22" cy="18" rx="2.6" ry="3.2" fill="#ffd24d"/><ellipse cx="27" cy="25.5" rx="3.4" ry="3.8" fill="#ffd24d"/><ellipse cx="20.5" cy="30.5" rx="2.4" ry="2" fill="#ffd24d"/>
+    <path d="M19 12.5h10l-1.8-6h-6.4Z" fill="#4a2a7a" stroke="${O}" stroke-width="1.4" stroke-linejoin="round"/>
+    <path d="M14 34h20l3.4 10H10.6Z" fill="#4a2a7a" stroke="${O}" stroke-width="1.6" stroke-linejoin="round"/>
+    <path d="M18.6 15.5 17.4 26" stroke="#fff" stroke-width="1.8" stroke-linecap="round" opacity=".7"/>`,
+  catBooths: `<path d="M5 22v6l19 9.5L43 28v-6L24 31.5Z" fill="#1f2536" stroke="${O}" stroke-width="1.5" stroke-linejoin="round"/>
+    <path d="M5 22 24 12.5 43 22 24 31.5Z" fill="#3e4760" stroke="${O}" stroke-width="1.5" stroke-linejoin="round"/>
+    <ellipse cx="21" cy="22" rx="10.5" ry="5.4" fill="#111" stroke="${O}" stroke-width="1"/>
+    <ellipse cx="21" cy="22" rx="7.4" ry="3.7" fill="none" stroke="#3a3a3a" stroke-width=".8"/>
+    <ellipse cx="21" cy="22" rx="3" ry="1.5" fill="#ff4fa8"/>
+    <path d="M36 16.5 29.5 22.5" stroke="#dfe6ef" stroke-width="1.8" stroke-linecap="round"/><circle cx="36.4" cy="16.2" r="2" fill="#dfe6ef" stroke="${O}" stroke-width="1"/>
+    <circle cx="37" cy="25" r="1.3" fill="#5fe3ff"/><circle cx="33" cy="27" r="1.3" fill="#7be36b"/>`,
+  catStaff: `<defs><linearGradient id="gSteelS" x1="0" x2="1"><stop offset="0" stop-color="#7f8aa0"/><stop offset=".45" stop-color="#eef2f7"/><stop offset="1" stop-color="#8d98ad"/></linearGradient></defs>
+    <path d="M16 19h16l-2 22c-.3 2.6-11.7 2.6-12 0Z" fill="url(#gSteelS)" stroke="${O}" stroke-width="1.6" stroke-linejoin="round"/>
+    <path d="M17.5 11h13l1.5 8H16Z" fill="url(#gSteelS)" stroke="${O}" stroke-width="1.6" stroke-linejoin="round"/>
+    <rect x="20.5" y="5.5" width="7" height="5.5" rx="2" fill="url(#gSteelS)" stroke="${O}" stroke-width="1.4"/>
+    <path d="M24 28.5 18.6 25.4v6.2ZM24 28.5l5.4-3.1v6.2Z" fill="#ff4fa8" stroke="${O}" stroke-width="1.1" stroke-linejoin="round"/><circle cx="24" cy="28.5" r="1.5" fill="#ff4fa8" stroke="${O}" stroke-width="1"/>
+    <path d="M38 8l1 2.4 2.4 1-2.4 1-1 2.4-1-2.4-2.4-1 2.4-1Z" fill="#ffd24d"/>`,
+  // Edit tools.
+  toolMove: `<defs><linearGradient id="gArrowT" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#b6ff8a"/><stop offset="1" stop-color="#2fae2a"/></linearGradient></defs><path d="M24 4l7 8h-4v9h9v-4l8 7-8 7v-4h-9v9h4l-7 8-7-8h4v-9h-9v4l-8-7 8-7v4h9v-9h-4Z" fill="url(#gArrowT)" stroke="${O}" stroke-width="1.6" stroke-linejoin="round"/>`,
+  toolRotate: `<path d="M35.5 15.5A14 14 0 1 0 38 29.5" fill="none" stroke="${O}" stroke-width="9" stroke-linecap="round"/>
+    <path d="M35.5 15.5A14 14 0 1 0 38 29.5" fill="none" stroke="#5fe3ff" stroke-width="5.4" stroke-linecap="round"/>
+    <path d="M41 6.5 42.5 21 29 17.5Z" fill="#5fe3ff" stroke="${O}" stroke-width="1.6" stroke-linejoin="round"/>`,
+  toolStore: `<defs><linearGradient id="gArrowT" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#b6ff8a"/><stop offset="1" stop-color="#2fae2a"/></linearGradient></defs><g transform="translate(5 11) scale(.8)"><path d="M8 15 24 8l16 7-16 7Z" fill="#e8b46a" stroke="${O}" stroke-width="1.6" stroke-linejoin="round"/>
+    <path d="M8 15l16 7v19L8 34Z" fill="#c98b3e" stroke="${O}" stroke-width="1.6" stroke-linejoin="round"/>
+    <path d="M24 22l16-7v19l-16 7Z" fill="#a96f2a" stroke="${O}" stroke-width="1.6" stroke-linejoin="round"/>
+    <path d="M8 21.3l16 7M8 27.6l16 7M24 28.3l16-7M24 34.6l16-7M12 11.2l16 7M20 11.5l16 7" stroke="#7a4a17" stroke-width="1"/>
+    <path d="M25 23.4 39 33" stroke="#7a4a17" stroke-width="2.4" stroke-linecap="round"/>
+    <ellipse cx="16" cy="28" rx="3.2" ry="3.8" fill="#e5483e" stroke="${O}" stroke-width="1"/></g>
+    <path d="M24 2.5v9h4.5L22 19l-6.5-7.5H20v-9Z" fill="url(#gArrowT)" stroke="${O}" stroke-width="1.5" stroke-linejoin="round" transform="translate(2 0)"/>`,
+  toolSell: `<path d="M31 15V10" stroke="${O}" stroke-width="2.4"/><rect x="25" y="4" width="14" height="7.5" rx="1.6" fill="#8fe0ff" stroke="${O}" stroke-width="1.5"/>
+    <path d="M10 31l4-15h22l4 15Z" fill="#f4f7fb" stroke="${O}" stroke-width="1.6" stroke-linejoin="round"/>
+    <path d="M16 20h3M21 20h3M26 20h3M15 24.5h3M20.5 24.5h3M26 24.5h3" stroke="#7d889c" stroke-width="2.2" stroke-linecap="round"/>
+    <rect x="7" y="30.5" width="34" height="11" rx="2" fill="#dfe5ee" stroke="${O}" stroke-width="1.6"/>
+    <path d="M13 41.5h22v3.5H13Z" fill="#5cc94a" stroke="${O}" stroke-width="1.3"/>
+    <path d="M10 33h28" stroke="#fff" stroke-width="1.4" opacity=".8"/>`,
 };
 
 export function iconSvg(name) {
