@@ -1,45 +1,50 @@
 // ClubScene methods: the street outside, like Nightclub City's. The club
 // sits on a city block at night: a sidewalk all round, roads beyond it and
-// dark buildings across the back roads. The door is at the front end of the
-// left wall (doorTile() in world.js), and people line up from it along the
-// front sidewalk behind a velvet rope, with a bouncer at the door; they go
-// in one at a time while the club has room. Others walk round the block on
-// every side, and patrons who leave come out of the door and walk off.
+// dark buildings across the back roads. Like Nightclub City's, people line
+// up on the sidewalk outside the left wall, from the door (doorTile() in
+// world.js, near the back of that wall) toward the front of the block, on a
+// red carpet behind a velvet rope, with a bouncer by the door; they go in
+// one at a time while the club has room. Others walk round the block, and
+// patrons who leave come out by the door and walk off.
 //
-// Street people aren't in this.patrons until they go in. Those on the front
-// and right sidewalks are drawn on streetLayer (over the room, since they're
-// nearer the camera); those on the left and back ones on streetBackLayer,
-// under the walls.
+// The line stands well out on the sidewalk (STREET.lineOut tiles from the
+// wall) so the wall doesn't hide it, and it's drawn on streetLayer, over
+// the walls, like everyone on the front and right sidewalks. Walkers on the
+// back sidewalk, just behind the right wall, are on streetBackLayer, under
+// the walls. Street people aren't in this.patrons until they go in.
 // Mixed into ClubScene (see ClubScene.js); `this` is the scene.
 import { FLOOR_SLAB_DEPTH as DROP, STREET, WALL_THICKNESS } from '../config.js';
 
 const randRange = (min, max) => min + Math.random() * (max - min);
 
 export class StreetMixin {
-  // Where things go on the front-left sidewalk, in grid coordinates. The
-  // room's front-left edge is at gy = n; the door is just round the corner,
-  // at the front end of the left wall.
+  // Where things go outside, in grid coordinates. The room's front-left
+  // edge is at gy = n; the walls' outer face is at t. The line runs along
+  // the left sidewalk from the door (at gy = door) toward the front.
   streetSpots() {
     const n = this.gridSize - 0.5;
     const t = -0.5 - WALL_THICKNESS; // the walls' outer face
-    const lineY = n + 1.2;
+    const door = this.doorTile().gy;
+    const lineX = t - STREET.lineOut;
+    const len = Math.max(2, Math.min(STREET.lineLength, Math.floor(n - door)));
     return {
       n,
       t,
-      lineY,
-      ropeY: n + 2,
-      laneY: n + 3,
-      slot: (k) => ({ gx: STREET.lineStartGx + k, gy: lineY }),
-      tailGx: STREET.lineStartGx + STREET.lineLength + 0.6,
-      corner: { gx: t - 0.35, gy: n + 0.35 }, // just outside the door
-      enterTo: { gx: t + 0.2, gy: n - 0.5 }, // in through the door
-      exitFrom: { gx: t - 0.35, gy: n + 0.35 },
-      bouncer: { gx: STREET.lineStartGx - 1, gy: n + 1.5 },
-      laneEnds: [STREET.lineStartGx - 8, this.gridSize + 4],
-      frontY: n + STREET.sidewalk - 1.2, // walking lanes round the block
+      door,
+      lineX,
+      len,
+      ropeX: lineX - 0.6, // the rope, on the street side of the line
+      leftX: lineX - 0.95, // the walking lane past the line
+      slot: (k) => ({ gx: lineX, gy: door + 0.2 + k }),
+      tail: { gx: lineX, gy: door + 0.2 + len + 0.5 },
+      enterTo: { gx: t - 0.6, gy: door }, // to the door, where they slip in
+      exitFrom: { gx: lineX - 0.95, gy: door - 0.9 },
+      bouncer: { gx: lineX + 0.35, gy: door - 0.85 },
+      laneY: n + STREET.sidewalk - 1.6, // walking lanes round the block
+      frontY: n + STREET.sidewalk - 0.8,
       rightX: n + STREET.sidewalk - 1.2,
-      leftX: t - STREET.sidewalk + 1.2,
       backY: t - STREET.sidewalk + 1.2,
+      laneEnds: [t - STREET.sidewalk - 1, n + STREET.sidewalk + 1],
     };
   }
 
@@ -87,14 +92,17 @@ export class StreetMixin {
       quad(STREET.laneLine, k, t - mid - 0.08, k + 1, t - mid + 0.08);
       quad(STREET.laneLine, t - mid - 0.08, k, t - mid + 0.08, k + 1);
     }
-    // Red carpet under the line, with gold edging.
-    const x0 = STREET.lineStartGx - 1.6;
-    const x1 = STREET.lineStartGx + STREET.lineLength;
-    quad(STREET.carpet, x0, n + 0.5, x1, n + 1.85);
+    // Red carpet under the line, from the door toward the front, with gold
+    // edging.
+    const sp = this.streetSpots();
+    const cx0 = sp.ropeX - 0.05, cx1 = sp.lineX + 0.7;
+    const cy0 = sp.door - 1.4, cy1 = sp.door + sp.len + 0.5;
+    quad(STREET.carpet, cx0, cy0, cx1, cy1);
     g.lineStyle(1.5, STREET.carpetEdge, 1);
-    g.lineBetween(...P(x0, n + 0.5, -drop), ...P(x1, n + 0.5, -drop));
-    g.lineBetween(...P(x0, n + 1.85, -drop), ...P(x1, n + 1.85, -drop));
-    g.lineBetween(...P(x1, n + 0.5, -drop), ...P(x1, n + 1.85, -drop));
+    g.lineBetween(...P(cx0, cy0, -drop), ...P(cx0, cy1, -drop));
+    g.lineBetween(...P(cx1, cy0, -drop), ...P(cx1, cy1, -drop));
+    g.lineBetween(...P(cx0, cy1, -drop), ...P(cx1, cy1, -drop));
+    g.lineBetween(...P(cx0, cy0, -drop), ...P(cx1, cy0, -drop));
     // Warm pools of light under the street lamps.
     for (const [lx, ly] of this.streetLampSpots(t, n)) {
       const [cx, cy] = P(lx, ly, -drop);
@@ -109,11 +117,8 @@ export class StreetMixin {
   streetLampSpots(t, n) {
     const curb = n + STREET.sidewalk - 0.4;
     const spots = [];
-    // Kept clear of the line at the rope.
-    const lineFrom = STREET.lineStartGx - 3;
-    const lineTo = STREET.lineStartGx + STREET.lineLength + 1;
     for (let k = t + 1; k <= n + 2; k += STREET.lampEvery) {
-      if (k < lineFrom || k > lineTo) spots.push([k, curb]);
+      spots.push([k, curb]);
       spots.push([curb, k]);
     }
     return spots;
@@ -168,7 +173,7 @@ export class StreetMixin {
     rope.clear();
     const postH = 22;
     const posts = [];
-    for (let k = 0; k <= STREET.lineLength; k++) posts.push(P(STREET.lineStartGx - 0.5 + k, sp.ropeY, -drop));
+    for (let k = 0; k <= sp.len; k++) posts.push(P(sp.ropeX, sp.door - 0.3 + k, -drop));
     for (let i = 0; i < posts.length - 1; i++) {
       const [ax, ay] = posts[i];
       const [bx, by] = posts[i + 1];
@@ -220,7 +225,7 @@ export class StreetMixin {
       const { sx, sy } = this.gridToScreen(sp.bouncer.gx, sp.bouncer.gy);
       const container = this.drawPatronCharacterSprite(sx, sy + drop, 1.08, STREET.bouncerCharacter);
       this.streetBouncer = { container, scaleVariance: 1.08 };
-      this.faceToward(this.streetBouncer, sx + 10, sy + 5);
+      this.faceToward(this.streetBouncer, sx - 10, sy + 5); // watching the line
       container.setDepth(sp.bouncer.gx + sp.bouncer.gy);
       this.streetQueueLayer.add(container);
     }
@@ -241,13 +246,14 @@ export class StreetMixin {
   // Someone walks up the street to join the line, if it isn't full. With
   // `already`, they're standing in line from the start.
   streetArrival(already = false) {
-    if (!this.hasCharacterSprites() || this.streetQueue.length >= STREET.lineLength) {
+    if (!this.hasCharacterSprites() || this.streetQueue.length >= this.streetSpots().len) {
       if (!this.hasCharacterSprites()) this.trySpawnPatron();
       return;
     }
     const sp = this.streetSpots();
     const k = this.streetQueue.length;
-    const start = already ? sp.slot(k) : { gx: sp.laneEnds[1], gy: sp.laneY };
+    // New arrivals walk up the left sidewalk from the front of the block.
+    const start = already ? sp.slot(k) : { gx: sp.leftX, gy: sp.laneEnds[1] };
     const vip = already ? null : this.pickReturningVip(); // now and then a regular comes back
     const person = this.makeStreetPerson(start, this.streetQueueLayer, vip ? vip.character : undefined);
     person.vip = vip;
@@ -255,12 +261,19 @@ export class StreetMixin {
     this.streetQueue.push(person);
     if (already) {
       person.arrived = true;
-      this.faceToward(person, -1e6, -1e6);
+      this.faceDoor(person);
       return;
     }
     person.container.setAlpha(0);
     this.tweens.add({ targets: person.container, alpha: 1, duration: 500 });
-    this.streetWalkTo(person, [{ gx: sp.tailGx, gy: sp.laneY }, { gx: sp.tailGx, gy: sp.lineY }], () => { person.arrived = true; this.walkStreetQueue(person); });
+    this.streetWalkTo(person, [{ gx: sp.leftX, gy: sp.tail.gy }, sp.tail], () => { person.arrived = true; this.walkStreetQueue(person); });
+  }
+
+  // Turns someone in line toward the door, up the line.
+  faceDoor(person) {
+    const sp = this.streetSpots();
+    const { sx, sy } = this.gridToScreen(sp.lineX, sp.door - 3);
+    this.faceToward(person, sx, sy + DROP);
   }
 
   makeStreetPerson(at, layer, character) {
@@ -320,12 +333,10 @@ export class StreetMixin {
       person.gy = target.gy;
       person.walking = false;
       this.setPatronAnimation(person, 'idle');
-      this.faceToward(person, -1e6, -1e6);
+      this.faceDoor(person);
       return;
     }
-    this.streetWalkTo(person, [target], () => {
-      this.faceToward(person, -1e6, -1e6); // facing the door
-    });
+    this.streetWalkTo(person, [target], () => this.faceDoor(person));
   }
 
   // Runs every couple of seconds: lets the person at the front in if the
@@ -339,17 +350,17 @@ export class StreetMixin {
     this.streetQueue.shift();
     this.streetQueue.forEach((p) => { if (p.arrived) this.walkStreetQueue(p); });
     const sp = this.streetSpots();
-    // Round the corner and in through the door, past the bouncer.
-    this.tweens.add({ targets: front.container, alpha: 0, delay: 500, duration: 500 });
-    this.streetWalkTo(front, [sp.corner, sp.enterTo], () => {
+    // Up past the bouncer and in at the door.
+    this.tweens.add({ targets: front.container, alpha: 0, delay: 600, duration: 500 });
+    this.streetWalkTo(front, [{ gx: sp.lineX, gy: sp.door }, sp.enterTo], () => {
       const character = front.container.patronCharacter;
       front.container.destroy();
       this.trySpawnPatron(character, front.vip);
     });
   }
 
-  // A patron has left through the door: they step out round the corner
-  // and walk off down the street.
+  // A patron has left through the door: they step out by the bouncer and
+  // walk off along the left sidewalk.
   streetLeaver(character) {
     if (!this.hasCharacterSprites() || !this.streetPassLayer) return;
     const sp = this.streetSpots();
@@ -358,7 +369,7 @@ export class StreetMixin {
     person.container.setAlpha(0);
     this.tweens.add({ targets: person.container, alpha: 1, duration: 500 });
     const end = sp.laneEnds[Math.random() < 0.5 ? 0 : 1];
-    this.walkAndVanish(person, [{ gx: sp.exitFrom.gx, gy: sp.laneY }, { gx: end, gy: sp.laneY }]);
+    this.walkAndVanish(person, [{ gx: sp.leftX, gy: end }]);
   }
 
   // Someone walking round the block, never going in: along one of the four
@@ -372,7 +383,7 @@ export class StreetMixin {
       { front: true, from: [lo, sp.laneY], to: [hi, sp.laneY] }, // past the line
       { front: true, from: [lo, sp.frontY], to: [hi, sp.frontY] }, // front curb
       { front: true, from: [sp.rightX, lo], to: [sp.rightX, hi] }, // right sidewalk
-      { front: false, from: [sp.leftX, lo], to: [sp.leftX, sp.n - 0.5] }, // left sidewalk
+      { front: true, from: [sp.leftX, lo], to: [sp.leftX, hi] }, // left sidewalk, past the line
       { front: false, from: [lo, sp.backY], to: [hi, sp.backY] }, // back sidewalk
     ];
     const r = routes[Math.floor(Math.random() * routes.length)];

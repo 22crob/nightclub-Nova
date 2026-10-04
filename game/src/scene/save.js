@@ -77,18 +77,6 @@ export class SaveMixin {
     window.location.reload();
   }
 
-  // The door moved to the front end of the left wall: anything a saved
-  // club had standing on that tile (a dance floor can stay) goes into the
-  // inventory so guests can get in.
-  clearDoorway() {
-    const { gx, gy } = this.doorTile();
-    const rec = this.placed[`${gx},${gy}`];
-    if (!rec || PROP_TYPES[rec.type].floorStyle || PROP_TYPES[rec.type].staff === 'dj') return;
-    this.removeProp(rec);
-    this.addToInventory(rec.type);
-    this.doorwayCleared = PROP_TYPES[rec.type].label;
-  }
-
   loadGame() {
     let raw;
     try {
@@ -146,7 +134,6 @@ export class SaveMixin {
       this.inventory = {};
       for (const [type, n] of Object.entries(data.inventory)) if (PROP_TYPES[type] && n > 0) this.inventory[type] = Math.floor(n);
     }
-    this.clearDoorway();
     if (Array.isArray(data.nightStars)) this.nightStars = data.nightStars.filter((n) => n >= 1 && n <= 5).slice(-5);
     this.restoreWallpaper(data.wallpaper);
     this.restoreFloorPaint(data.floorPaint);

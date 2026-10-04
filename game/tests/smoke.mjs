@@ -384,15 +384,15 @@ check('clicking a wall paints it with wallpaper ($8)', wall.painted === 'wpPaint
 check('wallpaper is saved', wall.saved === 'wpPaint');
 check('animated wallpaper moves while the DJ plays', wall.ledFrames > 3, `${wall.ledFrames} frames`);
 
-// The door is at the front end of the left wall, by the line outside; its
-// tile can't be blocked with furniture (floor tiles are fine).
+// The door is near the back of the left wall, where the line outside
+// leads; its tile can't be blocked with furniture (floor tiles are fine).
 const door = await page.evaluate(() => {
   const s = window.__clubNova.scene.getScene('club');
   const d = s.doorTile();
   const free = !s.placed[`${d.gx},${d.gy}`];
   return { at: [d.gx, d.gy], size: s.gridSize, solid: s.footprintValid([[d.gx, d.gy]], 'plant'), floor: !free || s.footprintValid([[d.gx, d.gy]], 'dance') };
 });
-check('the door is at the front of the left wall, and furniture can\'t block it', door.at[0] === 0 && door.at[1] === door.size - 1 && door.solid === false && door.floor === true, JSON.stringify(door));
+check('the door is near the back of the left wall, and furniture can\'t block it', door.at[0] === 0 && door.at[1] === 1 && door.solid === false && door.floor === true, JSON.stringify(door));
 
 // Mood lighting: the room is dimmed. Glows under lights are switched off
 // for now (MOOD_LIGHTING.glows), so a lava lamp casts none.
@@ -519,9 +519,13 @@ const street = await page.evaluate(() => {
   s.admitFromLine();
   delete s.patronCapacity;
   delete s.patronTileOccupied;
-  return { inLine, after: s.streetQueue.length, before, bouncer: !!s.streetBouncer, lamps: s.streetLamps.commandBuffer.length > 0 };
+  const sp = s.streetSpots();
+  const slot0 = sp.slot(0);
+  // Out on the left sidewalk, clear of the wall, starting at the door.
+  const outside = slot0.gx <= sp.t - 4 && Math.abs(slot0.gy - s.doorTile().gy) < 1 && sp.slot(1).gy > slot0.gy;
+  return { inLine, after: s.streetQueue.length, before, bouncer: !!s.streetBouncer, lamps: s.streetLamps.commandBuffer.length > 0, outside };
 });
-check('the street has a line at the rope, a bouncer and lamps; the front of the line goes in', street.inLine > 0 && street.after === street.inLine - 1 && street.bouncer && street.lamps, JSON.stringify(street));
+check('the line stands outside the left wall leading to the door, with a bouncer and lamps; the front goes in', street.inLine > 0 && street.after === street.inLine - 1 && street.bouncer && street.lamps && street.outside, JSON.stringify(street));
 
 // Guests have names; clicking one opens their card. A thirsty guest shows a
 // drink bubble. Clicking a bartender shows Bottoms Up!, which serves the

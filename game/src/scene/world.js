@@ -148,11 +148,10 @@ export class WorldMixin {
     this.drawStreetProps(P, t, n, FLOOR_SLAB_DEPTH);
   }
 
-  // The tile inside the club's front door: at the front end of the left
-  // wall, next to the line outside (see street.js). It moves forward when
-  // the club expands.
+  // The tile inside the club's front door, near the back of the left wall,
+  // like Nightclub City's. The line outside leads to it (see street.js).
   doorTile() {
-    return { gx: 0, gy: this.gridSize - 1 };
+    return { gx: 0, gy: 1 };
   }
 
   // The club's front door (see doorCanvas() in walls.js), set into the left

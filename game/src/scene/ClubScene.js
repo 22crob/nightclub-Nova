@@ -122,7 +122,6 @@ export class ClubScene extends Phaser.Scene {
     // the restored cash/fans instead of flashing the fresh-game defaults.
     this.loadGame();
     if (this.freshClub) this.placeStarterLayout();
-    if (this.doorwayCleared) this.time.delayedCall(1500, () => this.showToast(`🚪 The door moved to the front of the left wall: your ${this.doorwayCleared} is in your inventory.`, 6000));
     this.ensureClubBooth(); // every club has its DJ booth, with the DJ playing
 
     // Baseline for level-up detection (see updateUI()) — set from whatever
