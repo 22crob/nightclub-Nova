@@ -112,7 +112,11 @@ export const PATRON_MOVE_INTERVAL = [1500, 3000];  // ms a patron waits between 
 // anywhere in particular. Real base-game behavior fix, not a visual one.
 export const PATRON_POI_LINGER = [3500, 7000];
 export const PATRON_DANCE_LINGER = [12000, 22000]; // ms a patron dances before moving on     // ms a patron lingers at a point of interest before wandering again
-export const PATRON_TIP_INTERVAL = [3000, 5500];   // ms between a patron's tips
+// How guests pay, like Nightclub City: a cover charge once at the door, then
+// each drink (its price plus a tip of drinkTip x the price), and now and
+// then a tip while they're dancing (every danceTipEvery ms, $danceTip).
+export const MONEY = { cover: 5, drinkTip: [0.2, 0.5], danceTip: [2, 5], danceTipEvery: [15000, 25000] };
+export const PATRON_TIP_INTERVAL = MONEY.danceTipEvery; // ms between a dancer's tips
 export const PATRON_LIFETIME = [45000, 65000];     // ms a patron stays before heading out (the 12x12 room takes a while to cross)
 // Each patron token gets its own skin tone, outfit color, and hair (color +
 // style, or none at all) picked independently at spawn — see

@@ -35,6 +35,7 @@ export class NightsMixin {
       tips: 0,
       wages: 0,
       partyCost: 0,
+      cover: 0,
       vibeSum: 0,
       vibeCount: 0,
       peakCrowd: 0,
@@ -114,8 +115,9 @@ export class NightsMixin {
       tips: s.tips,
       wages: s.wages,
       partyCost: s.partyCost,
+      cover: s.cover,
       party: this.currentParty(),
-      profit: s.drinkMoney + s.tips - s.wages - s.partyCost,
+      profit: s.cover + s.drinkMoney + s.tips - s.wages - s.partyCost,
       fans: Math.round(this.fans - s.fans),
       bonus,
       avgVibe: Math.round(avgVibe),
@@ -203,6 +205,7 @@ export class NightsMixin {
     set('summaryVibe', `${r.avgVibe}%`);
     set('summaryDrinks', `${r.drinks} · ${money(r.drinkMoney)}`);
     set('summaryTips', money(r.tips));
+    set('summaryCover', money(r.cover));
     set('summaryWages', money(-r.wages));
     set('summaryParty', r.party ? `${r.party.emoji} ${r.party.label} · ${money(-r.partyCost)}` : 'None');
     set('summaryProfit', money(r.profit));

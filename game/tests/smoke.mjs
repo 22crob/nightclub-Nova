@@ -78,7 +78,7 @@ await waitForScene();
 check('all sprites loaded', st.textures.length === 0, st.textures.join(', ') || 'none missing');
 
 // Tips are paused while the checks below compare exact cash amounts.
-await page.evaluate(() => { window.__clubNova.scene.getScene('club').collectPatronTip = () => {}; });
+await page.evaluate(() => { const s = window.__clubNova.scene.getScene('club'); s.collectPatronTip = () => {}; s.chargeCover = () => {}; });
 
 // Shop opens with every tab.
 await page.click('#shopToggle');
@@ -165,7 +165,7 @@ const staffed = await page.evaluate(() => {
   return { cash: s.cash, music: s.musicPlaying(), bartenders: s.hireableRecords().filter((r) => r.staff).length };
 });
 check('hiring a bartender costs $50', staffed.cash === 550 && staffed.bartenders === 1 && staffed.music, JSON.stringify(staffed));
-await page.evaluate(() => { delete window.__clubNova.scene.getScene('club').collectPatronTip; });
+await page.evaluate(() => { const s = window.__clubNova.scene.getScene('club'); delete s.collectPatronTip; delete s.chargeCover; });
 
 // Patrons arrive, get thirsty, buy drinks, earn fans and tip.
 const fansBefore = (await state()).fans;
@@ -596,6 +596,43 @@ check('you can seat a guest at a free seat, which cheers them up', extras.noSeat
 check('happy guests join the VIP list, come back by name and tip double', extras.joined && extras.welcomed && extras.listed, JSON.stringify(extras));
 check('the club rating is the average of recent nights, shown at the top', extras.rating === 3.5 && extras.ratingShown === '3.5' && extras.faster, JSON.stringify(extras));
 check('VIPs and night ratings are saved', extras.saved, JSON.stringify(extras));
+
+// Money comes in like Nightclub City: a cover charge at the door, each
+// drink with a tip on top, and tips from dancers now and then (not from
+// guests just standing around).
+const money = await page.evaluate(() => {
+  const s = window.__clubNova.scene.getScene('club');
+  const out = {};
+  const p = s.patrons.find((q) => !q.leaving && !q.gone);
+  let cash = s.cash;
+  s.chargeCover(p);
+  out.cover = s.cash - cash;
+  const bar = s.staffableRecords().find((r) => r.staff && r.staff.kind === 'bartender');
+  cash = s.cash;
+  s.serveDrink(bar, p);
+  out.drink = s.cash - cash; // price + tip
+  // Standing around: no tip even when it's "due".
+  const anim = p.container.patronAnimState;
+  p.container.patronAnimState = 'idle_front';
+  p.nextTipAt = 0;
+  cash = s.cash;
+  s.tickPatrons();
+  out.idleTip = s.cash - cash;
+  p.container.patronAnimState = 'dance_front';
+  p.nextTipAt = 0;
+  const thirsty = p.thirstyAt;
+  p.thirstyAt = s.time.now + 1e6;
+  cash = s.cash;
+  s.tickPatrons();
+  out.danceTip = s.cash - cash;
+  out.nextTipIn = p.nextTipAt - s.time.now;
+  p.container.patronAnimState = anim;
+  p.thirstyAt = thirsty;
+  return out;
+});
+check('guests pay a cover charge at the door', money.cover === 5, JSON.stringify(money));
+check('a drink costs its price plus a tip', money.drink > 10, JSON.stringify(money));
+check('standing around pays nothing; dancers tip now and then', money.idleTip === 0 && money.danceTip > 0 && money.nextTipIn > 5000, JSON.stringify(money));
 
 // Throw a Party: the picker lists every party, a House Party costs $60 and
 // lets more guests in with bigger tips, only one a night, and it shows on

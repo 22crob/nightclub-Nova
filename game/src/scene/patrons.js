@@ -3,7 +3,7 @@
 import Phaser from 'phaser';
 import { PATRON_META, PATRON_SHEETS } from '../assets.js';
 import { FLOOR_DECAL_PROPS, PROP_TYPES, STAFF_TYPES } from '../catalog.js';
-import { BOOST, CHARACTER_DISPLAY_HEIGHT, DRINK_RUN_CHANCE, PATRON_DANCE_LINGER, HAIR_STYLES, PATRON_HAIR_COLORS, PATRON_LIFETIME, PATRON_MOVE_INTERVAL, PATRON_OUTFIT_COLORS, PATRON_POI_LINGER, PATRON_POPUP_Y, PATRON_SKIN_TONES, PATRON_SPAWN_INTERVAL, PATRON_SPAWN_TILE, PATRON_TIP_INTERVAL, PATRON_Y_OFFSET, PROP_SCALE } from '../config.js';
+import { BOOST, CHARACTER_DISPLAY_HEIGHT, DRINK_RUN_CHANCE, PATRON_DANCE_LINGER, HAIR_STYLES, PATRON_HAIR_COLORS, PATRON_LIFETIME, PATRON_MOVE_INTERVAL, PATRON_OUTFIT_COLORS, PATRON_POI_LINGER, PATRON_POPUP_Y, PATRON_SKIN_TONES, PATRON_SPAWN_INTERVAL, PATRON_SPAWN_TILE, MONEY, PATRON_TIP_INTERVAL, PATRON_Y_OFFSET, PROP_SCALE } from '../config.js';
 import { SFX } from '../sfx.js';
 import { MOOD } from './mood.js';
 import { randRange } from '../util.js';
@@ -79,6 +79,7 @@ export class PatronsMixin {
     };
     this.patrons.push(patron);
     if (vip) this.welcomeVip(patron, vip);
+    this.chargeCover(patron);
     this.setPatronDepth(patron, gx + gy);
     this.updateUI(); // refresh the patrons-on-floor readout right away, not on the next tip/tick
 
@@ -228,7 +229,11 @@ export class PatronsMixin {
       if (!patron.moving && now >= patron.nextMoveAt) {
         this.movePatronRandomly(patron);
       }
-      if (now >= patron.nextTipAt) {
+      // Dancers tip now and then; nobody else pays just for standing around.
+      const dancing = typeof patron.container.patronAnimState === 'string' && patron.container.patronAnimState.startsWith('dance');
+      if (!dancing) {
+        patron.nextTipAt = Math.max(patron.nextTipAt, now + 4000);
+      } else if (now >= patron.nextTipAt) {
         this.collectPatronTip(patron);
         patron.nextTipAt = now + randRange(...PATRON_TIP_INTERVAL) / this.boostFactor();
       }
@@ -640,21 +645,34 @@ export class PatronsMixin {
     });
   }
 
-  // A small tip. Drinks (orderDrink()) are the club's main income; tips
-  // are a little extra, bigger somewhere lively.
-  collectPatronTip(patron) {
-    const nearRevenue = this.isNearRevenueProp(patron.gx, patron.gy);
-    const base = 1 + Math.random() * 3; // $1-4
-    const moodFactor = 0.5 + patron.mood / 100; // unhappy patrons tip half, happy ones up to 1.5x
+  // How much a tip of `base` dollars becomes: happier guests, a boost, a
+  // party, a fancier club and VIPs all tip more.
+  tipAmount(patron, base) {
+    const moodFactor = 0.5 + patron.mood / 100; // unhappy guests tip half, happy ones up to 1.5x
     const boost = this.isBoosted() ? BOOST.tipMultiplier : 1;
-    const amount = Math.max(1, Math.round((nearRevenue ? base * 2 : base) * moodFactor * boost * this.partyEffect('tips', 1) * this.luxuryTipFactor() * this.vipTipFactor(patron)));
+    return Math.max(1, Math.round(base * moodFactor * boost * this.partyEffect('tips', 1) * this.luxuryTipFactor() * this.vipTipFactor(patron)));
+  }
+
+  // A dancer's tip, now and then (see tickPatrons()).
+  collectPatronTip(patron) {
+    const amount = this.tipAmount(patron, randRange(...MONEY.danceTip));
     this.cash += amount;
     this.noteIncome('tips', amount);
     patron.spent = (patron.spent || 0) + amount;
-    this.fans += nearRevenue ? 0.4 : 0.1;
+    this.fans += 0.3;
     SFX.tip();
     this.updateUI();
     this.floatText(patron.container.x, patron.container.y - PATRON_POPUP_Y, `$${amount} Tip`, '#ffe27a');
+  }
+
+  // The cover charge, once, as a guest comes in.
+  chargeCover(patron) {
+    const amount = MONEY.cover;
+    this.cash += amount;
+    this.noteIncome('cover', amount);
+    patron.spent = (patron.spent || 0) + amount;
+    this.updateUI();
+    this.floatText(patron.container.x, patron.container.y - PATRON_POPUP_Y, `$${amount} Cover`, '#7dffc4');
   }
 
   // Sends a patron walking back to the door tile, on foot, tile by tile,
