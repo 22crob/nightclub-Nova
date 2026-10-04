@@ -44,7 +44,7 @@
 
   <!-- Top-centre: cash -->
   <div id="hudCash">
-    <div class="cashStack"><span>$</span></div>
+    <div class="cashStack" data-icon="cash"></div>
     <span class="amount" id="cashVal">500</span>
   </div>
 
@@ -64,16 +64,6 @@
         <div id="restartYes" class="summaryButton danger">Yes, start over</div>
         <div id="restartNo" class="summaryButton later">Keep my club</div>
       </div>
-    </div>
-  </div>
-
-  <!-- The VIP list (see scene/vips.js) -->
-  <div id="vipList" class="overlay">
-    <div class="summaryCard partyCard">
-      <div class="summaryTitle">VIP List <span class="vipCount" id="vipCount">0 / 12</span></div>
-      <div class="summaryVerdict">Your regulars. Guests who leave really happy join, come back on later nights, and tip double.</div>
-      <div id="vipRows"></div>
-      <div class="summaryButtons"><div id="vipClose" class="summaryButton later">Close</div></div>
     </div>
   </div>
 
@@ -180,30 +170,22 @@
 
   <div id="toast"></div>
 
-  <!-- Bottom-centre: what you're holding, and the toolbar -->
+  <!-- Bottom: the shop dock, like Nightclub City's glossy blue panel. Three
+       drawn tabs stand on its top edge; the panel shows the open tab's
+       cards (see scene/shop.js). What you're holding shows above it. -->
   <div id="selectedChip"></div>
-  <div id="toolbar">
-    <div id="shopToggle" class="toolButton" data-icon="shop" data-tip-name="Shop" data-tip-text="Buy bars, seating, dance floors and decorations"></div>
-    <div id="decorateButton" class="toolButton" data-icon="decorate" data-tip-name="Decorate" data-tip-text="Paint the floor and paper the walls"></div>
-    <div id="expandButton" class="toolButton" data-icon="expand" data-tip-name="Expand" data-tip-text="Make the club bigger"></div>
-    <div id="staffButton" class="toolButton" data-icon="staff" data-tip-name="Staff" data-tip-text="Hire bartenders for your bars"></div>
-    <div id="vipButton" class="toolButton" data-icon="vip" data-tip-name="VIPs" data-tip-text="Your VIP regulars: famous guests who come back"></div>
-  </div>
-
-  <!-- The shop: a strip along the bottom of the screen, like Nightclub
-       City's. Category buttons on the left, items in a scrolling row, a name
-       bubble over the hovered item, and OK to finish. It stays open while
-       you build (see shop.js). -->
-  <div id="shopOverlay">
-    <div id="shopTabs"></div>
-    <div id="shopCatName"></div>
-    <div id="shopStrip">
-      <div id="shopPrev" class="shopArrow">◀</div>
-      <div id="shopItems"></div>
-      <div id="shopNext" class="shopArrow">▶</div>
+  <div id="dock" data-tab="decor">
+    <div id="dockTabs">
+      <div id="tabDecor" class="dockTab" data-tab="decor" data-icon="tabDecor" data-tip-name="Decorations" data-tip-text="Bars, seating, dance floors, floors, wallpaper and decorations. Also where you hire bartenders."></div>
+      <div id="tabExpand" class="dockTab" data-tab="expand" data-icon="tabExpand" data-tip-name="Expand" data-tip-text="Make the club bigger"></div>
+      <div id="tabVip" class="dockTab" data-tab="vip" data-icon="tabVip" data-tip-name="VIPs" data-tip-text="Your VIP regulars: guests who loved your club come back and tip double"></div>
     </div>
-    <div id="shopTip"></div>
-    <div id="shopClose" data-tip-name="Done" data-tip-text="Close the shop">OK</div>
+    <div id="dockPanel">
+      <div id="dockGrid"></div>
+      <div id="dockPrev" class="dockArrow" data-tip-name="Scroll left"></div>
+      <div id="shopItems"></div>
+      <div id="dockNext" class="dockArrow" data-tip-name="Scroll right"></div>
+    </div>
   </div>
 
   <script type="module" src="/src/main.js"></script>

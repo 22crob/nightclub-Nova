@@ -92,16 +92,10 @@ body { font-family: var(--ui-font); color: var(--ink); }
   display: flex; align-items: center; gap: 8px; z-index: 10;
 }
 /* A little stack of green bills. */
-.cashStack {
-  position: relative; width: 34px; height: 22px; border-radius: 3px;
-  background: linear-gradient(160deg, #b9ff94, #49c444 55%, #24862a);
-  border: 1px solid #0d3b11;
-  box-shadow: 3px -3px 0 -1px #2f9c31, 3px -3px 0 0 #0d3b11, 6px -6px 0 -1px #3fb23c, 6px -6px 0 0 #0d3b11, 0 3px 6px rgba(0, 0, 0, 0.6);
-  display: flex; align-items: center; justify-content: center;
-  font-weight: 700; font-size: 13px; color: #eaffdf; text-shadow: 0 1px 0 #0d3b11;
-}
+.cashStack { width: 50px; height: 50px; margin: -8px -2px -6px 0; }
+.cashStack .uiArt { width: 100%; height: 100%; filter: drop-shadow(0 3px 3px rgba(0, 0, 0, 0.6)); }
 #hudCash .amount {
-  font-size: 26px; font-weight: 700; letter-spacing: 0.01em; color: #fff;
+  font-size: 30px; font-family: 'Arial Black', Arial, sans-serif; -webkit-text-stroke: 1.5px #0b1626; paint-order: stroke fill; font-weight: 700; letter-spacing: 0.01em; color: #fff;
   font-variant-numeric: tabular-nums;
   text-shadow: var(--outline), 0 0 12px rgba(157, 255, 106, 0.35);
 }
@@ -123,29 +117,9 @@ body { font-family: var(--ui-font); color: var(--ink); }
 }
 .statIcon { display: inline-flex; width: 19px; height: 19px; }
 
-/* ---------- Bottom: toolbar, a dark metal strip with icons on it ---------- */
-#toolbar {
-  position: fixed; bottom: calc(10px + env(safe-area-inset-bottom, 0px)); left: 50%; transform: translateX(-50%);
-  display: flex; gap: 4px; z-index: 10;
-  padding: 6px 10px; border-radius: var(--radius);
-  background: linear-gradient(180deg, #3a4150 0%, #1a1e28 12%, #0e1118 60%, #07090d 100%);
-  border: 1px solid var(--chrome);
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.45), 0 0 0 1px #000, 0 6px 16px rgba(0, 0, 0, 0.6);
-}
-.toolButton {
-  width: 58px; height: 52px; padding: 8px; box-sizing: border-box; border-radius: var(--radius);
-  display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px;
-  cursor: pointer; user-select: none;
-  background: transparent; border: 1px solid transparent;
-  transition: background 0.12s ease, border-color 0.12s ease;
-}
-.toolButton:hover { background: rgba(63, 212, 255, 0.08); border-color: var(--neon); box-shadow: 0 0 8px var(--neon-glow); }
-.toolButton:active { transform: translateY(1px); }
-.toolButton.disabled { filter: grayscale(0.6) brightness(0.75); }
-
 #selectedChip:empty { display: none; }
 #selectedChip {
-  position: fixed; bottom: calc(84px + env(safe-area-inset-bottom, 0px)); left: 50%; transform: translateX(-50%);
+  position: fixed; bottom: calc(176px + env(safe-area-inset-bottom, 0px)); left: 50%; transform: translateX(-50%);
   display: flex; align-items: center; gap: 8px; z-index: 10;
   padding: 4px 12px 4px 4px; border-radius: var(--radius);
   background: var(--glass-flat); border: 1px solid var(--chrome);
@@ -170,134 +144,6 @@ body { font-family: var(--ui-font); color: var(--ink); }
   opacity: 0; transition: opacity 0.3s ease, transform 0.3s ease;
 }
 #toast.show { opacity: 1; transform: translateX(-50%) translateY(0) scale(1); }
-
-/* ---------- Shop: a strip along the bottom of the screen ----------
-   Like Nightclub City's: category buttons on the left, the items in a
-   scrolling row on a dark glass strip, a name bubble over the hovered item
-   and a big OK button. It stays open while you build. */
-#shopOverlay { display: none; }
-#shopOverlay.open { display: block; }
-body.shopOpen #toolbar { display: none; }
-body.shopOpen #selectedChip { bottom: calc(150px + env(safe-area-inset-bottom, 0px)); }
-
-#shopTabs {
-  position: fixed; left: 12px; bottom: calc(12px + env(safe-area-inset-bottom, 0px)); z-index: 30;
-  display: grid; grid-template-columns: repeat(2, 42px); gap: 5px;
-}
-.shopTab {
-  position: relative; width: 42px; height: 40px; border-radius: var(--radius); cursor: pointer;
-  display: flex; align-items: center; justify-content: center;
-  background: var(--glass); border: 1px solid var(--chrome);
-  box-shadow: var(--panel-shadow);
-}
-.shopTab .uiGlyph { width: 26px; height: 26px; }
-.shopTab .tabName { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
-.shopTab:hover { border-color: var(--neon); }
-.shopTab.active {
-  border: 2px solid var(--neon); background: linear-gradient(180deg, #123a55, #0a1d2e);
-  box-shadow: 0 0 0 1px #000, 0 0 10px var(--neon-glow);
-}
-#shopStrip {
-  position: fixed; left: 112px; right: 140px; bottom: calc(12px + env(safe-area-inset-bottom, 0px)); z-index: 30;
-  height: 118px; border-radius: var(--radius);
-  display: flex; align-items: stretch;
-  background: linear-gradient(180deg, #3a4150 0%, #1b1f29 10%, #0e1118 55%, #07090d 100%);
-  border: 1px solid var(--chrome);
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.45), 0 0 0 1px #000, 0 6px 18px rgba(0, 0, 0, 0.65);
-}
-.shopArrow {
-  flex: 0 0 30px; display: flex; align-items: center; justify-content: center; cursor: pointer; user-select: none;
-  font-size: 16px; color: var(--neon); text-shadow: 0 0 8px var(--neon-glow);
-}
-.shopArrow:hover { background: rgba(63, 212, 255, 0.08); }
-#shopItems {
-  flex: 1 1 auto; display: flex; align-items: center; gap: 6px; padding: 0 4px;
-  overflow-x: auto; overflow-y: hidden; scrollbar-width: none;
-}
-#shopItems::-webkit-scrollbar { display: none; }
-#shopItems .emptyCategory { width: 100%; text-align: center; font-size: 13px; color: var(--muted); }
-
-/* One item: its picture standing on the strip, and the price under it. */
-.propSlot { flex: 0 0 auto; width: 92px; display: flex; flex-direction: column; align-items: center; gap: 4px; }
-.propButton {
-  position: relative; width: 84px; height: 72px; cursor: pointer;
-  transition: transform 0.12s ease, filter 0.12s ease;
-}
-.propButton .icon {
-  width: 100%; height: 100%; background-size: contain; background-repeat: no-repeat; background-position: center bottom;
-  filter: drop-shadow(0 3px 2px rgba(0, 0, 0, 0.7));
-}
-.propButton:hover { transform: translateY(-3px); }
-.propButton.selected { transform: translateY(-4px) scale(1.08); }
-.propButton.selected .icon { filter: drop-shadow(0 0 4px #fff) drop-shadow(0 0 10px var(--neon)); }
-.propButton.unaffordable { filter: grayscale(0.65) brightness(0.6); }
-.propButton.locked { filter: grayscale(1) brightness(0.45); cursor: not-allowed; }
-.propButton.locked:hover { transform: none; }
-.propButton.locked::after {
-  content: '🔒'; position: absolute; inset: 0;
-  display: flex; align-items: center; justify-content: center; font-size: 20px;
-}
-.propLabel, .propStats { display: none; }
-.propCost {
-  font-size: 12px; font-weight: 700; color: var(--gold); white-space: nowrap; text-shadow: var(--outline);
-  padding: 1px 8px; border-radius: 4px; background: #000; border: 1px solid #4a5263;
-}
-
-#shopClose {
-  position: fixed; right: 14px; bottom: calc(26px + env(safe-area-inset-bottom, 0px)); z-index: 30;
-  width: 112px; height: 88px; border-radius: var(--radius); cursor: pointer; user-select: none;
-  display: flex; align-items: center; justify-content: center;
-  font-size: 30px; font-weight: 700; letter-spacing: 0.04em; text-shadow: var(--outline);
-  background: linear-gradient(180deg, #2a6a2e 0%, #134a18 55%, #0a300d 100%);
-  border: 2px solid #5dff6a;
-  box-shadow: 0 0 0 1px #000, 0 0 14px rgba(93, 255, 106, 0.55), inset 0 1px 0 rgba(255, 255, 255, 0.35);
-}
-#shopClose:hover { box-shadow: 0 0 0 1px #000, 0 0 20px rgba(93, 255, 106, 0.8), inset 0 1px 0 rgba(255, 255, 255, 0.35); }
-#shopClose:active { transform: translateY(1px); }
-
-/* The Expand tab's single card (see renderExpandCard()). */
-.expandCard { width: 100%; display: flex; align-items: center; justify-content: center; gap: 18px; text-align: center; }
-.expandCurrent { font-size: 13px; color: var(--muted); }
-.expandNext { font-size: 16px; font-weight: 700; text-shadow: var(--outline); }
-.expandMaxed { font-size: 15px; font-weight: 700; color: var(--gold); }
-
-/* Action buttons (buy, hire): dark glass with a neon edge. */
-.expandButton, .staffButton {
-  cursor: pointer; white-space: nowrap; font-weight: 700; text-shadow: var(--outline); color: #fff;
-  border-radius: var(--radius); background: var(--glass); border: 1px solid var(--neon);
-  box-shadow: var(--panel-shadow), 0 0 8px var(--neon-glow);
-}
-.expandButton { padding: 10px 24px; font-size: 14px; }
-.expandButton.unaffordable, .staffButton.hire.unaffordable { filter: grayscale(0.6) brightness(0.65); }
-.expandButton.locked { filter: grayscale(1) brightness(0.5); cursor: not-allowed; }
-
-@media (prefers-reduced-motion: reduce) {
-  .toolButton, .propButton, .xpFill, #toast { transition: none; }
-}
-
-/* ---------- Staff tab (see renderStaffCard()) ---------- */
-.staffCard { display: flex; align-items: center; gap: 8px; height: 100%; }
-.staffSummary { flex: 0 0 150px; font-size: 12px; font-weight: 700; color: var(--muted); text-shadow: var(--outline); white-space: normal; }
-.staffRow {
-  flex: 0 0 auto; display: flex; align-items: center; gap: 10px;
-  padding: 8px 10px; border-radius: var(--radius);
-  background: linear-gradient(180deg, #1c212c, #10131a);
-  border: 1px solid #353c4a;
-}
-.staffIcon {
-  width: 50px; height: 50px; flex: 0 0 auto; border-radius: 5px;
-  background: radial-gradient(circle at 50% 40%, #232a38, #07090d 75%);
-  background-size: contain; background-repeat: no-repeat; background-position: center;
-  border: 1px solid #4a5263;
-}
-.staffText { flex: 1 1 auto; min-width: 0; display: flex; flex-direction: column; gap: 2px; }
-.staffName { font-size: 14px; font-weight: 700; text-shadow: var(--outline); }
-.staffStatus { font-size: 11px; text-shadow: var(--outline); }
-.staffStatus.working { color: var(--cash); }
-.staffStatus.empty { color: #ff9aa6; }
-.staffButton { flex: 0 0 auto; padding: 8px 14px; font-size: 12px; }
-.staffButton.fire { border-color: var(--chrome); box-shadow: var(--panel-shadow); }
-.staffButton:active { transform: translateY(1px); }
 
 /* ------------------------------------------------------------------ */
 /* Club nights: the clock under the cash, the open button, and the      */
@@ -496,15 +342,6 @@ body.shopOpen #selectedChip { bottom: calc(150px + env(safe-area-inset-bottom, 0
 
 .seatGuest { margin-top: 4px; font-size: 14px; padding: 7px 10px; background: linear-gradient(180deg, #1f5f6b 0%, #0f3a44 60%, #072228 100%); border-color: var(--neon); box-shadow: 0 0 0 1px #000, 0 0 10px var(--neon-glow); }
 
-.vipCount { font-size: 13px; color: var(--gold); margin-left: 6px; }
-#vipRows { display: flex; flex-direction: column; gap: 6px; max-height: 50vh; overflow-y: auto; text-align: left; }
-.vipRow { display: flex; align-items: center; gap: 10px; padding: 5px 10px; border-radius: var(--radius); border: 1px solid #353c4a; background: linear-gradient(180deg, #1c212c, #10131a); }
-.vipFace { flex: none; width: 40px; height: 44px; border-radius: 6px; background-repeat: no-repeat; background-color: #10131a; border: 1px solid #ffd24d88; }
-.vipName { flex: 1; font-size: 14px; font-weight: 700; }
-.vipHere { font-size: 11px; color: var(--cash); margin-left: 6px; }
-.vipVisits { font-size: 12px; color: var(--muted); font-weight: 700; }
-.vipEmpty { font-size: 13px; color: #cfd8e6; text-align: center; padding: 10px; }
-
 /* ------------------------------------------------------------------ */
 /* Drawn icons (uiIcons.js) and the hover tip (tooltips.js): buttons    */
 /* show an icon, and hovering one names it and says what it does.       */
@@ -589,5 +426,153 @@ body.shopOpen #selectedChip { bottom: calc(150px + env(safe-area-inset-bottom, 0
 }
 .openButton.roundButton:hover { transform: translateX(-50%) scale(1.07); }
 .openButton.roundButton:active { transform: translateX(-50%) scale(0.97); }
-.propButton.expandIcon { width: 64px; height: 64px; padding: 6px; box-sizing: border-box; }
-.propButton.expandIcon.locked::after { content: none; }
+
+/* ------------------------------------------------------------------ */
+/* Nightclub City's look: glossy, bubbly sky-blue panels with a dark    */
+/* navy frame and a white shine across the top half.                    */
+/* ------------------------------------------------------------------ */
+:root {
+  --shine: linear-gradient(180deg, rgba(255, 255, 255, 0.55) 0%, rgba(255, 255, 255, 0.18) 46%, rgba(255, 255, 255, 0) 50%);
+  --nc-blue: linear-gradient(180deg, #8fd6ff 0%, #45a3ea 50%, #1f6cc2 100%);
+  --nc-deep: linear-gradient(180deg, #2a64b0 0%, #163f7a 55%, #0d2a55 100%);
+  --nc-frame: #0d2340;
+}
+
+/* The shop dock along the bottom. */
+#dock {
+  position: fixed; left: 50%; transform: translateX(-50%); z-index: 30;
+  bottom: calc(4px + env(safe-area-inset-bottom, 0px));
+  width: min(900px, calc(100vw - 16px));
+}
+#dockTabs {
+  position: relative; z-index: 2; display: flex; align-items: flex-end; gap: 14px;
+  height: 58px; padding-left: 26px; margin-bottom: -14px; pointer-events: none;
+}
+.dockTab {
+  width: 62px; height: 62px; cursor: pointer; pointer-events: auto;
+  transition: transform 0.12s ease, filter 0.12s ease;
+}
+.dockTab .uiArt { width: 100%; height: 100%; filter: drop-shadow(0 4px 3px rgba(0, 0, 0, 0.55)); }
+.dockTab:hover { transform: translateY(-5px) scale(1.06); }
+.dockTab.active { transform: translateY(-3px) scale(1.1); }
+.dockTab.active .uiArt { filter: drop-shadow(0 0 5px #fff) drop-shadow(0 0 12px #ffe45c) drop-shadow(0 4px 3px rgba(0, 0, 0, 0.55)); }
+#dockPanel {
+  position: relative; display: flex; align-items: center; gap: 8px;
+  height: 112px; padding: 10px 10px 8px; box-sizing: border-box; border-radius: 18px;
+  background: var(--shine), var(--nc-blue);
+  border: 3px solid var(--nc-frame);
+  box-shadow: inset 0 0 0 2px rgba(205, 240, 255, 0.55), inset 0 -8px 14px rgba(8, 30, 70, 0.35), 0 6px 18px rgba(0, 0, 0, 0.6);
+}
+/* Decorations' categories: a little grid of buttons on the left. */
+#dockGrid {
+  flex: 0 0 auto; display: grid; grid-template-columns: repeat(4, 34px); gap: 5px;
+  padding: 6px; border-radius: 10px;
+  background: rgba(10, 40, 90, 0.35); box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.35);
+}
+#dock:not([data-tab="decor"]) #dockGrid { display: none; }
+.subTab {
+  width: 34px; height: 34px; box-sizing: border-box; padding: 6px; border-radius: 8px; cursor: pointer;
+  background: var(--shine), var(--nc-deep); border: 2px solid var(--nc-frame);
+  box-shadow: inset 0 0 0 1px rgba(170, 220, 255, 0.45);
+}
+.subTab:hover { filter: brightness(1.2); }
+.subTab.active { background: var(--shine), linear-gradient(180deg, #ffe680 0%, #ffbf1f 55%, #e08a00 100%); }
+.dockArrow {
+  flex: 0 0 34px; height: 34px; border-radius: 50%; cursor: pointer; position: relative;
+  background: var(--shine), var(--nc-deep); border: 2px solid #fff;
+  box-shadow: 0 0 0 2px var(--nc-frame), 0 2px 4px rgba(0, 0, 0, 0.5);
+}
+.dockArrow::before {
+  content: ''; position: absolute; top: 50%; left: 50%; margin: -8px 0 0 -5px;
+  border: 8px solid transparent; border-left: 11px solid #fff; border-right: 0;
+  filter: drop-shadow(0 1px 0 var(--nc-frame));
+}
+#dockPrev::before { transform: scaleX(-1); margin-left: -6px; }
+.dockArrow:hover { filter: brightness(1.2); }
+#shopItems {
+  flex: 1 1 auto; display: flex; align-items: center; gap: 10px; height: 100%; padding: 0 2px;
+  overflow-x: auto; overflow-y: hidden; scrollbar-width: none;
+}
+#shopItems::-webkit-scrollbar { display: none; }
+
+/* A card: a light glossy frame, the picture on a dark panel, and a navy
+   strip with the price. */
+.propSlot {
+  position: relative; flex: 0 0 auto; width: 78px; height: 88px; box-sizing: border-box;
+  display: flex; flex-direction: column; padding: 4px 4px 0; border-radius: 12px; cursor: pointer;
+  background: linear-gradient(180deg, #f4fbff 0%, #b9e3fb 55%, #86c6ee 100%);
+  border: 2px solid var(--nc-frame);
+  box-shadow: 0 3px 5px rgba(0, 0, 0, 0.45);
+  transition: transform 0.12s ease, box-shadow 0.12s ease;
+}
+.propSlot:hover { transform: translateY(-3px); }
+.propButton {
+  flex: 1 1 auto; position: relative; border-radius: 8px; overflow: hidden;
+  background: radial-gradient(circle at 50% 40%, #3b78bf 0%, #1a3f73 70%, #10284c 100%);
+  box-shadow: inset 0 2px 5px rgba(0, 0, 0, 0.5);
+}
+.propButton .icon {
+  position: absolute; inset: 3px; background-size: contain; background-repeat: no-repeat; background-position: center;
+  filter: drop-shadow(0 2px 2px rgba(0, 0, 0, 0.6));
+}
+.propButton .icon .uiArt { width: 100%; height: 100%; }
+.propCost {
+  margin: 3px -4px 0; height: 20px; border-radius: 0 0 10px 10px;
+  display: flex; align-items: center; justify-content: center;
+  background: var(--nc-deep); border-top: 1px solid #6fb6ff;
+  font-size: 12px; font-weight: 700; color: #fff; white-space: nowrap; text-shadow: var(--outline);
+}
+.propSlot:has(.propButton.selected) {
+  transform: translateY(-4px);
+  box-shadow: 0 0 0 3px #ffe45c, 0 0 16px #ffe45c, 0 3px 5px rgba(0, 0, 0, 0.45);
+}
+.propSlot:has(.propButton.unaffordable) .propCost { color: #ff9aa6; }
+.propSlot:has(.propButton.unaffordable) .icon { filter: grayscale(0.5) brightness(0.75); }
+.propSlot:has(.propButton.locked) { cursor: not-allowed; }
+.propSlot:has(.propButton.locked):hover { transform: none; }
+.propButton.locked .icon { filter: grayscale(1) brightness(0.5); }
+.propSlot.emptySlot { cursor: default; opacity: 0.75; }
+.propSlot.emptySlot:hover { transform: none; }
+.propSlot.emptySlot .propButton::after {
+  content: '?'; position: absolute; inset: 0; display: flex; align-items: center; justify-content: center;
+  font-size: 28px; font-weight: 700; color: rgba(255, 255, 255, 0.35);
+}
+.propSlot.staffed .propCost { color: #9dff6a; }
+.staffFire {
+  position: absolute; top: -7px; right: -7px; width: 20px; height: 20px; border-radius: 50%;
+  display: flex; align-items: center; justify-content: center; cursor: pointer;
+  font-size: 11px; font-weight: 700; color: #fff;
+  background: linear-gradient(180deg, #ff7a7a, #c62828); border: 2px solid var(--nc-frame);
+}
+.propSlot.vipSlot.here { box-shadow: 0 0 0 3px #ffd24d, 0 3px 5px rgba(0, 0, 0, 0.45); }
+.propSlot.vipSlot .icon { inset: 0; background-size: auto; background-repeat: no-repeat; }
+
+/* The rest of the HUD in the same glossy blue. */
+.statButton {
+  background: var(--shine), var(--nc-deep); border: 2px solid var(--nc-frame);
+  box-shadow: inset 0 0 0 2px rgba(150, 210, 255, 0.55), 0 3px 6px rgba(0, 0, 0, 0.5);
+  border-radius: 10px;
+}
+.squareButton {
+  background: var(--shine), var(--nc-blue); border: 2px solid var(--nc-frame);
+  box-shadow: inset 0 0 0 1px rgba(205, 240, 255, 0.55), 0 2px 4px rgba(0, 0, 0, 0.5);
+  border-radius: 8px;
+}
+.squareButton:hover { filter: brightness(1.15); border-color: var(--nc-frame); }
+.roundButton {
+  border-radius: 14px; border: 3px solid #fff;
+  background: var(--shine), var(--nc-deep);
+  box-shadow: 0 0 0 2px var(--nc-frame), 0 0 14px rgba(255, 61, 220, 0.6), 0 4px 8px rgba(0, 0, 0, 0.5);
+}
+.partyButton {
+  background: var(--shine), linear-gradient(180deg, #ffd65a 0%, #f39c12 55%, #b8650a 100%);
+  border-color: #fff; box-shadow: 0 0 0 2px var(--nc-frame), 0 0 14px #ffd24d99, 0 4px 8px rgba(0, 0, 0, 0.5);
+}
+.boostButton[data-state="active"] { background: var(--shine), linear-gradient(180deg, #ffb35c 0%, #f06a10 55%, #a8400a 100%); border-color: #fff; }
+.partyButton[data-state="active"] { background: var(--shine), linear-gradient(180deg, #ff8ae6 0%, #d726b8 55%, #7d0f6a 100%); border-color: #fff; }
+.boostButton[data-state="cooldown"], .partyButton[data-state="off"] { background: var(--shine), linear-gradient(180deg, #8a96a8, #4a5466); border-color: #c9d2de; }
+.openButton.roundButton { border-radius: 14px; border-color: #fff; background: var(--shine), linear-gradient(180deg, #8af27a 0%, #2fae2a 55%, #17701a 100%); box-shadow: 0 0 0 2px var(--nc-frame), 0 0 16px #5dff6aa6, 0 4px 8px rgba(0, 0, 0, 0.5); }
+#hoverTip { background: var(--shine), var(--nc-deep); border: 2px solid var(--nc-frame); box-shadow: inset 0 0 0 1px rgba(150, 210, 255, 0.6), 0 4px 10px rgba(0, 0, 0, 0.6); border-radius: 10px; }
+#hoverTip[data-side="above"]::after { border-top-color: var(--nc-frame); }
+#hoverTip[data-side="below"]::after { border-bottom-color: var(--nc-frame); }
+@media (max-width: 700px) { #dockGrid { grid-template-columns: repeat(4, 28px); gap: 4px; } .subTab { width: 28px; height: 28px; padding: 4px; } }

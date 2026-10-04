@@ -1,8 +1,8 @@
 // ClubScene methods: the VIP list. Nightclub City's VIP list was friends you
 // invited; here it's your regulars. A guest who leaves very happy joins the
 // list (by name and look), and VIPs come back on later nights: they queue
-// outside like anyone else, glow gold, and tip double. The ⭐ VIPs button
-// lists them with how many times they've been.
+// outside like anyone else, glow gold, and tip double. The dock's VIP tab
+// shows them with how many times they've been.
 // Mixed into ClubScene (see ClubScene.js); `this` is the scene.
 import { PATRON_META, PATRON_SHEETS } from '../assets.js';
 import { VIP } from '../config.js';
@@ -42,6 +42,7 @@ export class VipsMixin {
     this.vips.push({ name: patron.name, character: patron.container.patronCharacter ?? 0, visits: 1 });
     SFX.levelUp();
     this.showToast(`⭐ ${patron.name} loved your club and joined your VIP list!`);
+    if (this.dockTab === 'vip') this.renderVipCards();
     this.saveGame();
   }
 
@@ -49,38 +50,42 @@ export class VipsMixin {
     return patron.vip ? VIP.tipMultiplier : 1;
   }
 
-  showVipList() {
-    const box = document.getElementById('vipList');
-    const list = document.getElementById('vipRows');
-    if (!box || !list) return;
-    list.innerHTML = '';
+  // The dock's VIP tab: a card per regular, their face and how many times
+  // they've been; name and status in the hover tip. Empty slots up to the
+  // list's size show how many more can join.
+  renderVipCards() {
+    const el = this.shopItemsEl;
+    if (!el) return;
+    el.innerHTML = '';
+    el.dataset.rendered = '';
     const vips = this.vips || [];
-    if (vips.length === 0) {
-      list.innerHTML = '<div class="vipEmpty">No VIPs yet. Guests who leave really happy (😍) join this list, and come back to tip double.</div>';
-    }
     for (const v of vips) {
-      const row = document.createElement('div');
-      row.className = 'vipRow';
-      const face = document.createElement('div');
-      face.className = 'vipFace';
+      const inside = this.patrons.some((p) => p.vip && p.vip.name === v.name && !p.gone);
+      const { slot, icon, cost } = this.makeCard(`⭐ ${v.name}`,
+        `${v.visits} visit${v.visits === 1 ? '' : 's'}${inside ? ' · in the club now' : ''}. VIPs come back on later nights and tip double.`, null);
+      slot.classList.add('vipSlot');
       const url = PATRON_SHEETS[v.character];
       if (url) {
-        const k = 0.45;
-        face.style.backgroundImage = `url(${url})`;
-        face.style.backgroundSize = `${PATRON_META.frameWidth * PATRON_META.columns * k}px auto`;
-        face.style.backgroundPosition = `${-PATRON_META.frameWidth * k * 0.22}px ${-30 * k}px`;
+        // The head and shoulders from the first frame of their sheet.
+        const k = 0.7;
+        icon.style.backgroundImage = `url(${url})`;
+        icon.style.backgroundSize = `${PATRON_META.frameWidth * PATRON_META.columns * k}px auto`;
+        icon.style.backgroundPosition = `${-PATRON_META.frameWidth * k * 0.12}px ${-22 * k}px`;
       }
-      const inside = this.patrons.some((p) => p.vip && p.vip.name === v.name && !p.gone);
-      row.append(face);
-      row.insertAdjacentHTML('beforeend', `<div class="vipName">⭐ ${v.name}${inside ? ' <span class="vipHere">in the club</span>' : ''}</div><div class="vipVisits">${v.visits} visit${v.visits === 1 ? '' : 's'}</div>`);
-      list.appendChild(row);
+      if (inside) slot.classList.add('here');
+      cost.textContent = `⭐ ${v.visits}`;
+      el.appendChild(slot);
     }
-    document.getElementById('vipCount').textContent = `${vips.length} / ${VIP.max}`;
-    box.classList.add('open');
+    for (let i = vips.length; i < VIP.max; i++) {
+      const { slot, cost } = this.makeCard('Empty VIP spot',
+        'Guests who leave really happy join your VIP list, then come back on later nights to tip double.', null);
+      slot.classList.add('vipSlot', 'emptySlot');
+      cost.textContent = `${i + 1}/${VIP.max}`;
+      el.appendChild(slot);
+    }
   }
 
   setupVips() {
-    document.getElementById('vipButton')?.addEventListener('click', () => { SFX.unlock(); this.showVipList(); });
-    document.getElementById('vipClose')?.addEventListener('click', () => document.getElementById('vipList').classList.remove('open'));
+    // Shown in the dock's VIP tab (see shop.js).
   }
 }

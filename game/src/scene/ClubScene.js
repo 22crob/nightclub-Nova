@@ -201,7 +201,7 @@ export class ClubScene extends Phaser.Scene {
     // ESC: quick way to stop holding whatever's selected, same as
     // re-clicking it in the shop.
     // A second Esc (with nothing held) puts the shop away.
-    this.input.keyboard.on('keydown-ESC', () => (this.selectedProp ? this.deselectProp() : this.closeShop()));
+    this.input.keyboard.on('keydown-ESC', () => { if (this.selectedProp) this.deselectProp(); });
 
     // Zoom: mouse wheel zooms toward the cursor, +/- keys and the on-screen
     // buttons zoom around the screen centre.

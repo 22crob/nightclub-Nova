@@ -77,7 +77,51 @@ const ICONS = {
     <path d="M5 16.4l4.2-4.6 3 3 2.8-2.6 4 4.2v2.1H5Z" fill="${PINK}"/><circle cx="15.4" cy="8.8" r="1.7" fill="${GOLD}"/>`,
 };
 
+
+// Bigger, glossier drawings in Nightclub City's cartoon style (48x48): the
+// dock's tabs and the money stack. Gradients, a white shine and dark
+// outlines.
+const O = '#10233d';
+const ART = {
+  // Decorations: a paint can brimming with purple paint, dripping down.
+  tabDecor: `<defs><linearGradient id="gCan" x1="0" x2="1"><stop offset="0" stop-color="#8a95a8"/><stop offset=".3" stop-color="#f4f7fb"/><stop offset=".65" stop-color="#b8c2d2"/><stop offset="1" stop-color="#6d7890"/></linearGradient>
+    <radialGradient id="gPaint" cx=".4" cy=".35" r=".8"><stop offset="0" stop-color="#d48bff"/><stop offset="1" stop-color="#7a1fd6"/></radialGradient></defs>
+    <path d="M9.5 21C11 8 37 8 38.5 21" fill="none" stroke="#56607a" stroke-width="2.4" stroke-linecap="round"/>
+    <path d="M9 19h30l-3 22c-.4 3-23.6 3-24 0Z" fill="url(#gCan)" stroke="${O}" stroke-width="1.8" stroke-linejoin="round"/>
+    <path d="M10.6 27h26.8l-.6 5H11.3Z" fill="#9b3cf0" stroke="${O}" stroke-width="1.2"/>
+    <ellipse cx="24" cy="19" rx="15" ry="4.6" fill="#dfe5ee" stroke="${O}" stroke-width="1.8"/>
+    <ellipse cx="24" cy="19" rx="12.6" ry="3.4" fill="url(#gPaint)"/>
+    <path d="M12 19.6c0 3.6.4 7.4 2.2 7.4s1.6-3.6 2-5.6c.6 2.2.8 3.8 2.2 3.8s1.4-3 1.6-4.6Z" fill="#9b3cf0" stroke="${O}" stroke-width="1.2" stroke-linejoin="round"/>
+    <path d="M14.4 30.6 15 38" stroke="#fff" stroke-width="2.2" stroke-linecap="round" opacity=".75"/>
+    <ellipse cx="20" cy="17.8" rx="4" ry="1" fill="#fff" opacity=".6"/>`,
+  // Expand: a cardboard box with green arrows pointing out of each corner.
+  tabExpand: `<defs><linearGradient id="gArrow" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#b6ff8a"/><stop offset="1" stop-color="#2fae2a"/></linearGradient></defs>
+    <path d="M24 13 37 19.5 24 26 11 19.5Z" fill="#f6dcaa" stroke="${O}" stroke-width="1.6" stroke-linejoin="round"/>
+    <path d="M11 19.5 24 26v14.5L11 34Z" fill="#e0a95c" stroke="${O}" stroke-width="1.6" stroke-linejoin="round"/>
+    <path d="M24 26 37 19.5V34L24 40.5Z" fill="#b97f36" stroke="${O}" stroke-width="1.6" stroke-linejoin="round"/>
+    <path d="M17.5 16.25 30.5 22.75" stroke="#c99a52" stroke-width="2.2"/>
+    ${[[9, 8, -45], [39, 8, 45], [41, 41, 135], [7, 41, -135]].map(([x, y, a]) => `<path transform="translate(${x} ${y}) rotate(${a})" d="M0-7.5 6.5 0H2.6v6.5h-5.2V0h-3.9Z" fill="url(#gArrow)" stroke="${O}" stroke-width="1.4" stroke-linejoin="round"/>`).join('')}`,
+  // VIPs: a gold star in shades, grinning.
+  tabVip: `<defs><radialGradient id="gStar" cx=".4" cy=".3" r=".8"><stop offset="0" stop-color="#fff6b0"/><stop offset=".5" stop-color="#ffcf2a"/><stop offset="1" stop-color="#e38a00"/></radialGradient></defs>
+    <path d="M24.0 5.0 L29.6 18.2 L44.0 19.5 L33.1 29.0 L36.3 43.0 L24.0 35.6 L11.7 43.0 L14.9 29.0 L4.0 19.5 L18.4 18.2Z" fill="url(#gStar)" stroke="${O}" stroke-width="1.8" stroke-linejoin="round"/>
+    <path d="M14.5 22.6h8.4l-.7 4.2c-.3 1.6-6.3 1.6-6.9 0ZM25.1 22.6h8.4l-.8 4.2c-.3 1.6-6.3 1.6-6.9 0ZM22.9 23.4h2.2" fill="#1b1b2b" stroke="${O}" stroke-width="1.2" stroke-linejoin="round"/>
+    <path d="M16.4 23.6l2.2 0M27 23.6l2.2 0" stroke="#8fd8ff" stroke-width="1.2" stroke-linecap="round"/>
+    <path d="M19.6 31.2c2.6 2.4 6.2 2.4 8.8 0" fill="none" stroke="${O}" stroke-width="1.8" stroke-linecap="round"/>
+    <path d="M17 14.6c1.6-2.6 3.4-4 5.4-4.4" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" opacity=".8"/>`,
+  // Money: a stack of green bills with a paper band.
+  cash: `<defs><linearGradient id="gBill" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#d8ffb8"/><stop offset=".55" stop-color="#6fd64f"/><stop offset="1" stop-color="#2f9b2a"/></linearGradient></defs>
+    ${[12, 7, 2].map((dy, k) => `<g transform="translate(0 ${dy})">
+      <path d="M3 22 27 31v4L3 26Z" fill="#2b8a27" stroke="#0d3a10" stroke-width="1.1" stroke-linejoin="round"/>
+      <path d="M27 31 45 21v4L27 35Z" fill="#1d6a1d" stroke="#0d3a10" stroke-width="1.1" stroke-linejoin="round"/>
+      <path d="M3 22 21 12 45 21 27 31Z" fill="url(#gBill)" stroke="#0d3a10" stroke-width="1.1" stroke-linejoin="round"/>
+      <path d="M6.6 22.1 21 14.2 41.4 21.1 27 29.1Z" fill="none" stroke="#2f8f2f" stroke-width=".8" opacity=".7"/></g>`).join('')}
+    <path d="M14 18.6 31.4 9.4l4 1.5L18 20.3Z" fill="#f6ecc4" stroke="#0d3a10" stroke-width="1" stroke-linejoin="round"/>
+    <ellipse cx="29.5" cy="17.2" rx="4.2" ry="2.4" fill="#3aa336" stroke="#0d3a10" stroke-width=".8"/>
+    <text x="29.5" y="18.9" font-family="Arial Black,Arial" font-weight="900" font-size="5" text-anchor="middle" fill="#eaffdf">$</text>`,
+};
+
 export function iconSvg(name) {
+  if (ART[name]) return `<svg class="uiArt" viewBox="0 0 48 48" aria-hidden="true">${ART[name]}</svg>`;
   const body = ICONS[name];
   if (!body) return '';
   return `<svg class="uiGlyph" viewBox="0 0 24 24" aria-hidden="true">${body}</svg>`;
@@ -86,6 +130,7 @@ export function iconSvg(name) {
 // Fills every element with data-icon="name" (inside `root`) with its icon.
 export function fillIcons(root = document) {
   for (const el of root.querySelectorAll('[data-icon]')) {
-    if (ICONS[el.dataset.icon] && !el.querySelector('.uiGlyph')) el.insertAdjacentHTML('afterbegin', iconSvg(el.dataset.icon));
+    const name = el.dataset.icon;
+    if ((ICONS[name] || ART[name]) && !el.querySelector('.uiGlyph, .uiArt')) el.insertAdjacentHTML('afterbegin', iconSvg(name));
   }
 }

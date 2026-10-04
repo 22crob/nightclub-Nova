@@ -85,19 +85,24 @@ check('all sprites loaded', st.textures.length === 0, st.textures.join(', ') || 
 // Tips are paused while the checks below compare exact cash amounts.
 await page.evaluate(() => { const s = window.__clubNova.scene.getScene('club'); s.collectPatronTip = () => {}; s.chargeCover = () => {}; });
 
-// Shop opens with every tab.
-await page.click('#shopToggle');
-const tabs = await page.$$eval('.shopTab', (els) => els.map((e) => e.dataset.tipName));
-check('shop opens with 9 tabs', tabs.length === 9 && tabs.includes('Staff'), tabs.join(' / '));
+// The shop dock: three tabs (Decorations, Expand, VIPs), and Decorations
+// has a grid of eight categories, Staff among them.
+const tabs = await page.$$eval('.dockTab', (els) => els.map((e) => e.dataset.tipName));
+const subTabs = await page.$$eval('.subTab', (els) => els.map((e) => e.dataset.tipName));
+check('the shop dock has Decorations, Expand and VIP tabs, and 8 decoration categories', tabs.join() === 'Decorations,Expand,VIPs' && subTabs.length === 8 && subTabs.includes('Staff'), `${tabs.join(' / ')} | ${subTabs.join(' / ')}`);
 check('bar shows its real sprite icon', await page.locator('.propButton .icon').first().evaluate((el) => el.style.backgroundImage.includes('data:image/png')));
-// Picking an item keeps the shop open (build mode); OK puts it away and
-// puts the item down.
-await page.click('.shopTab[data-tip-name="Seating"]');
-await page.locator('.propButton').first().click();
-const picked = await page.evaluate(() => ({ open: document.getElementById('shopOverlay').classList.contains('open'), held: window.__clubNova.scene.getScene('club').selectedProp }));
-await page.click('#shopClose');
-const closed = await page.evaluate(() => ({ open: document.getElementById('shopOverlay').classList.contains('open'), held: window.__clubNova.scene.getScene('club').selectedProp }));
-check('the shop stays open while building, OK closes it', picked.open && picked.held === 'woodStool' && !closed.open && !closed.held, JSON.stringify({ picked, closed }));
+// Clicking a card picks the item up; clicking it again puts it down.
+await page.click('.subTab[data-tip-name="Seating"]');
+await page.locator('.propSlot').first().click();
+const picked = await page.evaluate(() => ({ held: window.__clubNova.scene.getScene('club').selectedProp, glow: !!document.querySelector('.propButton.selected') }));
+await page.locator('.propSlot').first().click();
+const closed = await page.evaluate(() => ({ held: window.__clubNova.scene.getScene('club').selectedProp }));
+check('clicking a shop card picks the item up, clicking again puts it down', picked.held === 'woodStool' && picked.glow && !closed.held, JSON.stringify({ picked, closed }));
+// Expand: one card with the next size and its price.
+await page.click('#tabExpand');
+const expandCard = await page.evaluate(() => ({ cards: document.querySelectorAll('#shopItems .propSlot').length, tip: document.querySelector('#shopItems .propSlot')?.dataset.tipText, price: document.querySelector('#shopItems .propCost')?.textContent }));
+check('the Expand tab shows the next size up and its price', expandCard.cards === 1 && /Grow from \d+×\d+ to \d+×\d+/.test(expandCard.tip) && /\$|Lv/.test(expandCard.price), JSON.stringify(expandCard));
+await page.click('#tabDecor');
 await page.evaluate(() => window.__clubNova.scene.getScene('club').selectProp('starterBar'));
 
 // Place the Starter Bar (selected by default, $100).
@@ -162,11 +167,10 @@ check('R rotates the DJ booth', after === (before + 90) % 360, `${before} -> ${a
 const openingRate = await page.evaluate(() => window.__clubNova.scene.getScene('club').totalFanRate());
 check('the DJ booth earns fans from the start', openingRate > 0, `rate ${openingRate}`);
 await page.keyboard.press('Escape');
-await page.click('#staffButton');
-const staffRows = await page.locator('.staffRow').count();
-check('Staff tab lists just the bar (the DJ is free)', staffRows === 1, `${staffRows} rows`);
-await page.locator('.staffButton.hire').first().click();
-await page.click('#shopClose');
+await page.click('.subTab[data-tip-name="Staff"]');
+const staffRows = await page.locator('.staffSlot').count();
+check('Staff lists just the bar (the DJ is free)', staffRows === 1, `${staffRows} cards`);
+await page.locator('.staffSlot:not(.staffed)').first().click();
 const staffed = await page.evaluate(() => {
   const s = window.__clubNova.scene.getScene('club');
   return { cash: s.cash, music: s.musicPlaying(), bartenders: s.hireableRecords().filter((r) => r.staff).length };
@@ -595,9 +599,9 @@ const extras = await page.evaluate(async () => {
   const vip = s.vips.find((v) => v.name === 'Test Guest');
   s.welcomeVip(q, vip);
   out.welcomed = q.name === 'Test Guest' && s.vipTipFactor(q) === 2 && vip.visits === 2;
-  document.getElementById('vipButton').click();
-  out.listed = document.getElementById('vipList').classList.contains('open') && /Test Guest/.test(document.getElementById('vipRows').textContent);
-  document.getElementById('vipClose').click();
+  document.getElementById('tabVip').click();
+  out.listed = [...document.querySelectorAll('#shopItems .vipSlot')].some((c) => /Test Guest/.test(c.dataset.tipName));
+  document.getElementById('tabDecor').click();
   // Rating: the average of recent nights' stars.
   const stars0 = s.nightStars;
   s.nightStars = [3, 4];
@@ -786,13 +790,13 @@ check('restart asks first, then starts a brand-new club', restart.asked && resta
 // Buttons are drawn icons with no words on them; hovering one pops up its
 // name and what it does.
 const icons = await page.evaluate(() => {
-  const ids = ['shopToggle', 'decorateButton', 'expandButton', 'staffButton', 'vipButton', 'boostButton', 'partyButton', 'songChange', 'songLike', 'tipsButton'];
+  const ids = ['tabDecor', 'tabExpand', 'tabVip', 'boostButton', 'partyButton', 'songChange', 'songLike', 'tipsButton'];
   const bare = ids.filter((id) => {
     const el = document.getElementById(id);
     const words = [...el.childNodes].filter((n) => n.nodeType === 3).map((n) => n.textContent.trim()).join('');
-    return !el.querySelector('svg.uiGlyph') || words !== '' || !el.dataset.tipName;
+    return !el.querySelector('svg.uiGlyph, svg.uiArt') || words !== '' || !el.dataset.tipName;
   });
-  const tabs = [...document.querySelectorAll('.shopTab')];
+  const tabs = [...document.querySelectorAll('.subTab')];
   return { bare, tabs: tabs.length, tabIcons: tabs.filter((t) => t.querySelector('svg.uiGlyph') && t.dataset.tipName && !t.textContent.trim()).length };
 });
 await page.hover('#boostButton');
@@ -802,7 +806,7 @@ const hoverTip = await page.evaluate(() => {
   return { shown: !!t && t.classList.contains('show'), name: t?.querySelector('.tipName').textContent, text: t?.querySelector('.tipText').textContent };
 });
 await page.mouse.move(5, 400);
-check('buttons and shop tabs are icons with no words, each with a hover name', icons.bare.length === 0 && icons.tabs === 9 && icons.tabIcons === 9, JSON.stringify(icons));
+check('buttons and shop tabs are icons with no words, each with a hover name', icons.bare.length === 0 && icons.tabs === 8 && icons.tabIcons === 8, JSON.stringify(icons));
 check('hovering Drop the Bass pops up its name and what it does', hoverTip.shown && hoverTip.name === 'Drop the Bass!' && hoverTip.text.length > 10, JSON.stringify(hoverTip));
 
 check('no errors in the page', errors.length === 0, errors.join(' | '));

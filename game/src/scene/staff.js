@@ -478,65 +478,54 @@ export class StaffMixin {
   // The Staff tab: one row per bar, with a hire / let go button, and the
   // total wage bill.
   renderStaffCard() {
+    // One card per long bar in the shop row: the bar's picture, and under
+    // it the hire price, or a tick with a small "let go" button once
+    // someone works it. Details are in the hover tip.
     const el = this.shopItemsEl;
-    el.innerHTML = '';
-    const card = document.createElement('div');
-    card.className = 'staffCard';
     const records = this.hireableRecords();
-
-    const summary = document.createElement('div');
-    summary.className = 'staffSummary';
-    summary.textContent = records.length
-      ? `Wages: $${this.totalWages()} every 30 seconds · your DJ plays for free`
-      : 'Place a bar first, then hire a bartender to work it. Your DJ plays for free.';
-    card.appendChild(summary);
-
+    // Only rebuild when something on the cards changed (this runs often).
+    const key = 'staff:' + records.map((r) => `${r.anchor}:${!!r.staff}:${this.barGroup(r).length}`).join('|') + (this.cash >= STAFF_TYPES.bartender.hireCost);
+    if (el.dataset.rendered === key) return;
+    el.innerHTML = '';
+    el.dataset.rendered = key;
+    if (records.length === 0) {
+      const { slot, cost } = this.makeCard('No bars yet', 'Place a bar first, then hire a bartender to work it. Your DJ plays for free.', null);
+      slot.classList.add('emptySlot');
+      cost.textContent = '–';
+      el.appendChild(slot);
+      return;
+    }
     const counts = {};
     for (const rec of records) {
-      // One row per long bar: its staffed unit, or its first one.
+      // One card per long bar: its staffed unit, or its first one.
       const group = this.barGroup(rec);
       const leader = group.find((r) => r.staff) || group[0];
       if (leader !== rec) continue;
       const def = PROP_TYPES[rec.type];
       const type = STAFF_TYPES[def.staff];
       counts[rec.type] = (counts[rec.type] || 0) + 1;
-      const row = document.createElement('div');
-      row.className = 'staffRow';
-
-      const icon = document.createElement('div');
-      icon.className = 'staffIcon';
-      const src = realSpriteIconFor(rec.type);
-      if (src) icon.style.backgroundImage = `url(${src})`;
-      row.appendChild(icon);
-
-      const text = document.createElement('div');
-      text.className = 'staffText';
-      const name = document.createElement('div');
-      name.className = 'staffName';
-      name.textContent = group.length > 1 ? `${def.label} ${counts[rec.type]} (${group.length} long)` : `${def.label} ${counts[rec.type]}`;
-      const status = document.createElement('div');
-      status.className = rec.staff ? 'staffStatus working' : 'staffStatus empty';
-      status.textContent = rec.staff
-        ? `${type.label} working · $${type.wage} per 30s`
-        : (def.staff === 'bartender' ? 'No bartender: not selling drinks' : 'No DJ: no music');
-      text.appendChild(name);
-      text.appendChild(status);
-      row.appendChild(text);
-
-      const button = document.createElement('div');
+      const name = group.length > 1 ? `${def.label} ${counts[rec.type]} (${group.length} long)` : `${def.label} ${counts[rec.type]}`;
+      const status = rec.staff
+        ? `${type.label} working · $${type.wage} wages every 30 seconds.`
+        : `No ${type.label.toLowerCase()}: not selling drinks. Click to hire one for $${type.hireCost}.`;
+      const { slot, button, cost } = this.makeCard(name, status, realSpriteIconFor(rec.type));
+      slot.classList.add('staffSlot');
       if (rec.staff) {
-        button.className = 'staffButton fire';
-        button.textContent = 'Let go';
-        button.addEventListener('click', () => { this.fireStaff(rec); this.renderStaffCard(); });
+        slot.classList.add('staffed');
+        cost.textContent = '✔ Staffed';
+        const fire = document.createElement('div');
+        fire.className = 'staffFire';
+        fire.textContent = '✕';
+        fire.dataset.tipName = 'Let go';
+        fire.dataset.tipText = `Let this ${type.label.toLowerCase()} go. The bar stops selling drinks.`;
+        fire.addEventListener('click', (e) => { e.stopPropagation(); this.fireStaff(rec); this.renderStaffCard(); });
+        slot.appendChild(fire);
       } else {
-        button.className = 'staffButton hire';
         button.classList.toggle('unaffordable', this.cash < type.hireCost);
-        button.textContent = `Hire ${type.label} $${type.hireCost}`;
-        button.addEventListener('click', () => { this.hireStaff(rec); this.renderStaffCard(); });
+        cost.textContent = `Hire $${type.hireCost}`;
+        slot.addEventListener('click', () => { this.hireStaff(rec); this.renderStaffCard(); });
       }
-      row.appendChild(button);
-      card.appendChild(row);
+      el.appendChild(slot);
     }
-    el.appendChild(card);
   }
 }
