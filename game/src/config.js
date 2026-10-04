@@ -33,12 +33,11 @@ export const STARTING_CASH = 700;
 
 // Room shell, modelled on the reference game's rooms: thick light-grey
 // concrete walls with pale top caps, a raised floor slab with dark front
-// edges, and a tiled sidewalk outside. Walls are 4 tile-heights tall,
-// about 1.3x a patron.
-export const WALL_HEIGHT = 128; // px
+// edges, and a tiled sidewalk outside. Walls are about 1.3x a patron.
+export const WALL_HEIGHT = 104; // px: about 1.3 guests tall, like Nightclub City (was 128, which felt too tall)
 export const WALL_THICKNESS = 0.4; // in tiles
 export const WALL_BASEBOARD = 5;
-export const DOOR_HEIGHT = 106; // px
+export const DOOR_HEIGHT = 90; // px: a little taller than a guest
 export const FLOOR_SLAB_DEPTH = 10; // px from the floor down to the sidewalk
 export const ROOM_COLORS = {
   wallRight: 0x9a9aa3,
