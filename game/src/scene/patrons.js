@@ -641,7 +641,7 @@ export class PatronsMixin {
     const base = 1 + Math.random() * 3; // $1-4
     const moodFactor = 0.5 + patron.mood / 100; // unhappy patrons tip half, happy ones up to 1.5x
     const boost = this.isBoosted() ? BOOST.tipMultiplier : 1;
-    const amount = Math.max(1, Math.round((nearRevenue ? base * 2 : base) * moodFactor * boost));
+    const amount = Math.max(1, Math.round((nearRevenue ? base * 2 : base) * moodFactor * boost * this.partyEffect('tips', 1)));
     this.cash += amount;
     this.noteIncome('tips', amount);
     this.fans += nearRevenue ? 0.4 : 0.1;

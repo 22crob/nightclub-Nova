@@ -438,3 +438,39 @@ body.shopOpen #selectedChip { bottom: calc(150px + env(safe-area-inset-bottom, 0
   border: 1px solid var(--chrome); box-shadow: var(--panel-shadow);
 }
 .summaryButton:active { transform: translateY(1px); }
+
+/* ------------------------------------------------------------------ */
+/* Throw a Party: the button under Drop the Bass, and the picker.       */
+/* ------------------------------------------------------------------ */
+.partyButton {
+  position: fixed; top: calc(118px + env(safe-area-inset-top, 0px)); right: 12px; z-index: 10;
+  display: flex; align-items: center; gap: 8px; padding: 7px 14px 7px 10px;
+  border-radius: var(--radius); cursor: pointer; user-select: none;
+  font-size: 13px; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase;
+  color: #fff; text-shadow: var(--outline);
+  background: linear-gradient(180deg, #3a2a08 0%, #1e1504 60%, #0e0a02 100%);
+  border: 2px solid var(--gold);
+  box-shadow: 0 0 0 1px #000, 0 0 12px #ffd24d80, inset 0 1px 0 #fff3;
+}
+.partyButton:hover { box-shadow: 0 0 0 1px #000, 0 0 18px #ffd24dcc, inset 0 1px 0 #fff3; }
+.partyButton:active { transform: translateY(1px); }
+.partyButton[data-state="active"] { background: linear-gradient(180deg, #4a1250 0%, #26082a 60%, #120414 100%); border-color: var(--magenta); box-shadow: 0 0 0 1px #000, 0 0 16px #ff3ddcb3; cursor: default; }
+.partyButton[data-state="off"] { background: var(--glass); border-color: #4a5263; box-shadow: var(--panel-shadow); color: var(--muted); cursor: default; }
+
+.partyCard { width: min(440px, calc(100vw - 32px)); }
+#partyList { display: flex; flex-direction: column; gap: 8px; text-align: left; }
+.partyRow {
+  display: flex; align-items: center; gap: 12px; padding: 9px 12px; cursor: pointer;
+  border-radius: var(--radius); border: 1px solid #353c4a;
+  background: linear-gradient(180deg, #1c212c, #10131a);
+}
+.partyRow:hover { border-color: var(--gold); box-shadow: 0 0 10px #ffd24d66; }
+.partyRow.blocked { filter: grayscale(0.7) brightness(0.65); cursor: not-allowed; }
+.partyRow.blocked:hover { border-color: #353c4a; box-shadow: none; }
+.partyEmoji { font-size: 28px; flex: none; }
+.partyText { flex: 1; min-width: 0; }
+.partyName { font-size: 15px; font-weight: 700; }
+.partyBlurb { font-size: 12px; color: #cfd8e6; }
+.partyPerks { font-size: 11px; color: var(--cash); margin-top: 2px; }
+.partyWhy { color: #ff9aa6; }
+.partyCost { flex: none; font-size: 16px; font-weight: 700; color: var(--gold); }

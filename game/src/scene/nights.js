@@ -34,10 +34,12 @@ export class NightsMixin {
       drinkMoney: 0,
       tips: 0,
       wages: 0,
+      partyCost: 0,
       vibeSum: 0,
       vibeCount: 0,
       peakCrowd: 0,
     };
+    if (this.party) this.endParty();
     this.hideNightSummary();
     this.setLightsUp(false);
     this.syncMusic();
@@ -109,7 +111,9 @@ export class NightsMixin {
       drinkMoney: s.drinkMoney,
       tips: s.tips,
       wages: s.wages,
-      profit: s.drinkMoney + s.tips - s.wages,
+      partyCost: s.partyCost,
+      party: this.currentParty(),
+      profit: s.drinkMoney + s.tips - s.wages - s.partyCost,
       fans: Math.round(this.fans - s.fans),
       bonus,
       avgVibe: Math.round(avgVibe),
@@ -119,6 +123,7 @@ export class NightsMixin {
     result.best = result.profit > (this.bestNightProfit ?? -Infinity) && result.guests > 0;
     if (result.best) this.bestNightProfit = result.profit;
     this.lastNight = result;
+    if (this.party) this.endParty();
     this.setLightsUp(true);
     this.syncMusic();
     SFX.levelUp();
@@ -154,6 +159,8 @@ export class NightsMixin {
     if (phase === 'closed') text = `Night ${this.night} is over`;
     else if (phase === 'closing') text = `Closing time · Night ${this.night}`;
     else text = `Night ${this.night} · ${this.nightTimeLabel()}${phase === 'lastCall' ? ' · Last call!' : ''}`;
+    const party = this.currentParty();
+    if (party && phase !== 'closed') text += ` · ${party.emoji} ${party.label}`;
     if (this.nightClockText.textContent !== text) this.nightClockText.textContent = text;
     if (el.dataset.phase !== phase) el.dataset.phase = phase;
     const done = phase === 'closed' ? 1 : Math.min(1, (this.time.now - this.nightStartedAt) / NIGHT.lengthMs);
@@ -178,6 +185,7 @@ export class NightsMixin {
     set('summaryDrinks', `${r.drinks} · ${money(r.drinkMoney)}`);
     set('summaryTips', money(r.tips));
     set('summaryWages', money(-r.wages));
+    set('summaryParty', r.party ? `${r.party.emoji} ${r.party.label} · ${money(-r.partyCost)}` : 'None');
     set('summaryProfit', money(r.profit));
     set('summaryFans', `${r.fans >= 0 ? '+' : ''}${r.fans} ★ (incl. +${r.bonus} rating bonus)`);
     set('summaryOpen', `Open the doors for Night ${r.night + 1}`);

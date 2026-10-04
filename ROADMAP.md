@@ -43,5 +43,6 @@ The visual and gameplay reference for everything is **Nightclub City** (2010): i
 - Done: image files shrunk to 256-colour palettes (`art/compress_sprites.py`); the game is about 4 MB of the play link's 16 MB
 - Smaller start: done. A new club is 10x10, like Nightclub City's starter room, with old dark brick walls and a plain, worn concrete floor with no tile lines. It opens with the DJ booth on the left wall and a staffed Starter Bar on the right wall, like the reference; Expand grows it 13, 16, 19, 21, 24, 27.
 - Club nights: done. Each night runs 9 PM to 3 AM in 4 real minutes (clock under the cash). Last call stops new guests; at closing everyone heads home, the music and wages stop and the lights come up, and a summary card shows guests, drinks, tips, wages, profit and fans, with a 1-5 star rating from the night's average vibe (bonus fans for stars). "Open the doors" starts the next night; the night number and best profit are saved.
-- Next: Throw a Party events
+- Throw a Party: done. Once a night, while the doors are open, pay for a party that lasts until closing: House Party ($60, Lv1), Hip Hop Night ($150, Lv2), Neon Night ($300, Lv4), VIP Gala ($600, Lv6). Each lets more guests in, brings them faster, and raises tips, drinking and fans; the room takes the party's colour, the clock shows it, and the summary counts its cost.
+- Next: (owner to choose)
 - Then: a bouncer at the door

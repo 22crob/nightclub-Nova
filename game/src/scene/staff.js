@@ -292,7 +292,7 @@ export class StaffMixin {
     this.fans += 0.3;
     this.drinksSold = (this.drinksSold || 0) + 1;
     this.cheerPatron(patron, MOOD.drinkMood);
-    patron.thirstyAt = now + randRange(...THIRST_INTERVAL) / this.boostFactor();
+    patron.thirstyAt = now + randRange(...THIRST_INTERVAL) / this.boostFactor() / this.partyEffect('thirst', 1);
     SFX.tip();
     this.floatText(patron.container.x, patron.container.y - PATRON_POPUP_Y, `🍹 +$${price}`, '#7dffc4');
     this.updateUI();

@@ -195,5 +195,20 @@ export const NIGHT = {
   starFans: [0, 2, 5, 8, 12],
   verdicts: ['A quiet one.', 'Not bad.', 'Good night!', 'Great night!', 'Legendary night!'],
 };
+// Parties (see scene/parties.js): thrown once a night while the doors are
+// open, they last the rest of it. capacity: extra guests allowed in;
+// arrivals/tips/thirst/fans: multipliers (arrivals: guests come this much
+// faster; thirst: they want drinks this much sooner; fans: fans from happy
+// leavers). shade tints the room's mood lighting.
+export const PARTIES = [
+  { key: 'house', label: 'House Party', emoji: '🏠', cost: 60, unlockLevel: 1, capacity: 2, arrivals: 1.3, tips: 1.25, thirst: 1.1, fans: 1.2, shade: 0x1a0b2e,
+    blurb: 'Invite the neighbours. A couple more guests and a friendly crowd.' },
+  { key: 'hiphop', label: 'Hip Hop Night', emoji: '🎤', cost: 150, unlockLevel: 2, capacity: 3, arrivals: 1.5, tips: 1.4, thirst: 1.3, fans: 1.4, shade: 0x2e0b12,
+    blurb: 'Big beats, bigger crowd. Guests drink more and tip better.' },
+  { key: 'neon', label: 'Neon Night', emoji: '💜', cost: 300, unlockLevel: 4, capacity: 4, arrivals: 1.7, tips: 1.6, thirst: 1.4, fans: 1.7, shade: 0x2a0636,
+    blurb: 'Glow sticks and neon paint. The whole town wants in.' },
+  { key: 'gala', label: 'VIP Gala', emoji: '🥂', cost: 600, unlockLevel: 6, capacity: 6, arrivals: 2, tips: 2, thirst: 1.5, fans: 2, shade: 0x2e2306,
+    blurb: 'Red carpet, champagne, the A-list. Huge tips and fans.' },
+];
 export const MOOD_LIGHTING = { color: 0x0b0418, floorAlpha: 0.3, wallAlpha: 0.2, glows: false, glowAlpha: 0.55 };
 export const SEAT_SIT_TIME = [14000, 24000];

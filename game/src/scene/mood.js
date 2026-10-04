@@ -110,7 +110,7 @@ export class MoodMixin {
       emoji = '😠';
     } else {
       const tier = LEAVING_FANS.find((t) => patron.mood >= t.min);
-      fans = tier.fans;
+      fans = Math.round(tier.fans * this.partyEffect('fans', 1));
       emoji = tier.emoji;
     }
     this.fans = Math.max(0, this.fans + fans);
@@ -130,10 +130,12 @@ export class MoodMixin {
 
   // New patrons arrive faster when the vibe is good: 0.6x the wait at 100,
   // 1.4x at 0, normal when the club is empty.
+  // A party brings them faster still.
   spawnDelayFactor() {
     const vibe = this.clubVibe();
-    if (vibe == null) return 1;
-    return 1.4 - (vibe / 100) * 0.8;
+    const party = this.partyEffect('arrivals', 1);
+    if (vibe == null) return 1 / party;
+    return (1.4 - (vibe / 100) * 0.8) / party;
   }
 
   vibeEmoji(vibe) {

@@ -54,7 +54,8 @@ export class LightingMixin {
       const [x, y] = this.gridPoint(gx, gy, h);
       return { x, y };
     };
-    const { color, floorAlpha, wallAlpha } = MOOD_LIGHTING;
+    const { floorAlpha, wallAlpha } = MOOD_LIGHTING;
+    const color = this.moodColor ?? MOOD_LIGHTING.color; // a party tints it
     this.floorShade.clear();
     this.floorShade.fillStyle(color, floorAlpha);
     this.floorShade.fillPoints([P(-0.5, -0.5), P(n, -0.5), P(n, n), P(-0.5, n)], true);

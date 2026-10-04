@@ -493,6 +493,34 @@ const street = await page.evaluate(() => {
 });
 check('the street has a line at the rope, a bouncer and lamps; the front of the line goes in', street.inLine > 0 && street.after === street.inLine - 1 && street.bouncer && street.lamps, JSON.stringify(street));
 
+// Throw a Party: the picker lists every party, a House Party costs $60 and
+// lets more guests in with bigger tips, only one a night, and it shows on
+// the clock.
+const party = await page.evaluate(() => {
+  const s = window.__clubNova.scene.getScene('club');
+  s.cash = Math.max(s.cash, 1000);
+  const cap0 = s.patronCapacity();
+  const cash0 = s.cash;
+  document.getElementById('partyButton').click();
+  const rows = document.querySelectorAll('#partyList .partyRow').length;
+  const locked = document.querySelectorAll('#partyList .partyRow.blocked').length;
+  document.querySelector('#partyList .partyRow[data-party="house"]').click();
+  const out = {
+    rows, locked,
+    paid: cash0 - s.cash,
+    capacity: s.patronCapacity() - cap0,
+    tips: s.partyEffect('tips', 1),
+    closed: !document.getElementById('partyPicker').classList.contains('open'),
+    button: document.getElementById('partyButton').dataset.state,
+    clock: document.getElementById('nightClockText').textContent,
+  };
+  out.second = s.throwParty('hiphop');
+  return out;
+});
+check('the party picker lists four parties, the fancy ones locked at first', party.rows === 4 && party.locked >= 1, JSON.stringify(party));
+check('a House Party costs $60, lets 2 more guests in and raises tips', party.paid === 60 && party.capacity === 2 && party.tips > 1 && party.closed, JSON.stringify(party));
+check('only one party a night, and it shows on the clock', party.second === false && party.button === 'active' && /House Party/.test(party.clock), JSON.stringify(party));
+
 // Club nights: the clock runs, last call shuts the door, closing sends
 // everyone home and shows the summary; between nights the music and wages
 // stop; opening the doors starts the next night, and it's saved.
@@ -517,6 +545,8 @@ const nights = await page.evaluate(async () => {
   out.closed = s.nightPhase === 'closed' && s.patrons.length === 0;
   out.summary = card.classList.contains('open') && /Night \d+ is over/.test(document.getElementById('summaryTitle').textContent);
   out.stars = s.lastNight.stars;
+  out.partyRow = document.getElementById('summaryParty').textContent;
+  out.partyOver = s.party === null && s.partyEffect('capacity', 0) === 0;
   out.quiet = !s.musicPlaying() && document.getElementById('boostLabel').textContent === 'Club closed';
   const cash = s.cash;
   s.payWages();
@@ -531,6 +561,7 @@ const nights = await page.evaluate(async () => {
 check('a night has a clock', /^Night \d+ · \d+:\d0 [AP]M/.test(nights.clock) && nights.phase === 'open', nights.clock);
 check('last call lets nobody new in', nights.lastCall && nights.noNewGuests, JSON.stringify(nights));
 check('closing time sends everyone home and shows the summary', nights.closing && nights.closed && nights.summary && nights.stars >= 1, JSON.stringify(nights));
+check('the summary lists the party, and it ends with the night', /House Party/.test(nights.partyRow) && nights.partyOver, JSON.stringify(nights));
 check('between nights the music and wages stop', nights.quiet && nights.noWages, JSON.stringify(nights));
 check('opening the doors starts the next night, and it is saved', nights.openButton && nights.next && nights.saved, JSON.stringify(nights));
 

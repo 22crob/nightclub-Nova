@@ -22,6 +22,7 @@ import { BoostMixin } from './boost.js';
 import { FloorPaintMixin } from './floorPaint.js';
 import { StreetMixin } from './street.js';
 import { NightsMixin } from './nights.js';
+import { PartiesMixin } from './parties.js';
 import { Music } from '../music.js';
 import { applyMixins } from './applyMixins.js';
 
@@ -235,6 +236,7 @@ export class ClubScene extends Phaser.Scene {
       });
     }
     this.setupBoost();
+    this.setupParties();
     this.setupNights(this.savedNight);
     this.setupRestart();
 
@@ -328,4 +330,5 @@ applyMixins(ClubScene, [
   FloorPaintMixin,
   StreetMixin,
   NightsMixin,
+  PartiesMixin,
 ]);

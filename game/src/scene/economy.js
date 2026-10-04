@@ -51,7 +51,7 @@ export class EconomyMixin {
       const def = PROP_TYPES[rec.type];
       if (def.category === 'Dance Floors') capacity += def.capacity || 0;
     }
-    return Math.min(capacity, PATRON_ABSOLUTE_MAX);
+    return Math.min(capacity + this.partyEffect('capacity', 0), PATRON_ABSOLUTE_MAX);
   }
 
   // Derives a lightweight level + progress bar from the fan count, since

@@ -64,6 +64,7 @@
         <div><span>Drinks sold</span><b id="summaryDrinks">0</b></div>
         <div><span>Tips</span><b id="summaryTips">$0</b></div>
         <div><span>Staff wages</span><b id="summaryWages">$0</b></div>
+        <div><span>Party</span><b id="summaryParty">None</b></div>
         <div class="total"><span>Profit</span><b id="summaryProfit">$0</b></div>
         <div><span>Fans</span><b id="summaryFans">+0</b></div>
       </div>
@@ -93,6 +94,19 @@
   <!-- Top-right, under the stats: the Drop the Bass party boost -->
   <div id="boostButton" class="boostButton" data-state="ready" title="A free 90-second party: bigger, faster tips, more drinks and dancing, and heavy bass">
     <span class="boostIcon">🔊</span><span id="boostLabel">Drop the Bass!</span>
+  </div>
+
+  <!-- Under it: Throw a Party (see scene/parties.js) -->
+  <div id="partyButton" class="partyButton" data-state="ready" title="Pay for a themed party tonight: more guests, bigger tips, more fans">
+    <span class="boostIcon">🎉</span><span id="partyLabel">Throw a Party</span>
+  </div>
+  <div id="partyPicker" class="overlay">
+    <div class="summaryCard partyCard">
+      <div class="summaryTitle">Throw a Party</div>
+      <div class="summaryVerdict">One party a night. It lasts until closing time.</div>
+      <div id="partyList"></div>
+      <div class="summaryButtons"><div id="partyCancel" class="summaryButton later">Not tonight</div></div>
+    </div>
   </div>
 
   <div id="toast"></div>
