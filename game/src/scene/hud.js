@@ -1,7 +1,7 @@
 // ClubScene methods: Top bar readouts, mute button, level-up celebration and toasts.
 // Mixed into ClubScene (see ClubScene.js); `this` is the scene.
 import { FLOOR_DECAL_PROPS, GRID_EXPANSIONS, PROP_TYPES } from '../catalog.js';
-import { PARTIES } from '../config.js';
+import { BARTENDERS, PARTIES } from '../config.js';
 import { realSpriteIconFor, renderIsoIcon } from '../icons.js';
 import { SFX } from '../sfx.js';
 import { hideTip } from '../tooltips.js';
@@ -68,6 +68,9 @@ export class HudMixin {
     }
     for (const party of PARTIES) {
       if (party.unlockLevel === level) out.push({ name: party.label, kind: 'New party', emoji: party.emoji });
+    }
+    if (level > 1 && BARTENDERS.levels.includes(level)) {
+      out.push({ name: '+1 Bartender', kind: 'You can hire one more bartender (Store, then the shaker)', art: 'catStaff' });
     }
     for (const tier of GRID_EXPANSIONS) {
       if (tier.unlockLevel === level) out.push({ name: `${tier.size}×${tier.size} club`, kind: 'Expand your club', art: 'tabExpand' });

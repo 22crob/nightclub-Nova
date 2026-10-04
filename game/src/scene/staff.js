@@ -2,7 +2,7 @@
 // Mixed into ClubScene (see ClubScene.js); `this` is the scene.
 import { PATRON_META, PATRON_SHEETS } from '../assets.js';
 import { PROP_TYPES, STAFF_TYPES } from '../catalog.js';
-import { BAR_QUEUE_LENGTH, CHARACTER_DISPLAY_HEIGHT, MONEY, THIRST_INTERVAL, PATRON_POPUP_Y, PROP_SCALE, SELL_REFUND_RATIO } from '../config.js';
+import { BAR_QUEUE_LENGTH, BARTENDERS, CHARACTER_DISPLAY_HEIGHT, MONEY, THIRST_INTERVAL, PATRON_POPUP_Y, PROP_SCALE, SELL_REFUND_RATIO } from '../config.js';
 import { realSpriteIconFor } from '../icons.js';
 import { SFX } from '../sfx.js';
 import { randRange } from '../util.js';
@@ -206,21 +206,63 @@ export class StaffMixin {
 
   // --- Hiring -------------------------------------------------------------
 
+  // How many bartenders your level lets you hire, how many work now, and
+  // the level that allows one more (null at the top).
+  bartenderAllowance() {
+    const level = this.levelInfo().level;
+    return BARTENDERS.levels.filter((l) => level >= l).length;
+  }
+
+  bartenderCount() {
+    return this.hireableRecords().filter((rec) => rec.staff).length;
+  }
+
+  nextBartenderLevel() {
+    const level = this.levelInfo().level;
+    return BARTENDERS.levels.find((l) => l > level) || null;
+  }
+
+  // Puts `k` bartenders along a long bar, spread evenly over its units
+  // (one in the middle, two at the quarter points, ...), moving the ones
+  // already there as needed.
+  staffBarGroup(group, k) {
+    const want = new Set();
+    for (let i = 0; i < k; i++) want.add(group[Math.min(group.length - 1, Math.floor(((i + 0.5) * group.length) / k))]);
+    for (const r of group) if (r.staff && !want.has(r)) this.detachStaff(r);
+    for (const r of group) if (!r.staff && want.has(r)) this.attachStaff(r);
+  }
+
+  // Hires a bartender for the long bar `rec` is part of: its first, or one
+  // more beside the ones already there (one per bar unit at most), up to
+  // what your level allows.
   hireStaff(rec) {
     const type = STAFF_TYPES[PROP_TYPES[rec.type].staff];
-    if (this.isWorked(rec) || type.permanent) return false; // (a long bar needs only one bartender)
+    if (type.permanent) return false;
+    const group = this.barGroup(rec);
+    const working = group.filter((r) => r.staff).length;
+    if (working >= group.length) { SFX.denied(); return false; }
+    if (this.bartenderCount() >= this.bartenderAllowance()) {
+      SFX.denied();
+      const next = this.nextBartenderLevel();
+      this.showToast(next ? `🍸 You can have ${this.bartenderAllowance()} bartender${this.bartenderAllowance() > 1 ? 's' : ''} for now. Another at level ${next}!` : '🍸 You have every bartender you can hire!');
+      return false;
+    }
     if (this.cash < type.hireCost) { SFX.denied(); return false; }
     this.cash -= type.hireCost;
-    this.attachStaff(rec);
+    this.staffBarGroup(group, working + 1);
     SFX.place();
     this.updateUI();
     this.saveGame();
     return true;
   }
 
+  // Lets one bartender go from the long bar `rec` is part of.
   fireStaff(rec) {
-    if (!rec.staff || rec.staff.kind === 'dj') return; // the DJ never leaves
-    this.detachStaff(rec);
+    if (rec.staff && rec.staff.kind === 'dj') return; // the DJ never leaves
+    const group = this.barGroup(rec);
+    const working = group.filter((r) => r.staff).length;
+    if (working === 0) return;
+    this.staffBarGroup(group, working - 1);
     SFX.sell();
     this.updateUI();
     this.saveGame();
@@ -230,16 +272,19 @@ export class StaffMixin {
   // loading a save).
   attachStaff(rec) {
     const kind = PROP_TYPES[rec.type].staff;
-    rec.staff = { kind, container: this.createStaffSprite(STAFF_TYPES[kind]) };
+    // Each extra bartender looks different from the ones already working.
+    const others = kind === 'bartender' ? this.bartenderCount() : 0;
+    const type = { ...STAFF_TYPES[kind], character: STAFF_TYPES[kind].character + others * 3 };
+    rec.staff = { kind, container: this.createStaffSprite(type) };
     this.propLayer.add(rec.staff.container);
     this.positionStaff(rec);
   }
 
   detachStaff(rec) {
     if (!rec.staff) return;
-    this.clearBarQueue(rec);
     rec.staff.container.destroy();
     rec.staff = null;
+    if (!this.isWorked(rec)) this.clearBarQueue(rec); // the line stays while a mate still works the bar
   }
 
   createStaffSprite(type) {
@@ -475,55 +520,67 @@ export class StaffMixin {
 
   // --- Shop tab -----------------------------------------------------------
 
-  // The Staff tab: one row per bar, with a hire / let go button, and the
-  // total wage bill.
+  // The store's Staff category: a card per long bar with how many
+  // bartenders work it; click to hire one more (up to what your level
+  // allows), ✕ to let one go. Details are in the hover tip.
   renderStaffCard() {
-    // One card per long bar in the shop row: the bar's picture, and under
-    // it the hire price, or a tick with a small "let go" button once
-    // someone works it. Details are in the hover tip.
     const el = this.shopItemsEl;
     const records = this.hireableRecords();
+    const type = STAFF_TYPES.bartender;
+    const allowed = this.bartenderAllowance();
+    const hired = this.bartenderCount();
+    const next = this.nextBartenderLevel();
     // Only rebuild when something on the cards changed (this runs often).
-    const key = 'staff:' + records.map((r) => `${r.anchor}:${!!r.staff}:${this.barGroup(r).length}`).join('|') + (this.cash >= STAFF_TYPES.bartender.hireCost);
+    const key = 'staff:' + records.map((r) => `${r.anchor}:${!!r.staff}:${this.barGroup(r).length}`).join('|') + `:${this.cash >= type.hireCost}:${allowed}`;
     if (el.dataset.rendered === key) return;
     el.innerHTML = '';
     el.dataset.rendered = key;
+    const limit = `You have ${hired} of the ${allowed} bartender${allowed > 1 ? 's' : ''} your level allows${next ? `; one more at level ${next}` : ''}.`;
     if (records.length === 0) {
-      const { slot, cost } = this.makeCard('No bars yet', 'Place a bar first, then hire a bartender to work it. Your DJ plays for free.', null);
+      const { slot, cost } = this.makeCard('No bars yet', `Place a bar first, then hire a bartender to work it. ${limit}`, null);
       slot.classList.add('emptySlot');
       cost.textContent = '–';
       el.appendChild(slot);
       return;
     }
     const counts = {};
+    const seen = new Set();
     for (const rec of records) {
-      // One card per long bar: its staffed unit, or its first one.
+      if (seen.has(rec)) continue;
       const group = this.barGroup(rec);
-      const leader = group.find((r) => r.staff) || group[0];
-      if (leader !== rec) continue;
+      group.forEach((r) => seen.add(r));
       const def = PROP_TYPES[rec.type];
-      const type = STAFF_TYPES[def.staff];
       counts[rec.type] = (counts[rec.type] || 0) + 1;
+      const working = group.filter((r) => r.staff).length;
       const name = group.length > 1 ? `${def.label} ${counts[rec.type]} (${group.length} long)` : `${def.label} ${counts[rec.type]}`;
-      const status = rec.staff
-        ? `${type.label} working · $${type.wage} wages every 30 seconds.`
-        : `No ${type.label.toLowerCase()}: not selling drinks. Click to hire one for $${type.hireCost}.`;
+      const full = working >= group.length;
+      const atLimit = hired >= allowed;
+      let status = working
+        ? `${working} bartender${working > 1 ? 's' : ''} working · $${type.wage} each every 30 seconds.`
+        : 'No bartender: not selling drinks.';
+      if (full) status += ' Every spot behind this bar is taken.';
+      else if (atLimit) status += ` ${limit}`;
+      else status += ` Click to hire ${working ? 'another' : 'one'} for $${type.hireCost}. ${limit}`;
       const { slot, button, cost } = this.makeCard(name, status, realSpriteIconFor(rec.type));
       slot.classList.add('staffSlot');
-      if (rec.staff) {
-        slot.classList.add('staffed');
-        cost.textContent = '✔ Staffed';
+      slot.classList.toggle('staffed', working > 0);
+      const badge = working ? `🍸×${working}` : '';
+      if (full || atLimit) {
+        cost.textContent = badge || (next ? `🔒 Lv ${next}` : '–');
+        if (!working) button.classList.add('locked');
+      } else {
+        button.classList.toggle('unaffordable', this.cash < type.hireCost);
+        cost.textContent = `${badge ? badge + ' ' : ''}+$${type.hireCost}`;
+        slot.addEventListener('click', () => { this.hireStaff(rec); this.renderStaffCard(); });
+      }
+      if (working) {
         const fire = document.createElement('div');
         fire.className = 'staffFire';
         fire.textContent = '✕';
-        fire.dataset.tipName = 'Let go';
-        fire.dataset.tipText = `Let this ${type.label.toLowerCase()} go. The bar stops selling drinks.`;
+        fire.dataset.tipName = 'Let one go';
+        fire.dataset.tipText = working > 1 ? 'Let one of this bar\'s bartenders go.' : 'Let this bartender go. The bar stops selling drinks.';
         fire.addEventListener('click', (e) => { e.stopPropagation(); this.fireStaff(rec); this.renderStaffCard(); });
         slot.appendChild(fire);
-      } else {
-        button.classList.toggle('unaffordable', this.cash < type.hireCost);
-        cost.textContent = `Hire $${type.hireCost}`;
-        slot.addEventListener('click', () => { this.hireStaff(rec); this.renderStaffCard(); });
       }
       el.appendChild(slot);
     }

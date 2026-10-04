@@ -683,20 +683,36 @@ const longBar = await page.evaluate(() => {
   out.placed = units.every(Boolean);
   out.joined = s.barGroup(units[0]).length === 3;
   const cash = s.cash;
+  const fans = s.fans;
   s.cash = 1000;
-  out.hired = s.hireStaff(units[1]);
-  out.oneOnly = s.hireStaff(units[0]) === false && s.hireStaff(units[2]) === false;
+  // Level 1 allows one bartender, and the club already has one.
+  s.fans = 0;
+  out.limit1 = s.bartenderAllowance() === 1 && s.hireStaff(units[1]) === false;
+  // Level 4: a second bartender, here the long bar's first, in the middle.
+  s.fans = 750;
+  out.level4 = s.levelInfo().level === 4 && s.bartenderAllowance() === 2;
+  out.hired = s.hireStaff(units[0]) && !!units[1].staff && !units[0].staff;
   out.allWorked = units.every((u) => s.isWorked(u));
-  out.wageOnce = s.hireableRecords().filter((r) => r.staff && s.barGroup(r).includes(units[1])).length === 1;
+  out.limit2 = s.hireStaff(units[0]) === false;
+  // Level 7: a third, joining the same long bar; the two spread out.
+  s.fans = 2400;
+  out.level7 = s.levelInfo().level === 7 && s.bartenderAllowance() === 3;
+  out.second = s.hireStaff(units[0]) && !!units[0].staff && !units[1].staff && !!units[2].staff;
+  s.fireStaff(units[0]);
+  out.letGo = units.filter((u) => u.staff).length === 1 && !!units[1].staff;
   s.removeProp(units[1]); // the middle goes: the two ends are no longer joined
   out.split = s.barGroup(units[0]).length === 1 && s.barGroup(units[2]).length === 1;
   out.kept = s.isWorked(units[0]) || s.isWorked(units[2]);
   s.removeProp(units[0]);
   s.removeProp(units[2]);
   s.cash = cash;
+  s.fans = fans;
+  s.updateUI();
   return out;
 });
-check('bar units side by side make one long bar with one bartender', longBar.placed && longBar.joined && longBar.hired && longBar.oneOnly && longBar.allWorked && longBar.wageOnce, JSON.stringify(longBar));
+check('bar units side by side make one long bar', longBar.placed && longBar.joined && longBar.allWorked, JSON.stringify(longBar));
+check('your level sets how many bartenders you can hire (1, then 2 at level 4, 3 at level 7)', longBar.limit1 && longBar.level4 && longBar.hired && longBar.limit2 && longBar.level7, JSON.stringify(longBar));
+check('a long bar can take more bartenders, spread along it, and let one go', longBar.second && longBar.letGo, JSON.stringify(longBar));
 check('a long bar keeps its bartender when the unit they stood at is sold', longBar.split && longBar.kept, JSON.stringify(longBar));
 
 // Throw a Party: the picker lists every party, a House Party costs $60 and
@@ -913,10 +929,11 @@ const lvl = await page.evaluate(() => {
   const pictures = [...document.querySelectorAll('#levelUnlocks .unlockPic')].every((p) => p.style.backgroundImage || p.querySelector('svg') || p.textContent);
   const out = { open: document.getElementById('levelUp').classList.contains('open'), title: document.getElementById('levelUpTitle').textContent, names, pictures };
   document.getElementById('levelOk').click();
+  out.bartender = Object.getPrototypeOf(s).unlocksAt.call(s, 4).some((u) => u.name === '+1 Bartender') && !s.unlocksAt(5).some((u) => u.name === '+1 Bartender');
   out.closed = !document.getElementById('levelUp').classList.contains('open');
   return out;
 });
-check('levelling up shows a menu of everything unlocked, each with a picture', lvl.open && lvl.title === 'Level 5!' && lvl.names.includes('Old Brick') && lvl.names.includes('Brick') && lvl.names.some((n) => /club/.test(n)) && lvl.pictures && lvl.closed, JSON.stringify(lvl));
+check('levelling up shows a menu of everything unlocked, each with a picture', lvl.open && lvl.title === 'Level 5!' && lvl.names.includes('Old Brick') && lvl.names.includes('Brick') && lvl.names.some((n) => /club/.test(n)) && lvl.pictures && lvl.closed && lvl.bartender, JSON.stringify(lvl));
 
 // A new club's walls are beaten-up torn wallpaper; brick is a level 5 wallpaper.
 const walls = await page.evaluate(() => {

@@ -286,7 +286,8 @@ export class PlacementMixin {
     placed.gameObject.destroy();
     if (placed.frontObject) placed.frontObject.destroy();
     this.detachStaff(placed);
-    if (mates.length) this.attachStaff(mates[Math.floor(mates.length / 2)]);
+    const free = mates.filter((r) => !r.staff);
+    if (free.length) this.attachStaff(free[Math.floor(free.length / 2)]);
     if (placed.label) {
       // Selling the one prop whose label is currently shown (the player was
       // hovering it to right-click-sell it) would otherwise leave a

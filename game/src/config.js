@@ -174,6 +174,10 @@ export const SEAT_CHANCE = 0.3;
 // this many (the first one is ordering). DRINK_RUN_CHANCE is how often a
 // patron who isn't thirsty yet still goes for a drink.
 export const BAR_QUEUE_LENGTH = 4;
+// How many bartenders you may hire: one more at each of these levels (one
+// to start, two at level 4, ... five at level 15). Extra bartenders can work
+// another bar or join a long bar that already has one.
+export const BARTENDERS = { levels: [1, 4, 7, 11, 15] };
 export const DRINK_RUN_CHANCE = 0.1;
 
 // Drop the Bass (see boost.js): a free party boost with a cooldown. During
