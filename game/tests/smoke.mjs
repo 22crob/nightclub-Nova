@@ -60,9 +60,10 @@ const opening = await page.evaluate(() => {
   const s = window.__clubNova.scene.getScene('club');
   const booth = s.clubBooth();
   const bar = s.hireableRecords().find((rec) => rec.type === 'starterBar');
-  return { type: booth && booth.type, anchor: booth && booth.anchor.join(','), dj: !!(booth && booth.staff), music: s.musicPlaying(), size: s.gridSize, bar: bar && bar.anchor.join(','), bartender: !!(bar && bar.staff) };
+  const floor = Object.keys(s.placed).filter((k) => s.placed[k].type === 'dance').sort();
+  return { floor: floor.join(' '), dancing: s.isDanceFloorTile(2, 6), type: booth && booth.type, anchor: booth && booth.anchor.join(','), dj: !!(booth && booth.staff), music: s.musicPlaying(), size: s.gridSize, bar: bar && bar.anchor.join(','), bartender: !!(bar && bar.staff) };
 });
-check('starts with $700, a 10x10 room, the DJ booth and a staffed Starter Bar', st.cash === 700 && st.placed === 2 && opening.size === 10 && opening.bar === '7,0' && opening.bartender, `cash ${st.cash}, placed ${st.placed}, ${JSON.stringify(opening)}`);
+check('starts with $700, a 10x10 room, the DJ booth, a 3x3 dance floor and a staffed Starter Bar', st.cash === 700 && st.placed === 11 && opening.floor === '1,5 1,6 1,7 2,5 2,6 2,7 3,5 3,6 3,7' && opening.dancing && opening.size === 10 && opening.bar === '7,0' && opening.bartender, `cash ${st.cash}, placed ${st.placed}, ${JSON.stringify(opening)}`);
 check('every club opens with a Wood Booth and a DJ playing', opening.type === 'woodBooth' && opening.anchor === '0,5' && opening.dj && opening.music, JSON.stringify(opening));
 
 // The checks below were written for the old opening (a 16x16 room with just
