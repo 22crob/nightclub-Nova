@@ -26,6 +26,20 @@
     </div>
   </div>
 
+  <!-- Under the profile: the DJ's now-playing box (see scene/songs.js) -->
+  <div id="songBox">
+    <div class="songDisc">🎧</div>
+    <div class="songText">
+      <div class="songTitle" id="songTitle">Basement Lights</div>
+      <div class="songArtist" id="songArtist">DJ Nova</div>
+      <div class="songButtons">
+        <div id="songChange" class="songButton" title="Skip to the DJ's next track">Change</div>
+        <div id="songLike" class="songButton like" title="Like this song (+1 fan, once a song)">👍 Like</div>
+      </div>
+      <div class="songEnds" id="songEnds">Ends: 9:10 PM</div>
+    </div>
+  </div>
+
   <!-- Top-centre: cash -->
   <div id="hudCash">
     <div class="cashStack"><span>$</span></div>
@@ -48,6 +62,16 @@
         <div id="restartYes" class="summaryButton danger">Yes, start over</div>
         <div id="restartNo" class="summaryButton later">Keep my club</div>
       </div>
+    </div>
+  </div>
+
+  <!-- The VIP list (see scene/vips.js) -->
+  <div id="vipList" class="overlay">
+    <div class="summaryCard partyCard">
+      <div class="summaryTitle">VIP List <span class="vipCount" id="vipCount">0 / 12</span></div>
+      <div class="summaryVerdict">Your regulars. Guests who leave really happy join, come back on later nights, and tip double.</div>
+      <div id="vipRows"></div>
+      <div class="summaryButtons"><div id="vipClose" class="summaryButton later">Close</div></div>
     </div>
   </div>
 
@@ -84,6 +108,10 @@
     <div class="statButton" title="Luxury: how fancy your club is. Everything you place, paint and paper adds to it, and a fancier club earns bigger tips.">
       <div class="statValue"><span class="statIcon">💎</span><span id="luxuryVal">0</span></div>
       <div class="statLabel">Luxury</div>
+    </div>
+    <div class="statButton" title="Club rating: the average stars of your last five nights. A better-rated club draws guests faster.">
+      <div class="statValue"><span class="statIcon">⭐</span><span id="ratingVal">–</span></div>
+      <div class="statLabel">Rating</div>
     </div>
     <div class="statButton" title="Patrons in the club / capacity">
       <div class="statValue"><span class="statIcon">☺</span><span id="placedVal">0/0</span></div>
@@ -131,6 +159,7 @@
     <div id="infoGuestStats" class="infoStats">
       <span id="infoMood" title="Mood">🙂 60%</span><span id="infoFun" title="Fun">🎵 40%</span><span id="infoDrinks" title="Drinks">🍹 0</span>
       <div id="infoSpent" class="infoSpent">Spent: $0</div>
+      <div id="seatGuest" class="bottomsUp seatGuest" title="Show this guest to a free seat. They'll like that.">🛋️ Seat at a booth</div>
     </div>
     <div id="infoBarStats" class="infoStats" style="display:none">
       <div id="infoQueue" class="infoSpent">0 waiting</div>
@@ -161,6 +190,9 @@
     </div>
     <div id="staffButton" class="toolButton" title="Hire staff">
       <div class="toolIcon">🧑‍🍳</div><div class="toolLabel">Staff</div>
+    </div>
+    <div id="vipButton" class="toolButton" title="Your VIP regulars">
+      <div class="toolIcon">⭐</div><div class="toolLabel">VIPs</div>
     </div>
   </div>
 

@@ -221,5 +221,17 @@ export const BOTTOMS_UP = { cooldownMs: 60 * 1000, slammedLine: 3, hintEveryMs: 
 // painted and papered cost. Each point raises tips by luxuryTipPerPoint,
 // up to luxuryTipMax extra.
 export const LUXURY = { perDollar: 0.1, tipPerPoint: 0.001, tipMax: 1 };
+// The DJ's songs (see scene/songs.js and TRACKS in music.js): each plays
+// lengthMs, then the next one starts. Liking a song gives likeFans, once a
+// song; a new song gives everyone dancing newSongFun fun.
+export const SONGS = { lengthMs: 60 * 1000, likeFans: 1, newSongFun: 10 };
+// VIPs (see scene/vips.js): a guest who leaves at least joinMood happy
+// joins the VIP list (up to max). Each new arrival has returnChance of
+// being a VIP coming back; VIPs tip tipMultiplier times as much.
+export const VIP = { joinMood: 85, max: 12, returnChance: 0.2, tipMultiplier: 2 };
+// The club's star rating (see clubRating() in nights.js): the average of
+// the last `nights` nights' stars. Each star above 3 brings guests
+// arrivalsPerStar faster (and each below, slower).
+export const RATING = { nights: 5, arrivalsPerStar: 0.08 };
 export const MOOD_LIGHTING = { color: 0x0b0418, floorAlpha: 0.3, wallAlpha: 0.2, glows: false, glowAlpha: 0.55 };
 export const SEAT_SIT_TIME = [14000, 24000];

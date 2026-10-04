@@ -38,7 +38,7 @@ export class SaveMixin {
       seen.add(rec);
       placedList.push({ type: rec.type, facing: rec.facing, anchor: rec.anchor, ...(rec.staff ? { staff: true } : {}) });
     }
-    return { cash: this.cash, fans: this.fans, gridSize: this.gridSize, placed: placedList, wallpaper: { ...this.wallpaper }, floorPaint: { ...this.floorPaint }, night: this.night, nightOver: this.nightPhase === 'closed', bestNightProfit: this.bestNightProfit };
+    return { cash: this.cash, fans: this.fans, gridSize: this.gridSize, placed: placedList, wallpaper: { ...this.wallpaper }, floorPaint: { ...this.floorPaint }, night: this.night, nightOver: this.nightPhase === 'closed', bestNightProfit: this.bestNightProfit, vips: this.vips || [], nightStars: this.nightStars || [] };
   }
 
   saveGame() {
@@ -109,6 +109,11 @@ export class SaveMixin {
     // one moves on to the next (see setupNights()).
     if (typeof data.night === 'number') this.savedNight = data.night + (data.nightOver ? 1 : 0);
     if (typeof data.bestNightProfit === 'number') this.bestNightProfit = data.bestNightProfit;
+    if (Array.isArray(data.vips)) {
+      this.vips = data.vips.filter((v) => v && typeof v.name === 'string' && typeof v.character === 'number')
+        .map((v) => ({ name: v.name, character: v.character, visits: Number(v.visits) || 1 }));
+    }
+    if (Array.isArray(data.nightStars)) this.nightStars = data.nightStars.filter((n) => n >= 1 && n <= 5).slice(-5);
     this.restoreWallpaper(data.wallpaper);
     this.restoreFloorPaint(data.floorPaint);
   }

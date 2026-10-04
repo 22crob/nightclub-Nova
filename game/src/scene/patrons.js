@@ -40,7 +40,7 @@ export class PatronsMixin {
 
   // Brings a patron in at the door (`character`: their look, from the line
   // outside).
-  trySpawnPatron(character) {
+  trySpawnPatron(character, vip) {
     if (!this.doorsOpen()) return; // last call or closed
     if (this.patrons.length >= this.patronCapacity()) return;
     const { gx, gy } = PATRON_SPAWN_TILE;
@@ -78,6 +78,7 @@ export class PatronsMixin {
       leaving: false,
     };
     this.patrons.push(patron);
+    if (vip) this.welcomeVip(patron, vip);
     this.setPatronDepth(patron, gx + gy);
     this.updateUI(); // refresh the patrons-on-floor readout right away, not on the next tip/tick
 
@@ -646,7 +647,7 @@ export class PatronsMixin {
     const base = 1 + Math.random() * 3; // $1-4
     const moodFactor = 0.5 + patron.mood / 100; // unhappy patrons tip half, happy ones up to 1.5x
     const boost = this.isBoosted() ? BOOST.tipMultiplier : 1;
-    const amount = Math.max(1, Math.round((nearRevenue ? base * 2 : base) * moodFactor * boost * this.partyEffect('tips', 1) * this.luxuryTipFactor()));
+    const amount = Math.max(1, Math.round((nearRevenue ? base * 2 : base) * moodFactor * boost * this.partyEffect('tips', 1) * this.luxuryTipFactor() * this.vipTipFactor(patron)));
     this.cash += amount;
     this.noteIncome('tips', amount);
     patron.spent = (patron.spent || 0) + amount;

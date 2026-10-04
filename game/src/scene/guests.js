@@ -149,7 +149,9 @@ export class GuestsMixin {
       if (p.gone) { this.closeInfoCard(); return; }
       this.setPortrait(document.getElementById('infoPortrait'), p.container.patronCharacter);
       set('infoName', p.name || 'Guest');
-      set('infoRole', p.leaving ? 'Heading home' : 'Guest');
+      set('infoRole', p.leaving ? 'Heading home' : (p.vip ? `⭐ VIP · visit ${p.vip.visits}` : 'Guest'));
+      const seatBtn = document.getElementById('seatGuest');
+      if (seatBtn) seatBtn.textContent = p.sitting || p.seat ? '🛋️ Seated' : '🛋️ Seat at a booth';
       set('infoQuote', `"${this.guestQuote(p)}"`);
       set('infoMood', `${this.vibeEmoji(p.mood)} ${Math.round(p.mood)}%`);
       set('infoFun', `🎵 ${Math.round(p.fun)}%`);
@@ -177,6 +179,30 @@ export class GuestsMixin {
     }
     show('infoGuestStats', false);
     show('infoBarStats', true);
+  }
+
+  // --- Seating a guest --------------------------------------------------------
+
+  // Sends a guest to a free seat (a couch, booth or stool), like Nightclub
+  // City's "Seat a guest at one of your booths". Being shown to a seat
+  // cheers them up.
+  seatGuest(patron) {
+    if (!patron || patron.gone || patron.leaving) { SFX.denied(); return false; }
+    if (patron.sitting || patron.seat) { SFX.denied(); this.showToast('🛋️ They already have a seat.'); return false; }
+    if (patron.queue) this.leaveBarQueue(patron);
+    if (!this.claimSeat(patron)) {
+      SFX.denied();
+      this.showToast('🛋️ No free seats! Buy a couch or booth in the Shop (Seating).');
+      return false;
+    }
+    patron.mood = Math.min(100, patron.mood + 10);
+    patron.nextMoveAt = this.time.now;
+    const c = patron.container;
+    this.floatText(c.x, c.y - 80, 'THX!', '#ffffff');
+    SFX.tip();
+    if (!patron.moving) this.movePatronRandomly(patron);
+    this.refreshInfoCard();
+    return true;
   }
 
   // --- Bottoms Up! -----------------------------------------------------------
@@ -218,6 +244,9 @@ export class GuestsMixin {
   // Wires up the card (see index.html) and its refresh.
   setupGuests() {
     document.getElementById('infoClose')?.addEventListener('click', () => this.closeInfoCard());
+    document.getElementById('seatGuest')?.addEventListener('click', () => {
+      if (this.infoCard && this.infoCard.kind === 'guest') this.seatGuest(this.infoCard.target);
+    });
     document.getElementById('bottomsUp')?.addEventListener('click', () => {
       if (this.infoCard && this.infoCard.kind === 'bartender') this.bottomsUp(this.infoCard.target);
     });

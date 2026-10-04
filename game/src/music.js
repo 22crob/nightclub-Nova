@@ -8,17 +8,33 @@
 // way to keep Web Audio rhythm steady.
 import { SFX } from './sfx.js';
 
-const BPM = 122;
-const STEP = 60 / BPM / 4; // one 16th note, in seconds
 const STEPS = 32; // two bars
 const VOLUME = 0.16;
 const BOOST_VOLUME = 0.22;
 const BOOST_BASS_DB = 14;
 
-// Bassline: semitones above A1 (55 Hz) on each 16th step, null for a rest.
-const BASS = [
-  0, null, 0, null, 12, null, 0, 10, null, 0, null, 7, 0, null, 12, null,
-  5, null, 5, null, 17, null, 5, 3, null, 3, null, 7, 3, null, 15, null,
+// The DJ's tracks (original names; see the song box in scene/songs.js).
+// Each has its own tempo and two-bar pattern: kick and clap steps (of 16,
+// repeated each bar), a bassline in semitones above A1 (55 Hz) on each 16th
+// step (null for a rest), chords (MIDI notes) at the top of each bar, and
+// how busy the hi-hats are.
+const _ = null;
+export const TRACKS = [
+  { title: 'Basement Lights', artist: 'DJ Nova', bpm: 122, kick: [0, 4, 8, 12], clap: [4, 12], hats: 'house',
+    bass: [0, _, 0, _, 12, _, 0, 10, _, 0, _, 7, 0, _, 12, _, 5, _, 5, _, 17, _, 5, 3, _, 3, _, 7, 3, _, 15, _],
+    chords: [[57, 60, 64], [62, 65, 69]] },
+  { title: 'Neon Heartbeat', artist: 'Kitty Volt', bpm: 128, kick: [0, 4, 8, 12], clap: [4, 12], hats: 'offbeat',
+    bass: [_, _, 7, _, _, _, 7, _, _, _, 7, _, _, _, 10, _, _, _, 3, _, _, _, 3, _, _, _, 5, _, _, _, 7, _],
+    chords: [[55, 58, 62], [51, 55, 58]] },
+  { title: 'Velvet Rope', artist: 'Smooth K', bpm: 96, kick: [0, 7, 10], clap: [4, 12], hats: 'swing',
+    bass: [0, _, _, _, _, _, _, 0, _, _, 3, _, _, _, 5, _, 7, _, _, _, _, _, _, 5, _, _, 3, _, _, _, 0, _],
+    chords: [[60, 63, 67], [58, 62, 65]] },
+  { title: 'Brick City Funk', artist: 'The Low End', bpm: 114, kick: [0, 6, 8, 14], clap: [4, 12], hats: 'busy',
+    bass: [0, _, 12, 0, _, 10, _, 12, 0, _, 7, _, 10, _, 12, _, 5, _, 17, 5, _, 15, _, 17, 5, _, 12, _, 15, _, 17, _],
+    chords: [[57, 61, 64], [62, 66, 69]] },
+  { title: 'Last Call', artist: 'Midnight Ave', bpm: 124, kick: [0, 4, 8, 12], clap: [4, 12], hats: 'house',
+    bass: [0, _, _, 0, _, _, 0, _, 3, _, _, 3, _, _, 5, _, 7, _, _, 7, _, _, 7, _, 5, _, _, 5, _, _, 3, _],
+    chords: [[57, 60, 64], [53, 57, 60]] },
 ];
 const hz = (semi) => 55 * 2 ** (semi / 12);
 
@@ -29,6 +45,12 @@ export const Music = {
   timer: null,
   nextTime: 0,
   step: 0,
+  track: TRACKS[0],
+
+  // Switches to another track; it carries on from the next 16th note.
+  setTrack(i) {
+    this.track = TRACKS[((i % TRACKS.length) + TRACKS.length) % TRACKS.length];
+  },
 
   // Starts the beat, if sound is available (it needs a user gesture first:
   // see SFX.unlock()).
@@ -81,18 +103,28 @@ export const Music = {
     const ctx = SFX.ctx;
     while (this.nextTime < ctx.currentTime + 0.12) {
       this.playStep(this.step, this.nextTime);
-      this.nextTime += STEP;
+      this.nextTime += 60 / this.track.bpm / 4; // one 16th note
       this.step = (this.step + 1) % STEPS;
     }
   },
 
   playStep(i, t) {
-    if (i % 4 === 0) this.kick(t);
-    if (i % 8 === 4) this.clap(t);
-    if (i % 4 === 2) this.hat(t, 0.09, 0.35);
-    else if (i % 2 === 1) this.hat(t, 0.03, 0.12);
-    if (BASS[i] != null) this.bass(t, hz(BASS[i]));
-    if (i === 0 || i === 16) this.chord(t, i === 0 ? [57, 60, 64] : [62, 65, 69]);
+    const tr = this.track;
+    const s = i % 16;
+    if (tr.kick.includes(s)) this.kick(t);
+    if (tr.clap.includes(s)) this.clap(t);
+    if (tr.hats === 'house') {
+      if (s % 4 === 2) this.hat(t, 0.09, 0.35);
+      else if (s % 2 === 1) this.hat(t, 0.03, 0.12);
+    } else if (tr.hats === 'offbeat') {
+      if (s % 4 === 2) this.hat(t, 0.12, 0.4);
+    } else if (tr.hats === 'swing') {
+      if (s % 4 === 0 || s % 4 === 3) this.hat(t, 0.04, 0.2);
+    } else if (s % 2 === 0 || s % 4 === 3) {
+      this.hat(t, 0.03, s % 4 === 2 ? 0.3 : 0.14); // busy
+    }
+    if (tr.bass[i] != null) this.bass(t, hz(tr.bass[i]));
+    if (i === 0 || i === 16) this.chord(t, tr.chords[i === 0 ? 0 : 1]);
   },
 
   voice(t, type, freq, gain, attack, decay, filter) {

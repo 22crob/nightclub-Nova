@@ -115,6 +115,7 @@ export class MoodMixin {
     }
     this.fans = Math.max(0, this.fans + fans);
     this.guestsServed = (this.guestsServed || 0) + 1;
+    this.maybeJoinVips(patron);
     const c = patron.container;
     const label = fans > 0 ? `${emoji} +${fans}★` : (fans < 0 ? `${emoji} ${fans}★` : emoji);
     this.floatText(c.x, c.y - PATRON_POPUP_Y, label, fans < 0 ? '#ff8a8a' : '#ffe27a');
@@ -133,7 +134,7 @@ export class MoodMixin {
   // A party brings them faster still.
   spawnDelayFactor() {
     const vibe = this.clubVibe();
-    const party = this.partyEffect('arrivals', 1);
+    const party = this.partyEffect('arrivals', 1) * this.ratingArrivalFactor();
     if (vibe == null) return 1 / party;
     return (1.4 - (vibe / 100) * 0.8) / party;
   }

@@ -513,7 +513,10 @@ const people = await page.evaluate(() => {
   s.closeInfoCard();
   const bar = s.staffableRecords().find((r) => r.staff && r.staff.kind === 'bartender');
   at = screen(bar.staff.container);
+  const crowd = s.patrons;
+  s.patrons = []; // nobody standing in front of the bartender
   out.clickedBar = s.clickPerson(at) && s.infoCard && s.infoCard.kind === 'bartender';
+  s.patrons = crowd;
   out.barCard = document.getElementById('bottomsUp').offsetParent !== null;
   // Line up three guests and serve them all at once.
   const line = s.patrons.filter((q) => !q.leaving && !q.gone).slice(0, 3);
@@ -541,6 +544,58 @@ check('guests have names, and clicking one opens their card', people.named && pe
 check('a thirsty guest shows a drink bubble', people.bubble, JSON.stringify(people));
 check('Bottoms Up serves the whole line at once, then recovers', people.clickedBar && people.barCard && people.served >= 1 && people.paid > 0 && people.lineEmpty && people.cooling, JSON.stringify(people));
 check('Luxury grows with what you place, shows in the top bar and raises tips', people.luxuryUp > 0 && people.tipsUp && people.luxuryShown, JSON.stringify(people));
+
+// From the owner's screenshots, part two: the DJ's song box (Change, Like),
+// seating a guest yourself, the VIP list, and the club's star rating.
+const extras = await page.evaluate(async () => {
+  const s = window.__clubNova.scene.getScene('club');
+  const out = {};
+  const title0 = document.getElementById('songTitle').textContent;
+  document.getElementById('songChange').click();
+  out.changed = document.getElementById('songTitle').textContent !== title0 && document.getElementById('songTitle').textContent === s.currentSong().title;
+  const fans0 = s.fans;
+  document.getElementById('songLike').click();
+  document.getElementById('songLike').click();
+  out.liked = Math.round((s.fans - fans0) * 10) / 10;
+  // Seating: none free, then a couch.
+  const p = s.patrons.find((q) => !q.leaving && !q.gone && !q.sitting && !q.seat);
+  s.claimSeat = () => false; // pretend every seat is taken
+  out.noSeat = p ? s.seatGuest(p) === false : null;
+  delete s.claimSeat;
+  const couch = s.restoreProp('couch', 0, [12, 12]);
+  const mood0 = p ? p.mood : 0;
+  out.seated = p ? s.seatGuest(p) && !!p.seat && p.mood > mood0 : null;
+  if (p) s.releaseSeat(p);
+  if (couch) s.removeProp(couch);
+  // VIPs: a very happy leaver joins; a returning VIP keeps their name and tips double.
+  const before = (s.vips || []).length;
+  s.maybeJoinVips({ name: 'Test Guest', mood: 95, container: { patronCharacter: 2 } });
+  out.joined = (s.vips || []).length === before + 1 && s.vips.some((v) => v.name === 'Test Guest');
+  const q = s.patrons.find((x) => !x.leaving && !x.gone);
+  const vip = s.vips.find((v) => v.name === 'Test Guest');
+  s.welcomeVip(q, vip);
+  out.welcomed = q.name === 'Test Guest' && s.vipTipFactor(q) === 2 && vip.visits === 2;
+  document.getElementById('vipButton').click();
+  out.listed = document.getElementById('vipList').classList.contains('open') && /Test Guest/.test(document.getElementById('vipRows').textContent);
+  document.getElementById('vipClose').click();
+  // Rating: the average of recent nights' stars.
+  const stars0 = s.nightStars;
+  s.nightStars = [3, 4];
+  s.updateUI();
+  out.rating = s.clubRating();
+  out.ratingShown = document.getElementById('ratingVal').textContent;
+  out.faster = s.ratingArrivalFactor() > 1;
+  s.saveGame();
+  const saved = JSON.parse(localStorage.getItem('clubNovaSave_v2'));
+  out.saved = saved.vips.some((v) => v.name === 'Test Guest') && saved.nightStars.join() === '3,4';
+  s.nightStars = stars0;
+  return out;
+});
+check('the song box changes tracks, and Like gives a fan once a song', extras.changed && extras.liked === 1, JSON.stringify(extras));
+check('you can seat a guest at a free seat, which cheers them up', extras.noSeat === true && extras.seated === true, JSON.stringify(extras));
+check('happy guests join the VIP list, come back by name and tip double', extras.joined && extras.welcomed && extras.listed, JSON.stringify(extras));
+check('the club rating is the average of recent nights, shown at the top', extras.rating === 3.5 && extras.ratingShown === '3.5' && extras.faster, JSON.stringify(extras));
+check('VIPs and night ratings are saved', extras.saved, JSON.stringify(extras));
 
 // Throw a Party: the picker lists every party, a House Party costs $60 and
 // lets more guests in with bigger tips, only one a night, and it shows on

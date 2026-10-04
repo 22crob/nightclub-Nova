@@ -236,7 +236,9 @@ export class StreetMixin {
     const sp = this.streetSpots();
     const k = this.streetQueue.length;
     const start = already ? sp.slot(k) : { gx: sp.laneEnds[1], gy: sp.laneY };
-    const person = this.makeStreetPerson(start, this.streetQueueLayer);
+    const vip = already ? null : this.pickReturningVip(); // now and then a regular comes back
+    const person = this.makeStreetPerson(start, this.streetQueueLayer, vip ? vip.character : undefined);
+    person.vip = vip;
     person.slot = k;
     this.streetQueue.push(person);
     if (already) {
@@ -329,7 +331,7 @@ export class StreetMixin {
     this.streetWalkTo(front, [sp.enterTo], () => {
       const character = front.container.patronCharacter;
       front.container.destroy();
-      this.trySpawnPatron(character);
+      this.trySpawnPatron(character, front.vip);
     });
   }
 

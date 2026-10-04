@@ -6,7 +6,7 @@
 // doors for the next night when they're ready, so between nights is the
 // time to build and redecorate.
 // Mixed into ClubScene (see ClubScene.js); `this` is the scene.
-import { NIGHT } from '../config.js';
+import { NIGHT, RATING } from '../config.js';
 import { SFX } from '../sfx.js';
 
 export class NightsMixin {
@@ -40,6 +40,7 @@ export class NightsMixin {
       peakCrowd: 0,
     };
     if (this.party) this.endParty();
+    this.playSong(this.songIndex || 0); // the DJ starts the night's first song
     this.hideNightSummary();
     this.setLightsUp(false);
     this.syncMusic();
@@ -124,6 +125,7 @@ export class NightsMixin {
     result.best = result.profit > (this.bestNightProfit ?? -Infinity) && result.guests > 0;
     if (result.best) this.bestNightProfit = result.profit;
     this.lastNight = result;
+    this.nightStars = [...(this.nightStars || []), stars].slice(-RATING.nights);
     if (this.party) this.endParty();
     this.setLightsUp(true);
     this.syncMusic();
@@ -135,6 +137,20 @@ export class NightsMixin {
     this.saveGame();
   }
 
+  // The club's star rating, like Nightclub City's: the average stars of the
+  // last few nights, to the nearest half star, or null before the first.
+  clubRating() {
+    const s = this.nightStars || [];
+    if (s.length === 0) return null;
+    return Math.round((s.reduce((a, b) => a + b, 0) / s.length) * 2) / 2;
+  }
+
+  // A well-rated club draws guests faster.
+  ratingArrivalFactor() {
+    const r = this.clubRating();
+    return r == null ? 1 : 1 + (r - 3) * RATING.arrivalsPerStar;
+  }
+
   // The room's mood shading lifts between nights.
   setLightsUp(up) {
     const alpha = up ? NIGHT.closedShade : 1;
@@ -143,8 +159,9 @@ export class NightsMixin {
   }
 
   // "9:40 PM" on the night's clock.
-  nightTimeLabel() {
-    const elapsed = Math.min(this.time.now - this.nightStartedAt, NIGHT.lengthMs);
+  // `at` (scene time) defaults to now.
+  nightTimeLabel(at = this.time.now) {
+    const elapsed = Math.max(0, Math.min(at - this.nightStartedAt, NIGHT.lengthMs));
     const minutes = NIGHT.startHour * 60 + Math.floor((elapsed / NIGHT.lengthMs) * NIGHT.hours * 6) * 10;
     const h24 = Math.floor(minutes / 60) % 24;
     const m = minutes % 60;

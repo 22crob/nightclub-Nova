@@ -19,6 +19,7 @@ See ROADMAP.md for the plan. The reference for all art, UI and gameplay is Night
 - Club nights are `src/scene/nights.js`, settings in `NIGHT` in config.js. Only `doorsOpen()` lets guests in; `clubOpen()` is false between nights, which stops music, wages and passive fans. Income for the night's summary goes through `noteIncome()`.
 - Parties are `src/scene/parties.js`, the list in `PARTIES` in config.js. Their effects go through `partyEffect(name, none)` (capacity, arrivals, tips, thirst, fans); a party ends with the night.
 - Guests and bartenders are clickable (`clickPerson()` in `src/scene/guests.js`, which also has names, thought bubbles, the info card and Bottoms Up!). Drinks go through `serveDrink()` in staff.js. Luxury is `luxury()` in economy.js (settings `LUXURY` in config.js).
+- Songs are `src/scene/songs.js` (the tracks are `TRACKS` in music.js, settings `SONGS`); VIPs are `src/scene/vips.js` (`VIP`, saved under `vips`); the club rating is `clubRating()` in nights.js (`RATING`, saved under `nightStars`).
 - The save format lives in `src/scene/save.js` under the key `clubNovaSave_v2` (v2 came with the finer grid; v1 saves don't fit it). Don't break existing saves; bump the key only if the format changes incompatibly.
 
 ## Art pipeline

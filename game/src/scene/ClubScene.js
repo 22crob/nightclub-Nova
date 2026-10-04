@@ -24,6 +24,8 @@ import { StreetMixin } from './street.js';
 import { NightsMixin } from './nights.js';
 import { PartiesMixin } from './parties.js';
 import { GuestsMixin } from './guests.js';
+import { SongsMixin } from './songs.js';
+import { VipsMixin } from './vips.js';
 import { Music } from '../music.js';
 import { applyMixins } from './applyMixins.js';
 
@@ -239,6 +241,8 @@ export class ClubScene extends Phaser.Scene {
     this.setupBoost();
     this.setupParties();
     this.setupGuests();
+    this.setupSongs();
+    this.setupVips();
     this.setupNights(this.savedNight);
     this.setupRestart();
 
@@ -334,4 +338,6 @@ applyMixins(ClubScene, [
   NightsMixin,
   PartiesMixin,
   GuestsMixin,
+  SongsMixin,
+  VipsMixin,
 ]);
