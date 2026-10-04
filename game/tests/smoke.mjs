@@ -55,6 +55,8 @@ await page.evaluate(() => localStorage.clear());
 await page.reload();
 await waitForScene();
 
+const heldAtStart = await page.evaluate(() => window.__clubNova.scene.getScene('club').selectedProp);
+check('you start with nothing in hand, just the cursor', heldAtStart === null, String(heldAtStart));
 let st = await state();
 const opening = await page.evaluate(() => {
   const s = window.__clubNova.scene.getScene('club');

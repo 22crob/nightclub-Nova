@@ -34,7 +34,7 @@ export class ClubScene extends Phaser.Scene {
     super('club');
     this.cash = STARTING_CASH;
     this.fans = 0;
-    this.selectedProp = 'starterBar';
+    this.selectedProp = null; // nothing in hand until you pick something in the shop
     this.currentFacing = 0; // facing used for the NEXT rotatable prop placed
     this.wallpaper = {}; // wall section -> wallpaper type (see wallpaper.js)
     this.floorPaint = {}; // "gx,gy" -> regular floor type (see floorPaint.js)
