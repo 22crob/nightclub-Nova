@@ -1,0 +1,109 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 1200">
+<defs>
+  <style>
+    .o{vector-effect:non-scaling-stroke;stroke:#1c1119;stroke-width:7;stroke-linejoin:round;stroke-linecap:round}
+    .l{vector-effect:non-scaling-stroke;fill:none;stroke:#1c1119;stroke-width:4;stroke-linecap:round;stroke-linejoin:round}
+    .skin{fill:#f7c8a2}.skinS{fill:#e6a47f}
+    .hair{fill:#3b231e}.hairS{fill:#26140f}.hairH{fill:#6f4535}
+    .jk{fill:#2b2832}.jkS{fill:#1b1920}.jkH{fill:#4d4858}
+    .top{fill:#ff4f93}.topS{fill:#d4336f}
+    .sk{fill:#3d2d4a}.skS{fill:#2a1e35}
+    .boot{fill:#25212c}.bootH{fill:#4a4456}
+  </style>
+  <linearGradient id="iris" x1="0" y1="0" x2="0" y2="1">
+    <stop offset="0" stop-color="#2e1912"/><stop offset="1" stop-color="#a8693f"/>
+  </linearGradient>
+  <clipPath id="headClip"><path d="M208,330 C205,205 300,140 410,140 C525,140 612,210 610,335 C608,405 585,450 535,478 C480,505 420,512 372,503 C300,490 235,450 218,395 C212,375 209,352 208,330 Z"/></clipPath>
+</defs>
+
+<g transform="translate(0,16)">
+<!-- back hair -->
+<path class="hair o" d="M222,270 C178,370 166,520 186,650 L214,612 L228,668 L262,622 L290,548 L470,548 L552,628 L580,598 L608,656 L630,602 C648,500 642,370 600,270 Z"/>
+<path class="hairS" d="M240,420 C232,500 236,570 250,620 L262,622 L282,560 L300,470 Z"/>
+
+</g>
+<g transform="translate(382,0) scale(1.24,1) translate(-382,0)">
+<!-- legs -->
+<path class="skin o" d="M332,760 L337,920 L382,920 L388,760 Z"/>
+<path class="skin o" d="M398,760 L402,905 L445,905 L451,760 Z"/>
+<!-- far boot -->
+<path class="boot o" d="M399,880 L447,880 L447,1040 C449,1062 442,1080 425,1088 L400,1100 C380,1104 362,1100 362,1088 C362,1076 378,1068 396,1058 Z"/>
+<path class="boot o" d="M432,1080 L446,1080 L446,1104 L432,1104 Z"/>
+<path class="bootH" d="M412,895 L420,895 L422,1030 L414,1030 Z" opacity=".7"/>
+<!-- near boot -->
+<path class="boot o" d="M333,895 L385,895 L385,1068 C387,1092 378,1110 358,1116 L322,1126 C296,1131 276,1126 276,1112 C276,1099 296,1090 318,1080 L334,1070 Z"/>
+<path class="boot o" d="M366,1106 L382,1104 L383,1130 L367,1132 Z"/>
+<path class="bootH" d="M346,910 L355,910 L357,1060 L348,1060 Z" opacity=".7"/>
+
+<!-- far arm (behind) -->
+<path class="jk o" d="M436,550 C466,556 478,582 479,612 L486,702 L456,706 L450,620 Z"/>
+<circle class="skin o" cx="471" cy="722" r="22"/>
+
+<!-- torso -->
+<path class="skin o" d="M352,492 L350,548 L400,548 L398,492 Z"/>
+<path class="skinS" d="M353,500 C365,520 388,522 397,505 L398,492 L352,492 Z"/>
+<path class="skin o" d="M318,548 C335,540 352,538 375,540 C400,538 425,540 440,548 L445,600 C440,630 432,650 430,682 L335,682 C330,650 320,625 315,600 Z"/>
+<path class="top o" d="M321,578 Q378,562 439,578 L441,612 C437,628 433,640 431,654 L334,654 C330,640 325,628 320,612 Z"/>
+<path class="topS" d="M405,572 Q425,574 438,580 L440,612 C437,628 433,640 431,650 L410,650 C415,620 414,595 405,572 Z"/>
+<!-- skirt -->
+<path class="sk o" d="M331,676 L434,676 L463,796 C420,810 346,810 303,796 Z"/>
+<path class="skS" d="M405,690 L434,690 L463,796 C450,800 440,802 430,803 Z"/>
+<path class="l" d="M352,700 L338,800 M385,702 L385,806"/>
+<path class="jkS o" d="M331,672 L434,672 L436,692 L329,692 Z"/>
+<rect x="372" y="674" width="20" height="16" rx="3" fill="#e8b94a" stroke="#1c1119" stroke-width="4"/>
+
+<!-- jacket -->
+<path class="jk o" d="M354,540 L318,544 C298,552 291,576 292,602 L308,666 L354,668 C349,630 345,590 354,540 Z"/>
+<path class="jk o" d="M399,540 L437,545 C458,552 466,576 464,602 L448,666 L417,668 C420,630 413,590 399,540 Z"/>
+<path class="jkS" d="M425,560 C440,575 448,600 446,630 L440,660 L420,662 C422,625 420,590 425,560 Z"/>
+<path class="jkH o" d="M354,540 L338,596 L358,578 Z"/>
+<path class="jkH o" d="M399,540 L420,596 L402,578 Z"/>
+<path class="l" d="M300,600 L345,606" stroke="#55505f"/>
+<!-- near arm -->
+<path class="jk o" d="M320,548 C292,554 279,580 279,610 L271,706 L303,710 L310,620 Z"/>
+<path class="jkH" d="M296,575 C288,600 286,640 283,690 L291,690 C294,640 298,600 304,578 Z" opacity=".8"/>
+<circle class="skin o" cx="286" cy="728" r="24"/>
+
+</g>
+<g transform="translate(0,16)">
+<!-- head -->
+<ellipse class="skin o" cx="598" cy="395" rx="22" ry="34"/>
+<path class="l" d="M600,378 C590,388 590,405 600,414"/>
+<path class="skin o" d="M208,330 C205,205 300,140 410,140 C525,140 612,210 610,335 C608,405 585,450 535,478 C480,505 420,512 372,503 C300,490 235,450 218,395 C212,375 209,352 208,330 Z"/>
+<g clip-path="url(#headClip)">
+  <ellipse class="skinS" cx="660" cy="380" rx="95" ry="170"/>
+  <path class="skinS" d="M200,365 C182,230 268,116 410,114 C548,112 634,200 626,330 L600,356 C592,300 562,252 520,228 C500,242 470,256 430,264 C444,248 450,238 452,228 C420,262 390,286 350,302 C364,286 372,272 375,262 C340,296 302,326 262,352 C274,334 280,318 282,302 C262,330 244,356 236,382 C224,374 210,370 200,365 Z" transform="translate(4,14)"/>
+</g>
+<!-- blush -->
+<ellipse cx="270" cy="452" rx="26" ry="12" fill="#ff7f86" opacity=".35"/>
+<ellipse cx="478" cy="452" rx="30" ry="13" fill="#ff7f86" opacity=".35"/>
+<!-- eyes: far (left on screen) -->
+<ellipse cx="297" cy="400" rx="30" ry="45" fill="#fff" stroke="#1c1119" stroke-width="3"/>
+<ellipse cx="302" cy="410" rx="24" ry="36" fill="url(#iris)"/>
+<ellipse cx="303" cy="413" rx="11" ry="16" fill="#140a08"/>
+<circle cx="292" cy="392" r="9" fill="#fff"/><circle cx="312" cy="428" r="4" fill="#fff"/>
+<path d="M262,378 Q295,340 330,370 L328,378 Q296,352 268,384 L250,368 Z" fill="#1c1119"/>
+<!-- near eye -->
+<ellipse cx="452" cy="400" rx="40" ry="48" fill="#fff" stroke="#1c1119" stroke-width="3"/>
+<ellipse cx="447" cy="410" rx="31" ry="38" fill="url(#iris)"/>
+<ellipse cx="446" cy="413" rx="14" ry="18" fill="#140a08"/>
+<circle cx="434" cy="392" r="11" fill="#fff"/><circle cx="460" cy="430" r="5" fill="#fff"/>
+<path d="M408,376 Q452,336 496,372 L516,354 L500,384 Q452,350 412,384 Z" fill="#1c1119"/>
+<path class="l" d="M424,446 Q450,454 478,442" stroke-width="3" opacity=".6"/>
+<!-- brows -->
+<path class="l" d="M418,322 Q454,302 490,318" stroke-width="7"/>
+<path class="l" d="M266,326 Q290,310 318,318" stroke-width="6"/>
+<!-- nose, mouth -->
+<path class="l" d="M360,442 Q352,455 364,457" stroke="#b5735a"/>
+<path d="M346,474 Q366,490 388,470 Q366,480 346,474 Z" fill="#d94a6c" stroke="#7a2632" stroke-width="3" stroke-linejoin="round"/>
+
+<!-- front hair -->
+<path class="hair o" d="M200,365 C182,230 268,116 410,114 C548,112 634,200 626,330 L600,356 C592,300 562,252 520,228 C500,242 470,256 430,264 C444,248 450,238 452,228 C420,262 390,286 350,302 C364,286 372,272 375,262 C340,296 302,326 262,352 C274,334 280,318 282,302 C262,330 244,356 236,382 C224,374 210,370 200,365 Z"/>
+<path class="hairS" d="M520,228 C562,252 592,300 600,356 L626,330 C628,290 612,250 590,225 Z"/>
+<path class="hairH" d="M292,172 Q400,128 512,162 Q404,150 304,190 Z"/>
+<path class="l" d="M470,178 C440,220 400,250 360,272 M400,170 C370,220 320,270 280,300 M540,190 C560,220 580,260 590,300" stroke="#1c1119" stroke-width="3.5" opacity=".7"/>
+<!-- hoop -->
+<circle cx="600" cy="452" r="19" fill="none" stroke="#1c1119" stroke-width="11"/>
+<circle cx="600" cy="452" r="19" fill="none" stroke="#f0c050" stroke-width="5"/>
+</g>
+</svg>
