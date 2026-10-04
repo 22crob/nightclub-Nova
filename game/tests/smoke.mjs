@@ -493,6 +493,55 @@ const street = await page.evaluate(() => {
 });
 check('the street has a line at the rope, a bouncer and lamps; the front of the line goes in', street.inLine > 0 && street.after === street.inLine - 1 && street.bouncer && street.lamps, JSON.stringify(street));
 
+// Guests have names; clicking one opens their card. A thirsty guest shows a
+// drink bubble. Clicking a bartender shows Bottoms Up!, which serves the
+// whole line at once and then needs to recover. Luxury grows with what you
+// place and raises tips.
+const people = await page.evaluate(() => {
+  const s = window.__clubNova.scene.getScene('club');
+  const out = {};
+  const p = s.patrons.find((q) => !q.leaving && !q.gone);
+  const screen = (c) => ({ x: s.world.x + c.x * s.world.scaleX, y: s.world.y + (c.y - 30) * s.world.scaleY });
+  out.named = !!p.name && / /.test(p.name);
+  let at = screen(p.container);
+  out.clickedGuest = s.clickPerson(at);
+  out.card = document.getElementById('infoCard').classList.contains('open') && document.getElementById('infoName').textContent === p.name;
+  out.quote = document.getElementById('infoQuote').textContent;
+  p.thirstyAt = s.time.now - 1;
+  s.updateGuestBubble(p);
+  out.bubble = !!p.container.bubble && p.container.bubble.visible && p.container.bubble.text === '🍹';
+  s.closeInfoCard();
+  const bar = s.staffableRecords().find((r) => r.staff && r.staff.kind === 'bartender');
+  at = screen(bar.staff.container);
+  out.clickedBar = s.clickPerson(at) && s.infoCard && s.infoCard.kind === 'bartender';
+  out.barCard = document.getElementById('bottomsUp').offsetParent !== null;
+  // Line up three guests and serve them all at once.
+  const line = s.patrons.filter((q) => !q.leaving && !q.gone).slice(0, 3);
+  bar.queue = [...line];
+  for (const q of line) q.queue = bar;
+  const drinks0 = s.drinksSold || 0;
+  const cash0 = s.cash;
+  document.getElementById('bottomsUp').click();
+  out.served = (s.drinksSold || 0) - drinks0;
+  out.paid = s.cash - cash0;
+  out.lineEmpty = bar.queue.length === 0;
+  out.cooling = !s.bottomsUpReady(bar) && s.bottomsUp(bar) === 0;
+  s.closeInfoCard();
+  const lux0 = s.luxury();
+  const tip0 = s.luxuryTipFactor();
+  const lamp = s.restoreProp('lavaLamp', 0, [14, 14]);
+  out.luxuryUp = s.luxury() - lux0;
+  out.tipsUp = s.luxuryTipFactor() > tip0;
+  s.updateUI();
+  out.luxuryShown = document.getElementById('luxuryVal').textContent === String(s.luxury());
+  if (lamp) s.removeProp(lamp);
+  return out;
+});
+check('guests have names, and clicking one opens their card', people.named && people.clickedGuest && people.card && people.quote.length > 2, JSON.stringify(people));
+check('a thirsty guest shows a drink bubble', people.bubble, JSON.stringify(people));
+check('Bottoms Up serves the whole line at once, then recovers', people.clickedBar && people.barCard && people.served >= 1 && people.paid > 0 && people.lineEmpty && people.cooling, JSON.stringify(people));
+check('Luxury grows with what you place, shows in the top bar and raises tips', people.luxuryUp > 0 && people.tipsUp && people.luxuryShown, JSON.stringify(people));
+
 // Throw a Party: the picker lists every party, a House Party costs $60 and
 // lets more guests in with bigger tips, only one a night, and it shows on
 // the clock.
@@ -515,13 +564,14 @@ const party = await page.evaluate(() => {
     button: document.getElementById('partyButton').dataset.state,
     clock: document.getElementById('nightClockText').textContent,
     labelAtStart,
+    banner: document.getElementById('partyBanner').classList.contains('open') && /House Party/.test(document.getElementById('bannerName').textContent) && /Ends in: \d+:\d\d/.test(document.getElementById('bannerLeft').textContent),
   };
   out.second = s.throwParty('hiphop');
   return out;
 });
 check('the party picker lists four parties, the fancy ones locked at first', party.labelAtStart === 'Throw a Party' && party.rows === 4 && party.locked >= 1, JSON.stringify(party));
 check('a House Party costs $60, lets 2 more guests in and raises tips', party.paid === 60 && party.capacity === 2 && party.tips > 1 && party.closed, JSON.stringify(party));
-check('only one party a night, and it shows on the clock', party.second === false && party.button === 'active' && /House Party/.test(party.clock), JSON.stringify(party));
+check('only one party a night, and it shows on the clock and a banner', party.banner && party.second === false && party.button === 'active' && /House Party/.test(party.clock), JSON.stringify(party));
 
 // Levels get slower: 150 fans for level 2, 250 more for level 3.
 const levels = await page.evaluate(() => {

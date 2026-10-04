@@ -213,5 +213,13 @@ export const PARTIES = [
   { key: 'gala', label: 'VIP Gala', emoji: '🥂', cost: 600, unlockLevel: 6, capacity: 6, arrivals: 2, tips: 2, thirst: 1.5, fans: 2, shade: 0x2e2306,
     blurb: 'Red carpet, champagne, the A-list. Huge tips and fans.' },
 ];
+// A bartender's Bottoms Up! (see scene/guests.js): serves their whole line
+// at once, then needs cooldownMs to recover. The game suggests it when a
+// line reaches slammedLine, at most every hintEveryMs.
+export const BOTTOMS_UP = { cooldownMs: 60 * 1000, slammedLine: 3, hintEveryMs: 60 * 1000 };
+// Luxury (see luxury() in economy.js): a tenth of what everything placed,
+// painted and papered cost. Each point raises tips by luxuryTipPerPoint,
+// up to luxuryTipMax extra.
+export const LUXURY = { perDollar: 0.1, tipPerPoint: 0.001, tipMax: 1 };
 export const MOOD_LIGHTING = { color: 0x0b0418, floorAlpha: 0.3, wallAlpha: 0.2, glows: false, glowAlpha: 0.55 };
 export const SEAT_SIT_TIME = [14000, 24000];

@@ -23,6 +23,7 @@ import { FloorPaintMixin } from './floorPaint.js';
 import { StreetMixin } from './street.js';
 import { NightsMixin } from './nights.js';
 import { PartiesMixin } from './parties.js';
+import { GuestsMixin } from './guests.js';
 import { Music } from '../music.js';
 import { applyMixins } from './applyMixins.js';
 
@@ -182,6 +183,7 @@ export class ClubScene extends Phaser.Scene {
         if (p.event.button === 0 && this.hoverWall) this.paintWall(this.hoverWall);
         return;
       }
+      if (p.event.button === 0 && this.clickPerson(p)) return; // a guest's or bartender's card
       if (!this.hoverTile) return;
       if (p.event.button === 0) {
         this.placeProp(this.hoverTile.gx, this.hoverTile.gy);
@@ -214,6 +216,7 @@ export class ClubScene extends Phaser.Scene {
 
     this.cashText = document.getElementById('cashVal');
     this.fansText = document.getElementById('fansVal');
+    this.luxuryText = document.getElementById('luxuryVal');
     this.levelText = document.getElementById('levelVal');
     this.xpBarFill = document.getElementById('xpBarFill');
     this.xpText = document.getElementById('xpText');
@@ -235,6 +238,7 @@ export class ClubScene extends Phaser.Scene {
     }
     this.setupBoost();
     this.setupParties();
+    this.setupGuests();
     this.setupNights(this.savedNight);
     this.setupRestart();
 
@@ -329,4 +333,5 @@ applyMixins(ClubScene, [
   StreetMixin,
   NightsMixin,
   PartiesMixin,
+  GuestsMixin,
 ]);

@@ -69,6 +69,8 @@ export class PatronsMixin {
       nextMoveAt: now + randRange(...PATRON_MOVE_INTERVAL),
       nextTipAt: now + randRange(...PATRON_TIP_INTERVAL),
       thirstyAt: now + randRange(3000, 18000), // most patrons want a drink soon after arriving, not all at once
+      name: this.guestName(),
+      spent: 0,
       mood: MOOD.start,
       fun: MOOD.startFun,
       thirstSince: null,
@@ -215,6 +217,7 @@ export class PatronsMixin {
       }
 
       this.updatePatronMood(patron, (now - (patron.lastTickAt || now)) / 1000);
+      this.updateGuestBubble(patron);
       patron.lastTickAt = now;
       if (patron.leaving) continue; // stormed out just now
       if (now >= patron.despawnAt) {
@@ -247,6 +250,7 @@ export class PatronsMixin {
     } else {
       c.scaleX = (right ? 1 : -1) * patron.scaleVariance; // fallback token faces right by default
     }
+    this.unflipBubble(c);
   }
 
   // Turns a patron to face the camera, keeping left/right as it was: for
@@ -256,6 +260,7 @@ export class PatronsMixin {
     if (!c.patronSprite || c.patronDir === 'front') return;
     c.patronDir = 'front';
     c.scaleX = -c.scaleX;
+    this.unflipBubble(c);
   }
 
   // Picks a far-off open (prop-free) tile anywhere on the current grid for
@@ -641,13 +646,14 @@ export class PatronsMixin {
     const base = 1 + Math.random() * 3; // $1-4
     const moodFactor = 0.5 + patron.mood / 100; // unhappy patrons tip half, happy ones up to 1.5x
     const boost = this.isBoosted() ? BOOST.tipMultiplier : 1;
-    const amount = Math.max(1, Math.round((nearRevenue ? base * 2 : base) * moodFactor * boost * this.partyEffect('tips', 1)));
+    const amount = Math.max(1, Math.round((nearRevenue ? base * 2 : base) * moodFactor * boost * this.partyEffect('tips', 1) * this.luxuryTipFactor()));
     this.cash += amount;
     this.noteIncome('tips', amount);
+    patron.spent = (patron.spent || 0) + amount;
     this.fans += nearRevenue ? 0.4 : 0.1;
     SFX.tip();
     this.updateUI();
-    this.floatText(patron.container.x, patron.container.y - PATRON_POPUP_Y, `+$${amount}`, '#7dffc4');
+    this.floatText(patron.container.x, patron.container.y - PATRON_POPUP_Y, `$${amount} Tip`, '#ffe27a');
   }
 
   // Sends a patron walking back to the door tile, on foot, tile by tile,

@@ -7,6 +7,7 @@ export class HudMixin {
   updateUI() {
     this.cashText.textContent = Math.floor(this.cash);
     this.fansText.textContent = Math.floor(this.fans);
+    if (this.luxuryText) this.luxuryText.textContent = this.luxury();
     // Repurposed as a "patrons on the floor / capacity" readout rather than
     // a raw placed-prop count, since capacity (see patronCapacity()) is the
     // number that actually matters for how much the club can earn.

@@ -286,17 +286,26 @@ export class StaffMixin {
       return false;
     }
     this.leaveBarQueue(patron); // served: the line steps up
+    this.serveDrink(rec, patron);
+    return true;
+  }
+
+  // A patron gets a drink from a staffed bar and pays for it.
+  serveDrink(rec, patron) {
+    const now = this.time.now;
     const price = PROP_TYPES[rec.type].drinkPrice || 10;
     this.cash += price;
     this.noteIncome('drinkMoney', price);
+    patron.spent = (patron.spent || 0) + price;
+    patron.drinks = (patron.drinks || 0) + 1;
     this.fans += 0.3;
     this.drinksSold = (this.drinksSold || 0) + 1;
     this.cheerPatron(patron, MOOD.drinkMood);
     patron.thirstyAt = now + randRange(...THIRST_INTERVAL) / this.boostFactor() / this.partyEffect('thirst', 1);
     SFX.tip();
-    this.floatText(patron.container.x, patron.container.y - PATRON_POPUP_Y, `🍹 +$${price}`, '#7dffc4');
+    this.floatText(patron.container.x, patron.container.y - PATRON_POPUP_Y, `🍹 $${price} Drink`, '#7dffc4');
     this.updateUI();
-    return true;
+    return price;
   }
 
   // Pays every working staff member. If the club can't cover the whole bill,

@@ -5,7 +5,7 @@
 // takes the party's colour, the night clock shows it, and the night's
 // summary counts its cost.
 // Mixed into ClubScene (see ClubScene.js); `this` is the scene.
-import { PARTIES } from '../config.js';
+import { NIGHT, PARTIES } from '../config.js';
 import { SFX } from '../sfx.js';
 
 export class PartiesMixin {
@@ -35,6 +35,7 @@ export class PartiesMixin {
     if (!def || this.partyBlocker(def)) { SFX.denied(); return false; }
     this.cash -= def.cost;
     this.party = key;
+    this.partyStartedAt = this.time.now;
     this.noteIncome('partyCost', def.cost);
     this.moodColor = def.shade;
     this.drawMoodShade(this.gridSize);
@@ -73,6 +74,29 @@ export class PartiesMixin {
     }
     if (button.dataset.state !== state) button.dataset.state = state;
     if (this.partyLabel.textContent !== text) this.partyLabel.textContent = text;
+    this.updatePartyBanner();
+  }
+
+  // While a party is on, a banner takes the button's place: the party's
+  // name and how long until it ends (at closing time), like Nightclub
+  // City's "Party Started" banner.
+  updatePartyBanner() {
+    const banner = document.getElementById('partyBanner');
+    if (!banner) return;
+    const party = this.currentParty();
+    const on = !!party && (this.nightPhase === 'open' || this.nightPhase === 'lastCall');
+    banner.classList.toggle('open', on);
+    if (this.partyButton) this.partyButton.style.display = on ? 'none' : '';
+    if (!on) return;
+    const end = this.nightStartedAt + NIGHT.lengthMs;
+    const left = Math.max(0, end - this.time.now);
+    const s = Math.ceil(left / 1000);
+    const name = `${party.emoji} ${party.label}`;
+    const el = document.getElementById('bannerName');
+    if (el.textContent !== name) el.textContent = name;
+    document.getElementById('bannerLeft').textContent = `Ends in: ${Math.floor(s / 60)}:${String(s % 60).padStart(2, '0')}`;
+    const span = Math.max(1, end - this.partyStartedAt);
+    document.getElementById('bannerFill').style.width = `${(100 * (1 - left / span)).toFixed(1)}%`;
   }
 
   // The list of parties, each with its price and whether it can be thrown.

@@ -81,6 +81,10 @@
       <div class="statValue"><span class="statIcon">★</span><span id="fansVal">0</span></div>
       <div class="statLabel">Fans</div>
     </div>
+    <div class="statButton" title="Luxury: how fancy your club is. Everything you place, paint and paper adds to it, and a fancier club earns bigger tips.">
+      <div class="statValue"><span class="statIcon">💎</span><span id="luxuryVal">0</span></div>
+      <div class="statLabel">Luxury</div>
+    </div>
     <div class="statButton" title="Patrons in the club / capacity">
       <div class="statValue"><span class="statIcon">☺</span><span id="placedVal">0/0</span></div>
       <div class="statLabel">Patrons</div>
@@ -105,13 +109,42 @@
     </div>
   </div>
 
+  <!-- Party banner, while a party is on (see parties.js) -->
+  <div id="partyBanner" class="partyBanner">
+    <div class="bannerSmall">Party Started</div>
+    <div class="bannerName" id="bannerName">House Party</div>
+    <div class="bannerBar"><div id="bannerFill"></div></div>
+    <div class="bannerSmall" id="bannerLeft">Ends in 3:00</div>
+  </div>
+
+  <!-- A guest's or bartender's card (see guests.js) -->
+  <div id="infoCard">
+    <div id="infoClose" class="infoClose" title="Close">✕</div>
+    <div class="infoTop">
+      <div id="infoPortrait" class="infoPortrait"></div>
+      <div class="infoText">
+        <div class="infoName" id="infoName">Guest</div>
+        <div class="infoRole" id="infoRole">Guest</div>
+        <div class="infoQuote" id="infoQuote">"Nice place!"</div>
+      </div>
+    </div>
+    <div id="infoGuestStats" class="infoStats">
+      <span id="infoMood" title="Mood">🙂 60%</span><span id="infoFun" title="Fun">🎵 40%</span><span id="infoDrinks" title="Drinks">🍹 0</span>
+      <div id="infoSpent" class="infoSpent">Spent: $0</div>
+    </div>
+    <div id="infoBarStats" class="infoStats" style="display:none">
+      <div id="infoQueue" class="infoSpent">0 waiting</div>
+      <div id="bottomsUp" class="bottomsUp" title="Serve everyone in this bartender's line at once">🍹 Bottoms Up!</div>
+    </div>
+  </div>
+
   <div id="toast"></div>
 
   <!-- Bottom-left: tips box -->
   <div id="hint">
     <div class="hintTitle">Tips</div>
     Each night runs 9 PM to 3 AM; at closing you see how it went. Your DJ plays all night, and your first bar has a bartender; new bars need one hired in Staff. Press Drop the Bass for a 90-second party! Happy patrons tip more and bring fans; thirsty or bored ones leave.<br>
-    Click to place • Right-click to sell • R to rotate • Esc to put down • Drag to move around • Scroll to zoom
+    Click a guest or bartender to see their card (bartenders have Bottoms Up!). Click to place • Right-click to sell • R to rotate • Esc to put down • Drag to move around • Scroll to zoom
   </div>
 
   <!-- Bottom-centre: what you're holding, and the toolbar -->

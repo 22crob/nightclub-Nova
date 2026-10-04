@@ -1,7 +1,7 @@
 // ClubScene methods: Fan rate, patron capacity and level progression.
 // Mixed into ClubScene (see ClubScene.js); `this` is the scene.
 import { FLOOR_DECAL_PROPS, PROP_TYPES } from '../catalog.js';
-import { LEVEL_FANS, PATRON_ABSOLUTE_MAX, PATRON_BASE_CAPACITY } from '../config.js';
+import { LEVEL_FANS, LUXURY, PATRON_ABSOLUTE_MAX, PATRON_BASE_CAPACITY } from '../config.js';
 
 export class EconomyMixin {
   // Sums every placed prop's fanRate (dance tiles, DJ booth, neon floor —
@@ -52,6 +52,28 @@ export class EconomyMixin {
       if (def.category === 'Dance Floors') capacity += def.capacity || 0;
     }
     return Math.min(capacity + this.partyEffect('capacity', 0), PATRON_ABSOLUTE_MAX);
+  }
+
+  // How fancy the club is, like Nightclub City's Luxury: a tenth of what
+  // everything placed, every wallpapered wall section and every painted
+  // floor tile cost.
+  luxury() {
+    let dollars = 0;
+    const counted = new Set();
+    for (const key in this.placed) {
+      const rec = this.placed[key];
+      if (counted.has(rec)) continue;
+      counted.add(rec);
+      dollars += PROP_TYPES[rec.type].cost || 0;
+    }
+    for (const type of Object.values(this.wallpaper)) dollars += (PROP_TYPES[type] && PROP_TYPES[type].cost) || 0;
+    for (const type of Object.values(this.floorPaint)) dollars += (PROP_TYPES[type] && PROP_TYPES[type].cost) || 0;
+    return Math.round(dollars * LUXURY.perDollar);
+  }
+
+  // Tips grow with Luxury.
+  luxuryTipFactor() {
+    return 1 + Math.min(LUXURY.tipMax, this.luxury() * LUXURY.tipPerPoint);
   }
 
   // The level and the bar toward the next one, from the fan count (the
