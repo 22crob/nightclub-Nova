@@ -80,7 +80,7 @@ export class BoostMixin {
   // on a bar stool or leaving are left alone.
   rallyGuests(kind, settings) {
     const now = this.time.now;
-    const busy = (p) => p.leaving || p.gone || p.queue || p.stoolBar || (p.activity && p.activity.kind === kind);
+    const busy = (p) => p.leaving || p.gone || p.arguing || p.queue || p.stoolBar || (p.activity && p.activity.kind === kind);
     for (const p of this.patrons) {
       if (busy(p) || Math.random() > settings.joinShare) continue;
       this.time.delayedCall(randRange(...settings.staggerMs), () => {

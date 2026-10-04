@@ -207,6 +207,7 @@ export class PatronsMixin {
   // new wander step when it's time, and collect tips on schedule.
   tickPatrons() {
     const now = this.time.now;
+    this.tickSecurity(); // arguments and the guard (see security.js)
     for (let i = this.patrons.length - 1; i >= 0; i--) {
       const patron = this.patrons[i];
       if (patron.gone) continue;
@@ -681,6 +682,7 @@ export class PatronsMixin {
   finalizeDeparture(patron) {
     if (patron.gone) return;
     this.endChat(patron);
+    this.endDanceTogether(patron);
     this.releaseSeat(patron);
     this.leaveBarQueue(patron);
     this.patronLeaves(patron);

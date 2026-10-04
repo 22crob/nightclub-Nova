@@ -225,6 +225,18 @@ export const PARTY_LENGTH_MS = 3 * 60 * 1000;
 export const PARTY_COUNTDOWN_MS = 10 * 1000; // from paying to the party starting
 // Celebrities who might turn up at a party (made-up names). They wear a
 // star, tip celebTip times as much and bring celebFans fans leaving happy.
+// Guests getting along (or not). Dancers side by side sometimes dance
+// together. Now and then a chat turns into an argument (💢): the security
+// guard inside walks over and usually calms it down (settleChance); if not,
+// or if they're still at it after argueMs, it's a short cartoon fight
+// (fightMs) and security throws one of them out. At most one at a time,
+// and never within cooldownMs of the last.
+export const SECURITY = {
+  character: 0, scale: 1.08, stepMs: 380,
+  argueChance: 0.12, cooldownMs: 90 * 1000, argueMs: [8000, 12000],
+  settleChance: 0.7, fightMs: 3500, moodHit: 12,
+  danceTogetherChance: 0.35,
+};
 export const CELEBRITIES = ['Nova Starr', 'DJ Kai Blaze', 'Luna Vega', 'Rico Diamond', 'Jade Monroe', 'Max Volt', 'Sasha Glow', 'Tony Fame', 'Ivy Sparks', 'Leo Lux'];
 export const CELEB = { tip: 3, fans: 6 };
 export const PARTIES = [

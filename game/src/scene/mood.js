@@ -104,7 +104,10 @@ export class MoodMixin {
   patronLeaves(patron) {
     let fans;
     let emoji;
-    if (patron.stormedOut) {
+    if (patron.ejected) {
+      fans = 0; // thrown out by security
+      emoji = '🚫';
+    } else if (patron.stormedOut) {
       fans = STORM_OUT_FANS;
       this.noteStormOut();
       emoji = '😠';

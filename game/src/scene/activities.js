@@ -97,6 +97,7 @@ export class ActivitiesMixin {
     }
     if (a) patron.lastActivity = a.kind;
     this.endChat(patron);
+    this.endDanceTogether(patron);
     patron.activity = null;
     this.chooseActivity(patron);
   }
@@ -113,6 +114,7 @@ export class ActivitiesMixin {
       this.faceFront(patron);
       this.setPatronAnimation(patron, 'dance');
       patron.nextMoveAt = a.until;
+      this.maybeDanceTogether(patron); // someone dancing next to them? (security.js)
       return;
     }
     if (kind === 'drink' && a.phase === 'drinking') {
@@ -254,6 +256,7 @@ export class ActivitiesMixin {
       p.patronAnimState = null; // re-play idle in the new facing
       this.setPatronAnimation(p, 'idle');
     }
+    if (this.maybeArgue(patron, other)) return true; // once in a while it goes badly (security.js)
     this.chatBubble(patron);
     return true;
   }

@@ -861,6 +861,7 @@ const visits = await page.evaluate(() => {
   a.moving = false; b.moving = false;
   const spots = [[1, 0], [-1, 0], [0, 1], [0, -1]].map(([dx, dy]) => [a.gx + dx, a.gy + dy]);
   [b.gx, b.gy] = spots.find(([x, y]) => x >= 0 && y >= 0 && !s.isBlockingProp(x, y)) || [a.gx + 1, a.gy];
+  s.lastArgumentAt = s.time.now; // no argument this time (see the security checks)
   out.chatStarted = s.startChat(b) && b.chatWith === a && a.chatWith === b;
   [b.gx, b.gy] = [b.targetGx, b.targetGy];
   s.chatArrive(b);
@@ -878,6 +879,81 @@ const visits = await page.evaluate(() => {
 check('guests stay 4-8 minutes and each has their own tastes', visits.spawned && visits.visit, JSON.stringify(visits));
 check('guests dance for 30-90 s, drink for 20-45 s and chat with each other for 30-75 s', visits.danceStarted && visits.dancing && visits.drinking && visits.chatStarted && visits.chatting, JSON.stringify(visits));
 check('guests leave when their visit is over', visits.leaves, JSON.stringify(visits));
+
+// Interactions: dancers side by side may dance together; a chat can turn
+// into an argument (💢), the security guard walks over and calms it down,
+// or it becomes a cartoon fight and one of them is thrown out.
+const fight = await page.evaluate(() => {
+  const s = window.__clubNova.scene.getScene('club');
+  const out = {};
+  const g = s.guard;
+  out.guard = !!g && g.gx >= 0 && g.gy >= 0 && g.gx < s.gridSize && g.gy < s.gridSize && g.container.visible;
+  const cap = s.patronCapacity;
+  s.patronCapacity = () => 99;
+  const door = s.doorTile();
+  const spawn = () => {
+    const block = s.patrons.filter((p) => p.gx === door.gx && p.gy === door.gy);
+    block.forEach((p) => { p.gx = -50; });
+    s.trySpawnPatron();
+    block.forEach((p) => { p.gx = door.gx; });
+    const p = s.patrons[s.patrons.length - 1];
+    p.gx = -60 - s.patrons.length;
+    return p;
+  };
+  const a = spawn();
+  const b = spawn();
+  s.patronCapacity = cap;
+  const rnd = Math.random;
+  // The next random pick is v (only the next: Phaser names textures randomly).
+  const once = (v) => { Math.random = () => { Math.random = rnd; return v; }; };
+  // Dancing together.
+  for (const p of [a, b]) { p.moving = false; p.dancePartner = null; }
+  [a.gx, a.gy] = [5, 6];
+  [b.gx, b.gy] = [6, 6];
+  a.activity = { kind: 'dance', until: s.time.now + 40000 };
+  b.activity = { kind: 'dance', until: s.time.now + 30000 };
+  once(0.001);
+  s.maybeDanceTogether(b);
+  out.together = a.dancePartner === b && b.dancePartner === a && a.activity.until === b.activity.until;
+  s.endDanceTogether(a);
+  // An argument that security settles.
+  const tidy = () => { if (s.argument) s.clearArgument(); };
+  tidy();
+  s.lastArgumentAt = -Infinity;
+  once(0.001);
+  out.argues = s.maybeArgue(a, b);
+  out.angry = !!a.container.angerIcon && !!b.container.angerIcon && a.arguing && b.arguing && a.nextMoveAt === Infinity;
+  out.guardGoing = !!g.goal;
+  once(0.001); // settles it
+  s.guardArrived();
+  out.settled = !s.argument && !a.container.angerIcon && !a.arguing && !b.arguing && !a.leaving && !b.leaving;
+  out.cooldown = s.maybeArgue(a, b) === false; // not again straight away
+  // An argument that turns into a fight and an ejection.
+  s.startArgument(a, b);
+  once(0.99); // he can't calm them down
+  s.guardArrived();
+  out.fighting = s.argument && s.argument.state === 'fight' && !!s.argument.cloud && !a.container.visible && !b.container.visible;
+  s.argument.fightEndsAt = s.time.now - 1;
+  s.tickSecurity();
+  const out1 = [a, b].filter((p) => p.ejected && p.leaving);
+  const stay = [a, b].filter((p) => !p.leaving);
+  out.ejected = out1.length === 1 && stay.length === 1 && a.container.visible && b.container.visible && !s.argument && !a.container.angerIcon;
+  // Unresolved for too long: the argument turns into a fight on its own.
+  tidy();
+  const c = spawn();
+  [c.gx, c.gy] = [7, 7];
+  s.startArgument(stay[0], c);
+  s.argument.fightAt = s.time.now - 1;
+  s.tickSecurity();
+  out.escalates = s.argument && s.argument.state === 'fight';
+  tidy();
+  for (const p of [a, b, c]) if (!p.leaving) s.startPatronDeparture(p);
+  return out;
+});
+check('a security guard stands inside the club', fight.guard, JSON.stringify(fight));
+check('guests dancing side by side sometimes dance together', fight.together, JSON.stringify(fight));
+check('a chat can turn into an argument with anger icons, and security walks over and settles it', fight.argues && fight.angry && fight.guardGoing && fight.settled && fight.cooldown, JSON.stringify(fight));
+check('an argument security cannot settle becomes a cartoon fight and one guest is ejected', fight.fighting && fight.ejected && fight.escalates, JSON.stringify(fight));
 
 // Bar stools: a stool right in front of a staffed bar's counter is a
 // service seat. A guest sits there facing the counter, gets served across

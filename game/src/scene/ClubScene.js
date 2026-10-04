@@ -28,6 +28,7 @@ import { SongsMixin } from './songs.js';
 import { VipsMixin } from './vips.js';
 import { InventoryMixin } from './inventory.js';
 import { ActivitiesMixin } from './activities.js';
+import { SecurityMixin } from './security.js';
 import { Music } from '../music.js';
 import { applyMixins } from './applyMixins.js';
 
@@ -297,6 +298,7 @@ export class ClubScene extends Phaser.Scene {
     // (self-rescheduling rather than a fixed-period timer, so spawns don't
     // land in an obvious metronomic rhythm).
     this.startStreet();
+    this.setupSecurity(); // the guard inside the door
     this.scheduleNextPatronSpawn();
 
     // Patron behavior tick — movement, tipping, and departure are all
@@ -351,4 +353,5 @@ applyMixins(ClubScene, [
   GuestsMixin,
   SongsMixin,
   VipsMixin,
+  SecurityMixin,
 ]);

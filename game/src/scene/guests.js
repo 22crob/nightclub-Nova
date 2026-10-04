@@ -218,6 +218,7 @@ export class GuestsMixin {
   // Why a guest can't be seated at a VIP booth right now, or null.
   seatBlocker(patron) {
     if (patron.leaving) return 'they\'re heading home';
+    if (patron.arguing) return 'they\'re in an argument';
     if (patron.sitting || patron.seat) return 'already seated';
     const booths = Object.values(this.placed).some((rec) => VIP_BOOTHS.has(rec.type));
     if (!booths) return 'you have no VIP booth yet';
@@ -245,6 +246,7 @@ export class GuestsMixin {
   // A free dance-floor tile, or null.
   danceBlocker(patron) {
     if (patron.leaving) return 'they\'re heading home';
+    if (patron.arguing) return 'they\'re in an argument';
     if (!this.musicPlaying()) return 'the music is off';
     const anyFloor = Object.values(this.placed).some((rec) => this.isDanceFloorTile(rec.anchor[0], rec.anchor[1]));
     if (!anyFloor) return 'you have no dance floor yet';
@@ -274,6 +276,7 @@ export class GuestsMixin {
 
   drinkBlocker(patron) {
     if (patron.leaving) return 'they\'re heading home';
+    if (patron.arguing) return 'they\'re in an argument';
     if (patron.onTheHouse) return 'they already had one on the house';
     const bar = this.staffableRecords().find((rec) => rec.staff && rec.staff.kind === 'bartender');
     if (!bar) return 'you need a bar with a bartender';
