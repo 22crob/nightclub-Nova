@@ -280,9 +280,20 @@ export class ActivitiesMixin {
     }
   }
 
-  // Heads for a drink: joins the shortest line at a staffed bar.
+  // Heads for a drink: a free stool at a staffed bar (sit and get served
+  // across the counter) or the shortest line at one. Stools are popular,
+  // but some guests just queue.
   joinBarStoolOrQueue(patron) {
-    return this.joinBarQueue(patron);
+    const stools = this.freeBarStools();
+    const takeStool = () => {
+      if (stools.length === 0) return false;
+      const seat = Phaser.Utils.Array.GetRandom(stools);
+      this.claimSpecificSeat(patron, seat);
+      patron.stoolBar = seat.bar;
+      return true;
+    };
+    if (Math.random() < 0.65 && takeStool()) return true;
+    return this.joinBarQueue(patron) || takeStool();
   }
 
   // Runs every patron tick: chat bubbles for chatters.

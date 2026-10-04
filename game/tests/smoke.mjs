@@ -820,6 +820,40 @@ check('guests stay 4-8 minutes and each has their own tastes', visits.spawned &&
 check('guests dance for 30-90 s, drink for 20-45 s and chat with each other for 30-75 s', visits.danceStarted && visits.dancing && visits.drinking && visits.chatStarted && visits.chatting, JSON.stringify(visits));
 check('guests leave when their visit is over', visits.leaves, JSON.stringify(visits));
 
+// Bar stools: a stool right in front of a staffed bar's counter is a
+// service seat. A guest sits there facing the counter, gets served across
+// it, and drinks on the stool.
+const stool = await page.evaluate(() => {
+  const s = window.__clubNova.scene.getScene('club');
+  const out = {};
+  const bar = s.hireableRecords().find((r) => s.isWorked(r) && s.barLayout(r).out);
+  const { counter, out: dir } = s.barLayout(bar);
+  const spot = [counter[0] + dir[0], counter[1] + dir[1]];
+  for (const p of s.patrons) if (p.gx === spot[0] && p.gy === spot[1]) p.gx = -40;
+  const rec = s.restoreProp('woodStool', 0, spot);
+  out.placed = !!rec;
+  out.isBarStool = s.stoolBar(rec) === bar;
+  const seat = s.freeBarStools().find((x) => x.rec === rec);
+  const p = s.patrons.find((x) => !x.leaving && !x.gone && !x.sitting && !x.queue && !x.moving);
+  out.guest = !!p;
+  if (!p || !seat) return out;
+  s.endChat(p);
+  s.claimSpecificSeat(p, seat);
+  p.stoolBar = bar;
+  p.activity = { kind: 'drink', phase: 'queue' };
+  [p.gx, p.gy] = seat.access;
+  const cash = s.cash;
+  s.sitDown(p);
+  out.sitting = p.sitting === true;
+  out.facesCounter = p.container.patronDir === (dir[0] > 0 || dir[1] > 0 ? 'back' : 'front');
+  s.serveAtStool(p);
+  out.served = s.cash > cash && p.activity.phase === 'drinking' && p.sitting && p.nextMoveAt === p.activity.until;
+  s.releaseSeats(rec);
+  s.removeProp(rec);
+  return out;
+});
+check('a stool at a bar is a service seat: sit facing the counter, get served, drink there', stool.placed && stool.isBarStool && stool.guest && stool.sitting && stool.facesCounter && stool.served, JSON.stringify(stool));
+
 // Levels get slower: 250 fans for level 2, and each level after needs more
 // than the one before.
 const levels = await page.evaluate(() => {
