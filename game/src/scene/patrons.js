@@ -3,7 +3,7 @@
 import Phaser from 'phaser';
 import { PATRON_META, PATRON_SHEETS } from '../assets.js';
 import { FLOOR_DECAL_PROPS, PROP_TYPES, STAFF_TYPES } from '../catalog.js';
-import { BOOST, CHARACTER_DISPLAY_HEIGHT, DRINK_RUN_CHANCE, PATRON_DANCE_LINGER, HAIR_STYLES, PATRON_HAIR_COLORS, PATRON_LIFETIME, PATRON_MOVE_INTERVAL, PATRON_OUTFIT_COLORS, PATRON_POI_LINGER, PATRON_POPUP_Y, PATRON_SKIN_TONES, PATRON_SPAWN_INTERVAL, MONEY, PATRON_TIP_INTERVAL, PATRON_Y_OFFSET, PROP_SCALE } from '../config.js';
+import { BOOST, CHARACTER_DISPLAY_HEIGHT, HAIR_STYLES, PATRON_HAIR_COLORS, PATRON_MOVE_INTERVAL, PATRON_OUTFIT_COLORS, PATRON_POPUP_Y, PATRON_SKIN_TONES, PATRON_SPAWN_INTERVAL, MONEY, PATRON_TIP_INTERVAL, PATRON_Y_OFFSET, PROP_SCALE, VISIT } from '../config.js';
 import { SFX } from '../sfx.js';
 import { MOOD } from './mood.js';
 import { randRange } from '../util.js';
@@ -65,7 +65,6 @@ export class PatronsMixin {
       container,
       scaleVariance,
       spawnedAt: now,
-      despawnAt: now + randRange(...PATRON_LIFETIME),
       nextMoveAt: now + randRange(...PATRON_MOVE_INTERVAL),
       nextTipAt: now + randRange(...PATRON_TIP_INTERVAL),
       thirstyAt: now + randRange(3000, 18000), // most patrons want a drink soon after arriving, not all at once
@@ -77,6 +76,7 @@ export class PatronsMixin {
       moving: false,
       leaving: false,
     };
+    this.startVisit(patron); // their visit length and personality (see activities.js)
     this.patrons.push(patron);
     if (vip) this.welcomeVip(patron, vip);
     this.chargeCover(patron);
@@ -222,10 +222,14 @@ export class PatronsMixin {
       this.updateGuestBubble(patron);
       patron.lastTickAt = now;
       if (patron.leaving) continue; // stormed out just now
-      if (now >= patron.despawnAt) {
+      // Guests leave when their visit is over, once they've finished what
+      // they're doing (see chooseActivity()); this only catches someone
+      // stuck well past it.
+      if (now >= patron.despawnAt + VISIT.overstayMs && !patron.queue) {
         this.startPatronDeparture(patron);
         continue;
       }
+      this.tickActivity(patron);
       if (!patron.moving && now >= patron.nextMoveAt) {
         this.movePatronRandomly(patron);
       }
@@ -333,51 +337,13 @@ export class PatronsMixin {
     return null;
   }
 
-  // Gives a patron somewhere purposeful to walk to, rather than any random
-  // spot on the floor: most of the time a real point of interest (dance
-  // floor, bar/booth hangout spot — see pickPointOfInterestTile()), so the
-  // crowd visibly gathers around the club's attractions instead of just
-  // drifting; the rest of the time (or once nothing new is worth visiting)
-  // a plain open tile so patrons still spread out across the whole floor.
+  // Gives a patron somewhere to go: their place in a bar line, the next
+  // step of what they're doing, or their next activity (see activities.js).
   pickRoamTarget(patron) {
     // In line at a bar: stay in line.
     if (patron.queue) { this.updateQueueTarget(patron); if (patron.queue) return; }
-    this.releaseSeat(patron); // a new plan replaces any seat they were headed for
-    // Thirsty (or just fancying one): join the shortest line at a staffed bar.
-    const thirsty = patron.thirstyAt !== undefined && this.time.now >= patron.thirstyAt;
-    if ((thirsty || Math.random() < DRINK_RUN_CHANCE) && this.joinBarQueue(patron)) return;
-    if (this.maybeGoSit(patron)) return;
-    const poi = this.pickPointOfInterestTile();
-    if (poi && Math.random() < 0.7) {
-      [patron.targetGx, patron.targetGy] = poi;
-      return;
-    }
-    const lines = this.barLineTiles();
-    for (let i = 0; i < 12; i++) {
-      const tx = Phaser.Math.Between(0, this.gridSize - 1);
-      const ty = Phaser.Math.Between(0, this.gridSize - 1);
-      if (!this.isBlockingProp(tx, ty) && !lines.has(`${tx},${ty}`)) {
-        patron.targetGx = tx;
-        patron.targetGy = ty;
-        return;
-      }
-    }
-    const open = [];
-    for (let gx = 0; gx < this.gridSize; gx++) {
-      for (let gy = 0; gy < this.gridSize; gy++) {
-        if (!this.isBlockingProp(gx, gy) && !lines.has(`${gx},${gy}`)) open.push([gx, gy]);
-      }
-    }
-    if (open.length > 0) {
-      const [tx, ty] = Phaser.Utils.Array.GetRandom(open);
-      patron.targetGx = tx;
-      patron.targetGy = ty;
-    } else if (poi) {
-      [patron.targetGx, patron.targetGy] = poi;
-    } else {
-      patron.targetGx = patron.gx;
-      patron.targetGy = patron.gy;
-    }
+    if (!patron.sitting) this.releaseSeat(patron); // a new plan replaces any seat they were headed for
+    this.nextActivityStep(patron);
   }
 
   // Picks an open neighboring tile (on-grid, no prop, no other patron
@@ -408,6 +374,10 @@ export class PatronsMixin {
     if (!patron.leaving && (patron.targetGx === undefined ||
         (patron.gx === patron.targetGx && patron.gy === patron.targetGy))) {
       this.pickRoamTarget(patron);
+      if (patron.leaving || patron.gone || patron.moving) return;
+      // The next activity is right here (a chat partner waiting, a seat
+      // beside them): start it without walking.
+      if (patron.gx === patron.targetGx && patron.gy === patron.targetGy) { this.arriveForActivity(patron); return; }
     }
 
     // Someone else already parked on this patron's target tile — a popular
@@ -524,33 +494,9 @@ export class PatronsMixin {
           }
           return;
         }
-        if (arrived && patron.seat && !patron.sitting) {
-          this.sitDown(patron);
-          return;
-        }
-        if (arrived && patron.queue) {
-          this.waitInLine(patron);
-          return;
-        }
         if (arrived) {
-          // Reached the spot it was roaming toward — stand/mingle here for a
-          // bit before picking a fresh target. A genuine point of interest
-          // (dancing, or parked next to a bar/DJ/etc.) earns a much longer
-          // dwell than a random empty tile, so patrons visibly linger at
-          // the good spots instead of drifting off on the same short timer
-          // everywhere.
-          const dancing = this.isDanceFloorTile(tx, ty) && this.musicPlaying();
-          const atPOI = this.isDanceFloorTile(tx, ty) || this.isNearRevenueProp(tx, ty);
-          const linger = dancing ? PATRON_DANCE_LINGER : (atPOI ? PATRON_POI_LINGER : PATRON_MOVE_INTERVAL);
-          patron.nextMoveAt = this.time.now + randRange(...linger);
-          this.faceFront(patron);
-          this.setPatronAnimation(patron, dancing ? 'dance' : 'idle');
-          // Thirsty: don't hang about, go and get in line.
-          if (this.time.now >= patron.thirstyAt) patron.nextMoveAt = Math.min(patron.nextMoveAt, this.time.now + 1200);
-        } else if (this.time.now >= patron.despawnAt) {
-          // Time's up mid-journey — head for the door instead of
-          // continuing to roam toward the old target.
-          this.startPatronDeparture(patron);
+          // Reached the spot: start (or carry on with) their activity.
+          this.arriveForActivity(patron);
         } else {
           // Still mid-journey toward its target — chain directly into the
           // next hop's tween right here instead of just flagging it ready
@@ -685,6 +631,7 @@ export class PatronsMixin {
   startPatronDeparture(patron) {
     if (patron.leaving) return; // already on its way out
     patron.leaving = true;
+    this.endChat(patron);
     this.leaveBarQueue(patron);
     patron.targetGx = this.doorTile().gx;
     patron.targetGy = this.doorTile().gy;
@@ -730,6 +677,7 @@ export class PatronsMixin {
 
   finalizeDeparture(patron) {
     if (patron.gone) return;
+    this.endChat(patron);
     this.releaseSeat(patron);
     this.leaveBarQueue(patron);
     this.patronLeaves(patron);

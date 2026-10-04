@@ -1,7 +1,7 @@
 // ClubScene methods: patrons sitting on seating (couches, stools, booths).
 // Mixed into ClubScene (see ClubScene.js); `this` is the scene.
 //
-// A patron who fancies a sit (see pickRoamTarget()) reserves a free seat
+// A patron who fancies a sit (see activities.js) reserves a free seat
 // and walks to the open tile in front of it (its access tile). There they
 // hop onto the seat: the sprite moves to the seat's spot and is drawn
 // between the piece's back and front layers, so the seat hides their legs.
@@ -9,7 +9,7 @@
 // tile for others. Sitting slowly cheers them up (see updatePatronMood());
 // after a while, or when thirsty, they hop back down.
 import { PROP_TYPES } from '../catalog.js';
-import { SEAT_CHANCE, SEAT_SIT_TIME, TILE_W } from '../config.js';
+import { TILE_W, VISIT } from '../config.js';
 
 // Screen pixels per Blender unit of height, for sitLift.
 const UNIT_HEIGHT_PX = (TILE_W / Math.SQRT2) * Math.cos(Math.PI / 6);
@@ -124,7 +124,10 @@ export class SeatingMixin {
       ease: 'Sine.easeOut',
       onComplete: () => {
         patron.moving = false;
-        patron.nextMoveAt = this.time.now + randRange(...SEAT_SIT_TIME);
+        // Sit a while (VISIT.sitMs), or until the drink they ordered from
+        // here is finished.
+        const a = patron.activity;
+        patron.nextMoveAt = a && a.until ? a.until : this.time.now + randRange(...VISIT.sitMs);
       },
     });
   }
@@ -181,11 +184,5 @@ export class SeatingMixin {
       patron.path = null;
     }
     rec.seatTaken = [];
-  }
-
-  // Called from pickRoamTarget(): sometimes a patron goes for a sit.
-  maybeGoSit(patron) {
-    if (this.isBoosted()) return false; // everyone's dancing
-    return Math.random() < SEAT_CHANCE && this.claimSeat(patron);
   }
 }

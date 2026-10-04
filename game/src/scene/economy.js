@@ -82,12 +82,25 @@ export class EconomyMixin {
   levelInfo() {
     let fans = Math.floor(this.fans);
     let level = 1;
-    let need = LEVEL_FANS.first;
+    let need = this.fansToNextLevel(1);
     while (fans >= need) {
       fans -= need;
       level += 1;
-      need += LEVEL_FANS.step;
+      need = this.fansToNextLevel(level);
     }
     return { level, into: fans, need, progress: fans / need };
+  }
+
+  // Fans needed to get from `level` to the next (see LEVEL_FANS).
+  fansToNextLevel(level) {
+    const k = level - 1;
+    return LEVEL_FANS.first + LEVEL_FANS.step * k + LEVEL_FANS.curve * k * k;
+  }
+
+  // Total fans at which `level` starts.
+  fansForLevel(level) {
+    let total = 0;
+    for (let l = 1; l < level; l++) total += this.fansToNextLevel(l);
+    return total;
   }
 }

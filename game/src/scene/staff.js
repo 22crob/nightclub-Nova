@@ -2,7 +2,7 @@
 // Mixed into ClubScene (see ClubScene.js); `this` is the scene.
 import { PATRON_META, PATRON_SHEETS } from '../assets.js';
 import { PROP_TYPES, STAFF_TYPES } from '../catalog.js';
-import { BAR_QUEUE_LENGTH, BARTENDERS, CHARACTER_DISPLAY_HEIGHT, MONEY, THIRST_INTERVAL, PATRON_POPUP_Y, PROP_SCALE, SELL_REFUND_RATIO } from '../config.js';
+import { BAR_QUEUE_LENGTH, BARTENDERS, XP, CHARACTER_DISPLAY_HEIGHT, MONEY, THIRST_INTERVAL, PATRON_POPUP_Y, PROP_SCALE, SELL_REFUND_RATIO } from '../config.js';
 import { realSpriteIconFor } from '../icons.js';
 import { SFX } from '../sfx.js';
 import { randRange } from '../util.js';
@@ -387,10 +387,11 @@ export class StaffMixin {
     this.noteIncome('tips', tip);
     patron.spent = (patron.spent || 0) + price + tip;
     patron.drinks = (patron.drinks || 0) + 1;
-    this.fans += 0.3;
+    this.fans += XP.drinkServed; // XP for good service
     this.drinksSold = (this.drinksSold || 0) + 1;
     this.cheerPatron(patron, MOOD.drinkMood);
     patron.thirstyAt = now + randRange(...THIRST_INTERVAL) / this.boostFactor() / this.partyEffect('thirst', 1);
+    this.startDrinking(patron, rec); // they drink it for a while (see activities.js)
     SFX.tip();
     this.floatText(patron.container.x, patron.container.y - PATRON_POPUP_Y, `🍹 $${price} Drink + $${tip} Tip`, '#7dffc4');
     this.updateUI();

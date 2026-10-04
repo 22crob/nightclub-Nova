@@ -219,7 +219,7 @@ const facing = await page.evaluate(() => {
   return out;
 });
 check('patrons face the way they walk', facing.downLeft === 'front' && facing.downRight === 'front mirrored' && facing.upRight === 'back' && facing.upLeft === 'back mirrored', JSON.stringify(facing));
-check('fans grow over time', st.fans > fansBefore + 3, `${fansBefore.toFixed(1)} -> ${st.fans.toFixed(1)} fans`);
+check('fans grow over time', st.fans > fansBefore + 1, `${fansBefore.toFixed(1)} -> ${st.fans.toFixed(1)} fans`);
 // Patrons want their first drink 3-18s after arriving, so give it time.
 await page.waitForFunction(() => (window.__clubNova.scene.getScene('club').drinksSold || 0) > 0, null, { timeout: 30000 }).catch(() => {});
 const drinks = await page.evaluate(() => window.__clubNova.scene.getScene('club').drinksSold || 0);
@@ -290,7 +290,7 @@ check('the DJ booth and its DJ come back after reload', djAfterReload);
 const upgrade = await page.evaluate(() => {
   const s = window.__clubNova.scene.getScene('club');
   const fans = s.fans;
-  s.fans = Math.max(s.fans, 150); // level 2, for the Pro Booth
+  s.fans = Math.max(s.fans, s.fansForLevel(2)); // level 2, for the Pro Booth
   const c0 = s.cash;
   s.sellProp(6, 0);
   const kept = !!s.clubBooth() && s.cash === c0;
@@ -511,6 +511,7 @@ const street = await page.evaluate(() => {
   const s = window.__clubNova.scene.getScene('club');
   const before = s.patrons.length;
   const inLine = s.streetQueue.length;
+  s.streetQueue.forEach((p) => { p.arrived = true; s.walkStreetQueue(p, true); }); // everyone in their place
   const standing = s.streetQueue.filter((p) => p.arrived && !p.walking);
   const facing = standing.length > 0 && standing.every((p) => p.container.patronDir === 'back');
   const front = s.streetQueue[0];
@@ -527,7 +528,7 @@ const street = await page.evaluate(() => {
   // starting at the door, everyone facing it.
   const outside = slot0.gx <= sp.t - 2 && Math.abs(slot0.gy - s.doorTile().gy) < 1 && sp.slot(1).gy > slot0.gy
     && s.streetBackLayer.list.includes(s.streetQueueLayer) && facing;
-  return { inLine, after: s.streetQueue.length, before, bouncer: !!s.streetBouncer, lamps: s.streetLamps.commandBuffer.length > 0, outside };
+  return { inLine, after: s.streetQueue.length, before, bouncer: !!s.streetBouncer, lamps: s.streetLamps.commandBuffer.length > 0, outside, facing };
 });
 check('the line stands behind the left wall facing the door, with a bouncer and lamps; the front goes in', street.inLine > 0 && street.after === street.inLine - 1 && street.bouncer && street.lamps && street.outside, JSON.stringify(street));
 
@@ -701,13 +702,13 @@ const longBar = await page.evaluate(() => {
   s.fans = 0;
   out.limit1 = s.bartenderAllowance() === 1 && s.hireStaff(units[1]) === false;
   // Level 4: a second bartender, here the long bar's first, in the middle.
-  s.fans = 750;
+  s.fans = s.fansForLevel(4);
   out.level4 = s.levelInfo().level === 4 && s.bartenderAllowance() === 2;
   out.hired = s.hireStaff(units[0]) && !!units[1].staff && !units[0].staff;
   out.allWorked = units.every((u) => s.isWorked(u));
   out.limit2 = s.hireStaff(units[0]) === false;
   // Level 7: a third, joining the same long bar; the two spread out.
-  s.fans = 2400;
+  s.fans = s.fansForLevel(7);
   out.level7 = s.levelInfo().level === 7 && s.bartenderAllowance() === 3;
   out.second = s.hireStaff(units[0]) && !!units[0].staff && !units[1].staff && !!units[2].staff;
   s.fireStaff(units[0]);
@@ -760,16 +761,76 @@ check('the party picker lists four parties, the fancy ones locked at first', par
 check('a House Party costs $60, lets 2 more guests in and raises tips', party.paid === 60 && party.capacity === 2 && party.tips > 1 && party.closed, JSON.stringify(party));
 check('one party at a time, with a countdown banner, over after 3 minutes', party.banner && party.second === false && party.button === 'active' && party.ended, JSON.stringify(party));
 
-// Levels get slower: 150 fans for level 2, 250 more for level 3.
+// Guest visits: 4-8 minutes, each guest a type with their own tastes,
+// moving through activities (dance 30-90 s, drink 20-45 s, chat with
+// someone nearby), and leaving when the visit is over, not after one dance.
+const visits = await page.evaluate(() => {
+  const s = window.__clubNova.scene.getScene('club');
+  const out = {};
+  const now = s.time.now;
+  const cap = s.patronCapacity;
+  s.patronCapacity = () => 99;
+  const before = s.patrons.length;
+  // Clear the doorway for two test guests.
+  const door = s.doorTile();
+  const block = s.patrons.filter((p) => p.gx === door.gx && p.gy === door.gy);
+  block.forEach((p) => { p.gx = -50; });
+  s.trySpawnPatron();
+  const a = s.patrons[s.patrons.length - 1];
+  a.gx = -60;
+  s.trySpawnPatron();
+  const b = s.patrons[s.patrons.length - 1];
+  block.forEach((p) => { p.gx = door.gx; });
+  s.patronCapacity = cap;
+  out.spawned = s.patrons.length === before + 2;
+  const visit = a.despawnAt - now;
+  out.visit = visit >= 4 * 60000 - 1000 && visit <= 8 * 60000 + 1000 && !!a.type && !!a.type.weights;
+  // Dance: off to a dance floor tile; once there, dancing for 30-90 s.
+  [a.gx, a.gy] = [2, 2];
+  out.danceStarted = s.beginActivity(a, 'dance') && s.isDanceFloorTile(a.targetGx, a.targetGy);
+  [a.gx, a.gy] = [a.targetGx, a.targetGy];
+  s.arriveForActivity(a);
+  const dance = a.activity.until - s.time.now;
+  out.dancing = a.container.patronAnimState.startsWith('dance') && dance >= 29000 && dance <= 91000;
+  // A drink: they drink it for 20-45 s.
+  const bar = s.hireableRecords().find((r) => s.isWorked(r));
+  s.serveDrink(bar, a);
+  const drink = a.activity.until - s.time.now;
+  out.drinking = a.activity.kind === 'drink' && a.activity.phase === 'drinking' && drink >= 19000 && drink <= 46000;
+  // Chat: b walks up to a, and they talk for 30-75 s.
+  a.activity = { kind: 'wander', until: s.time.now + 5000 };
+  a.moving = false; b.moving = false;
+  const spots = [[1, 0], [-1, 0], [0, 1], [0, -1]].map(([dx, dy]) => [a.gx + dx, a.gy + dy]);
+  [b.gx, b.gy] = spots.find(([x, y]) => x >= 0 && y >= 0 && !s.isBlockingProp(x, y)) || [a.gx + 1, a.gy];
+  out.chatStarted = s.startChat(b) && b.chatWith === a && a.chatWith === b;
+  [b.gx, b.gy] = [b.targetGx, b.targetGy];
+  s.chatArrive(b);
+  const chat = a.activity.until - s.time.now;
+  out.chatting = a.activity.chatting && b.activity.chatting && chat >= 29000 && chat <= 76000;
+  // Visit over: the next pick sends them home.
+  s.endChat(b);
+  b.despawnAt = s.time.now - 1;
+  b.activity = null;
+  s.chooseActivity(b);
+  out.leaves = b.leaving === true;
+  s.startPatronDeparture(a);
+  return out;
+});
+check('guests stay 4-8 minutes and each has their own tastes', visits.spawned && visits.visit, JSON.stringify(visits));
+check('guests dance for 30-90 s, drink for 20-45 s and chat with each other for 30-75 s', visits.danceStarted && visits.dancing && visits.drinking && visits.chatStarted && visits.chatting, JSON.stringify(visits));
+check('guests leave when their visit is over', visits.leaves, JSON.stringify(visits));
+
+// Levels get slower: 250 fans for level 2, and each level after needs more
+// than the one before.
 const levels = await page.evaluate(() => {
   const s = window.__clubNova.scene.getScene('club');
   const fans = s.fans;
   const at = (n) => { s.fans = n; return s.levelInfo().level; };
-  const out = [at(0), at(149), at(150), at(399), at(400), at(1200)];
+  const out = { at: [at(0), at(249), at(250), at(s.fansForLevel(3) - 1), at(s.fansForLevel(3)), at(s.fansForLevel(5))].join(), steps: [1, 2, 3, 4, 5].map((l) => s.fansToNextLevel(l)) };
   s.fans = fans;
   return out;
 });
-check('levels need more fans each time', levels.join() === '1,1,2,2,3,5', levels.join());
+check('levels need more fans each time (250 for level 2)', levels.at === '1,1,2,2,3,5' && levels.steps.every((v, i, a) => i === 0 || v > a[i - 1] + (a[i - 1] - (a[i - 2] || 0)) * 0), JSON.stringify(levels));
 
 // One endless night: no night clock or summary, the doors and the music
 // never stop, wages keep being paid, and every minute the club gets stars
@@ -783,7 +844,7 @@ const endless = await page.evaluate(() => {
   s.vibeCount = 10;
   s.ratedAt = s.time.now - 61 * 1000;
   s.tickRating();
-  out.rated = s.nightStars[s.nightStars.length - 1] === 5 && s.fans >= fans0 + 5 && s.vibeCount === 0;
+  out.rated = s.nightStars[s.nightStars.length - 1] === 5 && s.fans >= fans0 + 2 && s.vibeCount === 0;
   out.notYet = (() => { const n = s.nightStars.length; s.vibeCount = 1; s.vibeSum = 50; s.tickRating(); return s.nightStars.length === n; })();
   out.songEnds = /^Ends in \d+:\d\d$/.test(document.getElementById('songEnds').textContent);
   s.nightStars = stars0;

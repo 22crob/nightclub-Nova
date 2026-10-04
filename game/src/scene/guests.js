@@ -243,22 +243,12 @@ export class GuestsMixin {
   }
 
   // A free dance-floor tile, or null.
-  freeDanceTile() {
-    const tiles = [];
-    for (let gx = 0; gx < this.gridSize; gx++) {
-      for (let gy = 0; gy < this.gridSize; gy++) {
-        if (this.isDanceFloorTile(gx, gy) && !this.patronTileOccupied(gx, gy)) tiles.push([gx, gy]);
-      }
-    }
-    return tiles.length ? tiles[Math.floor(Math.random() * tiles.length)] : null;
-  }
-
   danceBlocker(patron) {
     if (patron.leaving) return 'they\'re heading home';
     if (!this.musicPlaying()) return 'the music is off';
     const anyFloor = Object.values(this.placed).some((rec) => this.isDanceFloorTile(rec.anchor[0], rec.anchor[1]));
     if (!anyFloor) return 'you have no dance floor yet';
-    if (!this.freeDanceTile()) return 'the dance floor is full';
+    if (!this.freeDanceTile(patron)) return 'the dance floor is full';
     return null;
   }
 
@@ -268,7 +258,9 @@ export class GuestsMixin {
     if (patron.queue) this.leaveBarQueue(patron);
     if (patron.sitting) { SFX.denied(); this.showToast('💃 Let them finish sitting first.'); return false; }
     this.releaseSeat(patron);
-    [patron.targetGx, patron.targetGy] = this.freeDanceTile();
+    this.endChat(patron);
+    patron.activity = { kind: 'dance' }; // a dance session (see activities.js)
+    [patron.targetGx, patron.targetGy] = this.freeDanceTile(patron);
     patron.path = null;
     patron.nextMoveAt = this.time.now;
     patron.fun = Math.min(100, patron.fun + 10);

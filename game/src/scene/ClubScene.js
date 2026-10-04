@@ -27,6 +27,7 @@ import { GuestsMixin } from './guests.js';
 import { SongsMixin } from './songs.js';
 import { VipsMixin } from './vips.js';
 import { InventoryMixin } from './inventory.js';
+import { ActivitiesMixin } from './activities.js';
 import { Music } from '../music.js';
 import { applyMixins } from './applyMixins.js';
 
@@ -328,6 +329,7 @@ export class ClubScene extends Phaser.Scene {
 
 applyMixins(ClubScene, [
   InventoryMixin,
+  ActivitiesMixin,
   WorldMixin,
   PlacementMixin,
   PropVisualsMixin,

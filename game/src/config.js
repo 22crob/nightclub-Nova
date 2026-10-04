@@ -72,13 +72,13 @@ export const FLOOR_COLOR = 0x5d5e66;
 // Each second, the club gains this share of its props' total fanRate in
 // fans. The rest of a club's fans come from patrons: drinks, tips, and how
 // happy they are when they leave (see mood.js).
-export const PASSIVE_FAN_SHARE = 0.25;
+export const PASSIVE_FAN_SHARE = 0.05; // small: fans (XP) come mostly from guests (see XP)
 
 // Staff wages are paid on this interval (see STAFF_TYPES in catalog.js).
 export const WAGE_INTERVAL_MS = 30000;
 // After a drink, how long until a patron is thirsty again and heads back
 // to a bar.
-export const THIRST_INTERVAL = [32000, 50000];
+export const THIRST_INTERVAL = [60000, 110000];
 
 // Facings are in degrees, matching the rotation applied in Blender: 0/90/180/270.
 export const FACINGS = [0, 90, 180, 270];
@@ -99,7 +99,33 @@ export const FACINGS = [0, 90, 180, 270];
 export const PATRON_BASE_CAPACITY = 3;
 // Fans needed for each level: `first` to reach level 2, then `step` more
 // for every level after (150, 250, 350, ... so level 5 is at 1,200 fans).
-export const LEVEL_FANS = { first: 150, step: 100 };
+// Fans are the game's XP. Level L needs first + step*(L-1) + curve*(L-1)^2
+// more fans to reach the next one, so each level takes longer.
+export const LEVEL_FANS = { first: 250, step: 150, curve: 15 };
+// Where fans (XP) come from: mostly good service, satisfied visits and
+// successful parties, not guests just moving between activities.
+export const XP = { drinkServed: 0.5, partyPerGuest: 1, partyMax: 60 };
+// Guest visits (see scene/activities.js): a guest stays visitMs, moving
+// between activities that each last about their range (ms). They finish
+// what they're doing before leaving; overstayMs past that, they're sent off.
+export const VISIT = {
+  visitMs: [4 * 60000, 8 * 60000],
+  danceMs: [30000, 90000],
+  drinkMs: [20000, 45000],
+  sitMs: [30000, 75000],
+  chatMs: [30000, 75000],
+  wanderMs: [10000, 25000],
+  overstayMs: 120000,
+};
+// Kinds of guest: how much each likes each activity (relative weights), so
+// they don't all follow the same routine.
+export const GUEST_TYPES = [
+  { key: 'dancer', label: 'Dancer', weights: { dance: 6, drink: 2, sit: 1, chat: 2, wander: 1 } },
+  { key: 'barfly', label: 'Barfly', weights: { dance: 1, drink: 5, sit: 2, chat: 3, wander: 1 } },
+  { key: 'social', label: 'Social butterfly', weights: { dance: 2, drink: 2, sit: 2, chat: 6, wander: 1 } },
+  { key: 'chill', label: 'Chiller', weights: { dance: 1, drink: 2, sit: 6, chat: 2, wander: 2 } },
+  { key: 'partier', label: 'Party animal', weights: { dance: 4, drink: 4, sit: 1, chat: 2, wander: 1 } },
+];
 export const PATRON_ABSOLUTE_MAX = 24;
 export const PATRON_SPAWN_INTERVAL = [4000, 7000]; // ms between spawn attempts
 export const PATRON_MOVE_INTERVAL = [1500, 3000];  // ms a patron waits between wander steps
@@ -111,13 +137,11 @@ export const PATRON_MOVE_INTERVAL = [1500, 3000];  // ms a patron waits between 
 // one, so the floor never visibly had anyone actually "hanging out"
 // anywhere in particular. Real base-game behavior fix, not a visual one.
 export const PATRON_POI_LINGER = [3500, 7000];
-export const PATRON_DANCE_LINGER = [12000, 22000]; // ms a patron dances before moving on     // ms a patron lingers at a point of interest before wandering again
 // How guests pay, like Nightclub City: a cover charge once at the door, then
 // each drink (its price plus a tip of drinkTip x the price), and now and
 // then a tip while they're dancing (every danceTipEvery ms, $danceTip).
 export const MONEY = { cover: 5, drinkTip: [0.2, 0.5], danceTip: [2, 5], danceTipEvery: [15000, 25000] };
 export const PATRON_TIP_INTERVAL = MONEY.danceTipEvery; // ms between a dancer's tips
-export const PATRON_LIFETIME = [45000, 65000];     // ms a patron stays before heading out (the 12x12 room takes a while to cross)
 // Each patron token gets its own skin tone, outfit color, and hair (color +
 // style, or none at all) picked independently at spawn — see
 // drawPatronSprite() — so a full floor reads as a crowd of individuals
@@ -167,19 +191,14 @@ export const SELL_REFUND_RATIO = 0.5;
 // How often animated dance floors step a frame (see animateFloors()).
 export const FLOOR_TICK_MS = 125;
 
-// Seating (see seating.js): the chance a patron picking somewhere to go
-// heads for a free seat instead, and how long they stay seated (ms).
-export const SEAT_CHANCE = 0.3;
 
 // Bars: customers queue in a straight line out from the counter, at most
-// this many (the first one is ordering). DRINK_RUN_CHANCE is how often a
-// patron who isn't thirsty yet still goes for a drink.
+// this many (the first one is ordering).
 export const BAR_QUEUE_LENGTH = 4;
 // How many bartenders you may hire: one more at each of these levels (one
 // to start, two at level 4, ... five at level 15). Extra bartenders can work
 // another bar or join a long bar that already has one.
 export const BARTENDERS = { levels: [1, 4, 7, 11, 15] };
-export const DRINK_RUN_CHANCE = 0.1;
 
 // Drop the Bass (see boost.js): a free party boost with a cooldown. During
 // it, tips and thirst run `speedUp` times faster, tips are `tipMultiplier`
@@ -227,6 +246,5 @@ export const VIP = { joinMood: 85, max: 12, returnChance: 0.2, tipMultiplier: 2 
 // for each of starVibes its average vibe reached) and starFans bonus fans.
 // The rating is the average of the last `samples` of those. Each star above
 // 3 brings guests arrivalsPerStar faster (and each below, slower).
-export const RATING = { samples: 5, sampleMs: 60 * 1000, starVibes: [40, 55, 70, 85], starFans: [0, 1, 2, 3, 5], arrivalsPerStar: 0.08 };
+export const RATING = { samples: 5, sampleMs: 60 * 1000, starVibes: [40, 55, 70, 85], starFans: [0, 0, 1, 1, 2], arrivalsPerStar: 0.08 };
 export const MOOD_LIGHTING = { color: 0x0b0418, floorAlpha: 0.3, wallAlpha: 0.2, glows: false, glowAlpha: 0.55 };
-export const SEAT_SIT_TIME = [14000, 24000];
