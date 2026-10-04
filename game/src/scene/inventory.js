@@ -28,10 +28,12 @@ export class InventoryMixin {
     if (this.inventory[type] <= 0) delete this.inventory[type];
   }
 
-  // Holds an item from the inventory, to place for free.
+  // Holds an item from the inventory, to place for free. Things you own
+  // can always be placed, whatever your level.
   selectFromInventory(type) {
     if (this.inventoryCount(type) <= 0) { SFX.denied(); return; }
     if (this.selectedProp === type && this.holdingFromInventory) { this.deselectProp(); return; }
+    if (this.movingBooth && type !== this.movingBooth.type) this.cancelBoothMove();
     this.selectedProp = type;
     this.holdingFromInventory = true;
     this.updateGhost();
@@ -41,11 +43,22 @@ export class InventoryMixin {
   // Takes a placed item out of the club into the inventory. Returns its
   // record's bartender kind (so a moved bar can keep its bartender), or
   // false if it can't be picked up.
-  pickUpProp(rec) {
-    if (PROP_TYPES[rec.type].staff === 'dj') {
+  // The DJ booth can only be picked up to move it (the club always has
+  // one): pass `moving`.
+  pickUpProp(rec, moving = false) {
+    if (PROP_TYPES[rec.type].staff === 'dj' && !moving) {
       SFX.denied();
-      this.showToast('🎧 Your DJ booth stays put! You can still turn it, or upgrade it in the shop.');
+      this.showToast('🎧 Your DJ booth stays in the club! You can move it or turn it.');
       return false;
+    }
+    if (PROP_TYPES[rec.type].staff === 'dj') {
+      // Remember where it was, to put it back if the move is called off.
+      this.movingBooth = { type: rec.type, facing: rec.facing, anchor: [...rec.anchor] };
+      this.removeProp(rec);
+      this.addToInventory(rec.type);
+      this.updateGhost();
+      this.updateUI();
+      return 'dj';
     }
     const staffKind = rec.staff && rec.staff.kind;
     // A bar in a long bar leaves its bartender with the rest of the bar.
@@ -73,7 +86,7 @@ export class InventoryMixin {
       this.sellProp(gx, gy);
     } else {
       const facing = rec.facing;
-      const staff = this.pickUpProp(rec);
+      const staff = this.pickUpProp(rec, tool === 'move');
       if (staff === false) return true;
       SFX.sell();
       if (tool === 'move') {
@@ -93,6 +106,7 @@ export class InventoryMixin {
   // bartender back, and the hand empties when there are none left.
   placedFromInventory(rec) {
     this.addToInventory(rec.type, -1);
+    if (this.movingBooth && rec.type === this.movingBooth.type) this.movingBooth = null;
     if (this.carryStaff && !this.isWorked(rec) && PROP_TYPES[rec.type].staff === this.carryStaff) this.attachStaff(rec);
     this.carryStaff = null;
     if (this.inventoryCount(rec.type) <= 0) {
@@ -100,6 +114,25 @@ export class InventoryMixin {
       this.selectedProp = null;
     }
     this.refreshDock();
+  }
+
+  // Puts a DJ booth being moved back where it was (the move was called off:
+  // Esc, or picking something else).
+  cancelBoothMove() {
+    const m = this.movingBooth;
+    if (!m) return;
+    this.movingBooth = null;
+    this.addToInventory(m.type, -1);
+    const rec = this.restoreProp(m.type, m.facing, m.anchor) || (this.ensureClubBooth(), this.clubBooth());
+    if (rec && !rec.staff) this.attachStaff(rec);
+    if (this.selectedProp === m.type && this.holdingFromInventory) {
+      this.selectedProp = null;
+      this.holdingFromInventory = false;
+      this.carryStaff = null;
+    }
+    this.updateGhost();
+    this.updateUI();
+    this.saveGame();
   }
 
   // The Inventory tab: a card per kind of item, with how many you have.

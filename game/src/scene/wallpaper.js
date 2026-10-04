@@ -63,7 +63,9 @@ export class WallpaperMixin {
       for (let i = 0; i < size; i++) {
         const section = `${side}${i}`;
         const { x, y } = this.wallSectionOrigin(section);
-        const img = this.add.image(x, y, wallTextureKey('oldBrick', 0, SIDES[side]))
+        // One of the torn paper's variations, picked by section.
+        const variant = (i * 7 + (side === 'L' ? 3 : 0)) % WALL_STYLES.tornPaper.frames;
+        const img = this.add.image(x, y, wallTextureKey('tornPaper', variant, SIDES[side]))
           .setOrigin(0, 0).setDisplaySize(WALL_TEX_W / 2, WALL_TEX_H / 2);
         this.bareWallLayer.add(img);
         this.bareWallImages.push(img);

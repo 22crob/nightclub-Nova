@@ -209,11 +209,12 @@ export class PlacementMixin {
 
   placeProp(gx, gy) {
     if (!this.selectedProp) return; // nothing selected (see deselectProp()) — an empty-handed click does nothing
-    if (!this.isUnlocked(this.selectedProp)) { SFX.denied(); return; } // shouldn't normally be reachable — selectProp() already blocks this — but never place something not yet unlocked
     const def = PROP_TYPES[this.selectedProp];
     if (def.wallStyle || def.paintStyle) return; // painted with paintWall() / paintFloor()
-    // Things from the inventory are already paid for.
+    // Things from the inventory are already paid for, and can be placed
+    // whatever your level.
     const fromInventory = this.holdingFromInventory && this.inventoryCount(this.selectedProp) > 0;
+    if (!fromInventory && !this.isUnlocked(this.selectedProp)) { SFX.denied(); return; } // never buy something not yet unlocked
     const cost = fromInventory ? 0 : this.currentCost(this.selectedProp); // fixed price for this item — see currentCost()
     if (this.cash < cost) { SFX.denied(); return; }
 

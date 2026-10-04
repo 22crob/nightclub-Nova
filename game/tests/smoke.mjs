@@ -44,10 +44,15 @@ const clickTile = async (gx, gy, button = 'left') => {
   await page.mouse.click(x, y, { button });
   await page.waitForTimeout(150);
 };
-const waitForScene = () => page.waitForFunction(() => {
-  const s = window.__clubNova && window.__clubNova.scene.getScene('club');
-  return s && s.world && s.sys.settings.status >= 5; // RUNNING
-});
+// The level-up menu would cover the buttons the checks click, so it stays
+// shut here; it's checked on its own further down.
+const waitForScene = async () => {
+  await page.waitForFunction(() => {
+    const s = window.__clubNova && window.__clubNova.scene.getScene('club');
+    return s && s.world && s.sys.settings.status >= 5; // RUNNING
+  });
+  await page.evaluate(() => { window.__clubNova.scene.getScene('club').showLevelUp = () => {}; });
+};
 
 // Fresh start.
 await page.goto(gameUrl);
@@ -63,7 +68,7 @@ const opening = await page.evaluate(() => {
   const booth = s.clubBooth();
   const units = s.hireableRecords().filter((rec) => rec.type === 'starterBar');
   const bar = units.find((rec) => rec.staff);
-  const floor = Object.keys(s.placed).filter((k) => s.placed[k].type === 'dance').sort();
+  const floor = Object.keys(s.placed).filter((k) => s.placed[k].type === 'basicFloor').sort();
   return { floor: floor.join(' '), dancing: s.isDanceFloorTile(2, 6), type: booth && booth.type, anchor: booth && booth.anchor.join(','), dj: !!(booth && booth.staff), music: s.musicPlaying(), size: s.gridSize, bar: units.map((r) => r.anchor.join(',')).sort().join(' '), bartender: !!bar, staffed: units.filter((r) => r.staff).length, worked: units.every((r) => s.isWorked(r)), boothTiles: booth && booth.tiles.length, djOnTile: !!booth && (() => { const p = s.gridToScreen(0, 5.5); return Math.abs(booth.staff.container.x - p.sx) < 1 && Math.abs(booth.staff.container.y - p.sy) < 1 && booth.tiles.filter((t) => t.back).length === 2; })() };
 });
 check('starts with $700, a 10x10 room, a 2-tile DJ booth, a 3x3 dance floor and a 4-long bar with one bartender', st.cash === 700 && st.placed === 14 && opening.boothTiles === 4 && opening.djOnTile && opening.floor === '2,5 2,6 2,7 3,5 3,6 3,7 4,5 4,6 4,7' && opening.dancing && opening.size === 10 && opening.bar === '6,0 7,0 8,0 9,0' && opening.bartender && opening.staffed === 1 && opening.worked, `cash ${st.cash}, placed ${st.placed}, ${JSON.stringify(opening)}`);
@@ -99,7 +104,7 @@ const floorTips = await page.$$eval('#shopItems .propSlot', (els) => els.map((e)
 check('dance floors and regular floors share one category, and the tip says which', floorTips.some((t) => /^Dance floor/.test(t)) && floorTips.some((t) => /^Regular floor/.test(t)) && floorTips.every((t) => /Luxury: \d+/.test(t)), floorTips.length + ' floors');
 // Floors unlock one a level, taking turns: regular, dance, regular, ...
 const floorOrder = await page.$$eval('#shopItems .propSlot', (els) => els.map((e) => /^Dance/.test(e.dataset.tipText) ? 'D' : 'R').join(''));
-check('floors alternate regular and dance floors, one per level', floorOrder === 'RDRDRDRDRDRDRDRDD', floorOrder);
+check('floors alternate regular and dance floors, one per level (plus the Basic dance floor at level 1)', floorOrder === 'RDDRDRDRDRDRDRDRDD', floorOrder);
 // Clicking a card picks the item up; clicking it again puts it down.
 await page.click('.storeTab[data-tip-name="Seating"]');
 await page.locator('.propSlot').first().click();
@@ -325,8 +330,8 @@ check('zoom buttons zoom in and out within limits', zoom1 > zoom0 && Math.abs(zo
 // plays, and a Step Floor lights up under a patron.
 const floors = await page.evaluate(async () => {
   const s = window.__clubNova.scene.getScene('club');
-  const floorKeys = ['plainFloor', 'dance', 'woodFloor', 'glowFloor', 'neonFloor', 'ringFloor', 'waveFloor', 'rainbowFloor', 'stepFloor'];
-  const missing = floorKeys.filter((k) => !s.textures.exists(`floor_${{ plainFloor: 'plain', dance: 'checker', woodFloor: 'parquet', glowFloor: 'glow', neonFloor: 'lightUp', ringFloor: 'neonRings', waveFloor: 'wave', rainbowFloor: 'rainbow', stepFloor: 'step' }[k]}_0`));
+  const floorKeys = ['basicFloor', 'plainFloor', 'dance', 'woodFloor', 'glowFloor', 'neonFloor', 'ringFloor', 'waveFloor', 'rainbowFloor', 'stepFloor'];
+  const missing = floorKeys.filter((k) => !s.textures.exists(`floor_${{ basicFloor: 'basic', plainFloor: 'plain', dance: 'checker', woodFloor: 'parquet', glowFloor: 'glow', neonFloor: 'lightUp', ringFloor: 'neonRings', waveFloor: 'wave', rainbowFloor: 'rainbow', stepFloor: 'step' }[k]}_0`));
   const wave = s.restoreProp('waveFloor', 0, [9, 9]);
   const step = s.restoreProp('stepFloor', 0, [10, 9]);
   const music = s.musicPlaying();
@@ -351,7 +356,7 @@ check('a Step Floor lights up under a patron', floors.lit === 7, `frame ${floors
 // Wallpaper: pick one in the shop, click a wall section to paint it.
 const wallXY = await page.evaluate(() => {
   const s = window.__clubNova.scene.getScene('club');
-  s.selectProp('wpBrick');
+  s.selectProp('wpPaint');
   const paint = s.paintWall.bind(s);
   s.paintCosts = [];
   s.paintWall = (section) => { const before = s.cash; paint(section); s.paintCosts.push(before - s.cash); };
@@ -374,8 +379,8 @@ const wall = await page.evaluate(() => {
   delete s.paintWall;
   return { costs: s.paintCosts, painted: s.wallpaper.R3, saved: saved.wallpaper && saved.wallpaper.R3, visible: !!img && img.texture.key !== '__MISSING', ledFrames: frames.size };
 });
-check('clicking a wall paints it with wallpaper ($11)', wall.painted === 'wpBrick' && wall.costs.join() === '11' && wall.visible, `${wallXY.hit} -> ${wall.painted}, paid ${wall.costs.join()}`);
-check('wallpaper is saved', wall.saved === 'wpBrick');
+check('clicking a wall paints it with wallpaper ($8)', wall.painted === 'wpPaint' && wall.costs.join() === '8' && wall.visible, `${wallXY.hit} -> ${wall.painted}, paid ${wall.costs.join()}`);
+check('wallpaper is saved', wall.saved === 'wpPaint');
 check('animated wallpaper moves while the DJ plays', wall.ledFrames > 3, `${wall.ledFrames} frames`);
 
 // The doorway tile can't be blocked with furniture (floor tiles are fine).
@@ -831,18 +836,94 @@ const inv = await page.evaluate(() => {
   card.click();
   s.placeProp(spot[0], spot[1]);
   out.fromInventory = !!s.placed[`${spot[0]},${spot[1]}`] && s.cash === cash0 && s.inventoryCount('woodStool') === 0;
-  // The DJ booth can't be picked up.
-  s.editTool = 'move';
-  const booth = s.clubBooth();
-  s.editClick(booth.anchor[0], booth.anchor[1]);
-  out.boothStays = s.clubBooth() === booth && s.inventoryCount(booth.type) === 0;
+  // Something you own places from the inventory even if it unlocks later.
   s.sellProp(spot[0], spot[1]);
+  s.addToInventory('stepFloor');
+  const lockedCash = s.cash;
+  s.selectFromInventory('stepFloor');
+  s.placeProp(spot[0], spot[1]);
+  out.lockedPlaced = s.placed[`${spot[0]},${spot[1]}`]?.type === 'stepFloor' && s.cash === lockedCash && !s.isUnlocked('stepFloor');
+  s.sellProp(spot[0], spot[1]);
+  // The DJ booth can't be put away, but it can be moved: picked up with
+  // its DJ, put back if the move is called off, or set down somewhere new.
+  const booth = s.clubBooth();
+  const home = [...booth.anchor];
+  s.editTool = 'store';
+  s.editClick(home[0], home[1]);
+  out.boothStays = s.clubBooth() === booth && s.inventoryCount(booth.type) === 0;
+  s.editTool = 'move';
+  s.editClick(home[0], home[1]);
+  out.boothLifted = !s.clubBooth() && s.selectedProp === booth.type && s.holdingFromInventory;
+  out.savedWhileMoving = JSON.parse(JSON.stringify(s.serializeState())).placed.some((p) => p.type === booth.type && p.anchor.join() === home.join());
+  s.deselectProp();
+  const back = s.clubBooth();
+  out.boothBack = !!back && back.anchor.join() === home.join() && !!back.staff && s.inventoryCount(booth.type) === 0;
+  let free = null;
+  for (let gy = 1; gy < s.gridSize - 1 && !free; gy++) for (let gx = 1; gx < s.gridSize - 1 && !free; gx++) {
+    if (gx === home[0] && gy === home[1]) continue;
+    s.editClick(home[0], home[1]);
+    const ok = s.footprintValid(s.getFootprint(booth.type, s.currentFacing, gx, gy), booth.type);
+    if (ok) free = [gx, gy]; else s.deselectProp();
+  }
+  const boothCash = s.cash;
+  s.placeProp(free[0], free[1]);
+  const moved = s.clubBooth();
+  out.boothMoved = !!moved && moved.anchor.join() === free.join() && !!moved.staff && s.cash === boothCash && s.musicPlaying() && s.inventoryCount(booth.type) === 0;
+  // ...and back home, for the checks after this.
+  s.editClick(free[0], free[1]);
+  s.placeProp(home[0], home[1]);
+  out.boothHome = s.clubBooth()?.anchor.join() === home.join();
   return out;
 });
 check('Edit has Move, Turn, Put away and Sell', inv.tools === 'move,rotate,store,sell', inv.tools);
 check('Move picks an item up and it goes back down for free', inv.moved && inv.placedFree, JSON.stringify(inv));
 check('Put away sends an item to the saved inventory, and it places from there for free', inv.stored && inv.saved && inv.listed && inv.fromInventory, JSON.stringify(inv));
-check('the DJ booth cannot be picked up', inv.boothStays, JSON.stringify(inv));
+check('things in the inventory place even if they unlock at a later level', inv.lockedPlaced, JSON.stringify(inv));
+check('the DJ booth cannot be put away, but it moves with its DJ', inv.boothStays && inv.boothLifted && inv.savedWhileMoving && inv.boothBack && inv.boothMoved && inv.boothHome, JSON.stringify(inv));
+
+// With something in hand, clicking where a guest stands places it rather
+// than opening the guest's card.
+const handSpot = await page.evaluate(() => {
+  const s = window.__clubNova.scene.getScene('club');
+  s.setDockTab('inventory');
+  s.cardOpened = 0;
+  s.clickPersonReal = s.clickPerson;
+  s.clickPerson = (p) => { s.cardOpened += 1; return true; };
+  for (let gy = 2; gy < s.gridSize - 2; gy++) for (let gx = 2; gx < s.gridSize - 2; gx++) {
+    if (s.footprintValid(s.getFootprint('woodStool', 0, gx, gy), 'woodStool')) { s.selectProp('woodStool'); return [gx, gy]; }
+  }
+  return null;
+});
+await clickTile(handSpot[0], handSpot[1]);
+const hand = await page.evaluate(([gx, gy]) => {
+  const s = window.__clubNova.scene.getScene('club');
+  const out = { placed: s.placed[`${gx},${gy}`]?.type, cards: s.cardOpened };
+  s.clickPerson = s.clickPersonReal;
+  s.deselectProp();
+  s.sellProp(gx, gy);
+  return out;
+}, handSpot);
+check('holding something, a click places it instead of opening a guest card', hand.placed === 'woodStool' && hand.cards === 0, JSON.stringify(hand));
+
+// Level up: a menu with a card for everything just unlocked.
+const lvl = await page.evaluate(() => {
+  const s = window.__clubNova.scene.getScene('club');
+  Object.getPrototypeOf(s).showLevelUp.call(s, 5);
+  const names = [...document.querySelectorAll('#levelUnlocks .unlockTile')].map((t) => t.dataset.tipName);
+  const pictures = [...document.querySelectorAll('#levelUnlocks .unlockPic')].every((p) => p.style.backgroundImage || p.querySelector('svg') || p.textContent);
+  const out = { open: document.getElementById('levelUp').classList.contains('open'), title: document.getElementById('levelUpTitle').textContent, names, pictures };
+  document.getElementById('levelOk').click();
+  out.closed = !document.getElementById('levelUp').classList.contains('open');
+  return out;
+});
+check('levelling up shows a menu of everything unlocked, each with a picture', lvl.open && lvl.title === 'Level 5!' && lvl.names.includes('Old Brick') && lvl.names.includes('Brick') && lvl.names.some((n) => /club/.test(n)) && lvl.pictures && lvl.closed, JSON.stringify(lvl));
+
+// A new club's walls are beaten-up torn wallpaper; brick is a level 5 wallpaper.
+const walls = await page.evaluate(() => {
+  const s = window.__clubNova.scene.getScene('club');
+  return { bare: [...new Set((s.bareWallImages || []).map((i) => i.texture.key))] };
+});
+check('the bare walls are torn old wallpaper', walls.bare.length > 0 && walls.bare.every((k) => /tornPaper/.test(k)), JSON.stringify(walls));
 await page.click('#tabInventory');
 
 // Buttons are drawn icons with no words on them; hovering one pops up its

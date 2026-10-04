@@ -38,7 +38,14 @@ export class SaveMixin {
       seen.add(rec);
       placedList.push({ type: rec.type, facing: rec.facing, anchor: rec.anchor, ...(rec.staff ? { staff: true } : {}) });
     }
-    return { cash: this.cash, fans: this.fans, gridSize: this.gridSize, placed: placedList, wallpaper: { ...this.wallpaper }, floorPaint: { ...this.floorPaint }, night: this.night, nightOver: this.nightPhase === 'closed', bestNightProfit: this.bestNightProfit, vips: this.vips || [], nightStars: this.nightStars || [], inventory: { ...(this.inventory || {}) } };
+    // A DJ booth in the middle of a move is saved where it was.
+    const inventory = { ...(this.inventory || {}) };
+    if (this.movingBooth) {
+      placedList.push({ type: this.movingBooth.type, facing: this.movingBooth.facing, anchor: this.movingBooth.anchor, staff: true });
+      inventory[this.movingBooth.type] -= 1;
+      if (inventory[this.movingBooth.type] <= 0) delete inventory[this.movingBooth.type];
+    }
+    return { cash: this.cash, fans: this.fans, gridSize: this.gridSize, placed: placedList, wallpaper: { ...this.wallpaper }, floorPaint: { ...this.floorPaint }, night: this.night, nightOver: this.nightPhase === 'closed', bestNightProfit: this.bestNightProfit, vips: this.vips || [], nightStars: this.nightStars || [], inventory };
   }
 
   saveGame() {

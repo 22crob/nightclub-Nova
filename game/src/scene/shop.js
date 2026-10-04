@@ -37,6 +37,7 @@ export class ShopMixin {
   selectProp(key) {
     if (this.selectedProp === key && !this.holdingFromInventory) { this.deselectProp(); return; }
     if (!this.isUnlocked(key)) { SFX.denied(); return; } // can't select something you haven't unlocked yet
+    this.cancelBoothMove();
     this.selectedProp = key;
     this.holdingFromInventory = false;
     this.carryStaff = null;
@@ -45,6 +46,7 @@ export class ShopMixin {
   }
 
   deselectProp() {
+    if (this.movingBooth) { this.cancelBoothMove(); this.refreshDock(); return; }
     this.selectedProp = null;
     this.holdingFromInventory = false;
     this.carryStaff = null;

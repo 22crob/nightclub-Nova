@@ -70,6 +70,38 @@ export const FLOOR_STYLES = {
     },
   },
 
+  // The starter dance floor: worn grey vinyl squares with dull seams and a
+  // few scuffs, the kind a new club makes do with.
+  basic: {
+    frames: 1,
+    draw(ctx, S) {
+      const r = rng(7);
+      const n = 2, c = S / n;
+      for (let i = 0; i < n; i++) {
+        for (let j = 0; j < n; j++) {
+          const tone = (i + j) % 2 ? 66 : 76;
+          ctx.fillStyle = `rgb(${tone},${tone - 2},${tone + 6})`;
+          ctx.fillRect(i * c, j * c, c, c);
+        }
+      }
+      ctx.strokeStyle = 'rgba(20,18,26,0.6)';
+      ctx.lineWidth = 2;
+      ctx.beginPath();
+      ctx.moveTo(c, 0); ctx.lineTo(c, S); ctx.moveTo(0, c); ctx.lineTo(S, c);
+      ctx.stroke();
+      // Scuffs from dancing feet.
+      ctx.strokeStyle = 'rgba(25,22,30,0.35)';
+      ctx.lineWidth = 1.5;
+      for (let k = 0; k < 5; k++) {
+        const x = r() * S, y = r() * S, a = r() * Math.PI;
+        ctx.beginPath();
+        ctx.moveTo(x, y); ctx.lineTo(x + Math.cos(a) * 9, y + Math.sin(a) * 5);
+        ctx.stroke();
+      }
+      bevel(ctx, S, 'rgba(255,255,255,0.1)', 'rgba(0,0,0,0.4)');
+    },
+  },
+
   // Classic black-and-white checks.
   checker: {
     frames: 1,

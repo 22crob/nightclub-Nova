@@ -189,7 +189,9 @@ export class ClubScene extends Phaser.Scene {
       // The Edit tab's tools act on whatever was clicked.
       if (p.event.button === 0 && this.dockTab === 'edit' && !this.selectedProp && this.hoverTile
         && this.editClick(this.hoverTile.gx, this.hoverTile.gy)) return;
-      if (p.event.button === 0 && this.clickPerson(p)) return; // a guest's or bartender's card
+      // With something in hand, a click always places it (never opens a
+      // card for someone standing there).
+      if (p.event.button === 0 && !this.selectedProp && this.clickPerson(p)) return; // a guest's or bartender's card
       if (!this.hoverTile) return;
       if (p.event.button === 0) {
         this.placeProp(this.hoverTile.gx, this.hoverTile.gy);
@@ -247,6 +249,7 @@ export class ClubScene extends Phaser.Scene {
     this.setupGuests();
     this.setupSongs();
     this.setupVips();
+    this.setupLevelUp();
     this.setupNights(this.savedNight);
     this.setupRestart();
 

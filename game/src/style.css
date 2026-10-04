@@ -621,3 +621,53 @@ body { font-family: var(--ui-font); color: var(--ink); }
 #hoverTip .tipText { color: #333; font-weight: 700; font-size: 12px; }
 #hoverTip[data-side="above"]::after { border-top-color: #3a3f4a; }
 #hoverTip[data-side="below"]::after { border-bottom-color: #3a3f4a; }
+
+/* The level-up menu: a glossy blue card with a gold star, the new level,
+   and a card for each thing it unlocked (see showLevelUp() in hud.js). */
+#levelUp { z-index: 60; }
+.levelCard {
+  position: relative; width: min(520px, calc(100vw - 32px)); padding: 46px 18px 16px; margin-top: 30px;
+  border-radius: 20px; text-align: center;
+  background: var(--shine), var(--nc-blue); border: 3px solid var(--nc-frame);
+  box-shadow: inset 0 0 0 2px rgba(205, 240, 255, 0.55), 0 10px 30px rgba(0, 0, 0, 0.7);
+  animation: summaryIn 0.35s ease-out;
+}
+.levelBurst {
+  position: absolute; left: 50%; top: -58px; width: 108px; height: 108px; margin-left: -54px;
+  animation: levelSpin 0.7s ease-out;
+}
+.levelBurst .uiArt { width: 100%; height: 100%; filter: drop-shadow(0 0 14px #ffe45c) drop-shadow(0 4px 4px rgba(0, 0, 0, 0.5)); }
+@keyframes levelSpin { from { transform: scale(0.2) rotate(-200deg); } to { transform: scale(1) rotate(0); } }
+.levelTitle {
+  font-family: 'Arial Black', Arial, sans-serif; font-size: 34px; color: #ffe45c;
+  -webkit-text-stroke: 2px var(--nc-frame); paint-order: stroke fill; text-shadow: 0 3px 0 var(--nc-frame);
+}
+.levelSub { margin: 2px 0 10px; font-size: 15px; font-weight: 700; color: #fff; text-shadow: var(--outline); }
+#levelUnlocks { display: flex; flex-wrap: wrap; justify-content: center; gap: 10px; max-height: 46vh; overflow-y: auto; padding: 4px; }
+.unlockTile {
+  width: 96px; box-sizing: border-box; padding: 5px 5px 0; border-radius: 12px;
+  background: linear-gradient(180deg, #f4fbff 0%, #b9e3fb 55%, #86c6ee 100%);
+  border: 2px solid var(--nc-frame); box-shadow: 0 3px 5px rgba(0, 0, 0, 0.45);
+  animation: summaryIn 0.4s ease-out backwards;
+}
+.unlockPic {
+  height: 70px; border-radius: 8px; display: flex; align-items: center; justify-content: center;
+  font-size: 40px; background: radial-gradient(circle at 50% 40%, #3b78bf 0%, #1a3f73 70%, #10284c 100%) center / cover;
+  background-size: contain; background-repeat: no-repeat; background-position: center;
+  box-shadow: inset 0 2px 5px rgba(0, 0, 0, 0.5);
+}
+.unlockPic[style*="background-image"] { background-color: #1a3f73; }
+.unlockPic .uiArt { width: 58px; height: 58px; }
+.unlockName {
+  margin: 4px -5px 0; padding: 3px 4px; min-height: 30px; box-sizing: border-box; border-radius: 0 0 10px 10px;
+  display: flex; align-items: center; justify-content: center;
+  background: var(--nc-deep); font-size: 11px; font-weight: 700; line-height: 1.15; color: #fff; text-shadow: var(--outline);
+}
+.levelButtons { display: flex; justify-content: center; gap: 14px; margin-top: 14px; }
+.levelButton {
+  width: 64px; height: 46px; box-sizing: border-box; padding: 5px; border-radius: 12px; cursor: pointer;
+  border: 3px solid #fff; box-shadow: 0 0 0 2px var(--nc-frame), 0 4px 8px rgba(0, 0, 0, 0.5);
+}
+.levelButton.ok { padding: 8px 18px; background: var(--shine), linear-gradient(180deg, #8af27a 0%, #2fae2a 55%, #17701a 100%); }
+.levelButton.shop { background: var(--shine), var(--nc-deep); }
+.levelButton:hover { filter: brightness(1.12); }

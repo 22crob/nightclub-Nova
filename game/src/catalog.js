@@ -186,7 +186,8 @@ export const PROP_TYPES = {
   iceBooth: boothTier('iceBooth', 'Ice Booth', 550, 7, 'dj_ice', boothIceSprite),
   // Floors take turns unlocking, one a level: a regular floor on odd
   // levels and a dance floor on even ones (the last two are both dance
-  // floors), simple to fancy, so they sit side by side in the shop.
+  // floors), simple to fancy, so they sit side by side in the shop. Level 1
+  // also has the Basic Floor, the dance floor a new club starts with.
   // Regular floors:
   fpConcrete: paintTier('fpConcrete', 'Concrete', 3, 1, 'concrete'),
   fpStone: paintTier('fpStone', 'Stone Tiles', 5, 3, 'stone'),
@@ -202,6 +203,7 @@ export const PROP_TYPES = {
   // `capacity` field on a Bars/Booths/Decorations item is inert by design.
   // 'dance' and 'neonFloor' are the keys of the two original floors, kept
   // so older saves load them as Checker and Light-Up.
+  basicFloor: floorTier('basicFloor', 'Basic Floor', 15, 1, 'basic'),
   plainFloor: floorTier('plainFloor', 'Plain Floor', 20, 2, 'plain'),
   dance: floorTier('dance', 'Checker Floor', 25, 4, 'checker'),
   woodFloor: floorTier('woodFloor', 'Wood Floor', 35, 6, 'parquet'),
@@ -242,8 +244,8 @@ export const PROP_TYPES = {
   // Wallpaper (src/walls.js, drawn in code): simple to fancy across the
   // first ten levels.
   wpPaint: wallTier('wpPaint', 'Paint', 8, 1, 'paint'),
-  wpOldBrick: wallTier('wpOldBrick', 'Old Brick', 6, 1, 'oldBrick'),
-  wpBrick: wallTier('wpBrick', 'Brick', 11, 1, 'brick'),
+  wpOldBrick: wallTier('wpOldBrick', 'Old Brick', 6, 5, 'oldBrick'),
+  wpBrick: wallTier('wpBrick', 'Brick', 11, 5, 'brick'),
   wpStripes: wallTier('wpStripes', 'Stripes', 15, 2, 'stripes'),
   wpWainscot: wallTier('wpWainscot', 'Wood Panel', 19, 2, 'wainscot'),
   wpDots: wallTier('wpDots', 'Retro Dots', 22, 3, 'retroDots'),

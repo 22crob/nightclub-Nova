@@ -1,7 +1,17 @@
 // ClubScene methods: Top bar readouts, mute button, level-up celebration and toasts.
 // Mixed into ClubScene (see ClubScene.js); `this` is the scene.
-import { PROP_TYPES } from '../catalog.js';
+import { FLOOR_DECAL_PROPS, GRID_EXPANSIONS, PROP_TYPES } from '../catalog.js';
+import { PARTIES } from '../config.js';
+import { realSpriteIconFor, renderIsoIcon } from '../icons.js';
 import { SFX } from '../sfx.js';
+import { hideTip } from '../tooltips.js';
+import { iconSvg } from '../uiIcons.js';
+
+// What kind of thing each shop category is, for the level-up menu's tips.
+const KIND = {
+  Bars: 'New bar', Seating: 'New seating', 'Dance Floors': 'New dance floor', Floors: 'New regular floor',
+  Wallpaper: 'New wallpaper', Decorations: 'New decoration', 'DJ Booths': 'New DJ booth',
+};
 
 export class HudMixin {
   updateUI() {
@@ -43,13 +53,69 @@ export class HudMixin {
   // out.
   onLevelUp(level) {
     SFX.levelUp();
-    const newlyUnlocked = Object.values(PROP_TYPES)
-      .filter((def) => def.unlockLevel === level)
-      .map((def) => def.label);
-    const message = newlyUnlocked.length
-      ? `🎉 Level ${level}! ${newlyUnlocked.join(', ')} unlocked!`
-      : `🎉 Level ${level}!`;
-    this.showToast(message);
+    this.showLevelUp(level);
+  }
+
+  // Everything that unlocks at `level`: shop items, parties and a bigger
+  // club. Each is { name, kind, picture (an image URL) or art (a drawn
+  // icon name) or emoji }.
+  unlocksAt(level) {
+    const out = [];
+    for (const [key, def] of Object.entries(PROP_TYPES)) {
+      if ((def.unlockLevel || 1) !== level) continue;
+      out.push({ name: def.label, kind: KIND[def.category] || 'New item',
+        picture: realSpriteIconFor(key) || renderIsoIcon(def.color, FLOOR_DECAL_PROPS.has(key)) });
+    }
+    for (const party of PARTIES) {
+      if (party.unlockLevel === level) out.push({ name: party.label, kind: 'New party', emoji: party.emoji });
+    }
+    for (const tier of GRID_EXPANSIONS) {
+      if (tier.unlockLevel === level) out.push({ name: `${tier.size}×${tier.size} club`, kind: 'Expand your club', art: 'tabExpand' });
+    }
+    return out;
+  }
+
+  // The level-up menu, like Nightclub City's: the new level and a card for
+  // everything it unlocked, with its picture; hover a card for what it is.
+  showLevelUp(level) {
+    const box = document.getElementById('levelUp');
+    const grid = document.getElementById('levelUnlocks');
+    if (!box || !grid) { this.showToast(`🎉 Level ${level}!`); return; }
+    const unlocks = this.unlocksAt(level);
+    document.getElementById('levelUpTitle').textContent = `Level ${level}!`;
+    document.getElementById('levelUpSub').textContent = unlocks.length ? 'You unlocked:' : 'Keep it up: more unlocks at the next level!';
+    grid.innerHTML = '';
+    for (const u of unlocks) {
+      const tile = document.createElement('div');
+      tile.className = 'unlockTile';
+      tile.dataset.tipName = u.name;
+      tile.dataset.tipText = u.kind;
+      const pic = document.createElement('div');
+      pic.className = 'unlockPic';
+      if (u.picture) pic.style.backgroundImage = `url(${u.picture})`;
+      else if (u.art) pic.innerHTML = iconSvg(u.art);
+      else pic.textContent = u.emoji || '';
+      const name = document.createElement('div');
+      name.className = 'unlockName';
+      name.textContent = u.name;
+      tile.append(pic, name);
+      grid.appendChild(tile);
+    }
+    box.classList.add('open');
+  }
+
+  hideLevelUp() {
+    document.getElementById('levelUp')?.classList.remove('open');
+    hideTip();
+  }
+
+  // Wires up the level-up menu's buttons (see index.html).
+  setupLevelUp() {
+    const box = document.getElementById('levelUp');
+    if (!box || box.dataset.wired) return;
+    box.dataset.wired = '1';
+    document.getElementById('levelOk')?.addEventListener('click', () => this.hideLevelUp());
+    document.getElementById('levelShop')?.addEventListener('click', () => { this.hideLevelUp(); this.setDockTab('decor'); });
   }
 
   // Shows a brief DOM banner (see #toast in index.html) — plain HTML/CSS,

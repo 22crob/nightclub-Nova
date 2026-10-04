@@ -201,8 +201,17 @@ const ART = {
     <path d="M10 33h28" stroke="#fff" stroke-width="1.4" opacity=".8"/>`,
 };
 
+// Each copy of a drawing gets its own gradient/mask ids: a page can show
+// the same drawing twice, and browsers skip ids defined inside a hidden
+// copy (the level-up menu reuses the dock's drawings).
+let copies = 0;
+function uniqueIds(body) {
+  const n = ++copies;
+  return body.replace(/id="([\w-]+)"/g, `id="$1-${n}"`).replace(/url\(#([\w-]+)\)/g, `url(#$1-${n})`);
+}
+
 export function iconSvg(name) {
-  if (ART[name]) return `<svg class="uiArt" viewBox="0 0 48 48" aria-hidden="true">${ART[name]}</svg>`;
+  if (ART[name]) return `<svg class="uiArt" viewBox="0 0 48 48" aria-hidden="true">${uniqueIds(ART[name])}</svg>`;
   const body = ICONS[name];
   if (!body) return '';
   return `<svg class="uiGlyph" viewBox="0 0 24 24" aria-hidden="true">${body}</svg>`;

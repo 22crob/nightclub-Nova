@@ -75,8 +75,113 @@ export const WALL_STYLES = {
     },
   },
 
-  // Old, dark, sooty brick: the bare walls of every club (see
-  // drawBareWalls()), like a club in a converted warehouse basement.
+  // The bare walls of a new club (see drawBareWalls()): faded, stained old
+  // wallpaper, torn away in places down to cracked plaster. Three
+  // variations (frames), picked per wall section so the tears don't repeat.
+  tornPaper: {
+    frames: 3,
+    draw(ctx, W, H, frame) {
+      const r = rng(41 + frame * 97);
+      // Faded paper: dull stripes and a ghost of a printed pattern.
+      ctx.fillStyle = '#7a705a';
+      ctx.fillRect(0, 0, W, H);
+      const n = 8, sw = W / n;
+      for (let k = 0; k < n; k += 2) {
+        ctx.fillStyle = 'rgba(40,34,24,0.2)';
+        ctx.fillRect(k * sw, 0, sw, H);
+      }
+      ctx.fillStyle = 'rgba(210,195,160,0.08)';
+      for (let y = 18; y < H; y += 36) {
+        for (let k = 0; k < n; k += 2) {
+          const x = k * sw + sw / 2 + (Math.floor(y / 36) % 2 ? sw : 0);
+          ctx.beginPath();
+          ctx.moveTo(x, y - 6); ctx.lineTo(x + 5, y); ctx.lineTo(x, y + 6); ctx.lineTo(x - 5, y);
+          ctx.fill();
+        }
+      }
+      // Water stains running down from the top.
+      for (let k = 0; k < 2; k++) {
+        const x = r() * W, len = H * (0.3 + r() * 0.4);
+        const g = ctx.createLinearGradient(0, 0, 0, len);
+        g.addColorStop(0, 'rgba(70,52,28,0.35)');
+        g.addColorStop(1, 'rgba(70,52,28,0)');
+        ctx.fillStyle = g;
+        ctx.beginPath();
+        ctx.ellipse(x, len * 0.4, 8 + r() * 14, len * 0.6, 0, 0, Math.PI * 2);
+        ctx.fill();
+      }
+      // Torn patches: the paper ripped away down to plaster, with old
+      // brick showing through, a pale curled paper edge on top and a
+      // shadow inside the hole. Kept inside the strip.
+      const patches = 1 + (frame % 2);
+      for (let k = 0; k < patches; k++) {
+        const rx = 10 + r() * 6, ry = 13 + r() * 10;
+        const cx = rx + 4 + r() * (W - 2 * rx - 8), cy = 30 + k * (H * 0.4) + r() * (H * 0.3);
+        const pts = [];
+        for (let a = 0; a < 14; a++) {
+          const t = (a / 14) * Math.PI * 2 + (r() - 0.5) * 0.3, j = 0.62 + r() * 0.45; // ragged
+          pts.push([cx + Math.cos(t) * rx * j, cy + Math.sin(t) * ry * j]);
+        }
+        const path = () => { ctx.beginPath(); pts.forEach(([x, y], q) => (q ? ctx.lineTo(x, y) : ctx.moveTo(x, y))); ctx.closePath(); };
+        ctx.save();
+        path();
+        ctx.clip();
+        ctx.fillStyle = '#8a8478';
+        ctx.fillRect(cx - rx * 1.3, cy - ry * 1.3, rx * 2.6, ry * 2.6);
+        for (let by = cy - ry * 1.3; by < cy + ry * 1.3; by += 9) {
+          const off = Math.floor(by / 9) % 2 ? 6 : 0;
+          for (let bx = cx - rx * 1.3 - off; bx < cx + rx * 1.3; bx += 13) {
+            ctx.fillStyle = r() < 0.6 ? '#7a4b38' : '#6b3f30';
+            ctx.fillRect(bx + 1, by + 1, 11, 7);
+          }
+        }
+        ctx.strokeStyle = 'rgba(0,0,0,0.5)'; // shadow under the top edge
+        ctx.lineWidth = 5;
+        ctx.beginPath();
+        pts.slice(7).concat([pts[0]]).forEach(([x, y], q) => (q ? ctx.lineTo(x, y + 2) : ctx.moveTo(x, y + 2)));
+        ctx.stroke();
+        ctx.restore();
+        // The paper's torn edge, pale where it curls back along the top.
+        ctx.strokeStyle = '#cfc4a4';
+        ctx.lineWidth = 1.6;
+        ctx.beginPath();
+        pts.slice(7).concat([pts[0]]).forEach(([x, y], q) => (q ? ctx.lineTo(x, y) : ctx.moveTo(x, y)));
+        ctx.stroke();
+      }
+      // Scuffs and a couple of old nail holes.
+      ctx.fillStyle = 'rgba(20,16,10,0.55)';
+      for (let k = 0; k < 3; k++) ctx.fillRect(r() * W, 20 + r() * (H - 60), 2, 2);
+      ctx.strokeStyle = 'rgba(30,24,16,0.3)';
+      ctx.lineWidth = 1;
+      for (let k = 0; k < 3; k++) {
+        const x = r() * W, y = H * 0.55 + r() * H * 0.35;
+        ctx.beginPath(); ctx.moveTo(x, y); ctx.lineTo(x + 10 + r() * 10, y + r() * 4 - 2); ctx.stroke();
+      }
+      // A strip peeling off along the top on some sections.
+      if (frame === 1) {
+        ctx.fillStyle = '#8a8478';
+        ctx.fillRect(0, 0, W, 12);
+        ctx.fillStyle = 'rgba(0,0,0,0.35)';
+        ctx.fillRect(0, 12, W, 3);
+        ctx.fillStyle = '#b3a886'; // the flap's pale back, curling down
+        ctx.beginPath();
+        ctx.moveTo(W * 0.1, 12); ctx.lineTo(W * 0.6, 12); ctx.quadraticCurveTo(W * 0.5, 30, W * 0.3, 34); ctx.closePath();
+        ctx.fill();
+      }
+      // Grime, darker toward the floor.
+      const g = ctx.createLinearGradient(0, 0, 0, H);
+      g.addColorStop(0, 'rgba(0,0,0,0.05)');
+      g.addColorStop(0.65, 'rgba(0,0,0,0.15)');
+      g.addColorStop(1, 'rgba(0,0,0,0.42)');
+      ctx.fillStyle = g;
+      ctx.fillRect(0, 0, W, H);
+      baseboard(ctx, W, H, '#2a2622');
+      ctx.fillStyle = 'rgba(0,0,0,0.3)';
+      ctx.fillRect(r() * W * 0.6, H - BASEBOARD, 12, 3); // a chip in the skirting
+    },
+  },
+
+  // Old, dark, sooty brick, like a club in a converted warehouse basement.
   oldBrick: {
     frames: 1,
     draw(ctx, W, H) {
