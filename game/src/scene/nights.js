@@ -44,6 +44,7 @@ export class NightsMixin {
     this.setLightsUp(false);
     this.syncMusic();
     this.updateNightClock();
+    this.updatePartyButton();
     this.saveGame();
   }
 
@@ -129,6 +130,7 @@ export class NightsMixin {
     SFX.levelUp();
     this.updateUI();
     this.updateNightClock();
+    this.updatePartyButton();
     this.showNightSummary(result);
     this.saveGame();
   }

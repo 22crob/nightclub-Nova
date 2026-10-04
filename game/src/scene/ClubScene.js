@@ -218,8 +218,6 @@ export class ClubScene extends Phaser.Scene {
     this.xpBarFill = document.getElementById('xpBarFill');
     this.xpText = document.getElementById('xpText');
     this.placedText = document.getElementById('placedVal');
-    this.vibeText = document.getElementById('vibeVal');
-    this.vibeIcon = document.getElementById('vibeIcon');
     this.buildShop();
     this.updateUI();
 

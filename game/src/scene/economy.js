@@ -1,7 +1,7 @@
 // ClubScene methods: Fan rate, patron capacity and level progression.
 // Mixed into ClubScene (see ClubScene.js); `this` is the scene.
 import { FLOOR_DECAL_PROPS, PROP_TYPES } from '../catalog.js';
-import { PATRON_ABSOLUTE_MAX, PATRON_BASE_CAPACITY } from '../config.js';
+import { LEVEL_FANS, PATRON_ABSOLUTE_MAX, PATRON_BASE_CAPACITY } from '../config.js';
 
 export class EconomyMixin {
   // Sums every placed prop's fanRate (dance tiles, DJ booth, neon floor —
@@ -54,13 +54,18 @@ export class EconomyMixin {
     return Math.min(capacity + this.partyEffect('capacity', 0), PATRON_ABSOLUTE_MAX);
   }
 
-  // Derives a lightweight level + progress bar from the fan count, since
-  // the game doesn't track a separate XP stat. Every 100 fans is one level;
-  // the remainder within the current level drives the XP bar fill.
+  // The level and the bar toward the next one, from the fan count (the
+  // game has no separate XP). Each level needs more fans than the last
+  // (LEVEL_FANS): 150 for level 2, 250 more for level 3, and so on.
   levelInfo() {
-    const fansFloor = Math.floor(this.fans);
-    const level = Math.floor(fansFloor / 100) + 1;
-    const progress = fansFloor % 100;
-    return { level, progress };
+    let fans = Math.floor(this.fans);
+    let level = 1;
+    let need = LEVEL_FANS.first;
+    while (fans >= need) {
+      fans -= need;
+      level += 1;
+      need += LEVEL_FANS.step;
+    }
+    return { level, into: fans, need, progress: fans / need };
   }
 }

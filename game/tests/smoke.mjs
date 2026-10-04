@@ -198,12 +198,12 @@ await page.waitForFunction(() => (window.__clubNova.scene.getScene('club').drink
 const drinks = await page.evaluate(() => window.__clubNova.scene.getScene('club').drinksSold || 0);
 check('patrons buy drinks at the staffed bar', drinks > 0, `${drinks} drinks sold`);
 
-// Mood: drinks cheer patrons up, the Vibe readout shows the average, very
+// Mood: drinks cheer patrons up (there's no Vibe readout any more), very
 // unhappy patrons storm out, and leaving patrons bring fans by mood.
 const mood = await page.evaluate(() => {
   const s = window.__clubNova.scene.getScene('club');
   const p = s.patrons.find((x) => !x.leaving && !x.gone);
-  const out = { vibeText: document.getElementById('vibeVal').textContent };
+  const out = { vibeHidden: !document.getElementById('vibeVal') };
   p.mood = 50; s.cheerPatron(p, 15); out.cheered = p.mood;
   const fake = (extra) => ({ mood: 80, container: { x: 0, y: 0 }, ...extra });
   const f0 = s.fans; s.patronLeaves(fake({})); out.happyFans = Math.round(s.fans - f0);
@@ -211,7 +211,7 @@ const mood = await page.evaluate(() => {
   p.mood = 10; s.updatePatronMood(p, 0.1); out.stormed = p.leaving && p.stormedOut;
   return out;
 });
-check('Vibe shows the club mood', /^\d+%$/.test(mood.vibeText), mood.vibeText);
+check('there is no Vibe readout', mood.vibeHidden);
 check('a drink cheers a patron up', mood.cheered === 65, `mood ${mood.cheered}`);
 check('happy patrons bring 3 fans, angry ones cost 2', mood.happyFans === 3 && mood.angryFans === -2, JSON.stringify(mood));
 check('a very unhappy patron storms out', mood.stormed === true);
@@ -498,6 +498,7 @@ check('the street has a line at the rope, a bouncer and lamps; the front of the 
 // the clock.
 const party = await page.evaluate(() => {
   const s = window.__clubNova.scene.getScene('club');
+  const labelAtStart = document.getElementById('partyLabel').textContent;
   s.cash = Math.max(s.cash, 1000);
   const cap0 = s.patronCapacity();
   const cash0 = s.cash;
@@ -513,13 +514,25 @@ const party = await page.evaluate(() => {
     closed: !document.getElementById('partyPicker').classList.contains('open'),
     button: document.getElementById('partyButton').dataset.state,
     clock: document.getElementById('nightClockText').textContent,
+    labelAtStart,
   };
   out.second = s.throwParty('hiphop');
   return out;
 });
-check('the party picker lists four parties, the fancy ones locked at first', party.rows === 4 && party.locked >= 1, JSON.stringify(party));
+check('the party picker lists four parties, the fancy ones locked at first', party.labelAtStart === 'Throw a Party' && party.rows === 4 && party.locked >= 1, JSON.stringify(party));
 check('a House Party costs $60, lets 2 more guests in and raises tips', party.paid === 60 && party.capacity === 2 && party.tips > 1 && party.closed, JSON.stringify(party));
 check('only one party a night, and it shows on the clock', party.second === false && party.button === 'active' && /House Party/.test(party.clock), JSON.stringify(party));
+
+// Levels get slower: 150 fans for level 2, 250 more for level 3.
+const levels = await page.evaluate(() => {
+  const s = window.__clubNova.scene.getScene('club');
+  const fans = s.fans;
+  const at = (n) => { s.fans = n; return s.levelInfo().level; };
+  const out = [at(0), at(149), at(150), at(399), at(400), at(1200)];
+  s.fans = fans;
+  return out;
+});
+check('levels need more fans each time', levels.join() === '1,1,2,2,3,5', levels.join());
 
 // Club nights: the clock runs, last call shuts the door, closing sends
 // everyone home and shows the summary; between nights the music and wages

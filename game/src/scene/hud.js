@@ -11,16 +11,11 @@ export class HudMixin {
     // a raw placed-prop count, since capacity (see patronCapacity()) is the
     // number that actually matters for how much the club can earn.
     if (this.placedText) this.placedText.textContent = `${this.patrons.length}/${this.patronCapacity()}`;
-    if (this.vibeText) {
-      const vibe = this.clubVibe();
-      this.vibeText.textContent = vibe == null ? '–' : `${Math.round(vibe)}%`;
-      if (this.vibeIcon) this.vibeIcon.textContent = this.vibeEmoji(vibe);
-    }
 
-    const { level, progress } = this.levelInfo();
+    const { level, into, need, progress } = this.levelInfo();
     if (this.levelText) this.levelText.textContent = level;
-    if (this.xpBarFill) this.xpBarFill.style.width = `${progress}%`;
-    if (this.xpText) this.xpText.textContent = `Level ${level}  ·  ${progress} / 100 fans`;
+    if (this.xpBarFill) this.xpBarFill.style.width = `${(progress * 100).toFixed(1)}%`;
+    if (this.xpText) this.xpText.textContent = `Level ${level}  ·  ${into} / ${need} fans`;
     // this.currentLevel starts out set (in create(), right after loadGame())
     // to whatever level the game actually opened at, so this only fires
     // for a level actually crossed during THIS play session — never once

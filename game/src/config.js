@@ -97,6 +97,9 @@ export const PATRON_SPAWN_TILE = { gx: 0, gy: 1 }; // the door, on the left wall
 // ceiling so a maxed-out floor doesn't spawn an unmanageable crowd. See
 // patronCapacity() below.
 export const PATRON_BASE_CAPACITY = 3;
+// Fans needed for each level: `first` to reach level 2, then `step` more
+// for every level after (150, 250, 350, ... so level 5 is at 1,200 fans).
+export const LEVEL_FANS = { first: 150, step: 100 };
 export const PATRON_ABSOLUTE_MAX = 24;
 export const PATRON_SPAWN_INTERVAL = [4000, 7000]; // ms between spawn attempts
 export const PATRON_MOVE_INTERVAL = [1500, 3000];  // ms a patron waits between wander steps
