@@ -178,7 +178,7 @@ export class GuestsMixin {
     if (!rec.staff || !this.placed[`${rec.anchor[0]},${rec.anchor[1]}`]) { this.closeInfoCard(); return; }
     if (!rec.staff.name) rec.staff.name = this.guestName();
     this.setPortrait(document.getElementById('infoPortrait'), rec.staff.container.staffCharacter);
-    const waiting = (rec.queue || []).length;
+    const waiting = this.barGroupQueue(rec).length;
     set('infoName', rec.staff.name);
     set('infoRole', `Bartender · ${waiting} waiting for a drink`);
     set('infoQuote', waiting >= 3 ? '"The bar is slammed!"' : (waiting ? '"Coming right up!"' : '"Who\'s thirsty?"'));
@@ -312,14 +312,14 @@ export class GuestsMixin {
   // The bartender serves everyone in line at once.
   bottomsUp(rec) {
     if (!rec || !rec.staff || !this.bottomsUpReady(rec) || !this.clubOpen()) { SFX.denied(); return 0; }
-    const line = [...(rec.queue || [])].filter((p) => !p.gone && !p.leaving);
+    const line = this.barGroupQueue(rec).filter((p) => !p.gone && !p.leaving);
     if (line.length === 0) {
       SFX.denied();
       this.showToast('🍹 Nobody is waiting at this bar right now.');
       return 0;
     }
-    for (const p of line) this.serveDrink(rec, p);
-    this.clearBarQueue(rec);
+    for (const p of line) this.serveDrink(p.queue || rec, p);
+    for (const unit of this.barGroup(rec)) this.clearBarQueue(unit);
     rec.staff.bottomsUpAt = this.time.now + BOTTOMS_UP.cooldownMs;
     const { x, y } = rec.staff.container;
     this.floatText(x, y - CHARACTER_DISPLAY_HEIGHT * 1.1, 'SERVED!!', '#ff7ae0');
@@ -333,7 +333,7 @@ export class GuestsMixin {
     const now = this.time.now;
     if (now < (this.slammedHintAt || 0)) return;
     const slammed = this.staffableRecords().find((rec) => rec.staff && rec.staff.kind === 'bartender'
-      && (rec.queue || []).length >= BOTTOMS_UP.slammedLine && this.bottomsUpReady(rec));
+      && this.barGroupQueue(rec).length >= BOTTOMS_UP.slammedLine && this.bottomsUpReady(rec));
     if (!slammed) return;
     this.slammedHintAt = now + BOTTOMS_UP.hintEveryMs;
     this.showToast('🍹 Bottoms Up! The bar is slammed: click your bartender to serve everyone at once.', 5000);

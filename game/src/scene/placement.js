@@ -256,6 +256,8 @@ export class PlacementMixin {
   // Takes a placed prop out of the club (its tiles, art, staff and lights),
   // with no refund: used by selling and by swapping the DJ booth.
   removeProp(placed) {
+    // A long bar keeps its bartender when one of its units goes.
+    const mates = placed.staff && placed.staff.kind === 'bartender' ? this.barGroup(placed).filter((r) => r !== placed) : [];
     if (PROP_TYPES[placed.type].seats) this.releaseSeats(placed);
     if (placed.queue) this.clearBarQueue(placed); // anyone lined up at a bar wanders off
     // The record is stored under every tile a multi-tile prop occupies —
@@ -264,6 +266,7 @@ export class PlacementMixin {
     placed.gameObject.destroy();
     if (placed.frontObject) placed.frontObject.destroy();
     this.detachStaff(placed);
+    if (mates.length) this.attachStaff(mates[Math.floor(mates.length / 2)]);
     if (placed.label) {
       // Selling the one prop whose label is currently shown (the player was
       // hovering it to right-click-sell it) would otherwise leave a

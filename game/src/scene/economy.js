@@ -22,7 +22,7 @@ export class EconomyMixin {
       if (!def.fanRate) continue;
       // Staffed props only earn fans while someone works them, and the dance
       // floor only while a DJ is playing music.
-      if (def.staff && !p.staff) continue;
+      if (def.staff && !this.isWorked(p)) continue;
       if (FLOOR_DECAL_PROPS.has(p.type) && !music) continue;
       rate += def.fanRate;
     }

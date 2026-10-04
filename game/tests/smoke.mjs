@@ -59,11 +59,12 @@ let st = await state();
 const opening = await page.evaluate(() => {
   const s = window.__clubNova.scene.getScene('club');
   const booth = s.clubBooth();
-  const bar = s.hireableRecords().find((rec) => rec.type === 'starterBar');
+  const units = s.hireableRecords().filter((rec) => rec.type === 'starterBar');
+  const bar = units.find((rec) => rec.staff);
   const floor = Object.keys(s.placed).filter((k) => s.placed[k].type === 'dance').sort();
-  return { floor: floor.join(' '), dancing: s.isDanceFloorTile(2, 6), type: booth && booth.type, anchor: booth && booth.anchor.join(','), dj: !!(booth && booth.staff), music: s.musicPlaying(), size: s.gridSize, bar: bar && bar.anchor.join(','), bartender: !!(bar && bar.staff) };
+  return { floor: floor.join(' '), dancing: s.isDanceFloorTile(2, 6), type: booth && booth.type, anchor: booth && booth.anchor.join(','), dj: !!(booth && booth.staff), music: s.musicPlaying(), size: s.gridSize, bar: units.map((r) => r.anchor.join(',')).sort().join(' '), bartender: !!bar, staffed: units.filter((r) => r.staff).length, worked: units.every((r) => s.isWorked(r)), boothTiles: booth && booth.tiles.length };
 });
-check('starts with $700, a 10x10 room, the DJ booth, a 3x3 dance floor and a staffed Starter Bar', st.cash === 700 && st.placed === 11 && opening.floor === '1,5 1,6 1,7 2,5 2,6 2,7 3,5 3,6 3,7' && opening.dancing && opening.size === 10 && opening.bar === '7,0' && opening.bartender, `cash ${st.cash}, placed ${st.placed}, ${JSON.stringify(opening)}`);
+check('starts with $700, a 10x10 room, a 2-tile DJ booth, a 3x3 dance floor and a 4-long bar with one bartender', st.cash === 700 && st.placed === 14 && opening.boothTiles === 2 && opening.floor === '1,5 1,6 1,7 2,5 2,6 2,7 3,5 3,6 3,7' && opening.dancing && opening.size === 10 && opening.bar === '6,0 7,0 8,0 9,0' && opening.bartender && opening.staffed === 1 && opening.worked, `cash ${st.cash}, placed ${st.placed}, ${JSON.stringify(opening)}`);
 check('every club opens with a Wood Booth and a DJ playing', opening.type === 'woodBooth' && opening.anchor === '0,5' && opening.dj && opening.music, JSON.stringify(opening));
 
 // The checks below were written for the old opening (a 16x16 room with just
@@ -649,6 +650,30 @@ const money = await page.evaluate(() => {
 check('guests pay a cover charge at the door', money.cover === 5, JSON.stringify(money));
 check('a drink costs its price plus a tip', money.drink > 10, JSON.stringify(money));
 check('standing around pays nothing; dancers tip now and then', money.idleTip === 0 && money.danceTip > 0 && money.nextTipIn > 5000, JSON.stringify(money));
+
+// Long bars: bar units side by side join into one bar with one bartender.
+const longBar = await page.evaluate(() => {
+  const s = window.__clubNova.scene.getScene('club');
+  const out = {};
+  const units = [0, 1, 2].map((i) => s.restoreProp('woodBar', 0, [11 + i, 13]));
+  out.placed = units.every(Boolean);
+  out.joined = s.barGroup(units[0]).length === 3;
+  const cash = s.cash;
+  s.cash = 1000;
+  out.hired = s.hireStaff(units[1]);
+  out.oneOnly = s.hireStaff(units[0]) === false && s.hireStaff(units[2]) === false;
+  out.allWorked = units.every((u) => s.isWorked(u));
+  out.wageOnce = s.hireableRecords().filter((r) => r.staff && s.barGroup(r).includes(units[1])).length === 1;
+  s.removeProp(units[1]); // the middle goes: the two ends are no longer joined
+  out.split = s.barGroup(units[0]).length === 1 && s.barGroup(units[2]).length === 1;
+  out.kept = s.isWorked(units[0]) || s.isWorked(units[2]);
+  s.removeProp(units[0]);
+  s.removeProp(units[2]);
+  s.cash = cash;
+  return out;
+});
+check('bar units side by side make one long bar with one bartender', longBar.placed && longBar.joined && longBar.hired && longBar.oneOnly && longBar.allWorked && longBar.wageOnce, JSON.stringify(longBar));
+check('a long bar keeps its bartender when the unit they stood at is sold', longBar.split && longBar.kept, JSON.stringify(longBar));
 
 // Throw a Party: the picker lists every party, a House Party costs $60 and
 // lets more guests in with bigger tips, only one a night, and it shows on

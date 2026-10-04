@@ -631,7 +631,7 @@ export class PatronsMixin {
   // linger longer and tip more there.
   isNearRevenueProp(gx, gy) {
     const bar = this.barServingTile(gx, gy);
-    if (bar && bar.staff) return true;
+    if (bar && this.isWorked(bar)) return true;
     const music = this.musicPlaying();
     const cells = [[gx, gy], [gx + 1, gy], [gx - 1, gy], [gx, gy + 1], [gx, gy - 1]];
     return cells.some(([tx, ty]) => {
@@ -639,7 +639,7 @@ export class PatronsMixin {
       if (!rec) return false;
       const def = PROP_TYPES[rec.type];
       if (!def.fanRate) return false;
-      if (def.staff && !rec.staff) return false;
+      if (def.staff && !this.isWorked(rec)) return false;
       if (FLOOR_DECAL_PROPS.has(rec.type) && !music) return false;
       return true;
     });

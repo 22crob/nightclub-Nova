@@ -45,6 +45,46 @@ export class StaffMixin {
       .reduce((sum, rec) => sum + STAFF_TYPES[PROP_TYPES[rec.type].staff].wage, 0);
   }
 
+  // --- Long bars ----------------------------------------------------------
+  // Bar units placed side by side, the same way round, join into one long
+  // bar, like Nightclub City's: one bartender works the whole counter.
+
+  // Every bar unit joined to `rec` (including it), in order along the bar.
+  barGroup(rec) {
+    if (PROP_TYPES[rec.type].staff !== 'bartender') return [rec];
+    const along = rec.facing === 90 || rec.facing === 270 ? [0, 1] : [1, 0];
+    const at = (x, y) => {
+      const other = this.placed[`${x},${y}`];
+      return other && other.anchor[0] === x && other.anchor[1] === y && other.facing === rec.facing
+        && PROP_TYPES[other.type].staff === 'bartender' ? other : null;
+    };
+    const group = [rec];
+    for (const dir of [-1, 1]) {
+      let [x, y] = rec.anchor;
+      for (;;) {
+        x += along[0] * dir;
+        y += along[1] * dir;
+        const next = at(x, y);
+        if (!next) break;
+        if (dir < 0) group.unshift(next); else group.push(next);
+      }
+    }
+    return group;
+  }
+
+  // True if someone works this prop: its own staff, or for a bar unit, the
+  // bartender of the long bar it's part of.
+  isWorked(rec) {
+    if (rec.staff) return true;
+    if (PROP_TYPES[rec.type].staff !== 'bartender') return false;
+    return this.barGroup(rec).some((r) => r.staff);
+  }
+
+  // Everyone waiting anywhere along a long bar.
+  barGroupQueue(rec) {
+    return this.barGroup(rec).flatMap((r) => r.queue || []);
+  }
+
   // --- Bar layout ---------------------------------------------------------
 
   // For a bar: the counter tile customers order at and the direction its
@@ -102,7 +142,7 @@ export class StaffMixin {
   barLineTiles() {
     const keys = new Set();
     for (const rec of this.staffableRecords()) {
-      if (!rec.staff || PROP_TYPES[rec.type].staff !== 'bartender') continue;
+      if (!this.isWorked(rec) || PROP_TYPES[rec.type].staff !== 'bartender') continue;
       for (const [x, y] of this.barQueueTiles(rec)) keys.add(`${x},${y}`);
     }
     return keys;
@@ -113,7 +153,7 @@ export class StaffMixin {
     if (patron.queue) return true;
     let best = null;
     for (const rec of this.staffableRecords()) {
-      if (!rec.staff || PROP_TYPES[rec.type].staff !== 'bartender') continue;
+      if (!this.isWorked(rec) || PROP_TYPES[rec.type].staff !== 'bartender') continue;
       rec.queue = (rec.queue || []).filter((p) => p.queue === rec && !p.gone && !p.leaving);
       if (rec.queue.length >= this.barQueueTiles(rec).length) continue; // line's full
       if (!best || rec.queue.length < best.queue.length) best = rec;
@@ -168,7 +208,7 @@ export class StaffMixin {
 
   hireStaff(rec) {
     const type = STAFF_TYPES[PROP_TYPES[rec.type].staff];
-    if (rec.staff || type.permanent) return false;
+    if (this.isWorked(rec) || type.permanent) return false; // (a long bar needs only one bartender)
     if (this.cash < type.hireCost) { SFX.denied(); return false; }
     this.cash -= type.hireCost;
     this.attachStaff(rec);
@@ -274,7 +314,7 @@ export class StaffMixin {
     const rec = this.barServingTile(patron.gx, patron.gy);
     if (!rec) return false;
     const now = this.time.now;
-    if (!rec.staff) {
+    if (!this.isWorked(rec)) {
       this.clearBarQueue(rec);
       if (!rec.lastNoStaffNotice || now - rec.lastNoStaffNotice > NO_STAFF_NOTICE_MS) {
         rec.lastNoStaffNotice = now;
@@ -392,9 +432,9 @@ export class StaffMixin {
 
   // A brand-new club opens like Nightclub City's starter room: the DJ booth
   // against the left wall, toward the front, facing into the room, with a
-  // small 3x3 Checker Floor in front of it, and a Starter Bar with its
-  // bartender against the right wall, toward the front, serving into the
-  // room. (ensureClubBooth() then gives the booth its DJ.)
+  // small 3x3 Checker Floor in front of it, and a long bar of four Starter
+  // Bar units with one bartender against the right wall, toward the front,
+  // serving into the room. (ensureClubBooth() then gives the booth its DJ.)
   placeStarterLayout() {
     const n = this.gridSize;
     const booth = this.restoreProp('woodBooth', 90, [0, n - 5]);
@@ -402,13 +442,12 @@ export class StaffMixin {
     for (let gx = 1; gx <= 3; gx++) {
       for (let gy = n - 5; gy <= n - 3; gy++) this.restoreProp('dance', 0, [gx, gy]);
     }
-    for (const gx of [n - 3, n - 2, n - 4]) {
+    const units = [];
+    for (let gx = n - 4; gx < n; gx++) {
       const bar = this.restoreProp('starterBar', 0, [gx, 0]);
-      if (bar) {
-        this.attachStaff(bar);
-        break;
-      }
+      if (bar) units.push(bar);
     }
+    if (units.length) this.attachStaff(units[Math.floor(units.length / 2)]);
   }
 
   // Swaps the club's booth for another tier, in the same spot and facing.
@@ -452,6 +491,10 @@ export class StaffMixin {
 
     const counts = {};
     for (const rec of records) {
+      // One row per long bar: its staffed unit, or its first one.
+      const group = this.barGroup(rec);
+      const leader = group.find((r) => r.staff) || group[0];
+      if (leader !== rec) continue;
       const def = PROP_TYPES[rec.type];
       const type = STAFF_TYPES[def.staff];
       counts[rec.type] = (counts[rec.type] || 0) + 1;
@@ -468,7 +511,7 @@ export class StaffMixin {
       text.className = 'staffText';
       const name = document.createElement('div');
       name.className = 'staffName';
-      name.textContent = `${def.label} ${counts[rec.type]}`;
+      name.textContent = group.length > 1 ? `${def.label} ${counts[rec.type]} (${group.length} long)` : `${def.label} ${counts[rec.type]}`;
       const status = document.createElement('div');
       status.className = rec.staff ? 'staffStatus working' : 'staffStatus empty';
       status.textContent = rec.staff

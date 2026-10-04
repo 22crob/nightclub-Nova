@@ -8,8 +8,10 @@ Five tiers that pair with the five bars (build_bars.py), from a wooden
 desk with turntables to a glowing ice booth. Booths are only the DJ's desk
 and gear; speakers are a separate decoration.
 
-Every booth has the same 2 x 1 tile footprint: x in [-1, 1], y in
-[-0.5, 0.5] at rest. The crowd side faces -Y (game +gy at facing 0); the DJ
+Every booth has the same 2 x 1 tile footprint. Models are built x in
+[-1, 1], y in [-0.5, 0.5], then scaled by BOOTH_SCALE (0.75) so that,
+after iso_rig.MODEL_SCALE, the desk is exactly 2 game tiles long and a
+quarter lower: the size of Nightclub City's compact DJ desks. The crowd side faces -Y (game +gy at facing 0); the DJ
 stands just behind it on the +Y side, outside the footprint, and is drawn
 behind the booth so the desk hides their legs.
 
@@ -32,7 +34,8 @@ from build_bars import plain, srgb  # noqa: E402
 box, cylinder, rod_x, cone = bb.box, bb.cylinder, bb.rod_x, bb.cone
 principled, wood, neon = bb.principled, bb.wood, bb.neon
 
-DESK_H = 1.0   # desk height, about the same as the bar counters
+DESK_H = 1.0   # desk height before BOOTH_SCALE
+BOOTH_SCALE = 0.75  # 2 units x 0.75 x 4/3 = exactly 2 game tiles
 
 
 def platter(name, x, y, z, radius, base, disc, label, ring=None):
@@ -232,6 +235,8 @@ def build_tier(name):
     scene.collection.objects.link(root)
     bb.ROOT = root
     TIERS[name]()
+    root.scale = (BOOTH_SCALE, BOOTH_SCALE, BOOTH_SCALE)
+    bpy.context.view_layer.update()
     bpy.ops.wm.save_as_mainfile(filepath=os.path.join(HERE, f'dj_{name}.blend'))
     meta = iso_rig.render_facings(scene, cam, root, f'dj_{name}', bb.SPRITE_DIR)
     print(f'dj_{name}:', meta, flush=True)
