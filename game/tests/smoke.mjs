@@ -1239,7 +1239,7 @@ const lvl = await page.evaluate(() => {
   const s = window.__clubNova.scene.getScene('club');
   Object.getPrototypeOf(s).showLevelUp.call(s, 5);
   const names = [...document.querySelectorAll('#levelUnlocks .unlockTile')].map((t) => t.dataset.tipName);
-  const pictures = [...document.querySelectorAll('#levelUnlocks .unlockPic')].every((p) => p.style.backgroundImage || p.querySelector('svg') || p.textContent);
+  const pictures = [...document.querySelectorAll('#levelUnlocks .unlockPic')].every((p) => p.style.backgroundImage || p.querySelector('svg') || p.textContent || (p.querySelector('.unlockFace') && p.querySelector('.unlockFace').style.backgroundImage));
   const out = { open: document.getElementById('levelUp').classList.contains('open'), title: document.getElementById('levelUpTitle').textContent, names, pictures };
   document.getElementById('levelOk').click();
   out.bartender = Object.getPrototypeOf(s).unlocksAt.call(s, 4).some((u) => u.name === '+1 Bartender') && !s.unlocksAt(5).some((u) => u.name === '+1 Bartender');
