@@ -248,6 +248,11 @@ export const REACTIONS = {
   danceEveryMs: [9000, 20000], danceEveryBoostMs: [3500, 8000], danceMinMood: 50,
 };
 
+// Clickable guest bonuses (see bonuses.js): a happy guest (mood at least
+// minMood) offers a high five or fist bump about every everyMs; clicking it
+// within lifeMs collects `amount`. size: the badge, in px.
+export const BONUS = { amount: 88, everyMs: [30000, 60000], lifeMs: 8000, minMood: 70, size: 30 };
+
 export const SECURITY = {
   character: 4, scale: 1.12, stepMs: 380, // all in black, like the bouncer
   argueChance: 0.12, cooldownMs: 90 * 1000, argueMs: [8000, 12000],

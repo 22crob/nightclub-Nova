@@ -480,6 +480,58 @@ const disco = await page.evaluate(() => {
 });
 check('the disco ball glows (halo, rays, sparkles), and the glow goes when it is removed', disco.glow && disco.gone, JSON.stringify(disco));
 
+// Bonuses: a happy guest now and then holds up a high five or fist bump.
+// Clicking it collects $88 (and opens no card); left alone it fades.
+const bonusSetup = await page.evaluate(() => {
+  const s = window.__clubNova.scene.getScene('club');
+  const out = {};
+  if (s.bonus) s.removeBonus(false);
+  const cap = s.patronCapacity;
+  s.patronCapacity = () => 99;
+  const door = s.doorTile();
+  s.patrons.filter((q) => q.gx === door.gx && q.gy === door.gy).forEach((q) => { q.gx = -50; });
+  s.trySpawnPatron();
+  s.patronCapacity = cap;
+  const happy = s.patrons[s.patrons.length - 1];
+  [happy.gx, happy.gy] = [5, 5];
+  const spot = s.gridToScreen(5, 5);
+  happy.container.setPosition(spot.sx, spot.sy);
+  happy.mood = 95;
+  s.nextBonusAt = s.time.now - 1;
+  const others = s.patrons;
+  s.patrons = [happy];
+  s.tickBonuses();
+  s.patrons = others;
+  s.followBonus();
+  out.offered = !!s.bonus && s.bonus.patron === happy && ['highfive', 'fist'].includes(s.bonus.kind);
+  const h = s.bonus.holder;
+  out.at = { x: s.world.x + h.x * s.world.scaleX, y: s.world.y + h.y * s.world.scaleY };
+  out.cash = s.cash;
+  happy.moving = true; // stay put while we click
+  s.tweens.killTweensOf(happy.container);
+  return out;
+});
+await page.mouse.click(bonusSetup.at.x, bonusSetup.at.y);
+const bonus = await page.evaluate((setup) => {
+  const s = window.__clubNova.scene.getScene('club');
+  const out = { ...setup };
+  out.paid = s.cash - setup.cash;
+  out.noCard = !document.getElementById('infoCard').classList.contains('open');
+  out.gone = !s.bonus && s.nextBonusAt > s.time.now + 20000;
+  // One left alone fades after about 8 seconds.
+  const p = s.patrons.find((q) => !q.leaving && !q.gone);
+  p.mood = 95;
+  s.offerBonus(p);
+  out.life = Math.round((s.bonus.expiresAt - s.time.now) / 1000);
+  s.bonus.expiresAt = s.time.now - 1;
+  s.tickBonuses();
+  out.expired = !s.bonus;
+  s.patrons.forEach((q) => { q.moving = false; });
+  return out;
+}, bonusSetup);
+check('a happy guest offers a high five or fist bump; clicking it pays $88 and opens no card', bonus.offered && bonus.paid === 88 && bonus.noCard && bonus.gone, JSON.stringify(bonus));
+check('an unclaimed bonus fades after about 8 seconds', bonus.life === 8 && bonus.expired, JSON.stringify(bonus));
+
 // Zoom buttons change the zoom and stay within limits.
 const zoom0 = await page.evaluate(() => window.__clubNova.scene.getScene('club').world.scaleX);
 await page.click('#zoomIn');
@@ -835,6 +887,7 @@ const extras = await page.evaluate(async () => {
   const booth = s.restoreProp('vipLounge', 0, [11, 11]);
   s.refreshInfoCard();
   out.lit = !document.getElementById('seatGuest').classList.contains('disabled');
+  p.mood = 50; // room to cheer up
   const mood0 = p.mood;
   out.seated = s.seatGuest(p) && !!p.seat && p.seat.rec === booth && p.mood > mood0;
   s.releaseSeat(p);

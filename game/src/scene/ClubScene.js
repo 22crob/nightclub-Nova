@@ -31,6 +31,7 @@ import { ActivitiesMixin } from './activities.js';
 import { SecurityMixin } from './security.js';
 import { ReactionsMixin } from './reactions.js';
 import { BarsMixin } from './bars.js';
+import { BonusesMixin } from './bonuses.js';
 import { Music } from '../music.js';
 import { applyMixins } from './applyMixins.js';
 
@@ -164,6 +165,8 @@ export class ClubScene extends Phaser.Scene {
         if (this.hoverTile) this.paintFloor(this.hoverTile.gx, this.hoverTile.gy);
         return;
       }
+      // A bonus badge under the pointer takes the click (see pointerup).
+      if (this.bonusAt(p.x, p.y)) { dragStart = null; return; }
       dragStart = { x: p.x, y: p.y, wx: this.world.x, wy: this.world.y };
     });
 
@@ -191,6 +194,9 @@ export class ClubScene extends Phaser.Scene {
       dragStart = null;
       this.isDragging = false;
       if (wasDragging) return;
+      // A bonus badge comes first: collecting it never opens a card or
+      // places, moves or sells anything underneath.
+      if (p.event.button === 0 && this.clickBonus(p)) return;
       const holding = PROP_TYPES[this.selectedProp];
       if (holding && holding.wallStyle) {
         if (p.event.button === 0 && this.hoverWall) this.paintWall(this.hoverWall);
@@ -306,6 +312,8 @@ export class ClubScene extends Phaser.Scene {
     this.startStreet();
     this.setupSecurity(); // the guard inside the door
     this.makeReactionTextures(); // happy faces etc. over guests (reactions.js)
+    this.registerLightTexture();
+    this.setupBonuses(); // high fives worth $88 (bonuses.js)
     this.scheduleNextPatronSpawn();
 
     // Patron behavior tick — movement, tipping, and departure are all
@@ -363,4 +371,5 @@ applyMixins(ClubScene, [
   SecurityMixin,
   ReactionsMixin,
   BarsMixin,
+  BonusesMixin,
 ]);
