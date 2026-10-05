@@ -12,8 +12,13 @@ Parts whose name starts with "Back" (backrests) are behind the patrons
 unless, at that facing, they stand between the patrons and the camera;
 so a backrest moves to the front layer when the piece faces away.
 
+Parts whose name starts with "Canopy" (roofs, arches overhead) are always
+behind the patrons.
+
 Each piece also lists its seats: where a patron sits, in Blender units at
-facing 0 relative to the model's centre, and `sitLift`, how far a seated
+facing 0 relative to the model's centre, optionally with a third number,
+the way that patron faces in degrees (0 = the piece's front, 90 = +X,
+270 = -X, like the piece's own facings), and `sitLift`, how far a seated
 patron is raised (bar stools lift them so their legs dangle). These are
 added to <name>.json for the game.
 
@@ -248,9 +253,9 @@ def layers_at(root, seats):
         a = math.radians(-45 - facing)
         to_cam = (math.cos(a), math.sin(a))
         depth = lambda x, y: x * to_cam[0] + y * to_cam[1]
-        seat_depth = max((depth(x, y) for x, y in seats), default=0.0)
-        front = [o for o in meshes if not o.name.startswith('Back')
-                 or depth(centre[o].x, centre[o].y) > seat_depth + 0.08]
+        seat_depth = max((depth(s[0], s[1]) for s in seats), default=0.0)
+        front = [o for o in meshes if not o.name.startswith(('Back', 'Canopy'))
+                 or (o.name.startswith('Back') and depth(centre[o].x, centre[o].y) > seat_depth + 0.08)]
         return {'back': [o for o in meshes if o not in front], 'front': front}
     return at
 
@@ -285,7 +290,7 @@ def build(name, preview_dir=None):
     meta = iso_rig.render_facings(scene, cam, root, base, bb.SPRITE_DIR, layers=layers)
     # Seats are modelled at the original scale; the game wants them in tiles.
     s = iso_rig.MODEL_SCALE
-    meta['seats'] = [[round(x * s, 4), round(y * s, 4)] for x, y in info['seats']]
+    meta['seats'] = [[round(seat[0] * s, 4), round(seat[1] * s, 4), *seat[2:]] for seat in info['seats']]
     meta['sitLift'] = round(info['sitLift'] * s, 4)
     with open(os.path.join(bb.SPRITE_DIR, f'{base}.json'), 'w') as f:
         json.dump(meta, f, indent=2)

@@ -1,11 +1,13 @@
-"""Twenty more booths and sofas for Club Nova, built with build_seating.py's
+"""More booths and sofas for Club Nova, built with build_seating.py's
 helpers and rendered by it (build_seating.py merges DESIGNS into SEATING):
-    python art/blender/build_seating.py --preview DIR tikiBooth
-    python art/blender/build_seating.py tikiBooth ...
+    python art/blender/build_seating.py --preview DIR tikiHut
+    python art/blender/build_seating.py tikiHut ...
 
-Round booths (3 x 3 tiles, like the velvet booth) seat three or four
-around a table, open toward -Y. Sofas (3 x 1 tiles, like the couch) seat
-two. Backrests are parts named Back* (see build_seating.layers_at()).
+Booths take 3 x 3 tiles (the Wood Lounge 3 x 2) and each has its own
+shape; sofas take 3 x 1 tiles and seat two. Front faces -Y. Backrests are
+parts named Back*, roofs and arches overhead Canopy* (see
+build_seating.layers_at()); a seat may face its own way ([x, y, degrees]).
+See art/REFERENCE_NOTES.md for the owner's reference screenshots.
 """
 
 import math
@@ -16,50 +18,12 @@ bb = bs.bb
 box, cylinder, cone, sphere, arc_block, candle, drinks = bs.box, bs.cylinder, bs.cone, bs.sphere, bs.arc_block, bs.candle, bs.drinks
 principled, neon, plain, srgb = bs.principled, bs.neon, bs.plain, bs.srgb
 
-A0, A1 = -25, 205  # the arc of a round booth (degrees, 90 = +Y)
-CY = 0.05          # the arc's centre
-THREE = (150, 90, 30)
-FOUR = (160, 115, 65, 20)
 
 
 def mat(hex_color, rough=0.5, glow=0.0, **kw):
     if glow:
         kw.update(emission=srgb(hex_color), emission_strength=glow)
     return principled(f'M{hex_color}{rough}{glow}', srgb(hex_color), rough=rough, **kw)
-
-
-def on_arc(n, r, a0=A0 + 8, a1=A1 - 8):
-    """n points spread along the booth's arc at radius r: (x, y, degrees)."""
-    out = []
-    for k in range(n):
-        a = a0 + (a1 - a0) * k / max(1, n - 1)
-        out.append((r * math.cos(math.radians(a)), CY + r * math.sin(math.radians(a)), a))
-    return out
-
-
-def ring_seats(angles):
-    seats = [[0.64 * math.cos(math.radians(a)), CY + 0.64 * math.sin(math.radians(a))] for a in angles]
-    return {'seats': [[round(x, 3), round(y, 3)] for x, y in seats], 'sitLift': 0.0}
-
-
-def ring_base(seat, plinth=None):
-    arc_block('Plinth', 0, CY, 0.5, 0.92, A0, A1, 0, 0.1, plinth or plain('#1e161a', rough=0.6), bevel=0.01)
-    arc_block('Seat', 0, CY, 0.5, 0.88, A0, A1, 0.1, 0.42, seat, bevel=0.04)
-
-
-def ring_back(back, z1=1.0, r0=0.78, r1=0.94, pieces=5, prefix='BackRest', z0=0.42, bevel=0.0):
-    """The backrest in a few pieces (each can go in front or behind)."""
-    for k in range(pieces):
-        b0, b1 = A0 + (A1 - A0) * k / pieces, A0 + (A1 - A0) * (k + 1) / pieces
-        m = back[k % len(back)] if isinstance(back, (list, tuple)) else back
-        arc_block(f'{prefix}{k}', 0, CY, r0, r1, b0, b1, z0, z1, m, bevel=bevel)
-
-
-def ring_table(top, trim, r=0.32, z=0.52):
-    cylinder('TableFoot', 0, -0.1, 0, 0.04, 0.2, trim, verts=24)
-    cylinder('TableStem', 0, -0.1, 0.04, z, 0.035, trim, verts=12)
-    cylinder('Table', 0, -0.1, z, z + 0.04, r, top, verts=40)
-    cylinder('TableRim', 0, -0.1, z - 0.005, z + 0.005, r + 0.005, trim, verts=40)
 
 
 def torus(name, x, y, z, major, minor, m, rot=(0, 0, 0), scale=(1, 1, 1)):
@@ -74,250 +38,393 @@ def torus(name, x, y, z, major, minor, m, rot=(0, 0, 0), scale=(1, 1, 1)):
 
 
 # --------------------------------------------------------------------------
-# Round booths (3 x 3)
+# Booths (3 x 3 unless noted), each its own shape. A seat may face its own
+# way: [x, y, degrees] (see build_seating.py).
 # --------------------------------------------------------------------------
 
-def tiki_booth():
+def tube(name, a, b, r, m, verts=10):
+    """A rod from point a to point b."""
+    from mathutils import Vector
+    a, b = Vector(a), Vector(b)
+    bs.bpy.ops.mesh.primitive_cylinder_add(vertices=verts, radius=r, depth=(b - a).length, location=(a + b) / 2)
+    o = bs.bpy.context.active_object
+    o.name = name
+    o.rotation_mode = 'QUATERNION'
+    o.rotation_quaternion = Vector((0, 0, 1)).rotation_difference((b - a).normalized())
+    return bb._finish(o, m, 0)
+
+
+def lathe(name, cx, cy, profile, a0, a1, m, thickness=0.0):
+    """A surface turned round the upright axis at (cx, cy): `profile` is
+    [(radius, z), ...] from bottom to top, swept from angle a0 to a1."""
+    import bmesh
+    steps = max(6, int(abs(a1 - a0) / 6))
+    bm = bmesh.new()
+    grid = []
+    for k in range(steps + 1):
+        a = math.radians(a0 + (a1 - a0) * k / steps)
+        grid.append([bm.verts.new((cx + r * math.cos(a), cy + r * math.sin(a), z)) for r, z in profile])
+    for k in range(steps):
+        for j in range(len(profile) - 1):
+            bm.faces.new((grid[k][j], grid[k + 1][j], grid[k + 1][j + 1], grid[k][j + 1]))
+    mesh = bs.bpy.data.meshes.new(name)
+    bm.to_mesh(mesh)
+    bm.free()
+    o = bs.bpy.data.objects.new(name, mesh)
+    bs.bpy.context.scene.collection.objects.link(o)
+    for poly in mesh.polygons:
+        poly.use_smooth = True
+    if thickness:
+        mod = o.modifiers.new('Solid', 'SOLIDIFY')
+        mod.thickness = thickness
+    return bb._finish(o, m, 0)
+
+
+def seats(*spots, lift=0.0):
+    return {'seats': [list(s) for s in spots], 'sitLift': lift}
+
+
+def tiki_hut():
     straw = mat('#c9a35a', rough=0.95)
+    straw2 = mat('#b08840', rough=0.95)
     bamboo = mat('#b8964a', rough=0.5)
     dark = mat('#5a3b1c', rough=0.7)
-    ring_base(mat('#d8b878', rough=0.9), dark)
-    for i, (x, y, a) in enumerate(on_arc(15, 0.86)):
-        cylinder(f'BackBamboo{i}', x, y, 0.42, 1.02 + 0.05 * (i % 2), 0.045, bamboo, verts=12)
-        for z in (0.6, 0.85):
-            cylinder(f'BackKnot{i}{z}', x, y, z, z + 0.02, 0.05, dark, verts=12)
-    arc_block('BackThatch', 0, CY, 0.74, 1.0, A0, A1, 1.0, 1.12, straw, bevel=0.03)
-    for side, (x, y, _) in zip('LR', (on_arc(2, 0.98, A0 - 4, A1 + 4))):
-        cylinder(f'BackTorch{side}', x, y, 0, 1.3, 0.03, bamboo, verts=10)
-        cone(f'BackTorchCup{side}', x, y, 1.3, 1.42, 0.04, 0.07, dark, verts=12)
-        cone(f'BackFlame{side}', x, y, 1.42, 1.6, 0.06, 0.0, neon(f'TorchFire{side}', (1.0, 0.4, 0.05), 4), verts=12)
-    ring_table(bb.wood('TikiTop', (0.2, 0.09, 0.035), (0.36, 0.17, 0.07)), dark)
-    # A volcano bowl: brown cone with a glowing top, and two straws.
-    cone('Volcano', 0, -0.1, 0.56, 0.72, 0.12, 0.05, mat('#6b4423', rough=0.8), verts=20)
-    cylinder('Lava', 0, -0.1, 0.72, 0.74, 0.05, neon('Lava', (1.0, 0.35, 0.05), 6), verts=16)
-    drinks(['#ff8a3d', '#ffd23d'])
-    return ring_seats(THREE)
+    deck = bb.wood('TikiDeck', (0.2, 0.09, 0.035), (0.36, 0.17, 0.07))
+    box('Deck', -1.05, 1.05, -0.95, 0.95, 0, 0.08, deck, bevel=0.01)
+    box('Seat', -0.92, 0.92, 0.22, 0.72, 0.08, 0.42, mat('#d8b878', rough=0.9), bevel=0.04)
+    for i in range(13):
+        x = -0.9 + i * 0.15
+        cylinder(f'BackBamboo{i}', x, 0.78, 0.08, 1.0 + 0.04 * (i % 2), 0.05, bamboo, verts=12)
+        cylinder(f'BackKnot{i}', x, 0.78, 0.62, 0.64, 0.055, dark, verts=12)
+    for x in (-1.0, 1.0):
+        for y in (-0.88, 0.85):
+            name = 'BackPost' if y > 0 else 'Post'
+            cylinder(f'{name}{x}{y}', x, y, 0.08, 1.95, 0.05, bamboo, verts=12)
+    roof = cone('CanopyRoof', 0, 0, 1.9, 2.55, 1.55, 0.02, straw, verts=4)
+    roof.rotation_euler = (0, 0, math.radians(45))
+    fringe = cone('CanopyFringe', 0, 0, 1.78, 1.92, 1.6, 1.52, straw2, verts=4)
+    fringe.rotation_euler = (0, 0, math.radians(45))
+    # A square tiki table with a flaming volcano bowl.
+    box('TableBase', -0.12, 0.12, -0.42, -0.18, 0.08, 0.4, dark, bevel=0.02)
+    box('Table', -0.38, 0.38, -0.55, -0.05, 0.4, 0.46, deck, bevel=0.015)
+    cone('Volcano', 0, -0.3, 0.46, 0.62, 0.12, 0.05, mat('#6b4423', rough=0.8), verts=20)
+    cylinder('Lava', 0, -0.3, 0.62, 0.64, 0.05, neon('Lava', (1.0, 0.35, 0.05), 4), verts=16)
+    for x in (-0.95, 0.95):
+        cone(f'Flame{x}', x, -0.88, 1.95, 2.1, 0.05, 0.0, neon('TorchFire', (1.0, 0.4, 0.05), 4), verts=10)
+    return seats((-0.55, 0.45), (0, 0.45), (0.55, 0.45))
 
 
 def igloo_booth():
     ice = principled('IglooIce', srgb('#8cc8f0'), rough=0.25, transmission=0.25, ior=1.31,
                      emission=srgb('#3a8ad8'), emission_strength=0.25)
-    snow = mat('#e4eef8', rough=0.6)
-    ring_base(principled('IglooFur', srgb('#dfe6ee'), rough=0.95), mat('#b8c8d8'))
-    rows = 4
+    ice2 = principled('IglooIce2', srgb('#a8d8f8'), rough=0.25, transmission=0.25, ior=1.31,
+                      emission=srgb('#4a9ae8'), emission_strength=0.25)
+    cylinder('SnowFloor', 0, 0, 0, 0.06, 1.08, mat('#e4eef8', rough=0.6), verts=48)
+    # The dome, open at the front, in courses of ice blocks.
+    rows, R, H = 7, 1.02, 1.55
     for r in range(rows):
-        z0 = 0.42 + r * 0.16
-        off = 0 if r % 2 == 0 else 0.5
-        n = 7
-        for k in range(n + 1):
-            b0 = A0 + (A1 - A0) * max(0, (k - off)) / n
-            b1 = A0 + (A1 - A0) * min(n, (k + 1 - off)) / n
-            if b1 - b0 < 4:
-                continue
-            arc_block(f'BackIce{r}_{k}', 0, CY, 0.78 + r * 0.02, 0.95 - r * 0.01, b0 + 0.6, b1 - 0.6, z0 + 0.008, z0 + 0.152, ice, bevel=0.02)
-    arc_block('BackSnowCap', 0, CY, 0.8, 0.94, A0, A1, 1.06, 1.12, snow, bevel=0.03)
-    ring_table(principled('IceTop', (0.7, 0.88, 1.0), rough=0.05, transmission=0.6, emission=(0.4, 0.7, 1.0), emission_strength=0.8),
-               mat('#dfe8f2', rough=0.3))
-    arc_block('FloorGlow', 0, CY, 0.92, 0.95, A0, A1, 0.02, 0.05, neon('IglooGlow', (0.3, 0.75, 1.0), 6), bevel=0)
-    drinks(['#7fe0ff', '#bfefff', '#7fe0ff'])
-    return ring_seats(THREE)
+        t0, t1 = r / rows * (math.pi / 2), (r + 1) / rows * (math.pi / 2)
+        z0, z1 = 0.06 + H * math.sin(t0), 0.06 + H * math.sin(t1)
+        rad = R * math.cos((t0 + t1) / 2)
+        a0, a1 = (-20, 200) if r < rows - 2 else (-90, 270)
+        n = 6
+        for k in range(n):
+            b0 = a0 + (a1 - a0) * (k + (0.5 if r % 2 else 0)) / n
+            b1 = min(a1, b0 + (a1 - a0) / n)
+            arc_block(f'BackIce{r}_{k}', 0, 0, max(0.05, rad - 0.13), rad, b0 + 1, b1 - 1, z0 + 0.01, z1 - 0.01, ice if (r + k) % 2 else ice2, bevel=0.015)
+    arc_block('Seat', 0, 0, 0.35, 0.82, 15, 165, 0.06, 0.42, principled('IglooFur', srgb('#dfe6ee'), rough=0.95), bevel=0.04)
+    cylinder('Table', 0, -0.25, 0.06, 0.44, 0.2, principled('IceTop', (0.7, 0.88, 1.0), rough=0.05, transmission=0.6,
+             emission=(0.4, 0.7, 1.0), emission_strength=0.8), verts=24)
+    drinks_at = [(-0.07, -0.25), (0.08, -0.2)]
+    for i, (x, y) in enumerate(drinks_at):
+        cone(f'Glass{i}', x, y, 0.44, 0.56, 0.03, 0.045, mat('#7fe0ff', rough=0.1, glow=0.6, alpha=0.85), verts=12)
+    return seats((-0.42, 0.42), (0, 0.6), (0.42, 0.42))
 
 
-def neon_halo_booth():
-    gloss = mat('#141019', rough=0.15)
-    pink = neon('HaloPink', (1.0, 0.1, 0.6), 3.5)
-    cyan = neon('HaloCyan', (0.05, 0.75, 1.0), 4)
-    ring_base(mat('#221a2c', rough=0.35), gloss)
-    ring_back(mat('#1a1420', rough=0.3), z1=1.0)
-    for k in range(5):
-        b0, b1 = A0 + (A1 - A0) * k / 5, A0 + (A1 - A0) * (k + 1) / 5
-        arc_block(f'BackNeon{k}', 0, CY, 0.76, 0.96, b0, b1, 0.99, 1.03, pink, bevel=0)
-        arc_block(f'BackNeonLow{k}', 0, CY, 0.775, 0.785, b0, b1, 0.7, 0.72, cyan, bevel=0)
-    arc_block('UnderGlow', 0, CY, 0.9, 0.93, A0, A1, 0.02, 0.05, cyan, bevel=0)
-    ring_table(mat('#0d0b12', rough=0.05), mat('#3a3442', rough=0.3))
-    torus('TableHalo', 0, -0.1, 0.565, 0.3, 0.012, pink)
-    drinks(['#ff4dcf', '#3de0ff', '#c07dff'])
-    return ring_seats(FOUR)
+def glow_lounge():
+    """Two glossy benches facing each other across a table with glowing cup rings."""
+    blue = principled('LoungeBlue', srgb('#2a9ad8'), rough=0.12)
+    blue_light = principled('LoungeBlueLight', srgb('#5ec4f4'), rough=0.1)
+    chrome = mat('#d8e2ec', rough=0.15)
+    cyan = neon('LoungeGlow', (0.2, 0.85, 1.0), 3.5)
+    box('Base', -1.05, 1.05, -1.0, 1.0, 0, 0.1, chrome, bevel=0.02)
+    box('BaseGlow', -1.06, 1.06, -1.01, 1.01, 0.03, 0.06, cyan, bevel=0)
+    box('Tub', -1.0, 1.0, -0.95, 0.95, 0.1, 0.36, blue, bevel=0.06)
+    for x in (-1.0, 0.88):
+        box(f'Side{x}', x, x + 0.12, -0.95, 0.95, 0.36, 0.56, blue, bevel=0.05)
+    for row, (y0, y1, by, rot) in enumerate([(0.38, 0.82, 0.86, 0), (-0.82, -0.38, -0.86, 180)]):
+        box(f'Seat{row}', -0.88, 0.88, y0, y1, 0.36, 0.44, blue_light, bevel=0.05)
+        for k, x in enumerate((-0.63, -0.21, 0.21, 0.63)):
+            sphere(f'BackShell{row}{k}', x, by, 0.72, 1.0, blue_light if k % 2 else blue, scale=(0.21, 0.09, 0.32), segments=24)
+    box('Table', -0.6, 0.6, -0.24, 0.24, 0.36, 0.52, blue_light, bevel=0.05)
+    for i, x in enumerate((-0.3, 0.0, 0.3)):
+        torus(f'CupRing{i}', x, 0, 0.53, 0.085, 0.028, cyan)
+        cylinder(f'Cup{i}', x, 0, 0.52, 0.6, 0.05, mat(['#ff4dcf', '#ffe36f', '#7dff9a'][i], rough=0.1, glow=0.6, alpha=0.85), verts=14)
+    return seats((-0.42, 0.6, 0), (0.42, 0.6, 0), (-0.42, -0.6, 180), (0.42, -0.6, 180))
+
+
+def wood_lounge():
+    """3 x 2: a wood-walled booth, dark leather seats and two candle tables.
+    Units side by side line up into one long booth."""
+    wood = bb.wood('LoungeWood', (0.2, 0.09, 0.035), (0.34, 0.16, 0.065))
+    leather = principled('LoungeLeather', srgb('#26343c'), rough=0.3)
+    leather2 = principled('LoungeLeather2', srgb('#2f404a'), rough=0.3)
+    stud = mat('#c9ccd6', rough=0.3)
+    box('Floor', -1.1, 1.1, -0.72, 0.72, 0, 0.05, mat('#3a3e46', rough=0.4), bevel=0.005)
+    box('Wall', -1.1, 1.1, -0.74, -0.62, 0, 0.42, wood, bevel=0.01)
+    for i in range(12):
+        sphere(f'Stud{i}', -1.02 + i * 0.185, -0.745, 0.38, 0.012, stud, segments=6)
+    box('BackWall', -1.1, 1.1, 0.64, 0.72, 0, 0.92, wood, bevel=0.01)
+    box('Seat', -1.08, 1.08, 0.18, 0.64, 0.05, 0.4, leather, bevel=0.04)
+    for k, x in enumerate((-0.82, -0.28, 0.28, 0.82)):
+        box(f'BackCushion{k}', x - 0.26, x + 0.26, 0.46, 0.64, 0.4, 0.86, leather2 if k % 2 else leather, bevel=0.1)
+    for i, x in enumerate((-0.5, 0.5)):
+        cylinder(f'TableLeg{i}', x, -0.25, 0.05, 0.4, 0.03, mat('#2a1a10'), verts=10)
+        box(f'Table{i}', x - 0.2, x + 0.2, -0.45, -0.05, 0.4, 0.46, wood, bevel=0.012)
+        candle(f'Candle{i}', x, -0.25, 0.46)
+    return seats((-0.5, 0.4), (0.5, 0.4))
+
+
+def tulip_lounge():
+    """White shell chairs round a lime pedestal table, facing each other."""
+    white = principled('ShellWhite', srgb('#f6f6f8'), rough=0.2)
+    lime = principled('Lime', srgb('#c8e83a'), rough=0.25, emission=srgb('#a8d020'), emission_strength=0.15)
+    cylinder('TableFoot', 0, 0, 0, 0.04, 0.24, white, verts=32)
+    cone('TableStem', 0, 0, 0.04, 0.42, 0.12, 0.04, white, verts=24)
+    cylinder('Table', 0, 0, 0.42, 0.48, 0.36, lime, verts=40)
+    for i, (x, y) in enumerate([(-0.1, 0.08), (0.12, -0.06)]):
+        cone(f'Glass{i}', x, y, 0.48, 0.6, 0.03, 0.045, mat('#ffffff', rough=0.05, glow=0.3, alpha=0.7), verts=12)
+    out = []
+    for i, (deg, rot) in enumerate([(90, 0), (270, 180), (180, 90), (0, 270)]):
+        a = math.radians(deg)
+        cx, cy = 0.72 * math.cos(a), 0.72 * math.sin(a)
+        cylinder(f'ChairFoot{i}', cx, cy, 0, 0.03, 0.16, white, verts=24)
+        cylinder(f'ChairStem{i}', cx, cy, 0.03, 0.28, 0.03, white, verts=12)
+        cylinder(f'Seat{i}', cx, cy, 0.28, 0.4, 0.22, white, verts=32)
+        cylinder(f'Cushion{i}', cx, cy, 0.4, 0.44, 0.19, lime, verts=32)
+        # The shell back, round the far side of the seat from the table.
+        arc_block(f'BackShell{i}', cx, cy, 0.17, 0.23, deg - 62, deg + 62, 0.32, 0.72, white, bevel=0.03)
+        out.append((round(cx * 0.95, 3), round(cy * 0.95, 3), rot))
+    return seats(*out)
 
 
 def birdcage_booth():
     gold = mat('#e8b84a', rough=0.25, glow=0.15)
-    ring_base(principled('CagePink', srgb('#e0558f'), rough=0.85), mat('#2a1a22'))
-    ring_back(principled('CagePinkBack', srgb('#b83a70'), rough=0.85), z1=0.78)
-    for i, (x, y, a) in enumerate(on_arc(17, 0.97, A0, A1)):
-        cylinder(f'BackBar{i}', x, y, 0.1, 1.75, 0.012, gold, verts=8)
-    arc_block('BackRingMid', 0, CY, 0.955, 0.985, A0, A1, 0.98, 1.0, gold, bevel=0)
-    arc_block('BackRingTop', 0, CY, 0.955, 0.985, A0, A1, 1.73, 1.77, gold, bevel=0)
-    arc_block('BackRingLow', 0, CY, 0.92, 0.99, A0, A1, 0.08, 0.12, gold, bevel=0)
-    # The open cage's top curls in toward the middle.
-    for i, (x, y, a) in enumerate(on_arc(7, 0.97, A0, A1)):
-        cylinder(f'BackCurl{i}', x * 0.86, (y - CY) * 0.86 + CY, 1.76, 1.9, 0.01, gold, verts=8)
-    sphere('BackFinial', 0, CY + 0.82, 1.95, 0.05, gold)
-    ring_table(mat('#fbeff4', rough=0.2), gold)
-    candle('Candle', 0.0, -0.1, 0.56)
-    drinks(['#ff9ac8', '#ffe9a8', '#ff9ac8'])
-    return ring_seats(THREE)
+    pink = principled('CagePink', srgb('#e0558f'), rough=0.85)
+    cylinder('Platform', 0, 0, 0, 0.12, 1.0, mat('#2a1a22'), verts=48)
+    torus('PlatformRim', 0, 0, 0.12, 0.98, 0.025, gold)
+    arc_block('Seat', 0, 0, 0.25, 0.72, 25, 155, 0.12, 0.44, pink, bevel=0.04)
+    arc_block('BackRest', 0, 0, 0.62, 0.76, 15, 165, 0.44, 0.95, principled('CagePinkBack', srgb('#b83a70'), rough=0.85), bevel=0.03)
+    n = 22
+    for i in range(n):
+        a = math.radians(i * 360 / n + 8)
+        x, y = 0.95 * math.cos(a), 0.95 * math.sin(a)
+        if -0.35 < x < 0.35 and y < 0:
+            continue  # the cage's open door
+        tube(f'{"BackBar" if y > -0.1 else "Bar"}{i}', (x, y, 0.12), (x, y, 1.75), 0.011, gold)
+        tube(f'CanopyDome{i}', (x, y, 1.75), (0, 0, 2.3), 0.011, gold)
+    torus('CanopyRing', 0, 0, 1.75, 0.95, 0.018, gold)
+    sphere('CanopyFinial', 0, 0, 2.33, 0.05, gold)
+    torus('CanopyHook', 0, 0, 2.45, 0.07, 0.012, gold, rot=(90, 0, 0))
+    cylinder('TableStem', 0, -0.28, 0.12, 0.5, 0.025, gold, verts=12)
+    cylinder('Table', 0, -0.28, 0.5, 0.54, 0.2, mat('#fbeff4', rough=0.2), verts=32)
+    candle('Candle', 0.0, -0.28, 0.54)
+    return seats((-0.3, 0.38), (0.3, 0.38))
 
 
-def mirror_disco_booth():
+def disco_stage():
     silver = mat('#cfd4de', rough=0.15)
-    ring_base(mat('#9aa0ad', rough=0.25, glow=0.05), mat('#2a2c33'))
-    tiles = [mat('#e8ecf4', rough=0.05, glow=0.25), mat('#aab2c2', rough=0.1), mat('#f6f0ff', rough=0.05, glow=0.4)]
-    n = 14
-    for row in range(4):
-        for k in range(n):
-            b0, b1 = A0 + (A1 - A0) * k / n, A0 + (A1 - A0) * (k + 1) / n
-            arc_block(f'BackTile{row}_{k}', 0, CY, 0.78, 0.94, b0 + 0.4, b1 - 0.4, 0.42 + row * 0.145 + 0.006, 0.42 + (row + 1) * 0.145 - 0.006,
-                      tiles[(row + k) % 3], bevel=0)
-    arc_block('BackCap', 0, CY, 0.77, 0.95, A0, A1, 1.0, 1.03, silver, bevel=0)
-    ring_table(mat('#1a1c22', rough=0.05), silver)
-    cylinder('BallPole', 0, -0.1, 0.56, 0.8, 0.008, silver, verts=8)
-    ball = sphere('MiniBall', 0, -0.1, 0.86, 0.075, mat('#e8ecf4', rough=0.1, glow=0.6), segments=12)
-    ball.modifiers.clear()
-    drinks(['#ff4d8d', '#3de0ff', '#ffe36f'])
-    return ring_seats(FOUR)
+    pink = neon('StageRim', (1.0, 0.25, 0.75), 3.5)
+    cylinder('Stage', 0, 0, 0, 0.12, 1.05, mat('#24222a', rough=0.2), verts=48)
+    torus('StageRim', 0, 0, 0.1, 1.04, 0.02, pink)
+    cylinder('StageTop', 0, 0, 0.12, 0.2, 0.92, mat('#d8dce6', rough=0.08, glow=0.15), verts=48)
+    box('Seat', -0.82, 0.82, 0.12, 0.6, 0.2, 0.46, mat('#b8bfcc', rough=0.2, glow=0.05), bevel=0.05)
+    for k, x in enumerate((-0.55, 0.0, 0.55)):
+        box(f'BackCushion{k}', x - 0.26, x + 0.26, 0.5, 0.68, 0.46, 0.98, mat('#e8ecf4', rough=0.1, glow=0.15), bevel=0.08)
+    for x in (-0.92, 0.92):
+        box(f'Arm{x}', x - 0.1, x + 0.1, 0.12, 0.7, 0.2, 0.62, silver, bevel=0.05)
+        cylinder(f'BackPillar{x}', x, 0.72, 0.2, 2.1, 0.05, silver, verts=16)
+    tube('CanopyBeam', (-0.92, 0.72, 2.1), (0.92, 0.72, 2.1), 0.045, silver)
+    tube('CanopyChain', (0, 0.72, 2.1), (0, 0.3, 1.9), 0.008, silver)
+    ball = sphere('CanopyBall', 0, 0.3, 1.78, 0.14, mat('#e8ecf4', rough=0.1, glow=0.7), segments=12)
+    cylinder('TableStem', 0, -0.4, 0.2, 0.55, 0.025, silver, verts=12)
+    cylinder('Table', 0, -0.4, 0.55, 0.59, 0.22, mat('#1a1c22', rough=0.05), verts=32)
+    for i, (x, c) in enumerate([(-0.07, '#ff4d8d'), (0.08, '#3de0ff')]):
+        cone(f'Glass{i}', x, -0.4, 0.59, 0.71, 0.03, 0.045, mat(c, rough=0.1, glow=0.6, alpha=0.85), verts=12)
+    return seats((-0.55, 0.35), (0, 0.35), (0.55, 0.35))
 
 
 def throne_booth():
-    purple = principled('ThronePurple', srgb('#5a1d8a'), rough=0.85)
-    purple_back = principled('ThronePurpleBack', srgb('#44136a'), rough=0.85)
     gold = mat('#f0c24a', rough=0.2, glow=0.2)
-    ring_base(purple, mat('#1e1426'))
-    ring_back(purple_back, z1=1.25, pieces=7)
-    for k in range(7):
-        b0, b1 = A0 + (A1 - A0) * k / 7, A0 + (A1 - A0) * (k + 1) / 7
-        arc_block(f'BackPiping{k}', 0, CY, 0.77, 0.95, b0, b1, 1.24, 1.28, gold, bevel=0)
-    for i, (x, y, a) in enumerate(on_arc(9, 0.86, A0 + 4, A1 - 4)):
-        cone(f'BackSpike{i}', x, y, 1.28, 1.44, 0.04, 0.0, gold, verts=12)
-        sphere(f'BackJewel{i}', x, y, 1.46, 0.025, neon(f'Jewel{i % 3}', [(1, 0.1, 0.3), (0.2, 0.6, 1), (0.3, 1, 0.5)][i % 3], 4), segments=8)
-    for k in range(9):
-        a = math.radians(A0 + 10 + k * (A1 - A0 - 20) / 8)
-        for z in (0.62, 0.88, 1.1):
-            sphere(f'BackButton{k}{z}', 0.77 * math.cos(a), CY + 0.77 * math.sin(a), z, 0.02, gold, segments=8)
-    ring_table(mat('#f0c24a', rough=0.15, glow=0.1), gold)
-    cylinder('Goblet', 0.02, -0.1, 0.56, 0.62, 0.02, gold, verts=12)
-    cone('GobletCup', 0.02, -0.1, 0.62, 0.72, 0.03, 0.06, gold, verts=16)
-    drinks(['#a0103a', '#a0103a'])
-    return ring_seats(THREE)
+    purple = principled('ThronePurple', srgb('#5a1d8a'), rough=0.85)
+    red = principled('Carpet', srgb('#a0102a'), rough=0.95)
+    box('Dais', -1.05, 1.05, -0.55, 0.95, 0, 0.16, red, bevel=0.02)
+    box('DaisTrim', -1.06, 1.06, -0.56, -0.53, 0.12, 0.16, gold, bevel=0)
+    box('Step', -0.5, 0.5, -0.95, -0.55, 0, 0.08, red, bevel=0.02)
+    for i, x in enumerate((-0.52, 0.52)):
+        box(f'SeatFrame{i}', x - 0.32, x + 0.32, 0.05, 0.62, 0.16, 0.42, gold, bevel=0.03)
+        box(f'Seat{i}', x - 0.28, x + 0.28, 0.08, 0.58, 0.42, 0.5, purple, bevel=0.04)
+        box(f'BackFrame{i}', x - 0.34, x + 0.34, 0.6, 0.74, 0.42, 1.5, gold, bevel=0.04)
+        box(f'BackPanel{i}', x - 0.27, x + 0.27, 0.56, 0.62, 0.5, 1.4, purple, bevel=0.03)
+        for k, dx in enumerate((-0.24, 0, 0.24)):
+            cone(f'BackSpike{i}{k}', x + dx, 0.67, 1.5, 1.68 if k == 1 else 1.6, 0.05, 0.0, gold, verts=12)
+            sphere(f'BackJewel{i}{k}', x + dx, 0.67, 1.7 if k == 1 else 1.62, 0.028, neon(f'Jewel{k}', [(1, 0.1, 0.3), (0.2, 0.6, 1), (0.3, 1, 0.5)][k], 4), segments=8)
+        for side in (-1, 1):
+            box(f'Arm{i}{side}', x + side * 0.32 - 0.05, x + side * 0.32 + 0.05, 0.05, 0.62, 0.42, 0.68, gold, bevel=0.02)
+    cylinder('TableStem', 0, 0.3, 0.16, 0.6, 0.03, gold, verts=12)
+    cylinder('Table', 0, 0.3, 0.6, 0.64, 0.14, gold, verts=24)
+    cone('Goblet', 0, 0.3, 0.64, 0.76, 0.02, 0.05, gold, verts=16)
+    return seats((-0.52, 0.3), (0.52, 0.3))
 
 
 def seashell_booth():
-    coral = principled('ShellCoral', srgb('#f6b7a6'), rough=0.5)
+    coral = principled('ShellCoral', srgb('#f6b7a6'), rough=0.4)
     pearl = principled('ShellPearl', srgb('#fff4ec'), rough=0.2, emission=srgb('#ffe6f0'), emission_strength=0.15)
-    ring_base(principled('ShellSeat', srgb('#7fd6cf'), rough=0.85), mat('#e8d8c0'))
-    n = 11
+    sphere('LowerShell', 0, 0.05, 0.2, 1.0, coral, scale=(1.0, 0.72, 0.24), segments=40)
+    box('Seat', -0.8, 0.8, -0.35, 0.45, 0.3, 0.44, principled('ShellSeat', srgb('#7fd6cf'), rough=0.85), bevel=0.08)
+    # The upper shell stands up behind: ribs fanning out from the hinge.
+    n = 13
     for k in range(n):
-        b0, b1 = A0 + (A1 - A0) * k / n, A0 + (A1 - A0) * (k + 1) / n
-        mid = abs(k - (n - 1) / 2) / ((n - 1) / 2)
-        top = 1.45 - 0.55 * mid * mid
-        arc_block(f'BackRib{k}', 0, CY, 0.78, 0.94, b0 + 0.8, b1 - 0.8, 0.42, top, coral if k % 2 else pearl, bevel=0.03)
-    ring_table(pearl, mat('#e8d8c0', rough=0.3))
-    sphere('Pearl', 0, -0.1, 0.64, 0.07, mat('#ffffff', rough=0.1, glow=0.5))
-    torus('Clam', 0, -0.1, 0.58, 0.09, 0.025, coral)
-    drinks(['#7fe0d6', '#ffb0c8'])
-    return ring_seats(THREE)
+        a = math.radians(8 + k * (164 / (n - 1)))
+        tube(f'BackRib{k}', (0, 0.62, 0.35), (1.0 * math.cos(a), 0.62 + 0.08 * math.sin(a), 0.35 + 1.1 * math.sin(a)), 0.09,
+             pearl if k % 2 else coral, verts=16)
+    sphere('BackHinge', 0, 0.62, 0.35, 0.14, coral, segments=16)
+    cylinder('PearlStand', 0, -0.62, 0, 0.3, 0.05, coral, verts=16)
+    sphere('Pearl', 0, -0.62, 0.42, 0.12, mat('#ffffff', rough=0.1, glow=0.5))
+    return seats((-0.4, 0.1), (0.4, 0.1))
 
 
-def galaxy_booth():
-    navy = principled('GalaxyNavy', srgb('#1a1f5a'), rough=0.8)
-    navy_back = principled('GalaxyBack', srgb('#141848'), rough=0.8)
-    ring_base(navy, mat('#0a0c20'))
-    ring_back(navy_back)
-    arc_block('BackPiping', 0, CY, 0.77, 0.95, A0, A1, 0.98, 1.02, mat('#b9c3ff', rough=0.2, glow=0.4), bevel=0)
+def galaxy_pods():
+    navy = principled('PodNavy', srgb('#1a1f5a'), rough=0.5)
+    shell = principled('PodShell', srgb('#e8ecff'), rough=0.15)
+    silver = mat('#c0c6d8', rough=0.2)
+    cylinder('Platform', 0, 0, 0, 0.1, 1.05, mat('#0d0f24', rough=0.1), verts=48)
+    torus('PlatformGlow', 0, 0, 0.08, 1.04, 0.02, neon('PodGlow', (0.45, 0.35, 1.0), 4))
     import random
-    rnd = random.Random(7)
-    star = neon('Star', (0.9, 0.92, 1.0), 8)
-    pinks = neon('StarPink', (1.0, 0.5, 0.9), 6)
+    rnd = random.Random(5)
+    star = neon('Star', (0.9, 0.92, 1.0), 5)
+    for i in range(30):
+        a, r = rnd.uniform(0, 6.28), rnd.uniform(0.1, 0.95)
+        sphere(f'FloorStar{i}', r * math.cos(a), r * math.sin(a), 0.1, 0.012, star, segments=6)
+    out = []
+    for p, px in enumerate((-0.52, 0.52)):
+        py = 0.1
+        # The egg: one smooth shell, open at the front, lined in navy.
+        prof = [(0.06 + 0.42 * math.sin(math.pi * t) ** 0.8, 0.25 + 1.35 * t) for t in [k / 20 for k in range(21)]]
+        lathe(f'BackEgg{p}', px, py, prof, -35, 215, shell, thickness=0.035)
+        lathe(f'BackLining{p}', px, py, [(max(0.02, r - 0.04), z) for r, z in prof[1:-1]], -32, 212, navy)
+        cylinder(f'Seat{p}', px, py - 0.05, 0.38, 0.46, 0.3, principled('PodCushion', srgb('#7a5aff'), rough=0.85), verts=24)
+        tube(f'CanopyStand{p}a', (px, 0.85, 0.1), (px, 0.85, 1.85), 0.03, silver)
+        tube(f'CanopyStand{p}b', (px, 0.85, 1.85), (px, py, 1.85), 0.03, silver)
+        tube(f'CanopyStand{p}c', (px, py, 1.85), (px, py, 1.6), 0.015, silver)
+        out.append((px, py - 0.05))
+    return seats(*out)
+
+
+def donut_lounge():
+    dough = principled('Dough', srgb('#d89a50'), rough=0.6)
+    icing = principled('Icing', srgb('#ff8ec0'), rough=0.3)
+    torus('Donut', 0, 0.05, 0.28, 0.62, 0.28, dough)
+    torus('Frosting', 0, 0.05, 0.36, 0.62, 0.26, icing, scale=(1, 1, 0.7))
+    import random
+    rnd = random.Random(9)
+    cols = [mat(c, rough=0.3, glow=0.2) for c in ('#ffffff', '#5ad8ff', '#ffe36f', '#7dff9a', '#c07dff')]
     for i in range(40):
-        a = math.radians(rnd.uniform(A0 + 3, A1 - 3))
-        z = rnd.uniform(0.5, 0.95)
-        sphere(f'BackStar{i}', 0.775 * math.cos(a), CY + 0.775 * math.sin(a), z, rnd.uniform(0.008, 0.016), star if i % 4 else pinks, segments=6)
-    ring_table(mat('#0d0f24', rough=0.05), mat('#6a74c8', rough=0.3))
-    sphere('Planet', 0, -0.1, 0.68, 0.09, mat('#ff9a5a', rough=0.4, glow=0.3))
-    torus('PlanetRing', 0, -0.1, 0.68, 0.14, 0.008, mat('#ffe0b0', rough=0.3, glow=0.5), rot=(20, 10, 0))
-    arc_block('UnderGlow', 0, CY, 0.9, 0.93, A0, A1, 0.02, 0.05, neon('GalaxyGlow', (0.45, 0.35, 1.0), 6), bevel=0)
-    return ring_seats(FOUR)
+        a = rnd.uniform(0, 6.28)
+        r = 0.62 + rnd.uniform(-0.18, 0.18)
+        o = cylinder(f'Sprinkle{i}', r * math.cos(a), 0.05 + r * math.sin(a), 0.535, 0.545, 0.012, cols[i % 5], verts=6)
+        o.scale = (3, 1, 1)
+        o.rotation_euler = (0, 0, rnd.uniform(0, 3.14))
+    stripes = [mat('#ff4d8d', rough=0.3), mat('#ffffff', rough=0.3)]
+    for i, (x, h, c) in enumerate([(-0.72, 1.6, '#ff4d8d'), (0.75, 1.35, '#5ad8ff')]):
+        cylinder(f'BackStick{i}', x, 0.8, 0, h, 0.025, mat('#ffffff', rough=0.4), verts=10)
+        o = cylinder(f'BackLolly{i}', 0, 0, -0.04, 0.04, 0.3, mat(c, rough=0.25, glow=0.2), verts=32)
+        o.rotation_euler = (math.radians(90), 0, 0)
+        o.location = (x, 0.8, h + 0.25)
+        t = torus(f'BackSwirl{i}', x, 0.755, h + 0.25, 0.17, 0.03, mat('#ffffff', rough=0.3), rot=(90, 0, 0))
+    return seats((-0.42, -0.4), (0, -0.55), (0.42, -0.4))
 
 
-def candy_booth():
-    pastels = [principled('CandyPink', srgb('#ff9ec7'), rough=0.5), principled('CandyMint', srgb('#9ff0d0'), rough=0.5),
-               principled('CandyLemon', srgb('#fff09a'), rough=0.5), principled('CandyLilac', srgb('#c9a8ff'), rough=0.5)]
-    frosting = mat('#ffffff', rough=0.4)
-    ring_base(principled('CandySeat', srgb('#ff7fb4'), rough=0.6), mat('#ffd0e4'))
-    ring_back(pastels, pieces=8, z1=0.98)
-    for i, (x, y, a) in enumerate(on_arc(22, 0.86, A0 + 2, A1 - 2)):
-        sphere(f'BackDrip{i}', x, y, 1.0, 0.055, frosting, segments=10)
-    ring_table(mat('#fff7fb', rough=0.3), mat('#ff9ec7'))
-    # A giant cupcake.
-    cone('CupcakeCup', 0, -0.1, 0.56, 0.66, 0.06, 0.08, mat('#ff7fb4', rough=0.5), verts=16)
-    sphere('CupcakeTop', 0, -0.1, 0.69, 0.085, mat('#fff0f6', rough=0.4), scale=(1, 1, 0.7))
-    sphere('Cherry', 0, -0.1, 0.77, 0.025, mat('#e01030', rough=0.2))
-    drinks(['#ff9ec7', '#9ff0d0'])
-    return ring_seats(THREE)
-
-
-def garden_booth():
+def garden_gazebo():
+    white = mat('#f6f4ee', rough=0.5)
+    mint = mat('#9fd8b8', rough=0.6)
+    cylinder('Floor', 0, 0, 0, 0.1, 1.08, white, verts=6)
+    for i in range(6):
+        a = math.radians(i * 60 + 30)
+        x, y = 1.0 * math.cos(a), 1.0 * math.sin(a)
+        cylinder(f'{"BackPost" if y > 0 else "Post"}{i}', x, y, 0.1, 1.9, 0.04, white, verts=12)
+    cone('CanopyRoof', 0, 0, 1.85, 2.5, 1.28, 0.03, mint, verts=6)
+    cone('CanopyEave', 0, 0, 1.8, 1.88, 1.3, 1.25, white, verts=6)
+    sphere('CanopyFinial', 0, 0, 2.55, 0.06, white)
+    box('Seat', -0.8, 0.8, 0.22, 0.7, 0.1, 0.44, principled('GazeboCushion', srgb('#f2ead6'), rough=0.85), bevel=0.05)
+    for k in range(7):
+        x = -0.75 + k * 0.25
+        o = box(f'BackLattice{k}a', -0.015, 0.015, -0.015, 0.015, -0.35, 0.35, white, bevel=0)
+        o.location = (x, 0.74, 0.75)
+        o.rotation_euler = (0, math.radians(35), 0)
+        o = box(f'BackLattice{k}b', -0.015, 0.015, -0.015, 0.015, -0.35, 0.35, white, bevel=0)
+        o.location = (x, 0.74, 0.75)
+        o.rotation_euler = (0, math.radians(-35), 0)
+    box('BackTop', -0.82, 0.82, 0.71, 0.77, 1.02, 1.06, white, bevel=0.01)
     leaf = principled('Hedge', srgb('#3f8a3a'), rough=0.95)
-    leaf2 = principled('HedgeLight', srgb('#5aa84a'), rough=0.95)
-    ring_base(principled('GardenSeat', srgb('#f2ead6'), rough=0.85), mat('#7a6a58'))
-    ring_back(leaf, r0=0.76, r1=0.98, z1=1.0, bevel=0.05)
-    import random
-    rnd = random.Random(3)
-    for i, (x, y, a) in enumerate(on_arc(16, 0.87, A0 + 2, A1 - 2)):
-        sphere(f'BackBush{i}', x, y, 1.0 + rnd.uniform(-0.02, 0.03), rnd.uniform(0.1, 0.13), leaf2 if i % 2 else leaf, segments=10)
-    flowers = [mat('#ff5a8a', glow=0.2), mat('#fff06a', glow=0.2), mat('#ffffff', glow=0.2)]
-    for i in range(14):
-        a = math.radians(rnd.uniform(A0 + 5, A1 - 5))
-        r = 0.775
-        sphere(f'BackFlower{i}', r * math.cos(a), CY + r * math.sin(a), rnd.uniform(0.55, 1.05), 0.025, flowers[i % 3], segments=8)
-    ring_table(mat('#c9c2b4', rough=0.8), mat('#8a8274', rough=0.6))
-    cylinder('Pot', 0, -0.1, 0.56, 0.64, 0.045, mat('#c0603a', rough=0.8), verts=16)
-    for i in range(5):
-        a = i * 72
-        sphere(f'Bloom{i}', 0.03 * math.cos(math.radians(a)), -0.1 + 0.03 * math.sin(math.radians(a)), 0.68, 0.03, flowers[i % 3], segments=8)
-    return ring_seats(THREE)
+    flowers = [mat('#ff5a8a', glow=0.2), mat('#fff06a', glow=0.2), mat('#c07dff', glow=0.2)]
+    for side in (-1, 1):
+        box(f'Planter{side}', side * 0.78 - 0.18, side * 0.78 + 0.18, -0.7, -0.35, 0.1, 0.35, white, bevel=0.02)
+        for j in range(5):
+            sphere(f'Bush{side}{j}', side * 0.78 + (j % 3 - 1) * 0.1, -0.52 + (j // 3) * 0.1, 0.42, 0.11, leaf, segments=10)
+            sphere(f'Flower{side}{j}', side * 0.78 + (j % 3 - 1) * 0.11, -0.55 + (j // 3) * 0.1, 0.53, 0.03, flowers[j % 3], segments=8)
+    cylinder('TableStem', 0, -0.3, 0.1, 0.5, 0.025, white, verts=12)
+    cylinder('Table', 0, -0.3, 0.5, 0.54, 0.22, white, verts=32)
+    return seats((-0.5, 0.45), (0, 0.45), (0.5, 0.45))
 
 
-def fire_pit_lounge():
+def fire_sectional():
     stone = principled('PitStone', srgb('#8a8580'), rough=0.9)
-    stone2 = principled('PitStoneDark', srgb('#6a6560'), rough=0.9)
-    ring_base(principled('PitCushion', srgb('#d07a3a'), rough=0.85), stone2)
-    for k in range(9):
-        b0, b1 = A0 + (A1 - A0) * k / 9, A0 + (A1 - A0) * (k + 1) / 9
-        arc_block(f'BackStone{k}', 0, CY, 0.78, 0.95, b0 + 0.5, b1 - 0.5, 0.42, 0.82 + 0.04 * (k % 2), stone if k % 2 else stone2, bevel=0.03)
-    for i in range(10):
-        a = math.radians(i * 36)
-        box(f'PitRock{i}', -0.07, 0.07, -0.05, 0.05, 0, 0.22, stone if i % 2 else stone2, bevel=0.02)
-        o = bs.bpy.context.active_object
-        o.location = (0.24 * math.cos(a), -0.1 + 0.24 * math.sin(a), 0.11)
-        o.rotation_euler = (0, 0, a + math.pi / 2)
-    cylinder('Embers', 0, -0.1, 0.0, 0.16, 0.2, neon('Embers', (0.9, 0.2, 0.02), 2.5), verts=20)
+    cushion = principled('PitCushion', srgb('#d07a3a'), rough=0.85)
+    frame = principled('SectionalFrame', srgb('#3a3632'), rough=0.6)
+    back = principled('SectionalBack', srgb('#b86830'), rough=0.85)
+    # An L: a long sofa along the back and another down the left side.
+    box('FrameBack', -1.05, 1.0, 0.4, 1.0, 0, 0.3, frame, bevel=0.03)
+    box('FrameLeft', -1.05, -0.45, -1.0, 0.4, 0, 0.3, frame, bevel=0.03)
+    box('SeatBack', -1.0, 0.95, 0.42, 0.85, 0.3, 0.42, cushion, bevel=0.05)
+    box('SeatLeft', -1.0, -0.5, -0.95, 0.42, 0.3, 0.42, cushion, bevel=0.05)
+    box('BackRestBack', -1.05, 1.0, 0.84, 1.0, 0.3, 0.85, back, bevel=0.05)
+    box('BackRestLeft', -1.05, -0.88, -1.0, 0.84, 0.3, 0.85, back, bevel=0.05)
+    box('ArmRight', 0.88, 1.0, 0.4, 1.0, 0.3, 0.6, frame, bevel=0.03)
+    box('ArmFront', -1.05, -0.45, -1.0, -0.88, 0.3, 0.6, frame, bevel=0.03)
+    # A square fire table.
+    box('FireTable', -0.25, 0.85, -0.85, 0.15, 0, 0.36, stone, bevel=0.03)
+    box('FireBed', -0.05, 0.65, -0.65, -0.05, 0.36, 0.38, neon('Embers', (0.9, 0.2, 0.02), 2.5), bevel=0)
     fire = neon('Fire', (1.0, 0.4, 0.05), 3.5)
-    fire2 = neon('FireTip', (1.0, 0.75, 0.2), 4)
-    for i, (x, y, h) in enumerate([(0, -0.1, 0.55), (0.08, -0.06, 0.42), (-0.08, -0.13, 0.45), (0.03, -0.18, 0.38), (-0.05, -0.02, 0.4)]):
-        cone(f'Flame{i}', x, y, 0.16, h, 0.07, 0.0, fire, verts=12)
-        cone(f'FlameTip{i}', x, y, 0.2, h * 0.8, 0.035, 0.0, fire2, verts=10)
-    return ring_seats(FOUR)
+    tip = neon('FireTip', (1.0, 0.75, 0.2), 4)
+    for i, (x, y, h) in enumerate([(0.3, -0.35, 0.75), (0.1, -0.25, 0.6), (0.5, -0.45, 0.62), (0.2, -0.5, 0.55), (0.45, -0.2, 0.58)]):
+        cone(f'Flame{i}', x, y, 0.38, h, 0.07, 0.0, fire, verts=12)
+        cone(f'FlameTip{i}', x, y, 0.4, h * 0.85, 0.035, 0.0, tip, verts=10)
+    return seats((-0.3, 0.62, 0), (0.45, 0.62, 0), (-0.75, -0.05, 90), (-0.75, -0.6, 90))
 
 
-def cloud_booth():
+def cloud_bed():
     cloud = principled('Cloud', srgb('#ffffff'), rough=0.9, emission=srgb('#eaf2ff'), emission_strength=0.15)
-    ring_base(principled('CloudSeat', srgb('#bfe0ff'), rough=0.9), mat('#dfeeff'))
+    cylinder('BedBase', 0, 0, 0, 0.14, 1.02, mat('#bfe0ff', rough=0.4, glow=0.2), verts=48)
+    cylinder('Mattress', 0, 0, 0.14, 0.42, 0.98, principled('CloudSheet', srgb('#f4f8ff'), rough=0.9), verts=48)
+    torus('MattressEdge', 0, 0, 0.42, 0.95, 0.04, principled('CloudPiping', srgb('#d8e8ff'), rough=0.8))
     import random
     rnd = random.Random(11)
-    for i, (x, y, a) in enumerate(on_arc(12, 0.86, A0 + 2, A1 - 2)):
-        for j, z in enumerate((0.58, 0.82)):
-            sphere(f'BackPuff{i}_{j}', x, y, z + rnd.uniform(-0.03, 0.03), 0.17 - 0.03 * j, cloud, segments=14)
-    for i, (x, y, a) in enumerate(on_arc(7, 0.84, A0 + 15, A1 - 15)):
-        sphere(f'BackPuffTop{i}', x, y, 1.0 + rnd.uniform(-0.02, 0.04), 0.12, cloud, segments=14)
-    ring_table(mat('#fff8d8', rough=0.3, glow=0.2), mat('#e8d8a0', rough=0.3))
+    for i in range(11):
+        a = math.radians(-10 + i * 20)
+        x, y = 0.95 * math.cos(a), 0.95 * math.sin(a)
+        for j, z in enumerate((0.6, 0.85)):
+            sphere(f'BackPuff{i}_{j}', x, y, z + rnd.uniform(-0.03, 0.03), 0.2 - 0.04 * j, cloud, segments=14)
+    for i in range(6):
+        a = math.radians(30 + i * 24)
+        sphere(f'BackPuffTop{i}', 0.9 * math.cos(a), 0.9 * math.sin(a), 1.05 + rnd.uniform(-0.02, 0.05), 0.14, cloud, segments=14)
+    for i, (x, c) in enumerate([(-0.4, '#ffc8e0'), (0, '#c8e0ff'), (0.4, '#fff0b0')]):
+        sphere(f'BackPillow{i}', x, 0.55, 0.52, 1.0, principled(f'Pillow{i}', srgb(c), rough=0.9), scale=(0.2, 0.08, 0.12), segments=16)
     star = mat('#ffd84a', rough=0.3, glow=0.8)
-    for i in range(5):
-        a = math.radians(90 + i * 72)
-        cone(f'StarPoint{i}', 0.04 * math.cos(a), -0.1 + 0.04 * math.sin(a), 0.56, 0.6, 0.03, 0.0, star, verts=6)
-    sphere('StarMiddle', 0, -0.1, 0.6, 0.04, star, scale=(1, 1, 0.6))
-    arc_block('UnderGlow', 0, CY, 0.9, 0.93, A0, A1, 0.02, 0.05, neon('CloudGlow', (0.9, 0.8, 1.0), 4), bevel=0)
-    return ring_seats(THREE)
+    for i in range(4):
+        a = math.radians(-60 + i * 40)
+        sphere(f'Star{i}', 0.95 * math.cos(a), 0.95 * math.sin(a), 0.16, 0.025, star, segments=8)
+    return seats((-0.45, -0.4), (0, -0.55), (0.45, -0.4))
 
 
 # --------------------------------------------------------------------------
@@ -494,18 +601,20 @@ def rattan_love_seat():
 
 
 DESIGNS = {
-    'tikiBooth': tiki_booth,
+    'tikiHut': tiki_hut,
     'iglooBooth': igloo_booth,
-    'haloBooth': neon_halo_booth,
+    'glowLounge': glow_lounge,
+    'woodLounge': wood_lounge,
+    'tulipLounge': tulip_lounge,
     'birdcageBooth': birdcage_booth,
-    'mirrorBooth': mirror_disco_booth,
+    'discoStage': disco_stage,
     'throneBooth': throne_booth,
     'shellBooth': seashell_booth,
-    'galaxyBooth': galaxy_booth,
-    'candyBooth': candy_booth,
-    'gardenBooth': garden_booth,
-    'firePit': fire_pit_lounge,
-    'cloudBooth': cloud_booth,
+    'galaxyPods': galaxy_pods,
+    'donutLounge': donut_lounge,
+    'gardenGazebo': garden_gazebo,
+    'fireSectional': fire_sectional,
+    'cloudBed': cloud_bed,
     'kissSofa': kiss_sofa,
     'bathtubSofa': bathtub_sofa,
     'cruiserSofa': cruiser_sofa,
