@@ -281,7 +281,7 @@ const mood = await page.evaluate(() => {
 });
 check('there is no Vibe readout', mood.vibeHidden);
 check('a drink cheers a patron up', mood.cheered === 65, `mood ${mood.cheered}`);
-check('happy patrons bring 3 fans, angry ones cost 2', mood.happyFans === 3 && mood.angryFans === -2, JSON.stringify(mood));
+check('happy guests bring 5 XP, angry ones cost 2', mood.happyFans === 5 && mood.angryFans === -2, JSON.stringify(mood));
 check('a very unhappy patron storms out', mood.stormed === true);
 
 // Wages: $4 + $6 every 30 seconds; if the club can't pay, staff quit.
@@ -1602,11 +1602,11 @@ const levels = await page.evaluate(() => {
   const s = window.__clubNova.scene.getScene('club');
   const fans = s.fans;
   const at = (n) => { s.fans = n; return s.levelInfo().level; };
-  const out = { at: [at(0), at(249), at(250), at(s.fansForLevel(3) - 1), at(s.fansForLevel(3)), at(s.fansForLevel(5))].join(), steps: [1, 2, 3, 4, 5].map((l) => s.fansToNextLevel(l)) };
+  const out = { at: [at(0), at(119), at(120), at(s.fansForLevel(3) - 1), at(s.fansForLevel(3)), at(s.fansForLevel(5))].join(), steps: [1, 2, 3, 4, 5].map((l) => s.fansToNextLevel(l)) };
   s.fans = fans;
   return out;
 });
-check('levels need more fans each time (250 for level 2)', levels.at === '1,1,2,2,3,5' && levels.steps.every((v, i, a) => i === 0 || v > a[i - 1] + (a[i - 1] - (a[i - 2] || 0)) * 0), JSON.stringify(levels));
+check('levels need more XP each time (120 for level 2)', levels.at === '1,1,2,2,3,5' && levels.steps.every((v, i, a) => i === 0 || v > a[i - 1] + (a[i - 1] - (a[i - 2] || 0)) * 0), JSON.stringify(levels));
 
 // One endless night: no night clock or summary, the doors and the music
 // never stop, wages keep being paid, and every minute the club gets stars

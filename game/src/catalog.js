@@ -307,8 +307,8 @@ export const EXPANSION = {
     { level: 1, size: 10 }, { level: 2, size: 13 }, { level: 3, size: 16 }, { level: 4, size: 19 },
     { level: 5, size: 21 }, { level: 7, size: 24 }, { level: 9, size: 27 },
   ],
-  perTile: 3,
-  perTileGrowth: 1.8,
+  perTile: 10,
+  perTileGrowth: 6,
 };
 
 // A 1-5 "Fame" rating shown in the shop instead of raw fan-rate/capacity

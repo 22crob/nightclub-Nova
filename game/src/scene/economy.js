@@ -95,7 +95,7 @@ export class EconomyMixin {
 
   // The level and the bar toward the next one, from the fan count (the
   // game has no separate XP). Each level needs more fans than the last
-  // (LEVEL_FANS): 150 for level 2, 250 more for level 3, and so on.
+  // (LEVEL_FANS): 120 for level 2, 268 more for level 3, and so on.
   levelInfo() {
     let fans = Math.floor(this.fans);
     let level = 1;

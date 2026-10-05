@@ -93,17 +93,19 @@ export const FACINGS = [0, 90, 180, 270];
 // `perExpansion` for every row of floor bought (see expandClub()). Staff
 // don't count; celebrities do. When it's full, arrivals wait outside.
 export const CAPACITY = { base: 8, perExpansion: 1 };
-// Fans needed for each level: `first` to reach level 2, then `step` more
-// for every level after (150, 250, 350, ... so level 5 is at 1,200 fans).
-// Fans are the game's XP. Level L needs first + step*(L-1) + curve*(L-1)^2
-// more fans to reach the next one, so each level takes longer.
-export const LEVEL_FANS = { first: 250, step: 150, curve: 15 };
+// Fans needed for each level (fans are the game's XP). Level L needs
+// first + step*(L-1) + curve*(L-1)^2 more to reach the next one, so each
+// level takes longer: 120 for level 2 (a few minutes), level 5 at 1,512,
+// level 10 at 9,432. Tuned against a simulated club (about 25-30 XP a
+// minute from guests, plus purchase XP): level 2 in about 3 minutes, level
+// 5 in about 40, level 10 in about 4 hours of play.
+export const LEVEL_FANS = { first: 120, step: 130, curve: 18 };
 // Where XP (the save calls it fans) comes from: mostly good service,
 // satisfied visits and successful parties, not guests just moving between
 // activities; and buying things: perDollar XP for each $ spent on
 // furniture, decorations, floors, wallpaper and expansions. Moving gives
 // none, and selling takes back what the item gave.
-export const XP = { drinkServed: 0.5, partyPerGuest: 1, partyMax: 60, perDollar: 0.05 };
+export const XP = { drinkServed: 1, partyPerGuest: 1, partyMax: 60, perDollar: 0.05 };
 // Guest visits (see scene/activities.js): a guest stays visitMs, moving
 // between activities that each last about their range (ms). They finish
 // what they're doing before leaving; overstayMs past that, they're sent off.
