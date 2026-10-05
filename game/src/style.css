@@ -730,3 +730,15 @@ body { font-family: var(--ui-font); color: var(--ink); }
   75% { opacity: 1; transform: translate(-50%, 0) scale(1); }
   100% { opacity: 0; transform: translate(-50%, -30px) scale(1); }
 }
+
+/* The party wrap-up (see showPartySummary()): the level-up card's look,
+   with a row per stat. */
+#partySummary { z-index: 59; }
+#partySummaryRows { display: flex; flex-direction: column; gap: 5px; min-width: 320px; max-width: 420px; margin: 0 auto; }
+.summaryRow {
+  display: grid; grid-template-columns: 30px 1fr auto; align-items: center; gap: 8px;
+  padding: 6px 12px; border-radius: 10px; background: var(--shine), var(--nc-deep); border: 2px solid var(--nc-frame);
+  color: #fff; font-size: 15px; font-weight: 700; text-shadow: var(--outline);
+}
+.summaryRow .sIcon { font-size: 18px; text-align: center; }
+.summaryRow .sValue { color: #ffe45c; text-align: right; max-width: 210px; }

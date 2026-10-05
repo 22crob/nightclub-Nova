@@ -293,6 +293,10 @@ export class StaffMixin {
     patron.drinks = (patron.drinks || 0) + 1;
     this.fans += XP.drinkServed; // XP for good service
     this.drinksSold = (this.drinksSold || 0) + 1;
+    if (this.partyStats) {
+      this.partyStats.drinks += 1;
+      this.partyStats.drinkRevenue += price + tip;
+    }
     this.cheerPatron(patron, MOOD.drinkMood);
     patron.thirstyAt = now + randRange(...THIRST_INTERVAL) / this.boostFactor() / this.partyEffect('thirst', 1);
     this.startDrinking(patron, rec); // they drink it for a while (see activities.js)

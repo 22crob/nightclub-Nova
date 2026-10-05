@@ -1098,6 +1098,10 @@ const party = await page.evaluate(() => {
   s.partyStartedAt -= 3 * 60 * 1000 + 1000;
   s.updatePartyButton();
   out.ended = s.party === null && s.partyEffect('capacity', 0) === 0 && !document.getElementById('partyBanner').classList.contains('open');
+  const sum = document.getElementById('partySummary');
+  out.summary = sum.classList.contains('open') ? [...sum.querySelectorAll('.summaryRow')].map((r) => `${r.querySelector('.sLabel').textContent}=${r.querySelector('.sValue').textContent}`) : null;
+  document.getElementById('partySummaryOk').click();
+  out.summaryClosed = !sum.classList.contains('open');
   out.drift = !guest || (guest.despawnAt <= s.time.now + 71000 && guest.despawnAt > s.time.now);
   out.fans = s.fans >= fans;
   s.time.delayedCall = later;
@@ -1109,6 +1113,9 @@ check('when it starts, a crowd lines up outside and gets let in a few at a time'
 check('during the party 2 more guests fit and tips are higher, with a timer banner', party.capacity === 2 && party.tips > 1 && party.banner && party.button === 'active', JSON.stringify(party));
 check('celebrities wear a star and tip big', party.celeb, JSON.stringify(party));
 check('one party at a time; at the end its guests drift home over a minute and it earns fans', party.second === false && party.ended && party.drift && party.fans, JSON.stringify(party));
+check('a party ends with a wrap-up of what happened during it, and closing it carries on', !!party.summary && party.summaryClosed
+  && ['Guests admitted', 'Celebrities', 'Drinks served', 'Drink revenue', 'Bonuses collected', 'Average happiness', 'Fights / ejections'].every((l) => party.summary.some((r) => r.startsWith(l + '=')))
+  && party.summary.some((r) => r.startsWith('Celebrities=Jett Starr')) && party.summary.some((r) => /^Guests admitted=[1-9]/.test(r)), JSON.stringify(party.summary));
 
 // Guest visits: 4-8 minutes, each guest a type with their own tastes,
 // moving through activities (dance 30-90 s, drink 20-45 s, chat with

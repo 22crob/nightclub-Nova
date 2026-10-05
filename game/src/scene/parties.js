@@ -69,7 +69,9 @@ export class PartiesMixin {
     if (!def) return;
     this.partyPhase = 'running';
     this.partyStartedAt = this.time.now;
-    this.partyStats = { guests: 0 };
+    // What happens during the party, for the summary at the end (see
+    // showPartySummary()). Only counted while it's running.
+    this.partyStats = { guests: 0, celebs: [], drinks: 0, drinkRevenue: 0, bonuses: 0, bonusCash: 0, moodSum: 0, moodSamples: 0, fights: 0, ejections: 0 };
     this.moodColor = def.shade;
     this.drawMoodShade();
     SFX.levelUp();
@@ -109,10 +111,62 @@ export class PartiesMixin {
       const vibe = this.clubVibe() ?? 50;
       const fans = Math.round(Math.min(XP.partyMax, stats.guests * XP.partyPerGuest * (vibe / 60)));
       this.fans += fans;
-      this.showToast(`${def.emoji} The ${def.label} is over: ${stats.guests} guests came${fans > 0 ? `, +${fans} fans!` : '.'} Guests will head home soon.`, 6000);
+      this.showPartySummary(def, stats, fans);
       this.updateUI();
     }
+    this.partyStats = null;
     this.updatePartyButton();
+  }
+
+  // Samples how happy the crowd is, for the party's average (called with
+  // the patron tick while a party runs).
+  samplePartyMood() {
+    const stats = this.partyStats;
+    if (!stats || this.partyPhase !== 'running') return;
+    const inside = this.patrons.filter((p) => !p.gone && !p.leaving);
+    if (inside.length === 0) return;
+    stats.moodSum += inside.reduce((sum, p) => sum + p.mood, 0) / inside.length;
+    stats.moodSamples += 1;
+  }
+
+  // The party's wrap-up: what happened while it was on. Closing it carries
+  // on with the club as normal.
+  showPartySummary(def, stats, fans) {
+    const box = document.getElementById('partySummary');
+    if (!box) { this.showToast(`${def.emoji} The ${def.label} is over: ${stats.guests} guests came.`); return; }
+    const happiness = stats.moodSamples ? Math.round(stats.moodSum / stats.moodSamples) : null;
+    const face = happiness === null ? '' : happiness >= 70 ? '😍' : happiness >= 45 ? '🙂' : '😕';
+    const celebs = stats.celebs || [];
+    const rows = [
+      ['🎟️', 'Guests admitted', `${stats.guests}`],
+      ['⭐', 'Celebrities', celebs.length ? celebs.join(', ') : 'None this time'],
+      ['🍹', 'Drinks served', `${stats.drinks}`],
+      ['💵', 'Drink revenue', `$${Math.round(stats.drinkRevenue)}`],
+      ['✋', 'Bonuses collected', `${stats.bonuses}${stats.bonusCash ? ` ($${stats.bonusCash})` : ''}`],
+      [face || '🙂', 'Average happiness', happiness === null ? '-' : `${happiness}%`],
+      ['💢', 'Fights / ejections', `${stats.fights} / ${stats.ejections}`],
+      ['❤️', 'Fans earned', `+${fans}`],
+    ];
+    document.getElementById('partySummaryTitle').textContent = `${def.emoji} ${def.label} wrap-up`;
+    const list = document.getElementById('partySummaryRows');
+    list.innerHTML = '';
+    for (const [icon, label, value] of rows) {
+      const row = document.createElement('div');
+      row.className = 'summaryRow';
+      for (const [cls, text] of [['sIcon', icon], ['sLabel', label], ['sValue', value]]) {
+        const cell = document.createElement('div');
+        cell.className = cls;
+        cell.textContent = text;
+        row.appendChild(cell);
+      }
+      list.appendChild(row);
+    }
+    box.classList.add('open');
+    SFX.levelUp();
+  }
+
+  hidePartySummary() {
+    document.getElementById('partySummary')?.classList.remove('open');
   }
 
   // A party guest came in (see trySpawnPatron()).
@@ -201,6 +255,7 @@ export class PartiesMixin {
 
   // Wires up the HUD button and the picker (see index.html).
   setupParties() {
+    document.getElementById('partySummaryOk')?.addEventListener('click', () => this.hidePartySummary());
     this.partyButton = document.getElementById('partyButton');
     this.partyLabel = document.getElementById('partyLabel');
     this.partyButton?.addEventListener('click', () => {

@@ -211,6 +211,7 @@ export class SecurityMixin {
     const arg = this.argument;
     if (!arg || arg.state === 'fight') return;
     arg.state = 'fight';
+    if (this.partyStats) this.partyStats.fights += 1;
     arg.fightEndsAt = this.time.now + SECURITY.fightMs;
     const { a, b } = arg;
     a.container.setVisible(false);
@@ -254,6 +255,7 @@ export class SecurityMixin {
     const stay = out === a ? b : a;
     this.clearArgument();
     out.ejected = true;
+    if (this.partyStats) this.partyStats.ejections += 1;
     const c = out.container;
     this.floatText(c.x, c.y - PATRON_POPUP_Y - 10, '🚫 Ejected!', '#ff5a5a');
     this.showToast(`🚫 Security threw ${out.name} out after a fight.`);

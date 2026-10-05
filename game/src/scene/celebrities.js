@@ -66,6 +66,7 @@ export class CelebritiesMixin {
     if (!def) return;
     patron.celeb = def;
     patron.name = def.name;
+    if (this.partyStats) this.partyStats.celebs.push(def.name); // came during a party
     const c = patron.container;
     this.addStarIcon(c);
     const shadow = c.list[0];
