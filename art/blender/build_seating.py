@@ -294,6 +294,8 @@ def build(name, preview_dir=None):
 
 
 def main():
+    from seating_designs import DESIGNS
+    SEATING.update(DESIGNS)
     args = sys.argv[1:]
     preview = None
     if args[:1] == ['--preview']:
