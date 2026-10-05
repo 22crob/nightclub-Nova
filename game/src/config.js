@@ -201,12 +201,14 @@ export const BARTENDERS = { levels: [1, 4, 7, 11, 15] };
 // Bass Boost (see boost.js): for durationMs, guests are danceWeight times
 // as keen to dance, dancers tip `speedUp` times as often and `tipMultiplier`
 // times as much, and about joinShare of the crowd heads for the dance floor
-// over the first few seconds (staggerMs). Then cooldownMs before it's ready.
-export const BOOST = { durationMs: 60000, cooldownMs: 180000, speedUp: 1.5, tipMultiplier: 1.5, danceChance: 0.75, danceWeight: 5, joinShare: 0.6, staggerMs: [300, 5000] };
+// over the first few seconds (staggerMs). Guests already dancing dance
+// `energy` times faster and keep going danceExtendMs longer. Then
+// cooldownMs before it's ready.
+export const BOOST = { durationMs: 60000, cooldownMs: 180000, speedUp: 1.5, tipMultiplier: 1.5, danceChance: 0.75, danceWeight: 5, joinShare: 0.65, staggerMs: [250, 2500], danceExtendMs: [20000, 40000], energy: 1.5 };
 // Drink Rush (see scene/boost.js): for durationMs, guests are drinkWeight
 // times as keen on a drink, and about joinShare of them head for the bars
 // over the first few seconds (staggerMs). Then cooldownMs before it's ready.
-export const RUSH = { durationMs: 45000, cooldownMs: 180000, drinkWeight: 5, joinShare: 0.55, staggerMs: [300, 5000] };
+export const RUSH = { durationMs: 45000, cooldownMs: 180000, drinkWeight: 5, joinShare: 0.65, staggerMs: [250, 2500] };
 
 // Mood lighting (see lighting.js): how much the floor and walls are dimmed,
 // and the coloured glow under lights. The owner found the glows too strong
@@ -229,6 +231,15 @@ export const PARTY_COUNTDOWN_MS = 10 * 1000; // from paying to the party startin
 // or if they're still at it after argueMs, it's a short cartoon fight
 // (fightMs) and security throws one of them out. At most one at a time,
 // and never within cooldownMs of the last.
+// Quick reactions over guests' heads (see reactions.js): icon size and how
+// far it floats (px), how long it lasts and the random delay before it
+// shows (ms), and how often a happy dancer shows one (more often during a
+// Bass Boost), if their mood is at least danceMinMood.
+export const REACTIONS = {
+  size: 24, rise: 26, lifeMs: [1100, 1800], delayMs: [0, 700],
+  danceEveryMs: [9000, 20000], danceEveryBoostMs: [3500, 8000], danceMinMood: 50,
+};
+
 export const SECURITY = {
   character: 4, scale: 1.12, stepMs: 380, // all in black, like the bouncer
   argueChance: 0.12, cooldownMs: 90 * 1000, argueMs: [8000, 12000],

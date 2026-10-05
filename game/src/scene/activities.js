@@ -43,6 +43,8 @@ export class ActivitiesMixin {
     const now = this.time.now;
     if (now >= patron.despawnAt) { this.startPatronDeparture(patron); return; }
     const order = [];
+    // Answering the Bass Boost or Drink Rush (see rallyGuests()).
+    if (patron.wantActivity) { order.push(patron.wantActivity); patron.wantActivity = null; }
     if (now >= patron.thirstyAt) order.push('drink');
     const w = this.activityWeights(patron);
     const total = KINDS.reduce((s, k) => s + w[k], 0);
@@ -258,6 +260,8 @@ export class ActivitiesMixin {
     }
     if (this.maybeArgue(patron, other)) return true; // once in a while it goes badly (security.js)
     this.chatBubble(patron);
+    this.popReaction(patron, 'happy', randRange(1500, 4000)); // a good chat
+    this.popReaction(other, 'happy', randRange(2500, 6000));
     return true;
   }
 
@@ -287,5 +291,9 @@ export class ActivitiesMixin {
   tickActivity(patron) {
     const a = patron.activity;
     if (a && a.kind === 'chat' && a.chatting && !patron.moving) this.chatBubble(patron);
+    // Dancers enjoying themselves show it now and then (reactions.js).
+    const anim = patron.container.patronAnimState;
+    if (!patron.moving && typeof anim === 'string' && anim.startsWith('dance')) this.tickDanceJoy(patron);
+    else patron.nextDanceJoyAt = undefined;
   }
 }

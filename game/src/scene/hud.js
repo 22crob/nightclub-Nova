@@ -123,6 +123,20 @@ export class HudMixin {
 
   // Shows a brief DOM banner (see #toast in index.html) — plain HTML/CSS,
   // not a Phaser object, so no game-canvas layer is needed for it to work.
+  // A big popup in the middle of the screen for a moment: `theme` is
+  // 'boost', 'rush' or 'celeb' (colours in style.css).
+  showBigPopup(title, sub = '', theme = 'boost', durationMs = 1800) {
+    const el = document.getElementById('bigPopup');
+    if (!el) { this.showToast(`${title} ${sub}`); return; }
+    el.querySelector('.bpTitle').textContent = title;
+    el.querySelector('.bpSub').textContent = sub;
+    el.dataset.theme = theme;
+    el.style.setProperty('--bp-ms', `${durationMs}ms`);
+    el.classList.remove('show');
+    void el.offsetWidth; // restart the animation
+    el.classList.add('show');
+  }
+
   showToast(message, durationMs = 4000) {
     const el = document.getElementById('toast');
     if (!el) return; // older/debug HTML without the toast element — skip silently

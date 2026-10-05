@@ -1,18 +1,23 @@
 // ClubScene methods: the two crowd buttons, each with a cooldown.
-//  - Bass Boost: for BOOST.durationMs the bass is turned way up, more
-//    guests want to dance (and dancers tip a bit more), and a share of the
-//    crowd heads for free dance floor spots over the next few seconds.
-//  - Drink Rush: for RUSH.durationMs more guests want a drink, and a share
-//    of the crowd heads for the bars and bar stools over a few seconds.
-// Guests respond one by one (staggered by a few seconds), finishing a
-// step first, so the movement feels natural rather than everyone jumping
-// at once. Mixed into ClubScene (see ClubScene.js); `this` is the scene.
-import { BOOST, RUSH } from '../config.js';
+//  - Bass Boost: a pulse of light across the dance floor, a flash and a
+//    "Bass Boost!" popup; for BOOST.durationMs the bass is turned way up,
+//    more guests want to dance (and dancers tip more), dancers get more
+//    energetic and dance longer, and a share of the crowd heads for free
+//    dance floor spots.
+//  - Drink Rush: a "Drink Rush!" popup and the bars light up; for
+//    RUSH.durationMs more guests want a drink, and a share of the crowd
+//    heads for the bar lines.
+// The guests who answer react straight away (reactions.js), then set off
+// one by one a moment later, so it looks like a crowd responding. Guests
+// leaving, arguing or in line at a bar carry on with that. Mixed into ClubScene (see ClubScene.js); `this` is the scene.
+import Phaser from 'phaser';
+import { BOOST, CHARACTER_DISPLAY_HEIGHT, RUSH } from '../config.js';
 import { Music } from '../music.js';
 import { SFX } from '../sfx.js';
 import { refreshTip } from '../tooltips.js';
 
 const randRange = (min, max) => min + Math.random() * (max - min);
+const CHEERS = ['Woo!', 'Yeah!', 'Let\'s go!', 'Whoo!'];
 const clock = (ms) => {
   const s = Math.ceil(ms / 1000);
   return `${Math.floor(s / 60)}:${String(s % 60).padStart(2, '0')}`;
@@ -57,7 +62,20 @@ export class BoostMixin {
     this.boostReadyAt = this.boostUntil + BOOST.cooldownMs;
     Music.setBoost(true);
     SFX.levelUp();
-    this.showToast('🔊 BASS BOOST! Everybody to the dance floor!');
+    this.showBigPopup('Bass Boost!', 'Everybody to the dance floor!', 'boost');
+    this.flashScreen(0xb070ff);
+    this.pulseDanceFloor();
+    // Dancers get more energetic and keep going longer.
+    for (const p of this.patrons) {
+      if (!this.isDancing(p) || p.leaving || p.gone) continue;
+      const a = p.activity;
+      if (a && a.kind === 'dance' && a.until) {
+        a.until += randRange(...BOOST.danceExtendMs);
+        p.nextMoveAt = Math.max(p.nextMoveAt, a.until);
+      }
+      this.energize(p);
+      this.popReaction(p, Math.random() < 0.5 ? 'note' : 'excited', randRange(0, 300));
+    }
     this.rallyGuests('dance', BOOST);
     this.updateBoostButton();
     return true;
@@ -69,30 +87,122 @@ export class BoostMixin {
     this.rushUntil = now + RUSH.durationMs;
     this.rushReadyAt = this.rushUntil + RUSH.cooldownMs;
     SFX.levelUp();
-    this.showToast('🍹 DRINK RUSH! Who wants a drink?');
+    this.showBigPopup('Drink Rush!', 'Who wants a drink?', 'rush');
+    this.highlightBars();
     this.rallyGuests('drink', RUSH);
     this.updateBoostButton();
     return true;
   }
 
-  // Sends a share of the crowd off to `kind` ('dance' or 'drink'), one at a
-  // time over the next few seconds. Guests already doing it, in a line,
-  // on a bar stool or leaving are left alone.
+  // True if the guest is dancing right now.
+  isDancing(p) {
+    const anim = p.container.patronAnimState;
+    return typeof anim === 'string' && anim.startsWith('dance');
+  }
+
+  // A dancer's moves go faster during a Bass Boost (see setPatronAnimation()).
+  energize(p) {
+    const sprite = p.container.patronSprite;
+    if (sprite && sprite.anims) sprite.anims.timeScale = this.isBoosted() && this.isDancing(p) ? BOOST.energy : 1;
+  }
+
+  // Who can answer the call: not leaving, arguing, in line at a bar (being
+  // served), or already doing it (a drink on order or in hand counts).
+  canRally(p, kind) {
+    if (p.leaving || p.gone || p.arguing || p.queue) return false;
+    if (p.activity && p.activity.kind === kind) return false;
+    if (kind === 'dance' && this.isDancing(p)) return false;
+    return true;
+  }
+
+  // A share of the crowd (settings.joinShare) answers the call: each reacts
+  // straight away (an excited face, a note or a drink over their head, and
+  // a cheer from some), then sets off a moment later, one after another,
+  // for a free dance floor spot or a bar line.
   rallyGuests(kind, settings) {
     const now = this.time.now;
-    const busy = (p) => p.leaving || p.gone || p.arguing || p.queue || (p.activity && p.activity.kind === kind);
+    let count = 0;
     for (const p of this.patrons) {
-      if (busy(p) || Math.random() > settings.joinShare) continue;
+      if (!this.canRally(p, kind) || Math.random() > settings.joinShare) continue;
+      count += 1;
+      const icon = kind === 'drink' ? (Math.random() < 0.6 ? 'drink' : 'excited') : (Math.random() < 0.6 ? 'excited' : 'note');
+      this.popReaction(p, icon, randRange(0, 250));
+      if (Math.random() < 0.35) {
+        const c = p.container;
+        this.floatText(c.x, c.y - CHARACTER_DISPLAY_HEIGHT * 0.6, CHEERS[Math.floor(Math.random() * CHEERS.length)], kind === 'drink' ? '#7dffc4' : '#e9d4ff');
+      }
       this.time.delayedCall(randRange(...settings.staggerMs), () => {
-        if (busy(p) || this.time.now > now + settings.durationMs) return;
+        if (!this.canRally(p, kind) || this.time.now > now + settings.durationMs) return;
         if (kind === 'drink') p.thirstyAt = Math.min(p.thirstyAt, this.time.now);
         this.endChat(p);
+        this.endDanceTogether(p);
         p.lastActivity = null;
-        p.activity = null; // their next pick is now (most likely) `kind`
-        if (!p.sitting) { p.targetGx = undefined; p.path = null; }
+        p.activity = null;
+        p.wantActivity = kind; // their next pick (see chooseActivity())
+        if (!p.sitting) { this.releaseSeat(p); p.targetGx = undefined; p.path = null; }
         p.nextMoveAt = Math.min(p.nextMoveAt, this.time.now);
       });
     }
+    return count;
+  }
+
+  // --- Effects --------------------------------------------------------------
+
+  // A quick coloured flash over the whole club.
+  flashScreen(color) {
+    const { width, height } = this.scale;
+    const flash = this.add.rectangle(0, 0, width, height, color).setOrigin(0, 0)
+      .setScrollFactor(0).setBlendMode(Phaser.BlendModes.ADD).setAlpha(0).setDepth(10000);
+    this.tweens.add({ targets: flash, alpha: 0.35, duration: 90, yoyo: true, hold: 60, onComplete: () => flash.destroy() });
+  }
+
+  // Waves of light rolling out across every dance floor from its middle.
+  pulseDanceFloor() {
+    const tiles = Object.keys(this.placed).map((k) => k.split(',').map(Number)).filter(([x, y]) => this.isDanceFloorTile(x, y));
+    if (tiles.length === 0) return 0;
+    const cx = tiles.reduce((s, [x]) => s + x, 0) / tiles.length;
+    const cy = tiles.reduce((s, [, y]) => s + y, 0) / tiles.length;
+    for (let wave = 0; wave < 3; wave++) {
+      for (const [x, y] of tiles) {
+        const g = this.add.graphics();
+        const pts = [[x - 0.5, y - 0.5], [x + 0.5, y - 0.5], [x + 0.5, y + 0.5], [x - 0.5, y + 0.5]]
+          .map(([gx, gy]) => { const { sx, sy } = this.gridToScreen(gx, gy); return { x: sx, y: sy }; });
+        g.fillStyle(wave === 1 ? 0x5fe3ff : 0xd9a8ff, 1);
+        g.fillPoints(pts, true);
+        g.setBlendMode(Phaser.BlendModes.ADD).setAlpha(0).setDepth(-500); // over the floor, under people and props
+        this.propLayer.add(g);
+        const dist = Math.hypot(x - cx, y - cy);
+        this.tweens.add({
+          targets: g, alpha: 0.75, duration: 140, yoyo: true, delay: wave * 420 + dist * 70,
+          onComplete: () => g.destroy(),
+        });
+      }
+    }
+    this.propLayer.sort('depth');
+    return tiles.length;
+  }
+
+  // The bars someone's working glow for a moment, with a drink over each.
+  highlightBars() {
+    const bars = this.hireableRecords().filter((r) => this.isWorked(r));
+    const g = this.add.graphics();
+    this.ghostLayer.add(g);
+    for (const rec of bars) {
+      for (const [x, y] of rec.tiles) {
+        const pts = [[x - 0.5, y - 0.5], [x + 0.5, y - 0.5], [x + 0.5, y + 0.5], [x - 0.5, y + 0.5]]
+          .map(([gx, gy]) => { const { sx, sy } = this.gridToScreen(gx, gy); return { x: sx, y: sy }; });
+        g.fillStyle(0x3fe0c8, 0.35);
+        g.fillPoints(pts, true);
+        g.lineStyle(2, 0xb8fff2, 0.9);
+        g.strokePoints(pts, true);
+      }
+      const mid = rec.tiles[Math.floor(rec.tiles.length / 2)];
+      const { sx, sy } = this.gridToScreen(mid[0], mid[1]);
+      this.floatText(sx, sy - CHARACTER_DISPLAY_HEIGHT * 0.9, '🍹', '#ffffff');
+    }
+    g.setBlendMode(Phaser.BlendModes.ADD).setAlpha(0);
+    this.tweens.add({ targets: g, alpha: 1, duration: 220, yoyo: true, repeat: 2, onComplete: () => g.destroy() });
+    return bars.length;
   }
 
   // Runs a few times a second: ends the boost on time and keeps the button
@@ -100,6 +210,7 @@ export class BoostMixin {
   tickBoost() {
     if (this.boostUntil !== undefined && !this.isBoosted() && Music.boosted) {
       Music.setBoost(false);
+      for (const p of this.patrons) this.energize(p); // back to normal speed
       this.showToast('The Bass Boost is over. Ready again in a few minutes!');
     }
     if (this.rushUntil !== undefined && !this.isRushing() && this.rushOn) this.showToast('The Drink Rush is over.');
@@ -115,7 +226,7 @@ export class BoostMixin {
       `More guests want to dance for ${BOOST.durationMs / 1000} seconds, with heavy bass and bigger dance tips. Ready now!`,
       (t) => `Bass Boost! ${t} left.`, now);
     this.updateCrowdButton(this.rushButton, this.rushLabel, this.isRushing(), this.rushUntil, this.rushReadyAt,
-      `More guests want a drink for ${RUSH.durationMs / 1000} seconds and head for the bars and bar stools. Ready now!`,
+      `More guests want a drink for ${RUSH.durationMs / 1000} seconds and head for the bars. Ready now!`,
       (t) => `Drink Rush! ${t} left.`, now);
   }
 

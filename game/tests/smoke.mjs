@@ -373,6 +373,78 @@ check('Bass Boost runs for a minute, more guests want to dance, and some head fo
 check('the boost can\'t be stacked, and has a cooldown after', !boost.again && !boost.afterEnd.boosted && boost.afterEnd.button === 'cooldown' && !boost.afterEnd.canBoost, JSON.stringify(boost.afterEnd));
 check('Drink Rush makes guests want a drink, then recharges', boost.rush.started && boost.rush.rushing && boost.rush.drinkWeight > 1 && boost.rush.thirsty && boost.rush.button === 'active' && !boost.rush.again && boost.rush.cooldown, JSON.stringify(boost.rush));
 
+// The crowd answering Bass Boost / Drink Rush: a popup and a pulse across
+// the dance floor (or the bars lighting up); guests answer with a reaction
+// over their head right away, then head off; dancers get more energetic
+// and dance longer. Guests in a bar line, leaving or arguing carry on.
+const rally = await page.evaluate(() => {
+  const s = window.__clubNova.scene.getScene('club');
+  const out = {};
+  const later = s.time.delayedCall.bind(s.time);
+  const cap = s.patronCapacity;
+  s.patronCapacity = () => 99;
+  const door = s.doorTile();
+  const spawn = () => {
+    const block = s.patrons.filter((p) => p.gx === door.gx && p.gy === door.gy);
+    block.forEach((p) => { p.gx = -50; });
+    s.trySpawnPatron();
+    block.forEach((p) => { p.gx = door.gx; });
+    const p = s.patrons[s.patrons.length - 1];
+    p.gx = -70 - s.patrons.length;
+    p.moving = false;
+    return p;
+  };
+  const [free, queued, leaving, arguing, dancer, drinking] = [spawn(), spawn(), spawn(), spawn(), spawn(), spawn()];
+  s.patronCapacity = cap;
+  s.time.delayedCall = (ms, fn) => fn();
+  free.activity = { kind: 'wander', until: s.time.now + 60000 };
+  queued.queue = { queue: [queued] };
+  leaving.leaving = true;
+  arguing.arguing = true;
+  dancer.activity = { kind: 'dance', until: s.time.now + 10000 };
+  s.setPatronAnimation(dancer, 'dance');
+  drinking.activity = { kind: 'drink', phase: 'drinking', until: s.time.now + 20000 };
+  for (const p of [free, queued, leaving, arguing, dancer, drinking]) p.reactingUntil = 0;
+  // Bass Boost.
+  s.boostUntil = undefined; s.boostReadyAt = 0;
+  const until0 = dancer.activity.until;
+  s.startBoost();
+  const pop = document.getElementById('bigPopup');
+  out.popup = pop.classList.contains('show') && pop.querySelector('.bpTitle').textContent === 'Bass Boost!';
+  out.energetic = dancer.activity.until > until0 + 15000 && dancer.container.patronSprite.anims.timeScale > 1;
+  out.pulse = s.pulseDanceFloor() === Object.keys(s.placed).filter((k) => s.isDanceFloorTile(...k.split(',').map(Number))).length;
+  for (const p of [free, queued, leaving, arguing]) { p.wantActivity = null; p.reactingUntil = 0; }
+  out.joined = s.rallyGuests('dance', { joinShare: 1, staggerMs: [0, 0], durationMs: 60000 });
+  out.freeGoes = free.wantActivity === 'dance' && free.reactingUntil > s.time.now;
+  out.othersStay = [queued, leaving, arguing].every((p) => !p.wantActivity && !(p.reactingUntil > s.time.now));
+  s.boostUntil = s.time.now - 1; s.tickBoost(); s.boostReadyAt = 0; s.tickBoost();
+  out.calm = dancer.container.patronSprite.anims.timeScale === 1;
+  // Drink Rush.
+  s.rushUntil = undefined; s.rushReadyAt = 0;
+  for (const p of [free, drinking]) { p.wantActivity = null; p.reactingUntil = 0; }
+  free.activity = { kind: 'wander', until: s.time.now + 60000 };
+  drinking.activity = { kind: 'drink', phase: 'drinking', until: s.time.now + 20000 };
+  s.startRush();
+  out.rushPopup = pop.querySelector('.bpTitle').textContent === 'Drink Rush!';
+  out.bars = s.highlightBars() === s.hireableRecords().filter((r) => s.isWorked(r)).length;
+  s.rallyGuests('drink', { joinShare: 1, staggerMs: [0, 0], durationMs: 45000 });
+  out.thirstyGo = free.wantActivity === 'drink' && free.thirstyAt <= s.time.now;
+  out.drinkerStays = drinking.activity.kind === 'drink' && !drinking.wantActivity;
+  s.rushUntil = s.time.now - 1; s.tickBoost(); s.rushReadyAt = 0; s.tickBoost();
+  // Off they go: their next pick is the call they answered.
+  free.activity = null;
+  s.chooseActivity(free);
+  out.headsOff = !free.wantActivity && (free.activity && ['drink', 'wander'].includes(free.activity.kind));
+  s.time.delayedCall = later;
+  queued.queue = null; arguing.arguing = false;
+  for (const p of [free, queued, arguing, dancer, drinking]) s.startPatronDeparture(p);
+  leaving.leaving = false; s.startPatronDeparture(leaving);
+  return out;
+});
+check('Bass Boost: a popup, a pulse across the dance floor, and dancers dance faster and longer', rally.popup && rally.pulse && rally.energetic && rally.calm, JSON.stringify(rally));
+check('guests answering react at once and head off; those in a bar line, leaving or arguing stay put', rally.joined >= 1 && rally.freeGoes && rally.othersStay, JSON.stringify(rally));
+check('Drink Rush: a popup, the bars light up, and guests head for a drink (those drinking carry on)', rally.rushPopup && rally.bars && rally.thirstyGo && rally.drinkerStays && rally.headsOff, JSON.stringify(rally));
+
 // Zoom buttons change the zoom and stay within limits.
 const zoom0 = await page.evaluate(() => window.__clubNova.scene.getScene('club').world.scaleX);
 await page.click('#zoomIn');

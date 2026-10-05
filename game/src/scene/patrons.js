@@ -193,6 +193,7 @@ export class PatronsMixin {
     if (container.patronAnimState === key) return;
     container.patronAnimState = key;
     sprite.play(this.patronAnimKey(container, state));
+    if (this.energize) this.energize(patron); // dancing faster during a Bass Boost
   }
 
   // True if the given tile has one of the actual dance-floor prop types on

@@ -117,6 +117,8 @@ export class SecurityMixin {
     patron.nextMoveAt = other.nextMoveAt = until;
     const c = patron.container;
     this.floatText((c.x + other.container.x) / 2, c.y - PATRON_POPUP_Y, '💃🕺', '#ff7ae0');
+    this.popReaction(patron, 'happy', randRange(800, 1800));
+    this.popReaction(other, 'happy', randRange(1200, 2600));
   }
 
   // Splits up a dancing pair (one of them moved on).

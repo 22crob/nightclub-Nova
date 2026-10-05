@@ -392,6 +392,7 @@ export class StaffMixin {
     this.cheerPatron(patron, MOOD.drinkMood);
     patron.thirstyAt = now + randRange(...THIRST_INTERVAL) / this.boostFactor() / this.partyEffect('thirst', 1);
     this.startDrinking(patron, rec); // they drink it for a while (see activities.js)
+    this.popReaction(patron, 'happy', randRange(600, 1300)); // after the price pops up
     SFX.tip();
     this.floatText(patron.container.x, patron.container.y - PATRON_POPUP_Y, `🍹 $${price} Drink + $${tip} Tip`, '#7dffc4');
     this.updateUI();
