@@ -603,6 +603,33 @@ const select = await page.evaluate(() => {
 check('hovering any part of a three-tile booth glows the whole booth; clicking selects it and outlines its footprint', select.tiles === 9 && select.hitPoints > 3 && select.glow && select.selected && select.cleared, JSON.stringify(select));
 check('in Edit, clicking anywhere on the booth picks the whole booth up', select.pickedUp, JSON.stringify(select));
 
+// Capacity: 8 guests in a new 10x10 club, one more per expansion row;
+// staff don't count. Shown as "Guests: n/max".
+const capacity = await page.evaluate(() => {
+  const s = window.__clubNova.scene.getScene('club');
+  const [w, h] = [s.gridW, s.gridH];
+  const out = {};
+  s.gridW = 10; s.gridH = 10;
+  out.base = s.patronCapacity();
+  s.gridW = 11;
+  out.one = s.patronCapacity();
+  s.gridH = 12;
+  out.three = s.patronCapacity();
+  [s.gridW, s.gridH] = [w, h];
+  s.updateUI();
+  out.text = document.getElementById('placedVal').textContent;
+  out.matches = out.text === `Guests: ${s.patrons.filter((p) => !p.gone).length}/${s.patronCapacity()}`;
+  // Full: nobody else comes in.
+  const n0 = s.patrons.length;
+  const cap = s.patronCapacity;
+  s.patronCapacity = () => s.guestCount();
+  s.trySpawnPatron();
+  out.fullBlocks = s.patrons.length === n0;
+  s.patronCapacity = cap;
+  return out;
+});
+check('8 guests fit in a new club, +1 per expansion row, shown as "Guests: n/max", and a full club lets nobody in', capacity.base === 8 && capacity.one === 9 && capacity.three === 11 && capacity.matches && capacity.fullBlocks, JSON.stringify(capacity));
+
 // Zoom buttons change the zoom and stay within limits.
 const zoom0 = await page.evaluate(() => window.__clubNova.scene.getScene('club').world.scaleX);
 await page.click('#zoomIn');
@@ -1181,7 +1208,7 @@ const party = await page.evaluate(() => {
 check('the party picker lists four parties, the fancy ones locked at first', party.labelAtStart === 'Throw a Party' && party.rows === 4 && party.locked >= 1, JSON.stringify(party));
 check('a House Party costs $60 and counts down before it starts', party.paid === 60 && party.closed && party.countdown, JSON.stringify(party));
 check('when it starts, a crowd lines up outside and gets let in a few at a time', party.running && party.crowdInLine > 0 && party.crowdInLine + party.crowdWaiting >= 6 && party.gradual, JSON.stringify(party));
-check('during the party 2 more guests fit and tips are higher, with a timer banner', party.capacity === 2 && party.tips > 1 && party.banner && party.button === 'active', JSON.stringify(party));
+check('during the party tips are higher, with a timer banner', party.tips > 1 && party.banner && party.button === 'active', JSON.stringify(party));
 check('celebrities wear a star and tip big', party.celeb, JSON.stringify(party));
 check('one party at a time; at the end its guests drift home over a minute and it earns fans', party.second === false && party.ended && party.drift && party.fans, JSON.stringify(party));
 check('a party ends with a wrap-up of what happened during it, and closing it carries on', !!party.summary && party.summaryClosed

@@ -89,12 +89,10 @@ export const FACINGS = [0, 90, 180, 270];
 // as ambient "reputation from having a nice venue" growth, on top of
 // this.
 // ---------------------------------------------------------------------
-// Capacity is no longer a flat number — an empty club still draws a
-// trickle of curious visitors (PATRON_BASE_CAPACITY), and every prop you
-// place adds room for more (PROP_TYPES[type].capacity), up to a hard
-// ceiling so a maxed-out floor doesn't spawn an unmanageable crowd. See
-// patronCapacity() below.
-export const PATRON_BASE_CAPACITY = 3;
+// How many guests fit in the club (see patronCapacity()): `base`, plus
+// `perExpansion` for every row of floor bought (see expandClub()). Staff
+// don't count; celebrities do. When it's full, arrivals wait outside.
+export const CAPACITY = { base: 8, perExpansion: 1 };
 // Fans needed for each level: `first` to reach level 2, then `step` more
 // for every level after (150, 250, 350, ... so level 5 is at 1,200 fans).
 // Fans are the game's XP. Level L needs first + step*(L-1) + curve*(L-1)^2
@@ -125,7 +123,6 @@ export const GUEST_TYPES = [
   { key: 'chill', label: 'Chiller', weights: { dance: 1, drink: 2, sit: 6, chat: 2, wander: 2 } },
   { key: 'partier', label: 'Party animal', weights: { dance: 4, drink: 4, sit: 1, chat: 2, wander: 1 } },
 ];
-export const PATRON_ABSOLUTE_MAX = 24;
 export const PATRON_SPAWN_INTERVAL = [4000, 7000]; // ms between spawn attempts
 export const PATRON_MOVE_INTERVAL = [1500, 3000];  // ms a patron waits between wander steps
 // A patron who's actually landed somewhere worth being — a dance floor tile,
@@ -228,8 +225,7 @@ export const RUSH = { durationMs: 45000, cooldownMs: 180000, drinkWeight: 5, joi
 // Parties (see scene/parties.js): one at a time; a countdown, then
 // PARTY_LENGTH_MS of party. crowd: how many extra guests turn up and line
 // up outside; leaveOverMs: after
-// the party, its guests head home over this spread. capacity: extra guests
-// allowed in;
+// the party, its guests head home over this spread.
 // arrivals/tips/thirst/fans: multipliers (arrivals: guests come this much
 // faster; thirst: they want drinks this much sooner; fans: fans from happy
 // leavers). shade tints the room's mood lighting.
@@ -281,13 +277,13 @@ export const CELEBRITIES = [
 ];
 export const CELEB = { tipPerFame: 0.5, fansPerFame: 3, visitEveryMs: [120000, 240000], firstVisitMs: [45000, 90000] };
 export const PARTIES = [
-  { key: 'house', label: 'House Party', emoji: '🏠', cost: 60, unlockLevel: 1, capacity: 2, arrivals: 1.3, tips: 1.25, thirst: 1.1, fans: 1.2, shade: 0x1a0b2e, crowd: 6, leaveOverMs: [10000, 70000],
+  { key: 'house', label: 'House Party', emoji: '🏠', cost: 60, unlockLevel: 1, arrivals: 1.3, tips: 1.25, thirst: 1.1, fans: 1.2, shade: 0x1a0b2e, crowd: 6, leaveOverMs: [10000, 70000],
     blurb: 'Invite the neighbours. A couple more guests and a friendly crowd.' },
-  { key: 'hiphop', label: 'Hip Hop Night', emoji: '🎤', cost: 150, unlockLevel: 2, capacity: 3, arrivals: 1.5, tips: 1.4, thirst: 1.3, fans: 1.4, shade: 0x2e0b12, crowd: 9, leaveOverMs: [10000, 70000],
+  { key: 'hiphop', label: 'Hip Hop Night', emoji: '🎤', cost: 150, unlockLevel: 2, arrivals: 1.5, tips: 1.4, thirst: 1.3, fans: 1.4, shade: 0x2e0b12, crowd: 9, leaveOverMs: [10000, 70000],
     blurb: 'Big beats, bigger crowd. Guests drink more and tip better.' },
-  { key: 'neon', label: 'Neon Night', emoji: '💜', cost: 300, unlockLevel: 4, capacity: 4, arrivals: 1.7, tips: 1.6, thirst: 1.4, fans: 1.7, shade: 0x2a0636, crowd: 12, leaveOverMs: [10000, 70000],
+  { key: 'neon', label: 'Neon Night', emoji: '💜', cost: 300, unlockLevel: 4, arrivals: 1.7, tips: 1.6, thirst: 1.4, fans: 1.7, shade: 0x2a0636, crowd: 12, leaveOverMs: [10000, 70000],
     blurb: 'Glow sticks and neon paint. The whole town wants in.' },
-  { key: 'gala', label: 'VIP Gala', emoji: '🥂', cost: 600, unlockLevel: 6, capacity: 6, arrivals: 2, tips: 2, thirst: 1.5, fans: 2, shade: 0x2e2306, crowd: 15, leaveOverMs: [10000, 70000],
+  { key: 'gala', label: 'VIP Gala', emoji: '🥂', cost: 600, unlockLevel: 6, arrivals: 2, tips: 2, thirst: 1.5, fans: 2, shade: 0x2e2306, crowd: 15, leaveOverMs: [10000, 70000],
     blurb: 'Red carpet, champagne, the A-list. Huge tips and fans.' },
 ];
 // A bartender's Bottoms Up! (see scene/guests.js): serves their whole line

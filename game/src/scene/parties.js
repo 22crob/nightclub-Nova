@@ -241,7 +241,7 @@ export class PartiesMixin {
       row.dataset.party = def.key;
       row.innerHTML = `<div class="partyEmoji">${def.emoji}</div>
         <div class="partyText"><div class="partyName">${def.label}</div><div class="partyBlurb">${def.blurb}</div>
-        <div class="partyPerks">+${def.capacity} guests · tips ×${def.tips}${blocked ? ` · <span class="partyWhy">${blocked}</span>` : ''}</div></div>
+        <div class="partyPerks">a crowd of ${def.crowd} · tips ×${def.tips}${blocked ? ` · <span class="partyWhy">${blocked}</span>` : ''}</div></div>
         <div class="partyCost">$${def.cost}</div>`;
       row.addEventListener('click', () => this.throwParty(def.key));
       list.appendChild(row);

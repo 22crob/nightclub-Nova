@@ -179,7 +179,7 @@ export class ShopMixin {
     for (const key of keysInCategory) {
       const def = PROP_TYPES[key];
       const lines = [];
-      if (def.category === 'Dance Floors') lines.push(`Dance floor: guests dance on it${def.capacity ? `, and ${def.capacity} more fit in your club` : ''}.`);
+      if (def.category === 'Dance Floors') lines.push('Dance floor: guests dance on it.');
       if (def.category === 'Floors') lines.push('Regular floor: paint it tile by tile.');
       lines.push(`Luxury: ${Math.round((def.cost || 0) * LUXURY.perDollar)}`);
       const picture = realSpriteIconFor(key) || renderIsoIcon(def.color, FLOOR_DECAL_PROPS.has(key));
@@ -232,7 +232,7 @@ export class ShopMixin {
         button.classList.toggle('locked', !unlocked);
         button.classList.toggle('selected', pending === side);
         cost.textContent = unlocked ? `$${tier.cost}` : `🔒 Lv ${tier.unlockLevel}`;
-        slot.dataset.tipText = `${tier.tiles} more floor tiles along the front-${side} edge: the ${side} wall grows from ${wall} to ${tier.newLen} tiles.`
+        slot.dataset.tipText = `${tier.tiles} more floor tiles along the front-${side} edge: the ${side} wall grows from ${wall} to ${tier.newLen} tiles, and 1 more guest fits.`
           + (unlocked ? ' Click to see it, then confirm.' : ` Reach level ${tier.unlockLevel} to build it.`);
         slot.addEventListener('mouseenter', () => this.showExpandPreview(side));
         slot.addEventListener('mouseleave', () => this.showExpandPreview(this.pendingExpand));

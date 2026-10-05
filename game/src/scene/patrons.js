@@ -44,7 +44,7 @@ export class PatronsMixin {
   // celebrity).
   trySpawnPatron(character, info) {
     if (!this.doorsOpen()) return; // last call or closed
-    if (this.patrons.length >= this.patronCapacity()) return;
+    if (this.guestCount() >= this.patronCapacity()) return; // full: they wait outside
     const { gx, gy } = this.doorTile();
     if (this.isBlockingProp(gx, gy)) return; // door tile has a blocking prop on it — skip this attempt
     if (this.patronTileOccupied(gx, gy)) return; // someone's already standing right there

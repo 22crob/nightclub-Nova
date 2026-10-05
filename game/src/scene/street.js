@@ -356,7 +356,7 @@ export class StreetMixin {
     if (this.currentParty() && now < (this.lastAdmitAt || 0) + STREET.partyAdmitMs) return;
     const front = this.streetQueue[0];
     const { gx, gy } = this.doorTile();
-    const roomInside = this.patrons.length < this.patronCapacity() && !this.isBlockingProp(gx, gy) && !this.patronTileOccupied(gx, gy);
+    const roomInside = this.guestCount() < this.patronCapacity() && !this.isBlockingProp(gx, gy) && !this.patronTileOccupied(gx, gy);
     if (!front || !front.arrived || front.walking || front.slot !== 0 || !roomInside) return;
     this.streetQueue.shift();
     this.lastAdmitAt = now;

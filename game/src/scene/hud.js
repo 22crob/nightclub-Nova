@@ -21,10 +21,8 @@ export class HudMixin {
     const rating = this.clubRating();
     const ratingEl = document.getElementById('ratingVal');
     if (ratingEl) ratingEl.textContent = rating == null ? '–' : String(rating);
-    // Repurposed as a "patrons on the floor / capacity" readout rather than
-    // a raw placed-prop count, since capacity (see patronCapacity()) is the
-    // number that actually matters for how much the club can earn.
-    if (this.placedText) this.placedText.textContent = `${this.patrons.length}/${this.patronCapacity()}`;
+    // Guests inside out of how many fit (see patronCapacity()).
+    if (this.placedText) this.placedText.textContent = `Guests: ${this.guestCount()}/${this.patronCapacity()}`;
 
     const { level, into, need, progress } = this.levelInfo();
     if (this.levelText) this.levelText.textContent = level;
