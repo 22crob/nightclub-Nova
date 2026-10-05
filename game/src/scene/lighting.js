@@ -17,9 +17,9 @@ const SPARKLE_KEY = 'sparkle';
 // decor_disco_*.png, the same at every facing), the halo size (x radius),
 // colours and how fast they change, rays and sparkles.
 const DISCO = {
-  ball: [36, 36], radius: 31, halo: 4.2,
+  ball: [36, 36], radius: 31, halo: 3, haloAlpha: 0.55, rayAlpha: 0.35,
   colors: [0xff4de0, 0x4de0ff, 0xfff34d], colorMs: 1600,
-  rayLength: 120, rayWidth: 26, spinMs: 9000, sparkles: 5,
+  rayLength: 80, rayWidth: 18, spinMs: 9000, sparkles: 5,
 };
 
 // The spotlight's beam (see createSpotBeam()), in screen px: length, width
@@ -226,7 +226,7 @@ export class LightingMixin {
     DISCO.colors.forEach((color, i) => {
       for (let k = 0; k < 2; k++) {
         const ray = this.add.image(0, 0, BEAM_KEY).setOrigin(0, 0.5).setTint(color)
-          .setDisplaySize(DISCO.rayLength, DISCO.rayWidth).setAlpha(0.55)
+          .setDisplaySize(DISCO.rayLength, DISCO.rayWidth).setAlpha(DISCO.rayAlpha)
           .setRotation(((i * 2 + k) / (DISCO.colors.length * 2)) * Math.PI * 2);
         ray.setBlendMode(Phaser.BlendModes.ADD);
         rays.add(ray);
@@ -236,7 +236,7 @@ export class LightingMixin {
     add(rays, behind);
     tweens.push(this.tweens.add({ targets: rays, angle: 360, duration: DISCO.spinMs, repeat: -1, ease: 'Linear' }));
     // The halo, cycling through the colours.
-    const halo = add(this.add.image(x, y, POOL_KEY).setDisplaySize(r * DISCO.halo, r * DISCO.halo).setAlpha(0.8), behind);
+    const halo = add(this.add.image(x, y, POOL_KEY).setDisplaySize(r * DISCO.halo, r * DISCO.halo).setAlpha(DISCO.haloAlpha), behind);
     const cycle = { t: 0 };
     tweens.push(this.tweens.add({
       targets: cycle, t: DISCO.colors.length, duration: DISCO.colorMs * DISCO.colors.length, repeat: -1,
@@ -258,7 +258,7 @@ export class LightingMixin {
       };
       place();
       tweens.push(this.tweens.add({
-        targets: s, scale: { from: 0, to: 0.45 + Math.random() * 0.25 }, duration: 260, yoyo: true,
+        targets: s, scale: { from: 0, to: 0.35 + Math.random() * 0.2 }, duration: 260, yoyo: true,
         repeat: -1, repeatDelay: 600 + Math.random() * 1800, delay: Math.random() * 2000, onRepeat: place,
       }));
     }
