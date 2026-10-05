@@ -258,9 +258,8 @@ export class StreetMixin {
     const k = this.streetQueue.length;
     // New arrivals walk up the left sidewalk from the front of the block.
     const start = already ? sp.slot(k) : { gx: sp.leftX, gy: sp.laneEnds[1] };
-    const vip = already || info ? null : this.pickReturningVip(); // now and then a regular comes back
-    const person = this.makeStreetPerson(start, this.streetQueueLayer, vip ? vip.character : undefined);
-    person.vip = vip;
+    const celeb = info && info.celeb ? this.celebDef(info.celeb) : null; // a celebrity has their own look
+    const person = this.makeStreetPerson(start, this.streetQueueLayer, celeb ? celeb.character : undefined);
     person.info = info;
     if (info && info.celeb) this.addStarIcon(person.container); // a celebrity in the line
     person.slot = k;
@@ -371,7 +370,7 @@ export class StreetMixin {
     this.streetWalkTo(front, [{ gx: sp.lineX, gy: sp.door }, sp.enterTo], () => {
       const character = front.container.patronCharacter;
       front.container.destroy();
-      this.trySpawnPatron(character, front.vip, front.info);
+      this.trySpawnPatron(character, front.info);
     });
   }
 

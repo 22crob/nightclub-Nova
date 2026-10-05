@@ -39,8 +39,8 @@ export class PatronsMixin {
   }
 
   // Brings a patron in at the door (`character`: their look, from the line
-  // outside).
-  trySpawnPatron(character, vip, info) {
+  // outside; `info`: a party guest, maybe a celebrity).
+  trySpawnPatron(character, info) {
     if (!this.doorsOpen()) return; // last call or closed
     if (this.patrons.length >= this.patronCapacity()) return;
     const { gx, gy } = this.doorTile();
@@ -78,7 +78,6 @@ export class PatronsMixin {
     };
     this.startVisit(patron); // their visit length and personality (see activities.js)
     this.patrons.push(patron);
-    if (vip) this.welcomeVip(patron, vip);
     if (info) this.notePartyGuest(patron, info); // came for the party (maybe a celebrity)
     this.chargeCover(patron);
     this.setPatronDepth(patron, gx + gy);
@@ -599,7 +598,7 @@ export class PatronsMixin {
   tipAmount(patron, base) {
     const moodFactor = 0.5 + patron.mood / 100; // unhappy guests tip half, happy ones up to 1.5x
     const boost = this.isBoosted() ? BOOST.tipMultiplier : 1;
-    return Math.max(1, Math.round(base * moodFactor * boost * this.partyEffect('tips', 1) * this.luxuryTipFactor() * this.vipTipFactor(patron)));
+    return Math.max(1, Math.round(base * moodFactor * boost * this.partyEffect('tips', 1) * this.luxuryTipFactor() * this.celebTipFactor(patron)));
   }
 
   // A dancer's tip, now and then (see tickPatrons()).

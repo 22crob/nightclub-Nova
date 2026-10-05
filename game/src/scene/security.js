@@ -133,7 +133,7 @@ export class SecurityMixin {
   // Two guests have just started chatting: once in a while it goes badly.
   maybeArgue(a, b) {
     const now = this.time.now;
-    if (this.argument || !this.guard || a.celeb || b.celeb || a.vip || b.vip) return false;
+    if (this.argument || !this.guard || a.celeb || b.celeb) return false;
     if (now < (this.lastArgumentAt || -Infinity) + SECURITY.cooldownMs) return false;
     if (Math.random() > SECURITY.argueChance) return false;
     this.startArgument(a, b);

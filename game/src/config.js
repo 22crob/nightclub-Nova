@@ -215,7 +215,8 @@ export const RUSH = { durationMs: 45000, cooldownMs: 180000, drinkWeight: 5, joi
 // in spots, so they're off for now (`glows: false`).
 // Parties (see scene/parties.js): one at a time; a countdown, then
 // PARTY_LENGTH_MS of party. crowd: how many extra guests turn up and line
-// up outside; celebs: [min, max] celebrities among them; leaveOverMs: after
+// up outside; celebs: [min, max] celebrities among them (from those
+// unlocked on the Celebrity List); leaveOverMs: after
 // the party, its guests head home over this spread. capacity: extra guests
 // allowed in;
 // arrivals/tips/thirst/fans: multipliers (arrivals: guests come this much
@@ -223,8 +224,6 @@ export const RUSH = { durationMs: 45000, cooldownMs: 180000, drinkWeight: 5, joi
 // leavers). shade tints the room's mood lighting.
 export const PARTY_LENGTH_MS = 3 * 60 * 1000;
 export const PARTY_COUNTDOWN_MS = 10 * 1000; // from paying to the party starting
-// Celebrities who might turn up at a party (made-up names). They wear a
-// star, tip celebTip times as much and bring celebFans fans leaving happy.
 // Guests getting along (or not). Dancers side by side sometimes dance
 // together. Now and then a chat turns into an argument (💢): the security
 // guard inside walks over and usually calms it down (settleChance); if not,
@@ -246,8 +245,19 @@ export const SECURITY = {
   settleChance: 0.7, fightMs: 3500, moodHit: 12,
   danceTogetherChance: 0.35,
 };
-export const CELEBRITIES = ['Nova Starr', 'DJ Kai Blaze', 'Luna Vega', 'Rico Diamond', 'Jade Monroe', 'Max Volt', 'Sasha Glow', 'Tony Fame', 'Ivy Sparks', 'Leo Lux'];
-export const CELEB = { tip: 3, fans: 6 };
+// The Celebrity List (see celebrities.js): each unlocks at a club level and
+// can then come to your parties. `fame` is their stars (1-5); `character`
+// is their look (a patron sheet). Celebrities tip 1 + tipPerFame x fame
+// times as much and bring fansPerFame x fame extra fans leaving happy.
+export const CELEBRITIES = [
+  { key: 'rico', name: 'Rico Diamond', level: 5, fame: 1, character: 1 },
+  { key: 'max', name: 'Max Volt', level: 8, fame: 1, character: 7 },
+  { key: 'kai', name: 'DJ Kai Blaze', level: 11, fame: 2, character: 3 },
+  { key: 'leo', name: 'Leo Lux', level: 14, fame: 3, character: 5 },
+  { key: 'tony', name: 'Tony Fame', level: 17, fame: 4, character: 9 },
+  { key: 'jett', name: 'Jett Starr', level: 20, fame: 5, character: 11 },
+];
+export const CELEB = { tipPerFame: 0.5, fansPerFame: 3 };
 export const PARTIES = [
   { key: 'house', label: 'House Party', emoji: '🏠', cost: 60, unlockLevel: 1, capacity: 2, arrivals: 1.3, tips: 1.25, thirst: 1.1, fans: 1.2, shade: 0x1a0b2e, crowd: 6, celebs: [0, 1], leaveOverMs: [10000, 70000],
     blurb: 'Invite the neighbours. A couple more guests and a friendly crowd.' },
@@ -270,10 +280,6 @@ export const LUXURY = { perDollar: 0.1, tipPerPoint: 0.001, tipMax: 1 };
 // lengthMs, then the next one starts. Liking a song gives likeFans, once a
 // song; a new song gives everyone dancing newSongFun fun.
 export const SONGS = { lengthMs: 60 * 1000, likeFans: 1, newSongFun: 10 };
-// VIPs (see scene/vips.js): a guest who leaves at least joinMood happy
-// joins the VIP list (up to max). Each new arrival has returnChance of
-// being a VIP coming back; VIPs tip tipMultiplier times as much.
-export const VIP = { joinMood: 85, max: 12, returnChance: 0.2, tipMultiplier: 2 };
 // The club's star rating (see rating.js). The club runs one endless night;
 // every sampleMs it gets stars for how happy the crowd was (one, plus one
 // for each of starVibes its average vibe reached) and starFans bonus fans.

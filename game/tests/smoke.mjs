@@ -96,7 +96,7 @@ await page.evaluate(() => { const s = window.__clubNova.scene.getScene('club'); 
 const tabs = await page.$$eval('.dockTab', (els) => els.map((e) => e.dataset.tipName));
 await page.click('#tabDecor');
 const storeTabs = await page.$$eval('.storeTab', (els) => els.map((e) => e.dataset.tipName));
-check('the dock has Decorations, Inventory, Edit, Staff, Expand and VIP tabs; the store has 6 categories', tabs.join() === 'Decorations,Inventory,Edit,Staff,Expand,VIPs' && storeTabs.join() === 'Bars,Seating,Floors,Wallpaper,Decorations,DJ Booths', `${tabs.join(' / ')} | ${storeTabs.join(' / ')}`);
+check('the dock has Decorations, Inventory, Edit, Staff, Expand and Celebrities tabs; the store has 6 categories', tabs.join() === 'Decorations,Inventory,Edit,Staff,Expand,Celebrities' && storeTabs.join() === 'Bars,Seating,Floors,Wallpaper,Decorations,DJ Booths', `${tabs.join(' / ')} | ${storeTabs.join(' / ')}`);
 check('bar shows its real sprite icon', await page.locator('.propButton .icon').first().evaluate((el) => el.style.backgroundImage.includes('data:image/png')));
 // Floors: dance floors and regular floors in one category, the tip says which.
 await page.click('.storeTab[data-tip-name="Floors"]');
@@ -745,17 +745,32 @@ const extras = await page.evaluate(async () => {
   s.closeInfoCard();
   if (couch) s.removeProp(couch);
   if (booth) s.removeProp(booth);
-  // VIPs: a very happy leaver joins; a returning VIP keeps their name and tips double.
-  const before = (s.vips || []).length;
-  s.maybeJoinVips({ name: 'Test Guest', mood: 95, container: { patronCharacter: 2 } });
-  out.joined = (s.vips || []).length === before + 1 && s.vips.some((v) => v.name === 'Test Guest');
+  // The Celebrity List: six celebrities by unlock level, each with a
+  // portrait, name, fame stars and status. Only unlocked ones come to
+  // parties; one in the club shows "In Club".
+  const realLevel = s.levelInfo.bind(s);
+  out.noneEarly = s.levelInfo().level >= 5 || s.pickPartyCelebs(3).length === 0;
+  s.levelInfo = () => ({ ...realLevel(), level: 11 });
   const q = s.patrons.find((x) => !x.leaving && !x.gone);
-  const vip = s.vips.find((v) => v.name === 'Test Guest');
-  s.welcomeVip(q, vip);
-  out.welcomed = q.name === 'Test Guest' && s.vipTipFactor(q) === 2 && vip.visits === 2;
+  s.notePartyGuest(q, { partyGuest: true, celeb: 'rico' });
+  out.welcomed = q.celeb && q.celeb.key === 'rico' && q.name === 'Rico Diamond' && s.celebTipFactor(q) > 1
+    && document.getElementById('bigPopup').querySelector('.bpSub').textContent.includes('★');
+  const picks = s.pickPartyCelebs(5).map((c) => c.key).sort().join();
+  out.picks = picks === 'kai,max';
   document.getElementById('tabVip').click();
-  out.listed = [...document.querySelectorAll('#shopItems .vipSlot')].some((c) => /Test Guest/.test(c.dataset.tipName));
+  const cards = [...document.querySelectorAll('#shopItems .celebSlot')];
+  out.list = cards.map((c) => `${c.querySelector('.celebName').textContent}|${c.querySelector('.celebStars').textContent}|${c.querySelector('.propCost').textContent}|${!!c.querySelector('.icon').style.backgroundImage}`);
+  out.listed = cards.length === 6
+    && out.list[0] === 'Rico Diamond|★|In Club|true'
+    && out.list[1] === 'Max Volt|★|Available|true'
+    && out.list[2] === 'DJ Kai Blaze|★★|Available|true'
+    && out.list[3].startsWith('Leo Lux|★★★|🔒 Lv 14')
+    && out.list[5].startsWith('Jett Starr|★★★★★|🔒 Lv 20')
+    && cards[3].classList.contains('locked');
+  out.tab = document.getElementById('tabVip').dataset.tipName;
   document.getElementById('tabDecor').click();
+  s.levelInfo = realLevel;
+  q.celeb = null;
   // Rating: the average of recent ratings.
   const stars0 = s.nightStars;
   s.nightStars = [3, 4];
@@ -765,7 +780,7 @@ const extras = await page.evaluate(async () => {
   out.faster = s.ratingArrivalFactor() > 1;
   s.saveGame();
   const saved = JSON.parse(localStorage.getItem('clubNovaSave_v2'));
-  out.saved = saved.vips.some((v) => v.name === 'Test Guest') && saved.nightStars.join() === '3,4';
+  out.saved = saved.nightStars.join() === '3,4' && !('vips' in saved);
   s.nightStars = stars0;
   return out;
 });
@@ -773,9 +788,10 @@ check('the song box changes tracks, and Like gives a fan once a song', extras.ch
 check('guests can only be seated at a VIP booth; the button is greyed out without one', extras.greyed && extras.couchOnly && extras.lit && extras.seated, JSON.stringify(extras));
 check('a drink on the house, once a visit', extras.onHouse, JSON.stringify(extras));
 check('a guest can be sent to the dance floor', extras.danced, JSON.stringify(extras));
-check('happy guests join the VIP list, come back by name and tip double', extras.joined && extras.welcomed && extras.listed, JSON.stringify(extras));
+check('the Celebrity List shows six celebrities with portrait, name, fame stars and Locked / Available / In Club', extras.tab === 'Celebrities' && extras.listed, JSON.stringify(extras.list));
+check('only unlocked celebrities come to parties, and an arrival is announced with their stars', extras.noneEarly && extras.picks && extras.welcomed, JSON.stringify(extras));
 check('the club rating is the average of recent ratings, shown at the top', extras.rating === 3.5 && extras.ratingShown === '3.5' && extras.faster, JSON.stringify(extras));
-check('VIPs and ratings are saved', extras.saved, JSON.stringify(extras));
+check('ratings are saved', extras.saved, JSON.stringify(extras));
 
 // Money comes in like Nightclub City: a cover charge at the door, each
 // drink with a tip on top, and tips from dancers now and then (not from
@@ -906,8 +922,8 @@ const party = await page.evaluate(() => {
   // A celebrity wears a star and gets a welcome.
   const guest = s.patrons.find((p) => !p.leaving && !p.gone);
   if (guest) {
-    s.notePartyGuest(guest, { partyGuest: true, celeb: 'Nova Starr' });
-    out.celeb = guest.celeb && guest.name === 'Nova Starr' && !!guest.container.starIcon && s.vipTipFactor(guest) >= 3;
+    s.notePartyGuest(guest, { partyGuest: true, celeb: 'jett' });
+    out.celeb = guest.celeb && guest.name === 'Jett Starr' && !!guest.container.starIcon && s.celebTipFactor(guest) >= 3;
   }
   out.second = s.throwParty('hiphop');
   // Time's up: party guests head home over the next minute; fans for the party.
@@ -1230,7 +1246,7 @@ const lvl = await page.evaluate(() => {
   out.closed = !document.getElementById('levelUp').classList.contains('open');
   return out;
 });
-check('levelling up shows a menu of everything unlocked, each with a picture', lvl.open && lvl.title === 'Level 5!' && lvl.names.includes('Old Brick') && lvl.names.includes('Brick') && lvl.names.some((n) => /Walls up to/.test(n)) && lvl.pictures && lvl.closed && lvl.bartender, JSON.stringify(lvl));
+check('levelling up shows a menu of everything unlocked, each with a picture', lvl.open && lvl.title === 'Level 5!' && lvl.names.includes('Old Brick') && lvl.names.includes('Brick') && lvl.names.includes('Rico Diamond') && lvl.names.some((n) => /Walls up to/.test(n)) && lvl.pictures && lvl.closed && lvl.bartender, JSON.stringify(lvl));
 
 // A new club's walls are beaten-up torn wallpaper; brick is a level 5 wallpaper.
 const walls = await page.evaluate(() => {

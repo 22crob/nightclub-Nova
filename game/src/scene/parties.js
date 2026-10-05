@@ -9,7 +9,7 @@
 //     a good party earns fans (XP) for every guest it brought.
 // A banner shows the countdown, then the time left.
 // Mixed into ClubScene (see ClubScene.js); `this` is the scene.
-import { CELEBRITIES, PARTIES, PARTY_COUNTDOWN_MS, PARTY_LENGTH_MS, PATRON_POPUP_Y, XP } from '../config.js';
+import { PARTIES, PARTY_COUNTDOWN_MS, PARTY_LENGTH_MS, PATRON_POPUP_Y, XP } from '../config.js';
 import { SFX } from '../sfx.js';
 import { refreshTip } from '../tooltips.js';
 import { randRange } from '../util.js';
@@ -76,13 +76,13 @@ export class PartiesMixin {
     this.showToast(`${def.emoji} The ${def.label} has started! Here comes the crowd.`);
     // The crowd: everyone waits their turn in the line outside, and the
     // celebrities are mixed in among them.
-    const celebs = Math.max(0, Math.round(randRange(def.celebs[0], def.celebs[1] + 0.99) - 0.49));
-    const names = [...CELEBRITIES].sort(() => Math.random() - 0.5);
+    // Celebrities come from those unlocked on the Celebrity List.
+    const count = Math.floor(randRange(def.celebs[0], def.celebs[1] + 1));
     this.partyCrowd = [];
     for (let i = 0; i < def.crowd; i++) this.partyCrowd.push({ partyGuest: true });
-    for (let i = 0; i < celebs; i++) {
+    for (const celeb of this.pickPartyCelebs(count)) {
       const at = Math.floor(Math.random() * (this.partyCrowd.length + 1));
-      this.partyCrowd.splice(at, 0, { partyGuest: true, celeb: names[i % names.length] });
+      this.partyCrowd.splice(at, 0, { partyGuest: true, celeb: celeb.key });
     }
     // They arrive in a stream, filling the line.
     for (let i = 0; i < 8; i++) this.time.delayedCall(300 + i * 450, () => this.callPartyCrowd());
@@ -127,29 +127,6 @@ export class PartiesMixin {
     patron.partyGuest = true;
     if (this.partyStats) this.partyStats.guests += 1;
     if (info.celeb) this.welcomeCelebrity(patron, info.celeb);
-  }
-
-  // A celebrity: a star over their head, a gold glow, a fanfare as they
-  // come in, big tips, and lots of fans when they leave happy.
-  welcomeCelebrity(patron, name) {
-    patron.celeb = true;
-    patron.name = name;
-    if (this.partyStats) this.partyStats.celebs += 1;
-    const c = patron.container;
-    this.addStarIcon(c);
-    const shadow = c.list[0];
-    if (shadow && shadow.setFillStyle) shadow.setFillStyle(0xffd24d, 0.8);
-    this.floatText(c.x, c.y - PATRON_POPUP_Y - 16, `⭐ ${name}!`, '#ffd24d');
-    this.showToast(`⭐ Celebrity alert: ${name} just walked in!`);
-    SFX.levelUp();
-  }
-
-  // The little star that marks a celebrity, in line outside or inside.
-  addStarIcon(container) {
-    if (container.starIcon) return;
-    const star = this.add.text(0, -96, '⭐', { fontSize: '16px' }).setOrigin(0.5, 1);
-    container.add(star);
-    container.starIcon = star;
   }
 
   updatePartyButton() {

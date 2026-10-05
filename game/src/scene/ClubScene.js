@@ -25,7 +25,7 @@ import { RatingMixin } from './rating.js';
 import { PartiesMixin } from './parties.js';
 import { GuestsMixin } from './guests.js';
 import { SongsMixin } from './songs.js';
-import { VipsMixin } from './vips.js';
+import { CelebritiesMixin } from './celebrities.js';
 import { InventoryMixin } from './inventory.js';
 import { ActivitiesMixin } from './activities.js';
 import { SecurityMixin } from './security.js';
@@ -257,7 +257,6 @@ export class ClubScene extends Phaser.Scene {
     this.setupParties();
     this.setupGuests();
     this.setupSongs();
-    this.setupVips();
     this.setupLevelUp();
     this.setupClubHours();
     this.setupRestart();
@@ -359,7 +358,7 @@ applyMixins(ClubScene, [
   PartiesMixin,
   GuestsMixin,
   SongsMixin,
-  VipsMixin,
+  CelebritiesMixin,
   SecurityMixin,
   ReactionsMixin,
 ]);

@@ -1,7 +1,7 @@
 // ClubScene methods: Top bar readouts, mute button, level-up celebration and toasts.
 // Mixed into ClubScene (see ClubScene.js); `this` is the scene.
 import { EXPANSION, FLOOR_DECAL_PROPS, PROP_TYPES } from '../catalog.js';
-import { BARTENDERS, PARTIES } from '../config.js';
+import { BARTENDERS, CELEBRITIES, PARTIES } from '../config.js';
 import { realSpriteIconFor, renderIsoIcon } from '../icons.js';
 import { SFX } from '../sfx.js';
 import { hideTip } from '../tooltips.js';
@@ -72,6 +72,9 @@ export class HudMixin {
     if (level > 1 && BARTENDERS.levels.includes(level)) {
       out.push({ name: '+1 Bartender', kind: 'You can hire one more bartender in the Staff tab', art: 'catStaff' });
     }
+    for (const celeb of CELEBRITIES) {
+      if (celeb.level === level) out.push({ name: celeb.name, kind: `New celebrity (${'★'.repeat(celeb.fame)}): they can now come to your parties`, portrait: celeb.character });
+    }
     for (const limit of EXPANSION.limits) {
       if (limit.level === level && level > 1) out.push({ name: `Walls up to ${limit.size} tiles`, kind: 'Expand your club a row at a time in the Expand tab', art: 'tabExpand' });
     }
@@ -95,7 +98,13 @@ export class HudMixin {
       tile.dataset.tipText = u.kind;
       const pic = document.createElement('div');
       pic.className = 'unlockPic';
-      if (u.picture) pic.style.backgroundImage = `url(${u.picture})`;
+      if (u.portrait !== undefined) {
+        const face = document.createElement('div');
+        face.className = 'unlockFace';
+        this.celebPortrait(face, u.portrait);
+        pic.appendChild(face);
+      }
+      else if (u.picture) pic.style.backgroundImage = `url(${u.picture})`;
       else if (u.art) pic.innerHTML = iconSvg(u.art);
       else pic.textContent = u.emoji || '';
       const name = document.createElement('div');

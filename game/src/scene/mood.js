@@ -10,7 +10,7 @@
 // Mood sets how much they tip, how many fans they bring when they leave,
 // and whether they storm out early. The club's vibe (average mood) speeds
 // up or slows down new arrivals.
-import { CELEB, PATRON_POPUP_Y } from '../config.js';
+import { PATRON_POPUP_Y } from '../config.js';
 
 export const MOOD = {
   start: 60,
@@ -114,12 +114,11 @@ export class MoodMixin {
     } else {
       const tier = LEAVING_FANS.find((t) => patron.mood >= t.min);
       fans = Math.round(tier.fans * this.partyEffect('fans', 1));
-      if (patron.celeb && tier.fans > 0) fans += CELEB.fans; // a happy celebrity tells everyone
+      if (tier.fans > 0) fans += this.celebFans(patron); // a happy celebrity tells everyone
       emoji = tier.emoji;
     }
     this.fans = Math.max(0, this.fans + fans);
     this.guestsServed = (this.guestsServed || 0) + 1;
-    this.maybeJoinVips(patron);
     const c = patron.container;
     const label = fans > 0 ? `${emoji} +${fans}★` : (fans < 0 ? `${emoji} ${fans}★` : emoji);
     this.floatText(c.x, c.y - PATRON_POPUP_Y, label, fans < 0 ? '#ff8a8a' : '#ffe27a');

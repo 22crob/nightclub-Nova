@@ -99,7 +99,7 @@ export class ShopMixin {
   }
 
   // Switches the dock to a tab: 'decor' (the store), 'inventory', 'edit',
-  // 'staff', 'expand' or 'vip'.
+  // 'staff', 'expand' or 'celebs'.
   setDockTab(tab) {
     if (tab !== 'decor') this.lastMainTab = tab;
     if (tab !== 'expand') { this.pendingExpand = null; this.clearExpandPreview?.(); }
@@ -124,7 +124,7 @@ export class ShopMixin {
     else if (tab === 'edit') this.renderEditTools();
     else if (tab === 'staff') { if (this.shopItemsEl) this.shopItemsEl.dataset.rendered = ''; this.renderStaffCard(); }
     else if (tab === 'expand') { if (this.shopItemsEl) this.shopItemsEl.dataset.rendered = ''; this.renderExpandCard(); }
-    else if (tab === 'vip') this.renderVipCards();
+    else if (tab === 'celebs') { if (this.shopItemsEl) this.shopItemsEl.dataset.rendered = ''; this.renderCelebCards(); }
   }
 
   // Opens the store on one category (also used to jump to one from code).
@@ -267,6 +267,7 @@ export class ShopMixin {
   updateShopUI() {
     if (this.dockTab === 'expand' && this.shopItemsEl) this.renderExpandCard();
     if (this.dockTab === 'staff' && this.shopItemsEl) this.renderStaffCard();
+    if (this.dockTab === 'celebs' && this.shopItemsEl) this.renderCelebCards();
     if (this.dockTab === 'inventory' && this.shopButtons) {
       for (const key in this.shopButtons) this.shopButtons[key].classList.toggle('selected', key === this.selectedProp && !!this.holdingFromInventory);
     }

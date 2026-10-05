@@ -49,7 +49,7 @@ export class SaveMixin {
       inventory[this.movingBooth.type] -= 1;
       if (inventory[this.movingBooth.type] <= 0) delete inventory[this.movingBooth.type];
     }
-    return { cash: this.cash, fans: this.fans, gridW: this.gridW, gridH: this.gridH, placed: placedList, wallpaper: { ...this.wallpaper }, floorPaint: { ...this.floorPaint }, vips: this.vips || [], nightStars: this.nightStars || [], inventory };
+    return { cash: this.cash, fans: this.fans, gridW: this.gridW, gridH: this.gridH, placed: placedList, wallpaper: { ...this.wallpaper }, floorPaint: { ...this.floorPaint }, nightStars: this.nightStars || [], inventory };
   }
 
   saveGame() {
@@ -136,10 +136,6 @@ export class SaveMixin {
     }
     // (Saves from when the club had separate nights also have night,
     // nightOver and bestNightProfit; they're no longer used.)
-    if (Array.isArray(data.vips)) {
-      this.vips = data.vips.filter((v) => v && typeof v.name === 'string' && typeof v.character === 'number')
-        .map((v) => ({ name: v.name, character: v.character, visits: Number(v.visits) || 1 }));
-    }
     if (data.inventory && typeof data.inventory === 'object') {
       this.inventory = {};
       for (const [type, n] of Object.entries(data.inventory)) if (PROP_TYPES[type] && n > 0) this.inventory[type] = Math.floor(n);
