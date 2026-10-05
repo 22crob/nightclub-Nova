@@ -51,7 +51,7 @@ export class SaveMixin {
       inventory[this.movingBooth.type] -= 1;
       if (inventory[this.movingBooth.type] <= 0) delete inventory[this.movingBooth.type];
     }
-    return { cash: this.cash, fans: this.fans, gridW: this.gridW, gridH: this.gridH, placed: placedList, wallpaper: { ...this.wallpaper }, floorPaint: { ...this.floorPaint }, nightStars: this.nightStars || [], inventory, inventoryXp };
+    return { cash: this.cash, fans: this.fans, gridW: this.gridW, gridH: this.gridH, placed: placedList, wallpaper: { ...this.wallpaper }, floorPaint: { ...this.floorPaint }, nightStars: this.nightStars || [], inventory, inventoryXp, goalsDone: this.goalsDone || [], goalStats: this.goalStats || {} };
   }
 
   saveGame() {
@@ -142,6 +142,11 @@ export class SaveMixin {
     if (data.inventory && typeof data.inventory === 'object') {
       this.inventory = {};
       for (const [type, n] of Object.entries(data.inventory)) if (PROP_TYPES[type] && n > 0) this.inventory[type] = Math.floor(n);
+    }
+    if (Array.isArray(data.goalsDone)) this.goalsDone = data.goalsDone.filter((id) => typeof id === 'string');
+    if (data.goalStats && typeof data.goalStats === 'object') {
+      this.goalStats = {};
+      for (const [k, v] of Object.entries(data.goalStats)) if (typeof v === 'number') this.goalStats[k] = v;
     }
     if (data.inventoryXp && typeof data.inventoryXp === 'object') {
       this.inventoryXp = {};

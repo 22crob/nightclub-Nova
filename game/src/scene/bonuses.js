@@ -140,6 +140,7 @@ export class BonusesMixin {
     const b = this.bonusAt(pointer.x, pointer.y);
     if (!b) return false;
     b.collected = true;
+    this.bumpGoal(b.kind === 'tip' ? 'admired' : 'bonuses');
     this.cash += b.amount;
     this.noteIncome('bonuses', b.amount);
     if (this.partyStats) {

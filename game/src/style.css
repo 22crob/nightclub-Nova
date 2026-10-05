@@ -745,3 +745,24 @@ body { font-family: var(--ui-font); color: var(--ink); }
 }
 .summaryRow .sIcon { font-size: 18px; text-align: center; }
 .summaryRow .sValue { color: #ffe45c; text-align: right; max-width: 210px; }
+
+/* Goals (see goals.js): under the song box on the left. The guest card
+   opens over it. */
+#goals {
+  position: fixed; left: 12px; top: calc(192px + env(safe-area-inset-top, 0px)); z-index: 9; width: 236px;
+  padding: 6px 8px 8px; border-radius: var(--radius);
+  background: var(--glass-flat); border: 1px solid #8a94a699; box-shadow: var(--panel-shadow); text-shadow: var(--outline);
+}
+#goalsHead { cursor: pointer; user-select: none; font-size: 13px; font-weight: 800; color: #ffe45c; margin-bottom: 4px; }
+#goalsHead::after { content: ' ▾'; color: #cfd8e6; font-size: 11px; }
+#goals.collapsed #goalsHead::after { content: ' ▸'; }
+#goals.collapsed #goalList { display: none; }
+#goals.collapsed #goalsHead { margin-bottom: 0; }
+.goalRow { padding: 5px 6px; margin-top: 4px; border-radius: 8px; background: var(--shine), var(--nc-deep); border: 1px solid var(--nc-frame); }
+.goalRow.done { font-size: 12px; font-weight: 700; text-align: center; }
+.goalText { font-size: 12px; font-weight: 700; color: #fff; }
+.goalBar { height: 6px; margin: 4px 0 3px; border-radius: 3px; background: #05070b; overflow: hidden; }
+.goalFill { height: 100%; background: linear-gradient(90deg, #5dff6a, #ffe45c); transition: width 0.4s ease; }
+.goalMeta { display: flex; justify-content: space-between; font-size: 10px; font-weight: 700; color: #cfd8e6; }
+.goalReward { color: #ffe45c; }
+@media (width <= 900px) { #goals { display: none; } }

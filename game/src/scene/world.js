@@ -340,6 +340,7 @@ export class WorldMixin {
 
     this.cash -= tier.cost;
     this.awardPurchaseXp(tier.cost);
+    this.bumpGoal('expansions');
     if (side === 'left') this.gridH += 1;
     else this.gridW += 1;
     this.buildTiles();

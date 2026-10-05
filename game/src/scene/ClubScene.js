@@ -34,6 +34,7 @@ import { BarsMixin } from './bars.js';
 import { BonusesMixin } from './bonuses.js';
 import { SpeakersMixin } from './speakers.js';
 import { SelectionMixin } from './selection.js';
+import { GoalsMixin } from './goals.js';
 import { Music } from '../music.js';
 import { applyMixins } from './applyMixins.js';
 
@@ -323,6 +324,7 @@ export class ClubScene extends Phaser.Scene {
     this.registerLightTexture();
     this.setupBonuses(); // high fives worth $88 (bonuses.js)
     this.setupSpeakers(); // speaker cones bounce to the beat (speakers.js)
+    this.setupGoals(); // the goals panel (goals.js)
     this.scheduleNextPatronSpawn();
 
     // Patron behavior tick — movement, tipping, and departure are all
@@ -383,4 +385,5 @@ applyMixins(ClubScene, [
   BonusesMixin,
   SpeakersMixin,
   SelectionMixin,
+  GoalsMixin,
 ]);

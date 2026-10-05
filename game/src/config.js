@@ -267,6 +267,44 @@ export const HOVER = { color: 0xffffff, strength: 2.5, selectColor: 0x5dff8a, se
 // for the same decoration again within cooldownMs.
 export const ADMIRE = { weight: 1.2, lookMs: 3000, tipPerDollar: 0.08, tipMin: 5, tipMax: 40, cooldownMs: 180000 };
 
+// Goals (see goals.js), in order: three show at a time, and each pays its
+// cash and XP when done. `stat` is what's counted (see bumpGoal() and the
+// live ones in goalProgress()): drinks, bought, decorBought, bonuses,
+// boosts, rushes, dancersAtOnce, parties, expansions, happyGuests, level,
+// fullClub, hired, celebs, capacity, rating, admired.
+export const GOALS = [
+  { id: 'drinks5', text: 'Serve 5 drinks', stat: 'drinks', target: 5, cash: 40, xp: 10 },
+  { id: 'decor1', text: 'Buy a decoration', stat: 'decorBought', target: 1, cash: 30, xp: 5 },
+  { id: 'boost1', text: 'Use Bass Boost', stat: 'boosts', target: 1, cash: 40, xp: 10 },
+  { id: 'bonus1', text: 'Catch a high five', stat: 'bonuses', target: 1, cash: 30, xp: 5 },
+  { id: 'rush1', text: 'Start a Drink Rush', stat: 'rushes', target: 1, cash: 40, xp: 10 },
+  { id: 'dance4', text: 'Get 4 guests dancing at once', stat: 'dancersAtOnce', target: 4, cash: 60, xp: 15 },
+  { id: 'happy10', text: 'Send 10 guests home happy', stat: 'happyGuests', target: 10, cash: 80, xp: 15 },
+  { id: 'party1', text: 'Throw a party', stat: 'parties', target: 1, cash: 80, xp: 20 },
+  { id: 'drinks25', text: 'Serve 25 drinks', stat: 'drinks', target: 25, cash: 100, xp: 20 },
+  { id: 'full1', text: 'Fill your club to the limit', stat: 'fullClub', target: 1, cash: 80, xp: 15 },
+  { id: 'expand1', text: 'Expand your club', stat: 'expansions', target: 1, cash: 100, xp: 20 },
+  { id: 'level3', text: 'Reach level 3', stat: 'level', target: 3, cash: 150, xp: 0 },
+  { id: 'admire3', text: 'Collect 3 tips from guests admiring decorations', stat: 'admired', target: 3, cash: 80, xp: 15 },
+  { id: 'buy10', text: 'Buy 10 things for your club', stat: 'bought', target: 10, cash: 120, xp: 25 },
+  { id: 'bonus10', text: 'Catch 10 high fives', stat: 'bonuses', target: 10, cash: 150, xp: 25 },
+  { id: 'dance8', text: 'Get 8 guests dancing at once', stat: 'dancersAtOnce', target: 8, cash: 150, xp: 30 },
+  { id: 'cap12', text: 'Make room for 12 guests', stat: 'capacity', target: 12, cash: 200, xp: 30 },
+  { id: 'drinks100', text: 'Serve 100 drinks', stat: 'drinks', target: 100, cash: 250, xp: 40 },
+  { id: 'parties3', text: 'Throw 3 parties', stat: 'parties', target: 3, cash: 200, xp: 40 },
+  { id: 'hire2', text: 'Hire a second bartender', stat: 'hired', target: 1, cash: 150, xp: 25 },
+  { id: 'level5', text: 'Reach level 5', stat: 'level', target: 5, cash: 300, xp: 0 },
+  { id: 'celeb1', text: 'Have a celebrity visit', stat: 'celebs', target: 1, cash: 250, xp: 40 },
+  { id: 'rating4', text: 'Earn a 4-star club rating', stat: 'rating', target: 4, cash: 300, xp: 50 },
+  { id: 'happy100', text: 'Send 100 guests home happy', stat: 'happyGuests', target: 100, cash: 400, xp: 60 },
+  { id: 'drinks250', text: 'Serve 250 drinks', stat: 'drinks', target: 250, cash: 500, xp: 80 },
+  { id: 'cap16', text: 'Make room for 16 guests', stat: 'capacity', target: 16, cash: 500, xp: 80 },
+  { id: 'celebs5', text: 'Have 5 celebrity visits', stat: 'celebs', target: 5, cash: 600, xp: 100 },
+  { id: 'level8', text: 'Reach level 8', stat: 'level', target: 8, cash: 800, xp: 0 },
+  { id: 'parties10', text: 'Throw 10 parties', stat: 'parties', target: 10, cash: 800, xp: 120 },
+  { id: 'level10', text: 'Reach level 10', stat: 'level', target: 10, cash: 1500, xp: 0 },
+];
+
 export const SECURITY = {
   character: 4, scale: 1.12, stepMs: 380, // all in black, like the bouncer
   argueChance: 0.12, cooldownMs: 90 * 1000, argueMs: [8000, 12000],

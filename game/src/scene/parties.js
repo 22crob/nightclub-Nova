@@ -51,6 +51,7 @@ export class PartiesMixin {
     if (!def || this.partyBlocker(def)) { SFX.denied(); return false; }
     this.cash -= def.cost;
     this.party = key;
+    this.bumpGoal('parties');
     this.partyPhase = 'countdown';
     this.partyStartsAt = this.time.now + PARTY_COUNTDOWN_MS;
     this.noteIncome('partyCost', def.cost);

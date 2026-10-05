@@ -115,6 +115,7 @@ export class MoodMixin {
       const tier = LEAVING_FANS.find((t) => patron.mood >= t.min);
       fans = Math.round(tier.fans * this.partyEffect('fans', 1));
       if (tier.fans > 0) fans += this.celebFans(patron); // a happy celebrity tells everyone
+      if (tier.min >= 70) this.bumpGoal('happyGuests');
       emoji = tier.emoji;
     }
     this.fans = Math.max(0, this.fans + fans);

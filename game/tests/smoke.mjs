@@ -45,13 +45,18 @@ const clickTile = async (gx, gy, button = 'left') => {
   await page.waitForTimeout(150);
 };
 // The level-up menu would cover the buttons the checks click, so it stays
-// shut here; it's checked on its own further down.
+// shut here; it's checked on its own further down. Goals still tick off but
+// pay nothing, so the cash checks stay exact (goals are checked on their own).
 const waitForScene = async () => {
   await page.waitForFunction(() => {
     const s = window.__clubNova && window.__clubNova.scene.getScene('club');
     return s && s.world && s.sys.settings.status >= 5; // RUNNING
   });
-  await page.evaluate(() => { window.__clubNova.scene.getScene('club').showLevelUp = () => {}; });
+  await page.evaluate(() => {
+    const s = window.__clubNova.scene.getScene('club');
+    s.showLevelUp = () => {};
+    s.completeGoal = (goal) => { s.goalsDone.push(goal.id); };
+  });
 };
 
 // Fresh start.
@@ -1788,6 +1793,34 @@ const hoverTip = await page.evaluate(() => {
 await page.mouse.move(5, 400);
 check('buttons and shop tabs are icons with no words, each with a hover name', icons.bare.length === 0 && icons.tabs === 6 && icons.tabIcons === 6, JSON.stringify(icons));
 check('hovering Bass Boost pops up its name and what it does', hoverTip.shown && hoverTip.name === 'Bass Boost!' && hoverTip.text.length > 10, JSON.stringify(hoverTip));
+
+// Goals: three show at a time with their progress; finishing one pays its
+// cash and XP, brings in the next and is saved.
+const goals = await page.evaluate(() => {
+  const s = window.__clubNova.scene.getScene('club');
+  delete s.completeGoal; // the real payout (waitForScene stubs it)
+  s.goalsDone = [];
+  s.goalStats = {};
+  s.checkGoals();
+  const out = { showing: document.querySelectorAll('#goalList .goalRow').length };
+  const first = s.activeGoals()[0];
+  out.first = first.id;
+  const cash = s.cash;
+  const fans = s.fans;
+  s.bumpGoal(first.stat, 1);
+  out.partial = document.querySelector(`#goalList [data-goal="${first.id}"] .goalCount`)?.textContent;
+  s.bumpGoal(first.stat, first.target);
+  out.paid = s.cash - cash;
+  out.xp = s.fans - fans;
+  out.reward = [first.cash, first.xp];
+  out.gone = !document.querySelector(`#goalList [data-goal="${first.id}"]`);
+  out.stillThree = document.querySelectorAll('#goalList .goalRow').length;
+  s.saveGame();
+  const saved = JSON.parse(localStorage.getItem('clubNovaSave_v2'));
+  out.saved = (saved.goalsDone || []).includes(first.id) && saved.goalStats && saved.goalStats[first.stat] >= first.target;
+  return out;
+});
+check('goals show three at a time, track progress, pay cash and XP when done, and are saved', goals.showing === 3 && goals.partial === '1/' + (goals.partial || '').split('/')[1] && goals.paid === goals.reward[0] && goals.xp === goals.reward[1] && goals.gone && goals.stillThree === 3 && goals.saved, JSON.stringify(goals));
 
 check('no errors in the page', errors.length === 0, errors.join(' | '));
 

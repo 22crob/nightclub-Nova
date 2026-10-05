@@ -170,6 +170,7 @@ export class StaffMixin {
     if (this.cash < type.hireCost) { SFX.denied(); return false; }
     this.cash -= type.hireCost;
     this.staffBarGroup(group, working + 1);
+    if (this.bartenderCount() >= 2) this.noteGoalBest('hired', 1);
     SFX.place();
     this.updateUI();
     this.saveGame();
@@ -293,6 +294,7 @@ export class StaffMixin {
     patron.drinks = (patron.drinks || 0) + 1;
     this.fans += XP.drinkServed; // XP for good service
     this.drinksSold = (this.drinksSold || 0) + 1;
+    this.bumpGoal('drinks');
     if (this.partyStats) {
       this.partyStats.drinks += 1;
       this.partyStats.drinkRevenue += price + tip;

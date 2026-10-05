@@ -61,6 +61,7 @@ export class BoostMixin {
     this.boostUntil = now + BOOST.durationMs;
     this.boostReadyAt = this.boostUntil + BOOST.cooldownMs;
     Music.setBoost(true);
+    this.bumpGoal('boosts');
     SFX.levelUp();
     this.showBigPopup('Bass Boost!', 'Everybody to the dance floor!', 'boost');
     this.flashScreen(0xb070ff);
@@ -88,6 +89,7 @@ export class BoostMixin {
     this.rushReadyAt = this.rushUntil + RUSH.cooldownMs;
     SFX.levelUp();
     this.showBigPopup('Drink Rush!', 'Who wants a drink?', 'rush');
+    this.bumpGoal('rushes');
     this.highlightBars();
     this.rallyGuests('drink', RUSH);
     this.updateBoostButton();

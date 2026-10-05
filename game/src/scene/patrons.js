@@ -221,6 +221,7 @@ export class PatronsMixin {
     this.tickBars(); // bartenders serving, impatient customers (bars.js)
     this.tickBonuses(); // high fives and fist bumps (bonuses.js)
     this.samplePartyMood(); // for the party wrap-up (parties.js)
+    this.tickGoals(); // most dancers at once, a full club (goals.js)
     for (let i = this.patrons.length - 1; i >= 0; i--) {
       const patron = this.patrons[i];
       if (patron.gone) continue;

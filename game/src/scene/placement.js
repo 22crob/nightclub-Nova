@@ -246,6 +246,10 @@ export class PlacementMixin {
     // gave when it was first bought.
     const center = this.footprintCenter(tiles);
     record.xp = fromInventory ? this.takeInventoryXp(record.type) : this.awardPurchaseXp(cost, center.sx, center.sy - 60);
+    if (!fromInventory && cost > 0) {
+      this.bumpGoal('bought');
+      if (def.category === 'Decorations') this.bumpGoal('decorBought');
+    }
     if (fromInventory) this.placedFromInventory(record);
 
     SFX.place();
