@@ -1,7 +1,6 @@
 // ClubScene methods: getting to know the people in the club, like Nightclub
 // City. Every guest has a name; click one to see their card (mood, fun,
-// drinks, what they've spent, and what they're saying). A thought bubble
-// over their head shows when they want a drink or are loving it. Click a
+// drinks, what they've spent, and what they're saying). Click a
 // bartender for their card and the Bottoms Up! move, which serves their
 // whole line at once; the game suggests it when a bar is slammed.
 // Mixed into ClubScene (see ClubScene.js); `this` is the scene.
@@ -45,34 +44,6 @@ export class GuestsMixin {
       patron.chatUntil = now + 12000;
     }
     return patron.chat;
-  }
-
-  // --- Thought bubbles ------------------------------------------------------
-
-  // Keeps a guest's bubble right: a drink when they're thirsty, heart eyes
-  // when they're loving it, nothing otherwise. Called every patron tick.
-  updateGuestBubble(patron) {
-    const c = patron.container;
-    const now = this.time.now;
-    let icon = '';
-    if (!patron.leaving && !patron.gone) {
-      if (now >= patron.thirstyAt) icon = '🍹';
-      else if (patron.mood >= 85) icon = '😍';
-    }
-    if (!icon) {
-      if (c.bubble) c.bubble.setVisible(false);
-      return;
-    }
-    if (!c.bubble) {
-      c.bubble = this.add.text(0, -CHARACTER_DISPLAY_HEIGHT * 1.02, '', {
-        fontFamily: 'Arial, Helvetica, sans-serif', fontSize: '15px', backgroundColor: '#ffffffe6',
-        padding: { left: 4, right: 4, top: 2, bottom: 2 },
-      }).setOrigin(0.5, 1);
-      c.add(c.bubble);
-      this.unflipBubble(c);
-    }
-    if (c.bubble.text !== icon) c.bubble.setText(icon);
-    c.bubble.setVisible(true);
   }
 
   // The bubble lives in the guest's container, which is mirrored to face

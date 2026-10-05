@@ -658,8 +658,8 @@ const street = await page.evaluate(() => {
 });
 check('the line stands behind the left wall facing the door, with a bouncer and lamps; the front goes in', street.inLine > 0 && street.after === street.inLine - 1 && street.bouncer && street.lamps && street.outside, JSON.stringify(street));
 
-// Guests have names; clicking one opens their card. A thirsty guest shows a
-// drink bubble. Clicking a bartender shows Bottoms Up!, which serves the
+// Guests have names; clicking one opens their card, and they have no
+// lasting thought bubbles. Clicking a bartender shows Bottoms Up!, which serves the
 // whole line at once and then needs to recover. Luxury grows with what you
 // place and raises tips.
 const people = await page.evaluate(() => {
@@ -672,9 +672,8 @@ const people = await page.evaluate(() => {
   out.clickedGuest = s.clickPerson(at);
   out.card = document.getElementById('infoCard').classList.contains('open') && document.getElementById('infoName').textContent === p.name;
   out.quote = document.getElementById('infoQuote').textContent;
-  p.thirstyAt = s.time.now - 1;
-  s.updateGuestBubble(p);
-  out.bubble = !!p.container.bubble && p.container.bubble.visible && p.container.bubble.text === '🍹';
+  // No lasting thought bubbles (only the quick reactions that fade).
+  out.bubble = !p.container.bubble && typeof s.updateGuestBubble === 'undefined';
   s.closeInfoCard();
   const bar = s.staffableRecords().find((r) => r.staff && r.staff.kind === 'bartender');
   at = screen(bar.staff.container);
@@ -706,7 +705,7 @@ const people = await page.evaluate(() => {
   return out;
 });
 check('guests have names, and clicking one opens their card', people.named && people.clickedGuest && people.card && people.quote.length > 2, JSON.stringify(people));
-check('a thirsty guest shows a drink bubble', people.bubble, JSON.stringify(people));
+check('guests have no lasting thought bubbles over their heads', people.bubble, JSON.stringify(people));
 check('Bottoms Up serves the whole line at once, then recovers', people.clickedBar && people.barCard && people.served >= 1 && people.paid > 0 && people.lineEmpty && people.cooling, JSON.stringify(people));
 check('Luxury grows with what you place, shows in the top bar and raises tips', people.luxuryUp > 0 && people.tipsUp && people.luxuryShown, JSON.stringify(people));
 

@@ -115,9 +115,7 @@ export class ReactionsMixin {
     this.time.delayedCall(delay, () => {
       const c = patron.container;
       if (patron.gone || !c.active || !c.visible) return;
-      // Above the head, and above the thought bubble if one's showing.
-      const bubble = c.bubble && c.bubble.visible ? 22 : 0;
-      const y = c.y - CHARACTER_DISPLAY_HEIGHT * 1.04 - bubble;
+      const y = c.y - CHARACTER_DISPLAY_HEIGHT * 1.04; // just above the head
       const icon = this.add.image(c.x + randRange(-6, 6), y, `react_${kind}`)
         .setDisplaySize(REACTIONS.size, REACTIONS.size).setOrigin(0.5, 1);
       const full = icon.scaleX;

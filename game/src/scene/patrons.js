@@ -221,7 +221,6 @@ export class PatronsMixin {
       }
 
       this.updatePatronMood(patron, (now - (patron.lastTickAt || now)) / 1000);
-      this.updateGuestBubble(patron);
       patron.lastTickAt = now;
       if (patron.leaving) continue; // stormed out just now
       // Guests leave when their visit is over, once they've finished what
