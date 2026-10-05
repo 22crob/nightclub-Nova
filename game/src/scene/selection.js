@@ -78,6 +78,7 @@ export class SelectionMixin {
   updateHoverObject(pointer) {
     if (this.selectedProp || this.bonusAt(pointer.x, pointer.y)) { this.setHovered(null); return; }
     this.setHovered(this.objectAt(pointer.x, pointer.y));
+    if (this.dockTab === 'edit') this.drawSelectionFootprint(); // floor tiles follow the cursor
   }
 
   setHovered(hit) {
@@ -133,6 +134,10 @@ export class SelectionMixin {
       }
     };
     if (this.dockTab === 'edit' && this.hovered && this.hovered.kind === 'prop') outline(this.hovered.target, HOVER.color, 0.8);
+    // In Edit, a painted floor tile under the cursor is selectable too.
+    else if (this.dockTab === 'edit' && !this.selectedProp && this.hoverTile && this.floorPaint[`${this.hoverTile.gx},${this.hoverTile.gy}`]) {
+      outline({ tiles: [[this.hoverTile.gx, this.hoverTile.gy]] }, HOVER.color, 0.8);
+    }
     if (this.selected && this.placed[`${this.selected.target.anchor[0]},${this.selected.target.anchor[1]}`] === this.selected.target) {
       outline(this.selected.target, HOVER.selectColor, 1);
     }

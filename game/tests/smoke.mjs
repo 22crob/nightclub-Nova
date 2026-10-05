@@ -741,6 +741,46 @@ const doorway = await page.evaluate(() => {
 });
 check('the doorway stays clear: arrivals walk in to a clear spot first, and nobody idles in the doorway', doorway.zone && doorway.walksIn && doorway.wanderClear && doorway.guardClear && doorway.arrived, JSON.stringify(doorway));
 
+// Floors in Edit: a painted floor tile can be moved (laid again for free)
+// or sold (half back, its XP taken back), and a dance floor tile too;
+// the basic floor shows underneath.
+const floorEdit = await page.evaluate(() => {
+  const s = window.__clubNova.scene.getScene('club');
+  const out = {};
+  s.cash += 500;
+  let a = null;
+  let b = null;
+  for (let gy = 3; gy < s.gridH - 1 && !b; gy++) for (let gx = 3; gx < s.gridW - 1 && !b; gx++) {
+    if (s.placed[`${gx},${gy}`] || s.floorPaint[`${gx},${gy}`]) continue;
+    if (!a) a = [gx, gy]; else if (gx !== a[0] || gy !== a[1]) b = [gx, gy];
+  }
+  s.selectProp('fpConcrete');
+  s.paintFloor(a[0], a[1]);
+  s.deselectProp();
+  s.setDockTab('edit');
+  s.editTool = 'move';
+  const cash0 = s.cash;
+  out.pickedUp = s.editClick(a[0], a[1]) && !s.floorPaint[`${a[0]},${a[1]}`] && s.selectedProp === 'fpConcrete' && s.holdingFromInventory;
+  s.paintFloor(b[0], b[1]);
+  out.movedFree = s.floorPaint[`${b[0]},${b[1]}`] === 'fpConcrete' && s.cash === cash0 && !s.selectedProp;
+  s.editTool = 'sell';
+  const xp0 = s.fans;
+  const cash1 = s.cash;
+  s.editClick(b[0], b[1]);
+  out.sold = !s.floorPaint[`${b[0]},${b[1]}`] && s.cash > cash1 && s.fans <= xp0 && !s.floorPaintImages[`${b[0]},${b[1]}`];
+  // A dance floor tile: put away like furniture.
+  s.editTool = 'store';
+  const dance = s.restoreProp('basicFloor', 0, a);
+  const inv0 = s.inventoryCount('basicFloor');
+  s.editClick(a[0], a[1]);
+  out.danceStored = !s.placed[`${a[0]},${a[1]}`] && s.inventoryCount('basicFloor') === inv0 + 1 && !!dance;
+  s.addToInventory('basicFloor', -1);
+  s.editTool = 'move';
+  s.closeDock();
+  return out;
+});
+check('in Edit, floor tiles can be moved (free), sold or put away, showing the basic floor underneath', floorEdit.pickedUp && floorEdit.movedFree && floorEdit.sold && floorEdit.danceStored, JSON.stringify(floorEdit));
+
 // Zoom buttons change the zoom and stay within limits.
 const zoom0 = await page.evaluate(() => window.__clubNova.scene.getScene('club').world.scaleX);
 await page.click('#zoomIn');

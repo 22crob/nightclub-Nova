@@ -5,16 +5,16 @@
 // for free), turns it, puts it away in the inventory, or sells it.
 // Mixed into ClubScene (see ClubScene.js); `this` is the scene.
 import { FLOOR_DECAL_PROPS, PROP_TYPES } from '../catalog.js';
-import { SELL_REFUND_RATIO } from '../config.js';
+import { SELL_REFUND_RATIO, XP } from '../config.js';
 import { realSpriteIconFor, renderIsoIcon } from '../icons.js';
 import { SFX } from '../sfx.js';
 import { fillIcons } from '../uiIcons.js';
 
 export const EDIT_TOOLS = {
-  move: { icon: 'toolMove', name: 'Move', text: 'Click something in your club to pick it up, then click where it should go.' },
+  move: { icon: 'toolMove', name: 'Move', text: 'Click something in your club (furniture or a floor tile) to pick it up, then click where it should go.' },
   rotate: { icon: 'toolRotate', name: 'Turn', text: 'Click something in your club to turn it.' },
-  store: { icon: 'toolStore', name: 'Put away', text: 'Click something in your club to put it in your inventory, to place again later for free.' },
-  sell: { icon: 'toolSell', name: 'Sell', text: `Click something in your club to sell it back for ${Math.round(SELL_REFUND_RATIO * 100)}% of its price.` },
+  store: { icon: 'toolStore', name: 'Put away', text: 'Click something in your club (furniture or a floor tile) to put it in your inventory, to place again later for free.' },
+  sell: { icon: 'toolSell', name: 'Sell', text: `Click something in your club (furniture or a floor tile) to sell it back for ${Math.round(SELL_REFUND_RATIO * 100)}% of its price. The basic floor shows under a floor you take up.` },
 };
 
 export class InventoryMixin {
@@ -78,7 +78,7 @@ export class InventoryMixin {
   // it did something.
   editClick(gx, gy) {
     const rec = this.placed[`${gx},${gy}`];
-    if (!rec) return false;
+    if (!rec) return this.editFloorTile(gx, gy); // a painted floor tile, if there is one
     const tool = this.editTool || 'move';
     if (tool === 'rotate') {
       if (!PROP_TYPES[rec.type].rotatable) { SFX.denied(); return true; }
@@ -101,6 +101,37 @@ export class InventoryMixin {
       }
     }
     this.refreshDock();
+    return true;
+  }
+
+  // The Edit tools on a painted floor tile: move picks the floor up to lay
+  // again for free, put away stores it, sell refunds half (and takes back
+  // its XP). Either way the basic floor shows underneath. False if the
+  // tile isn't painted.
+  editFloorTile(gx, gy) {
+    const key = `${gx},${gy}`;
+    const type = this.floorPaint && this.floorPaint[key];
+    if (!type) return false;
+    const def = PROP_TYPES[type];
+    const tool = this.editTool || 'move';
+    if (tool === 'rotate') { SFX.denied(); return true; }
+    this.removeFloorPaint(gx, gy);
+    const xp = def.cost * XP.perDollar;
+    if (tool === 'sell') {
+      this.cash += Math.round(def.cost * SELL_REFUND_RATIO);
+      const { sx, sy } = this.gridToScreen(gx, gy);
+      this.revokePurchaseXp(xp, sx, sy - 20);
+      SFX.sell();
+    } else {
+      this.addToInventory(type);
+      this.pushInventoryXp(type, xp);
+      SFX.sell();
+      if (tool === 'move') this.selectFromInventory(type);
+      else this.showToast(`📦 ${def.label} put away in your inventory.`);
+    }
+    this.updateUI();
+    this.refreshDock();
+    this.saveGame();
     return true;
   }
 

@@ -48,12 +48,21 @@ export class FloorPaintMixin {
     if (!this.isUnlocked(type)) { SFX.denied(); return false; }
     const key = `${gx},${gy}`;
     if (this.floorPaint[key] === type) return false; // already this floor
-    const cost = this.currentCost(type);
+    // Laying one from the inventory (picked up with Move) is free.
+    const fromInventory = this.holdingFromInventory && this.inventoryCount(type) > 0;
+    const cost = fromInventory ? 0 : this.currentCost(type);
     if (this.cash < cost) { SFX.denied(); return false; }
     this.cash -= cost;
     this.floorPaint[key] = type;
     this.drawFloorPaint(gx, gy, type);
-    this.awardPurchaseXp(cost);
+    if (fromInventory) {
+      this.takeInventoryXp(type);
+      this.addToInventory(type, -1);
+      if (this.inventoryCount(type) <= 0) { this.holdingFromInventory = false; this.selectedProp = null; this.updateGhost(); }
+      this.refreshDock();
+    } else {
+      this.awardPurchaseXp(cost);
+    }
     SFX.place();
     this.updateUI();
     return true;
@@ -70,6 +79,13 @@ export class FloorPaintMixin {
     this.floorPaintGhost = this.floorPaintImage(tile.gx, tile.gy, this.selectedProp).setAlpha(0.85);
     this.floorPaintGhost.key = key;
     this.floorPaintLayer.add(this.floorPaintGhost);
+  }
+
+  // Takes the paint off a tile: the basic floor shows again.
+  removeFloorPaint(gx, gy) {
+    const key = `${gx},${gy}`;
+    delete this.floorPaint[key];
+    if (this.floorPaintImages[key]) { this.floorPaintImages[key].destroy(); delete this.floorPaintImages[key]; }
   }
 
   // Restores saved floors, skipping anything unknown or off the grid.
