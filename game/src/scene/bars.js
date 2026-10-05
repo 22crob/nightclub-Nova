@@ -53,7 +53,36 @@ export class BarsMixin {
       if (!this.isWorked(rec)) continue;
       for (const [x, y] of this.barQueueTiles(rec)) keys.add(`${x},${y}`);
     }
+    // The ends of every bar: nobody hangs about at the side of a counter.
+    for (const group of this.barGroups()) {
+      const first = group[0];
+      const last = group[group.length - 1];
+      const along = first.facing === 90 || first.facing === 270 ? [0, 1] : [1, 0];
+      const lo = Math.min(...[...first.tiles, ...last.tiles].map(([x, y]) => x * along[0] + y * along[1]));
+      const hi = Math.max(...[...first.tiles, ...last.tiles].map(([x, y]) => x * along[0] + y * along[1]));
+      for (const unit of [first, last]) {
+        for (const [x, y] of unit.tiles) {
+          const pos = x * along[0] + y * along[1];
+          const step = pos === lo ? -1 : pos === hi ? 1 : 0;
+          if (!step) continue;
+          keys.add(`${x + along[0] * step},${y + along[1] * step}`);
+        }
+      }
+    }
     return keys;
+  }
+
+  // Every long bar (worked or not), as its list of units.
+  barGroups() {
+    const seen = new Set();
+    const out = [];
+    for (const rec of this.hireableRecords()) {
+      if (seen.has(rec)) continue;
+      const group = this.barGroup(rec);
+      group.forEach((u) => seen.add(u));
+      out.push(group);
+    }
+    return out;
   }
 
   // The first unit of each worked long bar.

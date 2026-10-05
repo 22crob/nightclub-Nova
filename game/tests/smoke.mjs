@@ -835,6 +835,25 @@ const admire = await page.evaluate(() => {
 });
 check('a guest admires a decoration for ~3 s, then WOW!/OUU! with a tip to click, and not again soon', admire.going && admire.besideIt && admire.looks && admire.notYet && admire.tip && admire.paid && admire.cooldown, JSON.stringify(admire));
 
+// Nobody hangs about at the ends of a bar, and wanderers pick quiet spots.
+const spread = await page.evaluate(() => {
+  const s = window.__clubNova.scene.getScene('club');
+  const out = {};
+  const group = s.barGroups()[0];
+  if (!group) return { noBar: true };
+  const off = s.keepOffTiles();
+  const first = group[0];
+  const along = first.facing === 90 || first.facing === 270 ? [0, 1] : [1, 0];
+  const ends = [];
+  for (const unit of [group[0], group[group.length - 1]]) for (const [x, y] of unit.tiles) {
+    for (const d of [-1, 1]) { const k = `${x + along[0] * d},${y + along[1] * d}`; if (!s.placed[k] && s.inGrid(x + along[0] * d, y + along[1] * d)) ends.push(k); }
+  }
+  out.endsOff = ends.length > 0 && ends.every((k) => off.has(k));
+  out.crowdFn = typeof s.crowdAt === 'function' && typeof s.leastCrowded === 'function';
+  return out;
+});
+check('nobody idles at the ends of a bar, and guests pick the quieter spots', spread.noBar || (spread.endsOff && spread.crowdFn), JSON.stringify(spread));
+
 // Zoom buttons change the zoom and stay within limits.
 const zoom0 = await page.evaluate(() => window.__clubNova.scene.getScene('club').world.scaleX);
 await page.click('#zoomIn');

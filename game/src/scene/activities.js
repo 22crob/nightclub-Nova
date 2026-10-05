@@ -166,23 +166,49 @@ export class ActivitiesMixin {
     this.pickDrinkingSpot(patron, bar);
   }
 
-  // A free tile near a bar (not in anyone's line) to stand and drink at.
+  // How many other guests are on, or headed for, the tiles around (x, y):
+  // spot pickers prefer quiet spots so the crowd spreads out.
+  crowdAt(x, y, patron) {
+    let n = 0;
+    for (const p of this.patrons) {
+      if (p === patron || p.gone || p.leaving) continue;
+      if (Math.max(Math.abs(p.gx - x), Math.abs(p.gy - y)) <= 1) n += 1;
+      if (p.targetGx !== undefined && Math.max(Math.abs(p.targetGx - x), Math.abs(p.targetGy - y)) <= 1) n += 1;
+    }
+    return n;
+  }
+
+  // The least crowded of some tiles (ties broken at random), or null.
+  leastCrowded(tiles, patron) {
+    let best = null;
+    let bestScore = Infinity;
+    for (const t of tiles) {
+      const score = this.crowdAt(t[0], t[1], patron) + Math.random() * 0.9;
+      if (score < bestScore) { bestScore = score; best = t; }
+    }
+    return best;
+  }
+
+  // A free tile a little way from the bar (not in anyone's line, not where
+  // the crowd already is) to stand and drink at.
   pickDrinkingSpot(patron, bar) {
     const lines = this.keepOffTiles();
     const near = bar ? this.barLayout(bar).counter : [patron.gx, patron.gy];
     const spots = [];
-    for (let dx = -3; dx <= 3; dx++) {
-      for (let dy = -3; dy <= 3; dy++) {
+    for (let dx = -6; dx <= 6; dx++) {
+      for (let dy = -6; dy <= 6; dy++) {
         const x = near[0] + dx;
         const y = near[1] + dy;
         if (!this.inGrid(x, y)) continue;
-        if (Math.abs(dx) + Math.abs(dy) < 2 || this.isBlockingProp(x, y) || lines.has(`${x},${y}`)) continue;
+        const d = Math.abs(dx) + Math.abs(dy);
+        if (d < 2 || d > 6 || this.isBlockingProp(x, y) || lines.has(`${x},${y}`)) continue;
         if (this.patronTileOccupied(x, y) && !(x === patron.gx && y === patron.gy)) continue;
         spots.push([x, y]);
       }
     }
-    if (spots.length === 0) { this.pickWanderTile(patron); return; }
-    [patron.targetGx, patron.targetGy] = Phaser.Utils.Array.GetRandom(spots);
+    const spot = this.leastCrowded(Phaser.Utils.Array.Shuffle(spots).slice(0, 14), patron);
+    if (!spot) { this.pickWanderTile(patron); return; }
+    [patron.targetGx, patron.targetGy] = spot;
     patron.path = null;
   }
 
@@ -203,24 +229,28 @@ export class ActivitiesMixin {
     return tiles.length ? Phaser.Utils.Array.GetRandom(tiles) : null;
   }
 
-  // Somewhere to wander to: often by the DJ booth, otherwise any open tile.
+  // Somewhere to wander to: now and then by the DJ booth, otherwise the
+  // quietest of a few open tiles around the club, so the crowd spreads out
+  // instead of bunching up.
   pickWanderTile(patron) {
     const lines = this.keepOffTiles();
     const poi = this.pickPointOfInterestTile();
-    if (poi && Math.random() < 0.4) {
+    if (poi && Math.random() < 0.15 && this.crowdAt(poi[0], poi[1], patron) < 2) {
       [patron.targetGx, patron.targetGy] = poi;
       patron.path = null;
       return;
     }
-    for (let i = 0; i < 20; i++) {
+    const options = [];
+    for (let i = 0; i < 30 && options.length < 8; i++) {
       const tx = Phaser.Math.Between(0, this.gridW - 1);
       const ty = Phaser.Math.Between(0, this.gridH - 1);
-      if (!this.isBlockingProp(tx, ty) && !lines.has(`${tx},${ty}`)) {
-        patron.targetGx = tx;
-        patron.targetGy = ty;
-        patron.path = null;
-        return;
-      }
+      if (!this.isBlockingProp(tx, ty) && !lines.has(`${tx},${ty}`) && !this.patronTileOccupied(tx, ty)) options.push([tx, ty]);
+    }
+    const spot = this.leastCrowded(options, patron);
+    if (spot) {
+      [patron.targetGx, patron.targetGy] = spot;
+      patron.path = null;
+      return;
     }
     patron.targetGx = patron.gx;
     patron.targetGy = patron.gy;
