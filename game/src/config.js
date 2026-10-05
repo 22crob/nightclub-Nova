@@ -259,6 +259,13 @@ export const BONUS = { amount: 88, everyMs: [30000, 60000], lifeMs: 8000, minMoo
 // the room the glow needs, and how opaque a pixel must be to count as hit.
 export const HOVER = { color: 0xffffff, strength: 2.5, selectColor: 0x5dff8a, selectStrength: 4, padding: 10, alphaHit: 40 };
 
+// Admiring decorations (see activities.js): now and then (weight, among the
+// guest's activities) a guest stops by a decoration, looks at it for lookMs,
+// then says WOW! or OUU! and offers a tip to click: tipPerDollar of the
+// decoration's price, between tipMin and tipMax. The same guest won't tip
+// for the same decoration again within cooldownMs.
+export const ADMIRE = { weight: 1.2, lookMs: 3000, tipPerDollar: 0.08, tipMin: 5, tipMax: 40, cooldownMs: 180000 };
+
 export const SECURITY = {
   character: 4, scale: 1.12, stepMs: 380, // all in black, like the bouncer
   argueChance: 0.12, cooldownMs: 90 * 1000, argueMs: [8000, 12000],

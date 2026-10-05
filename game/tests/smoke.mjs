@@ -511,7 +511,7 @@ check('speaker cones bump to the beat (and hide when the speaker faces away)', s
 const bonusSetup = await page.evaluate(() => {
   const s = window.__clubNova.scene.getScene('club');
   const out = {};
-  if (s.bonus) s.removeBonus(false);
+  for (const b of [...(s.bonuses || [])]) s.removeBonus(b, false);
   const cap = s.patronCapacity;
   s.patronCapacity = () => 99;
   const door = s.doorTile();
@@ -529,8 +529,9 @@ const bonusSetup = await page.evaluate(() => {
   s.tickBonuses();
   s.patrons = others;
   s.followBonus();
-  out.offered = !!s.bonus && s.bonus.patron === happy && ['highfive', 'fist'].includes(s.bonus.kind);
-  const h = s.bonus.holder;
+  const bonus0 = s.bonuses[0];
+  out.offered = !!bonus0 && bonus0.patron === happy && ['highfive', 'fist'].includes(bonus0.kind);
+  const h = bonus0.holder;
   out.at = { x: s.world.x + h.x * s.world.scaleX, y: s.world.y + h.y * s.world.scaleY };
   out.cash = s.cash;
   happy.moving = true; // stay put while we click
@@ -543,15 +544,15 @@ const bonus = await page.evaluate((setup) => {
   const out = { ...setup };
   out.paid = s.cash - setup.cash;
   out.noCard = !document.getElementById('infoCard').classList.contains('open');
-  out.gone = !s.bonus && s.nextBonusAt > s.time.now + 20000;
+  out.gone = s.bonuses.length === 0 && s.nextBonusAt > s.time.now + 20000;
   // One left alone fades after about 8 seconds.
   const p = s.patrons.find((q) => !q.leaving && !q.gone);
   p.mood = 95;
-  s.offerBonus(p);
-  out.life = Math.round((s.bonus.expiresAt - s.time.now) / 1000);
-  s.bonus.expiresAt = s.time.now - 1;
+  const b2 = s.offerBonus(p);
+  out.life = Math.round((b2.expiresAt - s.time.now) / 1000);
+  b2.expiresAt = s.time.now - 1;
   s.tickBonuses();
-  out.expired = !s.bonus;
+  out.expired = s.bonuses.length === 0;
   s.patrons.forEach((q) => { q.moving = false; });
   return out;
 }, bonusSetup);
@@ -780,6 +781,59 @@ const floorEdit = await page.evaluate(() => {
   return out;
 });
 check('in Edit, floor tiles can be moved (free), sold or put away, showing the basic floor underneath', floorEdit.pickedUp && floorEdit.movedFree && floorEdit.sold && floorEdit.danceStored, JSON.stringify(floorEdit));
+
+// Admiring decorations: a guest walks up to a decoration, looks at it
+// for about 3 s, says WOW! or OUU! and offers a tip to click; they won't
+// tip for the same decoration again for a while.
+const admire = await page.evaluate(() => {
+  const s = window.__clubNova.scene.getScene('club');
+  const out = {};
+  let at = null;
+  for (let gy = 3; gy < s.gridH - 2 && !at; gy++) for (let gx = 3; gx < s.gridW - 2 && !at; gx++) {
+    if (s.footprintValid(s.getFootprint('woodSpeaker', 0, gx, gy), 'woodSpeaker')) at = [gx, gy];
+  }
+  const rec = s.restoreProp('woodSpeaker', 0, at);
+  const cap = s.patronCapacity;
+  s.patronCapacity = () => 99;
+  const door = s.doorTile();
+  s.patrons.filter((q) => q.gx === door.gx && q.gy === door.gy).forEach((q) => { q.gx = -50; });
+  s.trySpawnPatron();
+  s.patronCapacity = cap;
+  const p = s.patrons[s.patrons.length - 1];
+  p.entering = false;
+  [p.gx, p.gy] = [at[0] + 2, at[1] + 2];
+  p.moving = false;
+  // Pick this speaker (others may be in the club too).
+  let tries = 0;
+  do { p.activity = null; s.beginActivity(p, 'admire'); tries += 1; } while (p.activity && p.activity.rec !== rec && tries < 50);
+  out.going = !!p.activity && p.activity.kind === 'admire' && p.activity.rec === rec;
+  const t = [p.targetGx, p.targetGy];
+  out.besideIt = Math.max(Math.abs(t[0] - at[0]), Math.abs(t[1] - at[1])) === 1;
+  [p.gx, p.gy] = t;
+  s.arriveForActivity(p);
+  out.looks = Math.round((p.activity.until - s.time.now) / 1000) === 3;
+  const n0 = (s.bonuses || []).length;
+  s.tickActivity(p);
+  out.notYet = (s.bonuses || []).length === n0;
+  p.activity.until = s.time.now - 1;
+  s.tickActivity(p);
+  const tip = (s.bonuses || []).find((b) => b.patron === p && b.kind === 'tip');
+  out.tip = !!tip && tip.amount >= 5;
+  // Clicking the coin pays the tip.
+  const cash0 = s.cash;
+  s.followBonus();
+  const sx = s.world.x + tip.holder.x * s.world.scaleX;
+  const sy = s.world.y + tip.holder.y * s.world.scaleY;
+  out.paid = s.clickBonus({ x: sx, y: sy }) && s.cash - cash0 === tip.amount;
+  // Not again for this decoration for a while.
+  let again = false;
+  for (let i = 0; i < 30; i++) { const spot = s.admireSpot(p); if (spot && spot.rec === rec) again = true; }
+  out.cooldown = !again;
+  s.startPatronDeparture(p);
+  s.removeProp(rec);
+  return out;
+});
+check('a guest admires a decoration for ~3 s, then WOW!/OUU! with a tip to click, and not again soon', admire.going && admire.besideIt && admire.looks && admire.notYet && admire.tip && admire.paid && admire.cooldown, JSON.stringify(admire));
 
 // Zoom buttons change the zoom and stay within limits.
 const zoom0 = await page.evaluate(() => window.__clubNova.scene.getScene('club').world.scaleX);

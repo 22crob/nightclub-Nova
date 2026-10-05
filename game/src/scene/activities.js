@@ -11,10 +11,11 @@
 // Mixed into ClubScene (see ClubScene.js); `this` is the scene.
 import Phaser from 'phaser';
 import { FLOOR_DECAL_PROPS } from '../catalog.js';
-import { GUEST_TYPES, PATRON_MOVE_INTERVAL, PATRON_POPUP_Y, VISIT } from '../config.js';
+import { ADMIRE, GUEST_TYPES, PATRON_MOVE_INTERVAL, PATRON_POPUP_Y, VISIT } from '../config.js';
+import { PROP_TYPES } from '../catalog.js';
 import { randRange } from '../util.js';
 
-const KINDS = ['drink', 'dance', 'sit', 'chat', 'wander'];
+const KINDS = ['drink', 'dance', 'sit', 'chat', 'wander', 'admire'];
 
 export class ActivitiesMixin {
   // A new guest's visit length and personality.
@@ -30,6 +31,7 @@ export class ActivitiesMixin {
   // drinking during Drink Rush, and nothing that isn't in the club.
   activityWeights(patron) {
     const w = { ...patron.type.weights };
+    w.admire = this.admireSpot(patron) ? ADMIRE.weight : 0; // a decoration to look at
     if (patron.lastActivity) w[patron.lastActivity] *= 0.25;
     w.dance *= this.boostDanceFactor ? this.boostDanceFactor() : 1;
     w.drink *= this.rushDrinkFactor ? this.rushDrinkFactor() : 1;
@@ -79,6 +81,14 @@ export class ActivitiesMixin {
       return true;
     }
     if (kind === 'chat') return this.startChat(patron);
+    if (kind === 'admire') {
+      const spot = this.admireSpot(patron);
+      if (!spot) return false;
+      patron.activity = { kind, rec: spot.rec };
+      [patron.targetGx, patron.targetGy] = spot.tile;
+      patron.path = null;
+      return true;
+    }
     patron.activity = { kind: 'wander', until: now + randRange(...VISIT.wanderMs) };
     this.pickWanderTile(patron);
     return true;
@@ -127,6 +137,16 @@ export class ActivitiesMixin {
       return;
     }
     if (kind === 'chat' && this.chatArrive(patron)) return;
+    if (kind === 'admire' && !a.until) {
+      // Look at it for a few seconds (the WOW! comes in tickActivity()).
+      const { sx, sy } = this.footprintCenter(a.rec.tiles);
+      this.faceToward(patron, sx, sy);
+      patron.container.patronAnimState = null;
+      this.setPatronAnimation(patron, 'idle');
+      a.until = now + ADMIRE.lookMs;
+      patron.nextMoveAt = a.until + 1500; // and a moment to react
+      return;
+    }
     // Wandering, or the plan fell through: stand a moment, then go on.
     this.faceFront(patron);
     this.setPatronAnimation(patron, 'idle');
@@ -289,9 +309,73 @@ export class ActivitiesMixin {
     }
   }
 
+  // --- Admiring decorations ------------------------------------------------
+
+  // A decoration this guest hasn't admired lately, and a free spot beside
+  // it they can reach (not in the doorway or a bar line), or null.
+  admireSpot(patron) {
+    const now = this.time.now;
+    const seen = new Set();
+    const decor = [];
+    for (const key in this.placed) {
+      const rec = this.placed[key];
+      if (seen.has(rec)) continue;
+      seen.add(rec);
+      if (PROP_TYPES[rec.type].category !== 'Decorations') continue;
+      const last = patron.admired && patron.admired.get(rec);
+      if (last !== undefined && now - last < ADMIRE.cooldownMs) continue;
+      decor.push(rec);
+    }
+    if (decor.length === 0) return null;
+    const off = this.keepOffTiles();
+    const rec = decor[Math.floor(Math.random() * decor.length)];
+    const own = new Set(rec.tiles.map(([x, y]) => `${x},${y}`));
+    const tiles = [];
+    for (const [tx, ty] of rec.tiles) {
+      for (const [dx, dy] of [[1, 0], [-1, 0], [0, 1], [0, -1], [1, 1], [-1, -1], [1, -1], [-1, 1]]) {
+        const x = tx + dx;
+        const y = ty + dy;
+        const k = `${x},${y}`;
+        if (own.has(k) || !this.inGrid(x, y) || this.isBlockingProp(x, y) || off.has(k)) continue;
+        if (this.patronTileOccupied(x, y) && !(x === patron.gx && y === patron.gy)) continue;
+        tiles.push([x, y]);
+      }
+    }
+    tiles.sort((p, q) => (Math.abs(p[0] - patron.gx) + Math.abs(p[1] - patron.gy)) - (Math.abs(q[0] - patron.gx) + Math.abs(q[1] - patron.gy)));
+    for (const tile of tiles.slice(0, 4)) {
+      const here = tile[0] === patron.gx && tile[1] === patron.gy;
+      if (here || this.findPath(patron.gx, patron.gy, tile[0], tile[1])) return { rec, tile };
+    }
+    return null;
+  }
+
+  // Done looking: WOW! or OUU!, and a tip to click.
+  admireReaction(patron, rec) {
+    const now = this.time.now;
+    patron.admired = patron.admired || new Map();
+    patron.admired.set(rec, now);
+    if (!rec.tiles || this.placed[`${rec.tiles[0][0]},${rec.tiles[0][1]}`] !== rec) return; // it's gone
+    const c = patron.container;
+    const word = Math.random() < 0.5 ? 'WOW!' : 'OUU!';
+    const label = this.add.text(c.x, c.y - PATRON_POPUP_Y - 6, word, {
+      fontFamily: 'Arial Black, Arial, sans-serif', fontSize: '18px', color: word === 'WOW!' ? '#ffe45c' : '#ff9ae0', stroke: '#10233d', strokeThickness: 5,
+    }).setOrigin(0.5, 1).setScale(0.4);
+    this.patronLayer.add(label);
+    this.tweens.add({ targets: label, scale: 1.1, duration: 200, ease: 'Back.easeOut' });
+    this.tweens.add({ targets: label, y: label.y - 26, alpha: 0, delay: 700, duration: 700, onComplete: () => label.destroy() });
+    patron.mood = Math.min(100, patron.mood + 4);
+    const cost = PROP_TYPES[rec.type].cost || 0;
+    const tip = Math.round(Math.max(ADMIRE.tipMin, Math.min(ADMIRE.tipMax, cost * ADMIRE.tipPerDollar)));
+    this.offerBonus(patron, 'tip', tip);
+  }
+
   // Runs every patron tick: chat bubbles for chatters.
   tickActivity(patron) {
     const a = patron.activity;
+    if (a && a.kind === 'admire' && a.until && !a.reacted && this.time.now >= a.until && !patron.moving) {
+      a.reacted = true;
+      this.admireReaction(patron, a.rec);
+    }
     if (a && a.kind === 'chat' && a.chatting && !patron.moving) this.chatBubble(patron);
     // Thirsty for a while: wrap up what they're doing and go for a drink.
     const now = this.time.now;
