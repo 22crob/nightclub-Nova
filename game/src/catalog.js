@@ -228,7 +228,7 @@ export const PROP_TYPES = {
   crates: decorTier('crates', 'Beer Crates', 40, 1, 'crates', 0.15),
   plant: decorTier('plant', 'Potted Fern', 50, 1, 'fern', 0.2),
   woodSpeaker: decorTier('woodSpeaker', 'Wood Speaker', 80, 1, 'woodSpeaker', 0.3),
-  discoBall: decorTier('discoBall', 'Disco Ball', 120, 1, 'disco', 0.45, { lightRig: true }),
+  discoBall: decorTier('discoBall', 'Disco Ball', 120, 1, 'disco', 0.45, { lightRig: true, discoGlow: true }), // glows (createDiscoGlow())
   velvetRope: decorTier('velvetRope', 'Velvet Rope', 90, 2, 'rope', 0.3),
   palm: decorTier('palm', 'Palm Tree', 110, 2, 'palm', 0.35),
   lavaLamp: decorTier('lavaLamp', 'Lava Lamp', 140, 3, 'lava', 0.45),

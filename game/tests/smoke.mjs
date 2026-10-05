@@ -465,6 +465,20 @@ const spot = await page.evaluate(() => {
   return out;
 });
 check('the spotlight shines a beam that turns with it and goes when it is removed', spot.beam && spot.turned && spot.gone, JSON.stringify(spot));
+const disco = await page.evaluate(() => {
+  const s = window.__clubNova.scene.getScene('club');
+  let at = null;
+  for (let gy = 1; gy < s.gridH - 1 && !at; gy++) for (let gx = 1; gx < s.gridW - 1 && !at; gx++) {
+    if (s.footprintValid(s.getFootprint('discoBall', 0, gx, gy), 'discoBall')) at = [gx, gy];
+  }
+  const rec = s.restoreProp('discoBall', 0, at);
+  const out = { glow: !!rec.discoGlow && rec.discoGlow.parts.length >= 3 && rec.discoGlow.parts.every((p) => p.active) };
+  const parts = rec.discoGlow.parts;
+  s.removeProp(rec);
+  out.gone = parts.every((p) => !p.active);
+  return out;
+});
+check('the disco ball glows (halo, rays, sparkles), and the glow goes when it is removed', disco.glow && disco.gone, JSON.stringify(disco));
 
 // Zoom buttons change the zoom and stay within limits.
 const zoom0 = await page.evaluate(() => window.__clubNova.scene.getScene('club').world.scaleX);

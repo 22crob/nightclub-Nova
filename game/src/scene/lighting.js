@@ -10,6 +10,17 @@ import { MOOD_LIGHTING, TILE_H, TILE_W, WALL_HEIGHT } from '../config.js';
 
 const POOL_KEY = 'lightPool';
 const BEAM_KEY = 'spotBeam';
+const SPARKLE_KEY = 'sparkle';
+
+// The disco ball's glow (see createDiscoGlow()): the ball's centre and
+// radius on its sprite (px in the rendered image, measured from
+// decor_disco_*.png, the same at every facing), the halo size (x radius),
+// colours and how fast they change, rays and sparkles.
+const DISCO = {
+  ball: [36, 36], radius: 31, halo: 4.2,
+  colors: [0xff4de0, 0x4de0ff, 0xfff34d], colorMs: 1600,
+  rayLength: 120, rayWidth: 26, spinMs: 9000, sparkles: 5,
+};
 
 // The spotlight's beam (see createSpotBeam()), in screen px: length, width
 // at its open end, brightness, and how far it sways (radians).
@@ -170,10 +181,106 @@ export class LightingMixin {
     return { parts, tweens };
   }
 
-  destroySpotBeam(rec) {
-    if (!rec.spotBeam) return;
-    rec.spotBeam.tweens.forEach((t) => t.remove());
-    rec.spotBeam.parts.forEach((p) => p.destroy());
-    rec.spotBeam = null;
+
+  // --- The disco ball's glow --------------------------------------------------
+
+  // A four-pointed twinkle.
+  registerSparkleTexture() {
+    if (this.textures.exists(SPARKLE_KEY)) return;
+    const g = this.add.graphics();
+    const r = 16;
+    g.fillStyle(0xffffff, 1);
+    g.fillTriangle(r - 3, r, r + 3, r, r, 0);
+    g.fillTriangle(r - 3, r, r + 3, r, r, 2 * r);
+    g.fillTriangle(r, r - 3, r, r + 3, 0, r);
+    g.fillTriangle(r, r - 3, r, r + 3, 2 * r, r);
+    g.fillCircle(r, r, 3.5);
+    g.generateTexture(SPARKLE_KEY, 2 * r, 2 * r);
+    g.destroy();
+  }
+
+  // The disco ball glows: a halo behind it slowly changing colour, rays of
+  // coloured light turning around it, and sparkles twinkling on its mirrors.
+  createDiscoGlow(rec) {
+    const go = rec.gameObject;
+    if (!go || !go.frame || typeof go.setTexture !== 'function') return null;
+    this.registerLightTexture();
+    this.registerBeamTexture();
+    this.registerSparkleTexture();
+    const [bx, by] = DISCO.ball;
+    const x = go.x + (bx - go.originX * go.frame.width) * go.scaleX;
+    const y = go.y + (by - go.originY * go.frame.height) * go.scaleY;
+    const r = DISCO.radius * go.scaleY;
+    const behind = go.baseDepth - 0.0005;
+    const front = go.baseDepth + 0.004;
+    const parts = [];
+    const tweens = [];
+    const add = (obj, depth) => {
+      obj.setBlendMode(Phaser.BlendModes.ADD).setDepth(depth);
+      this.propLayer.add(obj);
+      parts.push(obj);
+      return obj;
+    };
+    // Rays: thin beams spinning slowly round the ball, in turns of colour.
+    const rays = this.add.container(x, y);
+    DISCO.colors.forEach((color, i) => {
+      for (let k = 0; k < 2; k++) {
+        const ray = this.add.image(0, 0, BEAM_KEY).setOrigin(0, 0.5).setTint(color)
+          .setDisplaySize(DISCO.rayLength, DISCO.rayWidth).setAlpha(0.55)
+          .setRotation(((i * 2 + k) / (DISCO.colors.length * 2)) * Math.PI * 2);
+        ray.setBlendMode(Phaser.BlendModes.ADD);
+        rays.add(ray);
+      }
+    });
+    rays.setScale(1, 0.75); // a little flattened, like light thrown round the room
+    add(rays, behind);
+    tweens.push(this.tweens.add({ targets: rays, angle: 360, duration: DISCO.spinMs, repeat: -1, ease: 'Linear' }));
+    // The halo, cycling through the colours.
+    const halo = add(this.add.image(x, y, POOL_KEY).setDisplaySize(r * DISCO.halo, r * DISCO.halo).setAlpha(0.8), behind);
+    const cycle = { t: 0 };
+    tweens.push(this.tweens.add({
+      targets: cycle, t: DISCO.colors.length, duration: DISCO.colorMs * DISCO.colors.length, repeat: -1,
+      onUpdate: () => {
+        const i = Math.floor(cycle.t) % DISCO.colors.length;
+        const a = Phaser.Display.Color.ValueToColor(DISCO.colors[i]);
+        const b = Phaser.Display.Color.ValueToColor(DISCO.colors[(i + 1) % DISCO.colors.length]);
+        const c = Phaser.Display.Color.Interpolate.ColorWithColor(a, b, 100, (cycle.t % 1) * 100);
+        halo.setTint(Phaser.Display.Color.GetColor(c.r, c.g, c.b));
+      },
+    }));
+    // Sparkles popping up here and there on the mirrors.
+    for (let i = 0; i < DISCO.sparkles; i++) {
+      const s = add(this.add.image(x, y, SPARKLE_KEY).setScale(0), front);
+      const place = () => {
+        const ang = Math.random() * Math.PI * 2;
+        const d = Math.sqrt(Math.random()) * r * 0.85;
+        s.setPosition(x + Math.cos(ang) * d, y + Math.sin(ang) * d);
+      };
+      place();
+      tweens.push(this.tweens.add({
+        targets: s, scale: { from: 0, to: 0.45 + Math.random() * 0.25 }, duration: 260, yoyo: true,
+        repeat: -1, repeatDelay: 600 + Math.random() * 1800, delay: Math.random() * 2000, onRepeat: place,
+      }));
+    }
+    this.propLayer.sort('depth');
+    return { parts, tweens };
+  }
+
+  // Removes the spotlight's beam or the disco ball's glow.
+  destroyGlowFx(rec) {
+    for (const key of ['spotBeam', 'discoGlow']) {
+      const fx = rec[key];
+      if (!fx) continue;
+      fx.tweens.forEach((t) => t.remove());
+      fx.parts.forEach((p) => p.destroy());
+      rec[key] = null;
+    }
+  }
+
+  // Adds the glow a placed prop gives off, if any (spotlight, disco ball).
+  createGlowFx(rec) {
+    const def = PROP_TYPES[rec.type];
+    if (def.spotBeam) rec.spotBeam = this.createSpotBeam(rec);
+    if (def.discoGlow) rec.discoGlow = this.createDiscoGlow(rec);
   }
 }

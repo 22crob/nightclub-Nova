@@ -116,7 +116,8 @@ export class PlacementMixin {
     if (placed.lightPool) placed.lightPool.setPosition(sx, sy);
     if (placed.lightRig) placed.lightRig.container.setPosition(sx, sy);
     this.setPropDepth(placed.gameObject, placed.type, newTiles, placed.frontObject, placed.facing);
-    if (placed.spotBeam) { this.destroySpotBeam(placed); placed.spotBeam = this.createSpotBeam(placed); }
+    this.destroyGlowFx(placed);
+    this.createGlowFx(placed); // the glow follows the turned prop
     this.positionStaff(placed);
     this.saveGame();
   }
@@ -240,7 +241,7 @@ export class PlacementMixin {
     for (const [tx, ty] of tiles) {
       this.placed[`${tx},${ty}`] = record;
     }
-    if (def.spotBeam) record.spotBeam = this.createSpotBeam(record); // the spotlight shines (lighting.js)
+    this.createGlowFx(record); // a spotlight or disco ball shines (lighting.js)
     if (fromInventory) this.placedFromInventory(record);
 
     SFX.place();
@@ -299,7 +300,7 @@ export class PlacementMixin {
       placed.label.destroy();
     }
     if (placed.lightPool) placed.lightPool.destroy();
-    this.destroySpotBeam(placed);
+    this.destroyGlowFx(placed);
     if (placed.lightRig) {
       // Stop the rotation tween before destroying its target — otherwise
       // the tween keeps a dead reference around until it next ticks.
@@ -324,7 +325,7 @@ export class PlacementMixin {
     for (const [tx, ty] of tiles) {
       this.placed[`${tx},${ty}`] = record;
     }
-    if (PROP_TYPES[type].spotBeam) record.spotBeam = this.createSpotBeam(record);
+    this.createGlowFx(record);
     return record;
   }
 
