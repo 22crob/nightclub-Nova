@@ -17,17 +17,19 @@ const randRange = (min, max) => min + Math.random() * (max - min);
 
 export class SeatingMixin {
   // Where seat i of a placed piece is, in (fractional) grid coordinates,
-  // and which way a patron sitting there faces.
+  // and which way a patron sitting there faces (the piece's front, turned by
+  // the seat's own third number if it has one).
   seatSpot(rec, i) {
-    const [bx, by] = PROP_TYPES[rec.type].seats[i];
+    const [bx, by, turn = 0] = PROP_TYPES[rec.type].seats[i];
     const f = (rec.facing * Math.PI) / 180;
+    const look = ((rec.facing + turn) * Math.PI) / 180; // a seat may face its own way
     const x = bx * Math.cos(f) - by * Math.sin(f);
     const y = bx * Math.sin(f) + by * Math.cos(f);
     const cx = rec.tiles.reduce((s, [tx]) => s + tx, 0) / rec.tiles.length;
     const cy = rec.tiles.reduce((s, [, ty]) => s + ty, 0) / rec.tiles.length;
     // Blender +X is game +gx and Blender +Y is game -gy; the front (-Y at
     // rest) turns with the piece.
-    return { gx: cx + x, gy: cy - y, front: [Math.round(Math.sin(f)), Math.round(Math.cos(f))] };
+    return { gx: cx + x, gy: cy - y, front: [Math.round(Math.sin(look)), Math.round(Math.cos(look))] };
   }
 
   // The walkable tile next to the piece that is closest to just in front
@@ -122,7 +124,12 @@ export class SeatingMixin {
       c.patronDir = facingCamera ? 'front' : 'back';
       c.scaleX = (fx !== 0 ? -1 : 1) * patron.scaleVariance;
     }
-    c.setDepth(rec.gameObject.baseDepth + (facingCamera ? 0.003 : 0.001));
+    // On a piece whose seats face different ways (benches facing each
+    // other, an L sectional), guests go between its layers, nearer ones on
+    // top, so a far guest facing the camera can't cover a near one.
+    const mixed = def.seats.some((seat) => (seat[2] || 0) !== (def.seats[0][2] || 0));
+    if (mixed) c.setDepth(rec.gameObject.baseDepth + 0.0015 + (spot.gx + spot.gy - rec.anchor[0] - rec.anchor[1]) * 0.0001);
+    else c.setDepth(rec.gameObject.baseDepth + (facingCamera ? 0.003 : 0.001));
     this.propLayer.sort('depth');
     this.setPatronAnimation(patron, 'sit');
     this.tweens.add({

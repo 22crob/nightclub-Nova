@@ -1106,6 +1106,26 @@ check('sitting cheers a patron up', seating.funUp);
 check('a seated patron plays the sit animation', seating.sitAnim);
 check('selling or turning seating gets everyone up', seating.freed);
 
+// The newer booths and sofas: every one has its art; a seat can face its
+// own way (the Glow Lounge's two benches face each other); the Wood Lounge
+// takes 3 x 2 tiles.
+const moreSeats = await page.evaluate(() => {
+  const s = window.__clubNova.scene.getScene('club');
+  const keys = ['tikiHut', 'iglooBooth', 'glowLounge', 'woodLounge', 'tulipLounge', 'birdcageBooth', 'discoStage', 'throneBooth',
+    'shellBooth', 'galaxyPods', 'donutLounge', 'gardenGazebo', 'fireSectional', 'cloudBed', 'kissSofa', 'bathtubSofa',
+    'cruiserSofa', 'decoSofa', 'chesterfield', 'beerBench', 'cubeBench', 'rattanSeat'];
+  const missing = keys.filter((k) => !s.hasLayerSprites(k));
+  const lounge = s.restoreProp('glowLounge', 90, [12, 1]);
+  const fronts = lounge ? [0, 2].map((i) => s.seatSpot(lounge, i).front) : null;
+  const wood = s.restoreProp('woodLounge', 0, [1, 13]);
+  const out = { missing, fronts, woodTiles: wood ? wood.tiles.length : 0 };
+  for (const rec of [lounge, wood]) if (rec) s.removeProp(rec);
+  return out;
+});
+check('all 22 new booths and sofas have their art', moreSeats.missing.length === 0, moreSeats.missing.join(', ') || '22 of 22');
+check('a booth\'s seats can face each other (Glow Lounge)', moreSeats.fronts && moreSeats.fronts[0][0] === -moreSeats.fronts[1][0] && moreSeats.fronts[0][1] === -moreSeats.fronts[1][1] && (moreSeats.fronts[0][0] !== 0 || moreSeats.fronts[0][1] !== 0), JSON.stringify(moreSeats.fronts));
+check('the Wood Lounge takes 3 x 2 tiles', moreSeats.woodTiles === 6, String(moreSeats.woodTiles));
+
 // Decorations: all sixteen have their sprites, and one can be placed and
 // rotated like any other prop.
 const decor = await page.evaluate(() => {

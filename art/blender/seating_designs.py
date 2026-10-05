@@ -96,21 +96,24 @@ def tiki_hut():
         x = -0.9 + i * 0.15
         cylinder(f'BackBamboo{i}', x, 0.78, 0.08, 1.0 + 0.04 * (i % 2), 0.05, bamboo, verts=12)
         cylinder(f'BackKnot{i}', x, 0.78, 0.62, 0.64, 0.055, dark, verts=12)
+    # A slanted thatch awning over the bench, on bamboo poles: tall at the
+    # back, shorter at the front.
     for x in (-1.0, 1.0):
-        for y in (-0.88, 0.85):
-            name = 'BackPost' if y > 0 else 'Post'
-            cylinder(f'{name}{x}{y}', x, y, 0.08, 1.95, 0.05, bamboo, verts=12)
-    roof = cone('CanopyRoof', 0, 0, 1.9, 2.55, 1.55, 0.02, straw, verts=4)
-    roof.rotation_euler = (0, 0, math.radians(45))
-    fringe = cone('CanopyFringe', 0, 0, 1.78, 1.92, 1.6, 1.52, straw2, verts=4)
-    fringe.rotation_euler = (0, 0, math.radians(45))
+        cylinder(f'BackPost{x}', x, 0.88, 0.08, 2.5, 0.05, bamboo, verts=12)
+        cylinder(f'Post{x}', x, 0.0, 0.08, 2.15, 0.05, bamboo, verts=12)
+    roof = box('CanopyRoof', -1.15, 1.15, -0.2, 1.1, -0.05, 0.05, straw, bevel=0.03)
+    roof.location = (0, 0.45, 2.32)
+    roof.rotation_euler = (math.radians(20), 0, 0)
+    fringe = box('CanopyFringe', -1.15, 1.15, -0.04, 0.04, -0.12, 0.0, straw2, bevel=0.02)
+    fringe.location = (0, -0.18, 2.1)
     # A square tiki table with a flaming volcano bowl.
     box('TableBase', -0.12, 0.12, -0.42, -0.18, 0.08, 0.4, dark, bevel=0.02)
     box('Table', -0.38, 0.38, -0.55, -0.05, 0.4, 0.46, deck, bevel=0.015)
     cone('Volcano', 0, -0.3, 0.46, 0.62, 0.12, 0.05, mat('#6b4423', rough=0.8), verts=20)
     cylinder('Lava', 0, -0.3, 0.62, 0.64, 0.05, neon('Lava', (1.0, 0.35, 0.05), 4), verts=16)
-    for x in (-0.95, 0.95):
-        cone(f'Flame{x}', x, -0.88, 1.95, 2.1, 0.05, 0.0, neon('TorchFire', (1.0, 0.4, 0.05), 4), verts=10)
+    for x in (-1.0, 1.0):
+        cone(f'TorchCup{x}', x, 0.0, 2.15, 2.25, 0.05, 0.08, dark, verts=12)
+        cone(f'Flame{x}', x, 0.0, 2.25, 2.42, 0.07, 0.0, neon('TorchFire', (1.0, 0.4, 0.05), 4), verts=10)
     return seats((-0.55, 0.45), (0, 0.45), (0.55, 0.45))
 
 
@@ -189,21 +192,21 @@ def tulip_lounge():
     """White shell chairs round a lime pedestal table, facing each other."""
     white = principled('ShellWhite', srgb('#f6f6f8'), rough=0.2)
     lime = principled('Lime', srgb('#c8e83a'), rough=0.25, emission=srgb('#a8d020'), emission_strength=0.15)
-    cylinder('TableFoot', 0, 0, 0, 0.04, 0.24, white, verts=32)
-    cone('TableStem', 0, 0, 0.04, 0.42, 0.12, 0.04, white, verts=24)
-    cylinder('Table', 0, 0, 0.42, 0.48, 0.36, lime, verts=40)
+    cylinder('TableFoot', 0, 0, 0, 0.04, 0.3, white, verts=32)
+    cone('TableStem', 0, 0, 0.04, 0.46, 0.14, 0.05, white, verts=24)
+    cylinder('Table', 0, 0, 0.46, 0.53, 0.46, lime, verts=40)
     for i, (x, y) in enumerate([(-0.1, 0.08), (0.12, -0.06)]):
-        cone(f'Glass{i}', x, y, 0.48, 0.6, 0.03, 0.045, mat('#ffffff', rough=0.05, glow=0.3, alpha=0.7), verts=12)
+        cone(f'Glass{i}', x, y, 0.53, 0.65, 0.03, 0.045, mat('#ffffff', rough=0.05, glow=0.3, alpha=0.7), verts=12)
     out = []
     for i, (deg, rot) in enumerate([(90, 0), (270, 180), (180, 90), (0, 270)]):
         a = math.radians(deg)
-        cx, cy = 0.72 * math.cos(a), 0.72 * math.sin(a)
-        cylinder(f'ChairFoot{i}', cx, cy, 0, 0.03, 0.16, white, verts=24)
-        cylinder(f'ChairStem{i}', cx, cy, 0.03, 0.28, 0.03, white, verts=12)
-        cylinder(f'Seat{i}', cx, cy, 0.28, 0.4, 0.22, white, verts=32)
-        cylinder(f'Cushion{i}', cx, cy, 0.4, 0.44, 0.19, lime, verts=32)
+        cx, cy = 0.86 * math.cos(a), 0.86 * math.sin(a)
+        cylinder(f'ChairFoot{i}', cx, cy, 0, 0.03, 0.19, white, verts=24)
+        cylinder(f'ChairStem{i}', cx, cy, 0.03, 0.28, 0.035, white, verts=12)
+        cylinder(f'Seat{i}', cx, cy, 0.28, 0.4, 0.26, white, verts=32)
+        cylinder(f'Cushion{i}', cx, cy, 0.4, 0.44, 0.23, lime, verts=32)
         # The shell back, round the far side of the seat from the table.
-        arc_block(f'BackShell{i}', cx, cy, 0.17, 0.23, deg - 62, deg + 62, 0.32, 0.72, white, bevel=0.03)
+        arc_block(f'BackShell{i}', cx, cy, 0.21, 0.27, deg - 62, deg + 62, 0.32, 0.76, white, bevel=0.03)
         out.append((round(cx * 0.95, 3), round(cy * 0.95, 3), rot))
     return seats(*out)
 
@@ -352,10 +355,10 @@ def garden_gazebo():
     for i in range(6):
         a = math.radians(i * 60 + 30)
         x, y = 1.0 * math.cos(a), 1.0 * math.sin(a)
-        cylinder(f'{"BackPost" if y > 0 else "Post"}{i}', x, y, 0.1, 1.9, 0.04, white, verts=12)
-    cone('CanopyRoof', 0, 0, 1.85, 2.5, 1.28, 0.03, mint, verts=6)
-    cone('CanopyEave', 0, 0, 1.8, 1.88, 1.3, 1.25, white, verts=6)
-    sphere('CanopyFinial', 0, 0, 2.55, 0.06, white)
+        cylinder(f'{"BackPost" if y > 0 else "Post"}{i}', x, y, 0.1, 2.55, 0.04, white, verts=12)
+    cone('CanopyRoof', 0, 0, 2.5, 3.15, 1.28, 0.03, mint, verts=6)
+    cone('CanopyEave', 0, 0, 2.45, 2.53, 1.3, 1.25, white, verts=6)
+    sphere('CanopyFinial', 0, 0, 3.2, 0.06, white)
     box('Seat', -0.8, 0.8, 0.22, 0.7, 0.1, 0.44, principled('GazeboCushion', srgb('#f2ead6'), rough=0.85), bevel=0.05)
     for k in range(7):
         x = -0.75 + k * 0.25

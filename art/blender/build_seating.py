@@ -9,8 +9,9 @@ Run from the repo root with a Python that has the `bpy` module and pillow:
 Seating is drawn in two layers, and seated patrons are drawn between them:
 'front' always goes on top. Seats, arms and tables are always in front.
 Parts whose name starts with "Back" (backrests) are behind the patrons
-unless, at that facing, they stand between the patrons and the camera;
-so a backrest moves to the front layer when the piece faces away.
+unless, at that facing, they are nearer the camera than the seat they
+belong to (the closest one); so a backrest moves to the front layer when
+its seat faces away.
 
 Parts whose name starts with "Canopy" (roofs, arches overhead) are always
 behind the patrons.
@@ -253,9 +254,15 @@ def layers_at(root, seats):
         a = math.radians(-45 - facing)
         to_cam = (math.cos(a), math.sin(a))
         depth = lambda x, y: x * to_cam[0] + y * to_cam[1]
-        seat_depth = max((depth(s[0], s[1]) for s in seats), default=0.0)
+        def nearer_than_its_seat(o):
+            # A backrest goes in front when it is nearer the camera than the
+            # seat it belongs to (the closest one), so with two rows facing
+            # each other the near row's backs hide the guests sitting there.
+            x, y = centre[o].x, centre[o].y
+            sx, sy = min(seats, key=lambda s: (s[0] - x) ** 2 + (s[1] - y) ** 2)[:2]
+            return depth(x, y) > depth(sx, sy) + 0.02
         front = [o for o in meshes if not o.name.startswith(('Back', 'Canopy'))
-                 or (o.name.startswith('Back') and depth(centre[o].x, centre[o].y) > seat_depth + 0.08)]
+                 or (o.name.startswith('Back') and nearer_than_its_seat(o))]
         return {'back': [o for o in meshes if o not in front], 'front': front}
     return at
 

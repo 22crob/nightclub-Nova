@@ -17,6 +17,28 @@ import seat_leatherCouch from './assets/sprites/seat_leatherCouch.json';
 import seat_velvetBooth from './assets/sprites/seat_velvetBooth.json';
 import seat_blackBooth from './assets/sprites/seat_blackBooth.json';
 import seat_goldBooth from './assets/sprites/seat_goldBooth.json';
+import seat_beerBench from './assets/sprites/seat_beerBench.json';
+import seat_chesterfield from './assets/sprites/seat_chesterfield.json';
+import seat_cruiserSofa from './assets/sprites/seat_cruiserSofa.json';
+import seat_woodLounge from './assets/sprites/seat_woodLounge.json';
+import seat_tikiHut from './assets/sprites/seat_tikiHut.json';
+import seat_decoSofa from './assets/sprites/seat_decoSofa.json';
+import seat_tulipLounge from './assets/sprites/seat_tulipLounge.json';
+import seat_bathtubSofa from './assets/sprites/seat_bathtubSofa.json';
+import seat_glowLounge from './assets/sprites/seat_glowLounge.json';
+import seat_fireSectional from './assets/sprites/seat_fireSectional.json';
+import seat_kissSofa from './assets/sprites/seat_kissSofa.json';
+import seat_gardenGazebo from './assets/sprites/seat_gardenGazebo.json';
+import seat_cubeBench from './assets/sprites/seat_cubeBench.json';
+import seat_iglooBooth from './assets/sprites/seat_iglooBooth.json';
+import seat_donutLounge from './assets/sprites/seat_donutLounge.json';
+import seat_rattanSeat from './assets/sprites/seat_rattanSeat.json';
+import seat_birdcageBooth from './assets/sprites/seat_birdcageBooth.json';
+import seat_shellBooth from './assets/sprites/seat_shellBooth.json';
+import seat_cloudBed from './assets/sprites/seat_cloudBed.json';
+import seat_discoStage from './assets/sprites/seat_discoStage.json';
+import seat_galaxyPods from './assets/sprites/seat_galaxyPods.json';
+import seat_throneBooth from './assets/sprites/seat_throneBooth.json';
 import decor_fern from './assets/sprites/decor_fern.json';
 import decor_palm from './assets/sprites/decor_palm.json';
 import decor_crates from './assets/sprites/decor_crates.json';
@@ -124,13 +146,45 @@ function decorTier(key, label, cost, unlockLevel, model, fanRate, extra = {}) {
 // seated patrons between them; unlike a bar, the front layer is always the
 // nearer one, because the render already moved any backrest that faces the
 // camera into it. `seats` are seat positions in Blender units at facing 0,
-// relative to the piece's centre; `sitLift` raises a seated patron (stools).
+// relative to the piece's centre, with an optional third number for the way
+// that seat faces (degrees from the piece's front, like its facings); `sitLift`
+// raises a seated patron (stools).
 const SEAT_SPRITES = {
   woodStool: seat_woodStool, couch: seat_couch, candleTable: seat_candleTable, stool: seat_stool,
   leatherCouch: seat_leatherCouch, velvetBooth: seat_velvetBooth, blackBooth: seat_blackBooth, goldBooth: seat_goldBooth,
+  // More booths and sofas (art/blender/seating_designs.py), each its own shape.
+  beerBench: seat_beerBench,
+  chesterfield: seat_chesterfield,
+  cruiserSofa: seat_cruiserSofa,
+  woodLounge: seat_woodLounge,
+  tikiHut: seat_tikiHut,
+  decoSofa: seat_decoSofa,
+  tulipLounge: seat_tulipLounge,
+  bathtubSofa: seat_bathtubSofa,
+  glowLounge: seat_glowLounge,
+  fireSectional: seat_fireSectional,
+  kissSofa: seat_kissSofa,
+  gardenGazebo: seat_gardenGazebo,
+  cubeBench: seat_cubeBench,
+  iglooBooth: seat_iglooBooth,
+  donutLounge: seat_donutLounge,
+  rattanSeat: seat_rattanSeat,
+  birdcageBooth: seat_birdcageBooth,
+  shellBooth: seat_shellBooth,
+  cloudBed: seat_cloudBed,
+  discoStage: seat_discoStage,
+  galaxyPods: seat_galaxyPods,
+  throneBooth: seat_throneBooth,
 };
 const SQUARE_3X3 = [[0, 0], [1, 0], [2, 0], [0, 1], [1, 1], [2, 1], [0, 2], [1, 2], [2, 2]];
 const BOOTH_3X3 = { 0: SQUARE_3X3, 90: SQUARE_3X3, 180: SQUARE_3X3, 270: SQUARE_3X3 };
+// The Wood Lounge: 3 wide and 2 deep, so a row of them makes one long booth.
+const LOUNGE_3X2 = {
+  0: [[0, 0], [1, 0], [2, 0], [0, 1], [1, 1], [2, 1]],
+  90: [[0, 0], [0, 1], [0, 2], [1, 0], [1, 1], [1, 2]],
+  180: [[0, 0], [1, 0], [2, 0], [0, 1], [1, 1], [2, 1]],
+  270: [[0, 0], [0, 1], [0, 2], [1, 0], [1, 1], [1, 2]],
+};
 function seatTier(key, label, cost, unlockLevel, model, fanRate, footprint = null) {
   const meta = SEAT_SPRITES[model];
   const base = `seat_${model}`;
@@ -223,6 +277,29 @@ export const PROP_TYPES = {
   vipLounge: seatTier('vipLounge', 'Red Velvet Booth', 280, 4, 'velvetBooth', 0.5, BOOTH_3X3),
   blackBooth: seatTier('blackBooth', 'Black Leather Booth', 360, 6, 'blackBooth', 0.6, BOOTH_3X3),
   goldBooth: seatTier('goldBooth', 'Gold VIP Booth', 500, 8, 'goldBooth', 0.8, BOOTH_3X3),
+  // More booths and sofas, each its own shape, a couple a level up to 20.
+  beerBench: seatTier('beerBench', 'Beer Hall Bench', 120, 2, 'beerBench', 0.25, BOOTH_FOOTPRINT),
+  chesterfield: seatTier('chesterfield', 'Chesterfield', 180, 3, 'chesterfield', 0.3, BOOTH_FOOTPRINT),
+  cruiserSofa: seatTier('cruiserSofa', 'Cruiser Car Seat', 220, 4, 'cruiserSofa', 0.35, BOOTH_FOOTPRINT),
+  woodLounge: seatTier('woodLounge', 'Wood Lounge', 300, 4, 'woodLounge', 0.45, LOUNGE_3X2),
+  tikiHut: seatTier('tikiHut', 'Tiki Hut', 380, 5, 'tikiHut', 0.5, BOOTH_3X3),
+  decoSofa: seatTier('decoSofa', 'Art Deco Sofa', 260, 5, 'decoSofa', 0.4, BOOTH_FOOTPRINT),
+  tulipLounge: seatTier('tulipLounge', 'Tulip Lounge', 420, 6, 'tulipLounge', 0.55, BOOTH_3X3),
+  bathtubSofa: seatTier('bathtubSofa', 'Bathtub Sofa', 300, 6, 'bathtubSofa', 0.45, BOOTH_FOOTPRINT),
+  glowLounge: seatTier('glowLounge', 'Glow Lounge', 520, 7, 'glowLounge', 0.6, BOOTH_3X3),
+  fireSectional: seatTier('fireSectional', 'Fire Pit Sectional', 480, 7, 'fireSectional', 0.6, BOOTH_3X3),
+  kissSofa: seatTier('kissSofa', 'Kiss Sofa', 350, 8, 'kissSofa', 0.5, BOOTH_FOOTPRINT),
+  gardenGazebo: seatTier('gardenGazebo', 'Garden Gazebo', 600, 9, 'gardenGazebo', 0.7, BOOTH_3X3),
+  cubeBench: seatTier('cubeBench', 'LED Cube Bench', 380, 9, 'cubeBench', 0.55, BOOTH_FOOTPRINT),
+  iglooBooth: seatTier('iglooBooth', 'Igloo', 700, 10, 'iglooBooth', 0.75, BOOTH_3X3),
+  donutLounge: seatTier('donutLounge', 'Donut Lounge', 750, 11, 'donutLounge', 0.8, BOOTH_3X3),
+  rattanSeat: seatTier('rattanSeat', 'Peacock Love Seat', 450, 11, 'rattanSeat', 0.6, BOOTH_FOOTPRINT),
+  birdcageBooth: seatTier('birdcageBooth', 'Birdcage', 850, 12, 'birdcageBooth', 0.85, BOOTH_3X3),
+  shellBooth: seatTier('shellBooth', 'Giant Clam', 900, 13, 'shellBooth', 0.9, BOOTH_3X3),
+  cloudBed: seatTier('cloudBed', 'Cloud Nine Bed', 1000, 14, 'cloudBed', 0.95, BOOTH_3X3),
+  discoStage: seatTier('discoStage', 'Disco Stage', 1200, 16, 'discoStage', 1.0, BOOTH_3X3),
+  galaxyPods: seatTier('galaxyPods', 'Galaxy Egg Pods', 1350, 18, 'galaxyPods', 1.1, BOOTH_3X3),
+  throneBooth: seatTier('throneBooth', 'Royal Thrones', 1500, 20, 'throneBooth', 1.2, BOOTH_3X3),
   // Decorations, simple to fancy. 'plant', 'discoBall' and 'neonSign' are
   // the keys of the original placeholder decorations, kept for old saves.
   crates: decorTier('crates', 'Beer Crates', 40, 1, 'crates', 0.15),
@@ -295,7 +372,8 @@ export const STAFF_TYPES = {
 // place more Floors-category items, which is what actually grows capacity.
 // The VIP booths: the only seats you can show a guest to from their card
 // (see seatGuest() in scene/guests.js), like Nightclub City's booths.
-export const VIP_BOOTHS = new Set(['vipLounge', 'blackBooth', 'goldBooth']);
+export const VIP_BOOTHS = new Set(['vipLounge', 'blackBooth', 'goldBooth',
+  'woodLounge', 'tikiHut', 'tulipLounge', 'glowLounge', 'fireSectional', 'gardenGazebo', 'iglooBooth', 'donutLounge', 'birdcageBooth', 'shellBooth', 'cloudBed', 'discoStage', 'galaxyPods', 'throneBooth']);
 
 // Expanding adds one row of floor along one of the room's two open edges at
 // a time (see expandClub()). How long a wall can get depends on your level:
