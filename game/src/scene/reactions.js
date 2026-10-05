@@ -86,6 +86,61 @@ export class ReactionsMixin {
       g.fillCircle(r - 8, r - 12, 4); // cherry
     });
 
+    // Angry: a red face with a frown, and a shaking fist beside it.
+    make('react_mad', (g) => {
+      g.fillStyle(0xb81a1a, 1);
+      g.fillCircle(r - 6, r + 2, r - 10);
+      g.fillStyle(0xff4a3a, 1);
+      g.fillCircle(r - 6, r, r - 10);
+      g.lineStyle(3, ink, 1);
+      g.strokeCircle(r - 6, r, r - 10);
+      g.lineStyle(3.5, ink, 1);
+      g.lineBetween(r - 18, r - 9, r - 10, r - 5); // angry brows
+      g.lineBetween(r + 6, r - 9, r - 2, r - 5);
+      g.fillStyle(ink, 1);
+      g.fillCircle(r - 13, r - 1, 2.6);
+      g.fillCircle(r + 1, r - 1, 2.6);
+      g.beginPath();
+      g.arc(r - 6, r + 15, 8, Math.PI * 1.15, Math.PI * 1.85);
+      g.strokePath();
+      // The fist.
+      g.fillStyle(0xffc98a, 1);
+      g.fillRoundedRect(r + 12, r - 4, 17, 16, 5);
+      g.lineStyle(2.5, ink, 1);
+      g.strokeRoundedRect(r + 12, r - 4, 17, 16, 5);
+      g.lineBetween(r + 12, r + 1, r + 29, r + 1);
+      g.lineBetween(r + 18, r - 4, r + 18, r + 1);
+      g.lineBetween(r + 24, r - 4, r + 24, r + 1);
+    });
+
+    // Heart eyes: the happy face with two red hearts for eyes.
+    make('react_hearts', (g) => {
+      face(g);
+      g.fillStyle(0xff2a5a, 1);
+      for (const x of [r - 10, r + 10]) {
+        g.fillCircle(x - 3.5, r - 5, 4.5);
+        g.fillCircle(x + 3.5, r - 5, 4.5);
+        g.fillTriangle(x - 8, r - 3.5, x + 8, r - 3.5, x, r + 5);
+      }
+      g.lineStyle(3.5, ink, 1);
+      g.beginPath();
+      g.arc(r, r + 4, 12, Math.PI * 0.15, Math.PI * 0.85);
+      g.strokePath();
+    });
+
+    // An exclamation mark on an orange badge.
+    make('react_exclaim', (g) => {
+      g.fillStyle(0xff8a1a, 1);
+      g.fillCircle(r, r, r - 4);
+      g.fillStyle(0xffffff, 0.3);
+      g.fillEllipse(r - 8, r - 14, 20, 9);
+      g.lineStyle(3, 0x10233d, 1);
+      g.strokeCircle(r, r, r - 4);
+      g.fillStyle(0xffffff, 1);
+      g.fillRoundedRect(r - 4, r - 17, 8, 22, 3);
+      g.fillCircle(r, r + 13, 4.5);
+    });
+
     // A music note on a purple badge.
     make('react_note', (g) => {
       g.fillStyle(0x8a3cf0, 1);
@@ -106,11 +161,10 @@ export class ReactionsMixin {
   // Pops a reaction icon over a guest's head after a short random delay:
   // it springs up, floats and fades within a second or two. A guest only
   // shows one at a time.
-  popReaction(patron, kind = 'happy', delay = randRange(...REACTIONS.delayMs)) {
+  popReaction(patron, kind = 'happy', delay = randRange(...REACTIONS.delayMs), life = randRange(...REACTIONS.lifeMs)) {
     if (!patron || patron.gone || !this.textures.exists(`react_${kind}`)) return false;
     const now = this.time.now;
     if (now < (patron.reactingUntil || 0)) return false;
-    const life = randRange(...REACTIONS.lifeMs);
     patron.reactingUntil = now + delay + life;
     this.time.delayedCall(delay, () => {
       const c = patron.container;

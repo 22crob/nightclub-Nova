@@ -211,6 +211,7 @@ export class PatronsMixin {
   tickPatrons() {
     const now = this.time.now;
     this.tickSecurity(); // arguments and the guard (see security.js)
+    this.tickBars(); // bartenders serving, impatient customers (bars.js)
     for (let i = this.patrons.length - 1; i >= 0; i--) {
       const patron = this.patrons[i];
       if (patron.gone) continue;
@@ -445,8 +446,9 @@ export class PatronsMixin {
       // Stuck behind someone: find another way, unless it's just the line
       // at the bar, which is worth waiting in.
       if (patron.waits > 6 && !patron.leaving && !patron.queue) { this.pickRoamTarget(patron); patron.path = null; patron.waits = 0; }
-      // Even a line isn't worth being stuck in forever.
-      if (patron.waits > 20 && patron.queue) { this.leaveBarQueue(patron); this.pickRoamTarget(patron); patron.waits = 0; }
+      // Even a line isn't worth being stuck in forever (giving up on a
+      // slow bar is checkBarPatience()).
+      if (patron.waits > 60 && patron.queue) { this.leaveBarQueue(patron); this.pickRoamTarget(patron); patron.waits = 0; }
       return;
     }
     patron.waits = 0;
@@ -513,16 +515,6 @@ export class PatronsMixin {
         }
       },
     });
-  }
-
-  // A patron standing in their place in a bar line: wait facing the
-  // counter, or order if they're at the front.
-  waitInLine(patron) {
-    this.faceBar(patron);
-    this.setPatronAnimation(patron, 'idle');
-    const front = patron.queue.queue[0] === patron;
-    if (front && this.orderDrink(patron)) patron.nextMoveAt = this.time.now + randRange(1200, 2000); // take the drink and go
-    else patron.nextMoveAt = this.time.now + 500; // check again if the line has moved
   }
 
   // Shortest walkable route from (fx, fy) to (tx, ty) as a list of steps

@@ -75,7 +75,7 @@ export class PlacementMixin {
     // occupies; always pivot around its original anchor tile so rotating
     // from a "second" tile doesn't shift the piece.
     if (PROP_TYPES[placed.type].seats) this.releaseSeats(placed); // anyone sitting gets up first
-    if (placed.queue) this.clearBarQueue(placed); // the line moves with the bar
+    this.clearBarQueue(placed); // the line moves with the bar
     const [agx, agy] = placed.anchor;
     const idx = FACINGS.indexOf(placed.facing);
     const newFacing = FACINGS[(idx + 1) % FACINGS.length];
@@ -282,7 +282,7 @@ export class PlacementMixin {
     // A long bar keeps its bartender when one of its units goes.
     const mates = placed.staff && placed.staff.kind === 'bartender' ? this.barGroup(placed).filter((r) => r !== placed) : [];
     if (PROP_TYPES[placed.type].seats) this.releaseSeats(placed);
-    if (placed.queue) this.clearBarQueue(placed); // anyone lined up at a bar wanders off
+    this.clearBarQueue(placed); // anyone lined up at a bar wanders off
     // The record is stored under every tile a multi-tile prop occupies —
     // free all of them, not just the tile that was clicked.
     for (const [tx, ty] of placed.tiles) delete this.placed[`${tx},${ty}`];

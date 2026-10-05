@@ -2,7 +2,7 @@
 // Mixed into ClubScene (see ClubScene.js); `this` is the scene.
 //
 // Every patron has:
-//   - thirst: after THIRST_INTERVAL they want a drink (see orderDrink()).
+//   - thirst: after THIRST_INTERVAL they want a drink (see joinBarQueue() in bars.js).
 //     Going without one for MOOD.thirstGrace makes them unhappy.
 //   - fun (0-100): drains while they're bored; dancing to a live DJ fills it
 //     fast, hanging out somewhere lively fills it slowly.

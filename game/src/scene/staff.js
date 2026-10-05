@@ -8,9 +8,6 @@ import { SFX } from '../sfx.js';
 import { randRange } from '../util.js';
 import { MOOD } from './mood.js';
 
-// How long a bar waits before showing "No bartender!" again.
-const NO_STAFF_NOTICE_MS = 8000;
-
 export class StaffMixin {
   // Every distinct placed prop that takes staff (bars, DJ booths), in a
   // stable order: by type, then position.
@@ -80,11 +77,6 @@ export class StaffMixin {
     return this.barGroup(rec).some((r) => r.staff);
   }
 
-  // Everyone waiting anywhere along a long bar.
-  barGroupQueue(rec) {
-    return this.barGroup(rec).flatMap((r) => r.queue || []);
-  }
-
   // --- Bar layout ---------------------------------------------------------
 
   // For a bar: the counter tile customers order at and the direction its
@@ -130,78 +122,6 @@ export class StaffMixin {
       if (spot && spot[0] === gx && spot[1] === gy) return rec;
     }
     return null;
-  }
-
-  // --- Bar queues ---------------------------------------------------------
-  // rec.queue lists the patrons lined up at a bar, front first; each one's
-  // walk target is their place in the line, and everyone steps up when the
-  // front customer is served or someone leaves the line.
-
-  // Every tile of every staffed bar's line, as "gx,gy" keys: wanderers keep
-  // off them so they don't block the queue.
-  barLineTiles() {
-    const keys = new Set();
-    for (const rec of this.staffableRecords()) {
-      if (!this.isWorked(rec) || PROP_TYPES[rec.type].staff !== 'bartender') continue;
-      for (const [x, y] of this.barQueueTiles(rec)) keys.add(`${x},${y}`);
-    }
-    return keys;
-  }
-
-  // Joins the shortest line at a staffed bar with room. False if none.
-  joinBarQueue(patron) {
-    if (patron.queue) return true;
-    let best = null;
-    for (const rec of this.staffableRecords()) {
-      if (!this.isWorked(rec) || PROP_TYPES[rec.type].staff !== 'bartender') continue;
-      rec.queue = (rec.queue || []).filter((p) => p.queue === rec && !p.gone && !p.leaving);
-      if (rec.queue.length >= this.barQueueTiles(rec).length) continue; // line's full
-      if (!best || rec.queue.length < best.queue.length) best = rec;
-    }
-    if (!best) return false;
-    this.releaseSeat(patron);
-    best.queue.push(patron);
-    patron.queue = best;
-    this.updateQueueTarget(patron);
-    return true;
-  }
-
-  // Points a queued patron at their current place in line.
-  updateQueueTarget(patron) {
-    const rec = patron.queue;
-    const slot = this.barQueueTiles(rec)[rec.queue.indexOf(patron)];
-    if (!slot) { this.leaveBarQueue(patron); return; } // the line got shorter (something placed in it)
-    [patron.targetGx, patron.targetGy] = slot;
-    patron.path = null;
-  }
-
-  leaveBarQueue(patron) {
-    const rec = patron.queue;
-    if (!rec) return;
-    patron.queue = null;
-    rec.queue = (rec.queue || []).filter((p) => p !== patron);
-    for (const p of rec.queue) {
-      this.updateQueueTarget(p);
-      if (!p.moving) p.nextMoveAt = Math.min(p.nextMoveAt, this.time.now + 300); // step up
-    }
-  }
-
-  // A bar was sold, turned or lost its bartender: everyone in its line
-  // goes and does something else.
-  clearBarQueue(rec) {
-    for (const p of rec.queue || []) {
-      p.queue = null;
-      p.targetGx = undefined;
-      p.path = null;
-    }
-    rec.queue = [];
-  }
-
-  // Turns a queued patron to face the bar's counter.
-  faceBar(patron) {
-    const { counter } = this.barLayout(patron.queue);
-    const { sx, sy } = this.gridToScreen(counter[0], counter[1]);
-    this.faceToward(patron, sx, sy);
   }
 
   // --- Hiring -------------------------------------------------------------
@@ -282,9 +202,12 @@ export class StaffMixin {
 
   detachStaff(rec) {
     if (!rec.staff) return;
+    this.releaseBartender(rec.staff);
+    this.tweens.killTweensOf(rec.staff.container);
     rec.staff.container.destroy();
     rec.staff = null;
-    if (!this.isWorked(rec)) this.clearBarQueue(rec); // the line stays while a mate still works the bar
+    // The line stays while a mate still works the bar.
+    if (!this.isWorked(rec)) for (const unit of this.barGroup(rec)) this.clearBarQueue(unit);
   }
 
   createStaffSprite(type) {
@@ -319,6 +242,10 @@ export class StaffMixin {
     let faceOut;
     let depth;
     if (rec.staff.kind === 'bartender') {
+      // Back at their own unit (see bars.js for walking along the bar).
+      this.releaseBartender(rec.staff);
+      this.tweens.killTweensOf(c);
+      rec.staff.atUnit = rec;
       const { aisle, out } = this.barLayout(rec);
       [gx, gy] = aisle;
       faceOut = out || [0, 1];
@@ -353,29 +280,6 @@ export class StaffMixin {
   }
 
   // --- Drinks and wages ---------------------------------------------------
-
-  // A patron standing at a bar's customer side orders a drink. A staffed bar
-  // sells it (the club's main income); an unstaffed one can't. Returns true
-  // if a drink was bought.
-  orderDrink(patron) {
-    const rec = this.barServingTile(patron.gx, patron.gy);
-    if (!rec) return false;
-    const now = this.time.now;
-    if (!this.isWorked(rec)) {
-      this.clearBarQueue(rec);
-      if (!rec.lastNoStaffNotice || now - rec.lastNoStaffNotice > NO_STAFF_NOTICE_MS) {
-        rec.lastNoStaffNotice = now;
-        const { sx, sy } = this.footprintCenter(rec.tiles);
-        this.floatText(sx, sy - PATRON_POPUP_Y * 1.2, 'No bartender!', '#ff8a8a');
-      }
-      patron.nextMoveAt = Math.min(patron.nextMoveAt, now + 1500); // give up and wander off
-      patron.thirstyAt = now + 8000; // try again a bit later
-      return false;
-    }
-    this.leaveBarQueue(patron); // served: the line steps up
-    this.serveDrink(rec, patron);
-    return true;
-  }
 
   // A patron gets a drink from a staffed bar and pays for it.
   serveDrink(rec, patron) {

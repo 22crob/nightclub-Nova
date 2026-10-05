@@ -291,6 +291,15 @@ export class ActivitiesMixin {
   tickActivity(patron) {
     const a = patron.activity;
     if (a && a.kind === 'chat' && a.chatting && !patron.moving) this.chatBubble(patron);
+    // Thirsty for a while: wrap up what they're doing and go for a drink.
+    const now = this.time.now;
+    if (a && a.kind !== 'drink' && !patron.queue && !patron.arguing && !patron.leaving
+      && now >= patron.thirstyAt + VISIT.thirstGraceMs && now >= (patron.drinkTryAt || 0)) {
+      patron.drinkTryAt = now + 8000; // the bars may be full: try again in a bit
+      patron.wantActivity = 'drink';
+      a.until = Math.min(a.until || now, now);
+      patron.nextMoveAt = Math.min(patron.nextMoveAt, now + randRange(300, 1500));
+    }
     // Dancers enjoying themselves show it now and then (reactions.js).
     const anim = patron.container.patronAnimState;
     if (!patron.moving && typeof anim === 'string' && anim.startsWith('dance')) this.tickDanceJoy(patron);

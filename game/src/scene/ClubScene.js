@@ -30,6 +30,7 @@ import { InventoryMixin } from './inventory.js';
 import { ActivitiesMixin } from './activities.js';
 import { SecurityMixin } from './security.js';
 import { ReactionsMixin } from './reactions.js';
+import { BarsMixin } from './bars.js';
 import { Music } from '../music.js';
 import { applyMixins } from './applyMixins.js';
 
@@ -361,4 +362,5 @@ applyMixins(ClubScene, [
   CelebritiesMixin,
   SecurityMixin,
   ReactionsMixin,
+  BarsMixin,
 ]);

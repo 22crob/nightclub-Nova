@@ -284,8 +284,11 @@ export class GuestsMixin {
       this.showToast('🍹 Nobody is waiting at this bar right now.');
       return 0;
     }
-    for (const p of line) this.serveDrink(p.queue || rec, p);
-    for (const unit of this.barGroup(rec)) this.clearBarQueue(unit);
+    for (const p of line) {
+      const unit = p.queue || rec;
+      this.leaveBarQueue(p);
+      this.serveDrink(unit, p);
+    }
     rec.staff.bottomsUpAt = this.time.now + BOTTOMS_UP.cooldownMs;
     const { x, y } = rec.staff.container;
     this.floatText(x, y - CHARACTER_DISPLAY_HEIGHT * 1.1, 'SERVED!!', '#ff7ae0');

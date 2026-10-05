@@ -114,6 +114,7 @@ export const VISIT = {
   chatMs: [30000, 75000],
   wanderMs: [10000, 25000],
   overstayMs: 120000,
+  thirstGraceMs: 5000, // thirsty this long, they stop what they're doing for a drink
 };
 // Kinds of guest: how much each likes each activity (relative weights), so
 // they don't all follow the same routine.
@@ -193,6 +194,15 @@ export const FLOOR_TICK_MS = 125;
 // Bars: customers queue in a straight line out from the counter, at most
 // this many (the first one is ordering).
 export const BAR_QUEUE_LENGTH = 4;
+// Bar service (see bars.js): a bartender walks walkMsPerUnit per bar unit
+// to a customer and takes serveMs to make the drink. Customers never give
+// up before patienceMs; after that, every patienceCheckMs each one gives up
+// with giveUpChance (showing an angry face for angryMs, losing giveUpMood),
+// except the patient ones (patientShare of customers), who keep waiting.
+export const BAR = {
+  serveMs: 3000, walkMsPerUnit: 380,
+  patienceMs: 20000, patienceCheckMs: 2500, giveUpChance: 0.3, patientShare: 0.4, angryMs: 2000, giveUpMood: 8,
+};
 // How many bartenders you may hire: one more at each of these levels (one
 // to start, two at level 4, ... five at level 15). Extra bartenders can work
 // another bar or join a long bar that already has one.

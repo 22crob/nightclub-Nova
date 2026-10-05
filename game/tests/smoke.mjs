@@ -568,28 +568,94 @@ const lighting = await page.evaluate(() => {
 });
 check('the room is dimmed, with no glows under lights', lighting.shaded && !lighting.glow, JSON.stringify(lighting));
 
-// Bar lines: customers queue in a straight line out from the counter and
-// step up when the front one is served.
+// Bar lines: customers take every service spot along a long bar, then
+// wait in rows behind them and step up when a spot frees. Bartenders walk
+// along the bar to a customer, one per spot, and take 3 s to serve. Nobody
+// gives up before 20 s; after that some walk off angry.
 const queue = await page.evaluate(() => {
   const s = window.__clubNova.scene.getScene('club');
-  s.cash += 500;
-  const bar = s.restoreProp('woodBar', 0, [6, 6]);
-  s.hireStaff(bar);
-  const others = s.staffableRecords().filter((r) => r !== bar && r.staff && r.staff.kind === 'bartender');
+  const out = {};
+  s.cash += 1000;
+  const allow = s.bartenderAllowance;
+  s.bartenderAllowance = () => 5;
+  const barA = s.restoreProp('woodBar', 0, [6, 6]);
+  const barB = s.restoreProp('woodBar', 0, [7, 6]);
+  const others = s.staffableRecords().filter((r) => r.staff && r.staff.kind === 'bartender' && !s.barGroup(barA).includes(r));
   others.forEach((r) => s.detachStaff(r)); // only this bar is open
-  const tiles = s.barQueueTiles(bar).map((t) => t.join(','));
-  // Two stand-in customers (the line logic only needs these fields).
-  const a = { nextMoveAt: 0 };
-  const b = { nextMoveAt: 0 };
-  s.joinBarQueue(a); s.joinBarQueue(b);
-  const before = [[a.targetGx, a.targetGy].join(','), [b.targetGx, b.targetGy].join(',')];
-  s.leaveBarQueue(a);
-  const after = [b.targetGx, b.targetGy].join(',');
-  s.leaveBarQueue(b);
-  return { tiles, before, after };
+  s.hireStaff(barA);
+  out.group = s.barGroup(barA).length === 2;
+  const cap = s.patronCapacity;
+  s.patronCapacity = () => 99;
+  const door = s.doorTile();
+  const spawn = () => {
+    const block = s.patrons.filter((p) => p.gx === door.gx && p.gy === door.gy);
+    block.forEach((p) => { p.gx = -50; });
+    s.trySpawnPatron();
+    block.forEach((p) => { p.gx = door.gx; });
+    const p = s.patrons[s.patrons.length - 1];
+    p.gx = 6; p.gy = 12; p.moving = false;
+    return p;
+  };
+  const guests = [spawn(), spawn(), spawn(), spawn()];
+  s.patronCapacity = cap;
+  // Everyone else stays away from this bar for the check.
+  for (const p of s.patrons) if (!guests.includes(p) && p.queue && s.barGroup(barA).includes(p.queue)) s.leaveBarQueue(p);
+  guests.forEach((p, i) => { s.joinBarQueue(p); p.queuedAt = s.time.now + i; });
+  s.refreshBarLine(s.barGroup(barA));
+  const where = (p) => `${p.targetGx},${p.targetGy}`;
+  out.spots = guests.slice(0, 2).map(where).sort().join(' ');
+  out.waiting = guests.slice(2).map(where).sort().join(' ');
+  out.spotsOk = out.spots === '6,9 7,9' && guests[0].atSpot && guests[1].atSpot;
+  out.lineOk = out.waiting === '6,10 7,10' && !guests[2].atSpot;
+  // One leaves: the longest waiter steps up to the free spot.
+  const freed = where(guests[0]);
+  s.leaveBarQueue(guests[0]);
+  out.stepUp = guests[2].atSpot && where(guests[2]) === freed;
+  // Two bartenders, two customers ready: each takes a different spot.
+  s.hireStaff(barB);
+  const ready = [guests[1], guests[2]];
+  for (const p of ready) { [p.gx, p.gy] = [p.targetGx, p.targetGy]; s.waitInLine(p); }
+  out.ready = ready.every((p) => p.readyToOrder);
+  s.tickBars();
+  const staff = s.barGroup(barA).filter((u) => u.staff).map((u) => u.staff);
+  out.claimed = staff.every((b) => b.task) && staff[0].task.unit !== staff[1].task.unit
+    && staff.every((b) => b.task.unit.claimedBy === b && b.task.patron.servedBy === b);
+  // Mixing takes about 3 seconds once they're there.
+  const drinks0 = s.drinksSold || 0;
+  for (const b of staff) {
+    s.tweens.killTweensOf(b.container);
+    b.atUnit = b.task.unit;
+    b.task.phase = 'serve';
+    b.task.until = s.time.now + 3000;
+  }
+  s.tickBars();
+  out.notYet = (s.drinksSold || 0) === drinks0;
+  for (const b of staff) b.task.until = s.time.now - 1;
+  s.tickBars();
+  out.served = (s.drinksSold || 0) - drinks0 === 2 && ready.every((p) => !p.queue) && staff.every((b) => !b.task);
+  // Patience: nobody gives up before 20 s; after that some do, angrily.
+  const w = guests[3];
+  out.w = { queue: !!w.queue, atSpot: w.atSpot };
+  w.patient = false; w.patienceCheckAt = 0;
+  w.queuedAt = s.time.now - 10000;
+  const rnd = Math.random;
+  Math.random = () => 0.01;
+  s.checkBarPatience(s.barGroup(barA));
+  out.stillWaiting = !!w.queue;
+  w.queuedAt = s.time.now - 25000;
+  w.reactingUntil = 0;
+  s.checkBarPatience(s.barGroup(barA));
+  Math.random = rnd;
+  out.gaveUp = !w.queue && w.reactingUntil > s.time.now;
+  for (const p of guests) { if (p.queue) s.leaveBarQueue(p); s.startPatronDeparture(p); }
+  s.removeProp(barB); // barA stays, staffed, for the checks below
+  others.forEach((r) => s.attachStaff(r)); // the club's own bar back to work
+  s.bartenderAllowance = allow;
+  return out;
 });
-check('bar customers line up in a straight row', queue.tiles && queue.tiles.join(' ') === '6,9 6,10 6,11 6,12', JSON.stringify(queue));
-check('the line steps up when someone is served', queue.before && queue.before[0] === '6,9' && queue.before[1] === '6,10' && queue.after === '6,9', JSON.stringify(queue));
+check('customers fill every spot along a long bar, then wait in rows behind and step up', queue.group && queue.spotsOk && queue.lineOk && queue.stepUp, JSON.stringify(queue));
+check('bartenders each claim a different customer, take 3 s to serve, then serve', queue.ready && queue.claimed && queue.notYet && queue.served, JSON.stringify(queue));
+check('nobody gives up on the bar before 20 s; after that some walk off angry', queue.stillWaiting && queue.gaveUp, JSON.stringify(queue));
 
 // Regular floors: pick one and click (or drag across) tiles to paint them.
 // It's saved, and patrons don't dance on it.
@@ -704,7 +770,10 @@ const people = await page.evaluate(() => {
   const screen = (c) => ({ x: s.world.x + c.x * s.world.scaleX, y: s.world.y + (c.y - 30) * s.world.scaleY });
   out.named = !!p.name && / /.test(p.name);
   let at = screen(p.container);
+  const everyone = s.patrons;
+  s.patrons = [p]; // nobody else standing in front of them
   out.clickedGuest = s.clickPerson(at);
+  s.patrons = everyone;
   out.card = document.getElementById('infoCard').classList.contains('open') && document.getElementById('infoName').textContent === p.name;
   out.quote = document.getElementById('infoQuote').textContent;
   // No lasting thought bubbles (only the quick reactions that fade).
@@ -719,14 +788,14 @@ const people = await page.evaluate(() => {
   out.barCard = document.getElementById('bottomsUp').offsetParent !== null;
   // Line up three guests and serve them all at once.
   const line = s.patrons.filter((q) => !q.leaving && !q.gone).slice(0, 3);
-  bar.queue = [...line];
-  for (const q of line) q.queue = bar;
+  for (const q of s.patrons) if (q.queue) s.leaveBarQueue(q);
+  for (const q of line) s.joinBarQueue(q);
   const drinks0 = s.drinksSold || 0;
   const cash0 = s.cash;
   document.getElementById('bottomsUp').click();
   out.served = (s.drinksSold || 0) - drinks0;
   out.paid = s.cash - cash0;
-  out.lineEmpty = bar.queue.length === 0;
+  out.lineEmpty = s.barGroupQueue(bar).length === 0 && line.every((q) => !q.queue);
   out.cooling = !s.bottomsUpReady(bar) && s.bottomsUp(bar) === 0;
   s.closeInfoCard();
   const lux0 = s.luxury();
@@ -1108,7 +1177,9 @@ const fight = await page.evaluate(() => {
   out.ejected = out1.length === 1 && stay.length === 1 && a.container.visible && b.container.visible && !s.argument && !a.container.angerIcon;
   // Unresolved for too long: the argument turns into a fight on its own.
   tidy();
+  s.patronCapacity = () => 99;
   const c = spawn();
+  s.patronCapacity = cap;
   [c.gx, c.gy] = [7, 7];
   s.startArgument(stay[0], c);
   s.argument.fightAt = s.time.now - 1;
