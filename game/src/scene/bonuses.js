@@ -93,13 +93,14 @@ export class BonusesMixin {
   offerBonus(patron, kind = Math.random() < 0.5 ? 'highfive' : 'fist', amount = BONUS.amount) {
     this.makeBonusTextures();
     this.bonuses = this.bonuses || [];
-    const icon = this.add.image(0, 0, `bonus_${kind}`).setDisplaySize(BONUS.size, BONUS.size);
+    const size = kind === 'tip' ? BONUS.tipSize : BONUS.size;
+    const icon = this.add.image(0, 0, `bonus_${kind}`).setDisplaySize(size, size);
     const glow = this.add.image(0, 0, 'lightPool').setTint(0xffd84a).setBlendMode(Phaser.BlendModes.ADD)
-      .setDisplaySize(BONUS.size * 2, BONUS.size * 2).setAlpha(0.6);
+      .setDisplaySize(size * 2, size * 2).setAlpha(0.6);
     const parts = [glow, icon];
     if (kind === 'tip') {
       parts.push(this.add.text(0, 0, '$', {
-        fontFamily: 'Arial Black, Arial, sans-serif', fontSize: `${Math.round(BONUS.size * 0.62)}px`, color: '#2f9b2a', stroke: '#fff7c0', strokeThickness: 2,
+        fontFamily: 'Arial Black, Arial, sans-serif', fontSize: `${Math.round(size * 0.62)}px`, color: '#2f9b2a', stroke: '#fff7c0', strokeThickness: 2,
       }).setOrigin(0.5, 0.52));
     }
     const holder = this.add.container(0, 0, parts);
@@ -111,7 +112,7 @@ export class BonusesMixin {
       this.tweens.add({ targets: parts.slice(1), y: -5, duration: 450, yoyo: true, repeat: -1, ease: 'Sine.easeInOut' }),
       this.tweens.add({ targets: glow, alpha: 0.25, duration: 500, yoyo: true, repeat: -1 }),
     ];
-    const b = { patron, kind, amount, holder, tweens, expiresAt: this.time.now + BONUS.lifeMs };
+    const b = { patron, kind, amount, size, holder, tweens, expiresAt: this.time.now + BONUS.lifeMs };
     this.bonuses.push(b);
     this.followBonus();
     SFX.tip();
@@ -123,7 +124,7 @@ export class BonusesMixin {
     for (const b of [...(this.bonuses || [])]) {
       const c = b.patron.container;
       if (b.patron.gone || !c.active) { this.removeBonus(b, true); continue; }
-      b.holder.setPosition(c.x, c.y - CHARACTER_DISPLAY_HEIGHT * 1.12);
+      b.holder.setPosition(c.x, c.y - CHARACTER_DISPLAY_HEIGHT * 1.02 - b.size / 2); // just above the head
     }
   }
 
@@ -131,7 +132,7 @@ export class BonusesMixin {
   bonusAt(screenX, screenY) {
     const x = (screenX - this.world.x) / this.world.scaleX;
     const y = (screenY - this.world.y) / this.world.scaleY;
-    return (this.bonuses || []).find((b) => !b.collected && Math.hypot(x - b.holder.x, y - b.holder.y) <= BONUS.size * 0.7) || null;
+    return (this.bonuses || []).find((b) => !b.collected && Math.hypot(x - b.holder.x, y - b.holder.y) <= b.size * 0.7) || null;
   }
 
   // A click on a badge collects it. True if it did.

@@ -251,8 +251,9 @@ export const REACTIONS = {
 
 // Clickable guest bonuses (see bonuses.js): a happy guest (mood at least
 // minMood) offers a high five or fist bump about every everyMs; clicking it
-// within lifeMs collects `amount`. size: the badge, in px.
-export const BONUS = { amount: 88, everyMs: [30000, 60000], lifeMs: 8000, minMood: 70, size: 30 };
+// within lifeMs collects `amount`. size: the high five / fist bump badge,
+// tipSize: a decoration tip coin, in px.
+export const BONUS = { amount: 88, everyMs: [30000, 60000], lifeMs: 8000, minMood: 70, size: 60, tipSize: 30 };
 
 // Hovering and selecting (see selection.js): the outline glow round
 // whatever's under the cursor (colour, strength), round a selected piece,
