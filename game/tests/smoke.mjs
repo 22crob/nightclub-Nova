@@ -663,6 +663,34 @@ const buyXp = await page.evaluate(() => {
 });
 check('buying gives XP by price, moving gives none, and selling takes it back', buyXp.gained > 0 && buyXp.gained === buyXp.expected && buyXp.moveFree && buyXp.sellBack && buyXp.label, JSON.stringify(buyXp));
 
+// The card's red X stays in its corner with nothing under it, even on a
+// bartender's card with a long line of dialogue.
+const cardX = await page.evaluate(() => {
+  const s = window.__clubNova.scene.getScene('club');
+  let bar = s.hireableRecords().find((r) => r.staff) || s.hireableRecords()[0];
+  let placedBar = false;
+  if (!bar) {
+    for (let gy = 1; gy < s.gridH - 3 && !bar; gy++) for (let gx = 1; gx < s.gridW - 1 && !bar; gx++) bar = s.restoreProp('woodBar', 0, [gx, gy]);
+    placedBar = true;
+  }
+  const hired = !bar.staff;
+  if (hired) s.attachStaff(bar);
+  s.openInfoCard('bartender', bar);
+  const quote = document.getElementById('infoQuote');
+  quote.textContent = '"Busy night! Three in line, a Drink Rush going, and someone keeps asking for a drink with a tiny umbrella in it."';
+  const x = document.getElementById('infoClose').getBoundingClientRect();
+  const card = document.getElementById('infoCard').getBoundingClientRect();
+  const below = [...document.querySelectorAll('#infoCard .infoTop, #infoCard .infoQuote, #infoCard .infoName, #infoCard .infoRole')]
+    .every((el) => { const r = el.getBoundingClientRect(); return r.top >= x.bottom || r.right <= x.left; });
+  const hit = document.elementFromPoint(x.left + x.width / 2, x.top + x.height / 2);
+  const out = { below, inCorner: x.top - card.top < 12 && card.right - x.right < 14, clickable: hit && hit.id === 'infoClose' };
+  s.closeInfoCard();
+  if (hired) s.detachStaff(bar); // leave the club as it was
+  if (placedBar) s.removeProp(bar);
+  return out;
+});
+check('the card\'s red X stays in its corner, with the speech bubble and text below it', cardX.below && cardX.inCorner && cardX.clickable, JSON.stringify(cardX));
+
 // Zoom buttons change the zoom and stay within limits.
 const zoom0 = await page.evaluate(() => window.__clubNova.scene.getScene('club').world.scaleX);
 await page.click('#zoomIn');
