@@ -412,6 +412,11 @@ const rally = await page.evaluate(() => {
   const pop = document.getElementById('bigPopup');
   out.popup = pop.classList.contains('show') && pop.querySelector('.bpTitle').textContent === 'Bass Boost!';
   out.energetic = dancer.activity.until > until0 + 15000 && dancer.container.patronSprite.anims.timeScale > 1;
+  // For ten seconds they go wild: much faster, with heart eyes or ! popping up.
+  out.excited = dancer.excitedUntil - s.time.now > 9000 && dancer.container.patronSprite.anims.timeScale >= 1.7 && dancer.reactingUntil > s.time.now;
+  dancer.excitedUntil = s.time.now - 1;
+  s.energize(dancer);
+  out.afterExcite = dancer.container.patronSprite.anims.timeScale > 1 && dancer.container.patronSprite.anims.timeScale < 1.7;
   out.pulse = s.pulseDanceFloor() === Object.keys(s.placed).filter((k) => s.isDanceFloorTile(...k.split(',').map(Number))).length;
   for (const p of [free, queued, leaving, arguing]) { p.wantActivity = null; p.reactingUntil = 0; }
   out.joined = s.rallyGuests('dance', { joinShare: 1, staggerMs: [0, 0], durationMs: 60000 });
@@ -441,7 +446,7 @@ const rally = await page.evaluate(() => {
   leaving.leaving = false; s.startPatronDeparture(leaving);
   return out;
 });
-check('Bass Boost: a popup, a pulse across the dance floor, and dancers dance faster and longer', rally.popup && rally.pulse && rally.energetic && rally.calm, JSON.stringify(rally));
+check('Bass Boost: a popup, a pulse across the dance floor, and dancers go wild for 10 s, then dance faster and longer', rally.popup && rally.pulse && rally.energetic && rally.excited && rally.afterExcite && rally.calm, JSON.stringify(rally));
 check('guests answering react at once and head off; those in a bar line, leaving or arguing stay put', rally.joined >= 1 && rally.freeGoes && rally.othersStay, JSON.stringify(rally));
 check('Drink Rush: a popup, the bars light up, and guests head for a drink (those drinking carry on)', rally.rushPopup && rally.bars && rally.thirstyGo && rally.drinkerStays && rally.headsOff, JSON.stringify(rally));
 

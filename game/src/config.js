@@ -211,10 +211,12 @@ export const BARTENDERS = { levels: [1, 4, 7, 11, 15] };
 // Bass Boost (see boost.js): for durationMs, guests are danceWeight times
 // as keen to dance, dancers tip `speedUp` times as often and `tipMultiplier`
 // times as much, and about joinShare of the crowd heads for the dance floor
-// over the first few seconds (staggerMs). Guests already dancing dance
-// `energy` times faster and keep going danceExtendMs longer. Then
+// over the first few seconds (staggerMs). Guests already dancing go wild
+// for exciteMs (dancing excitedEnergy times faster, with excitePops heart
+// eyes or ! over their heads), then dance `energy` times faster for the
+// rest of the boost, and keep going danceExtendMs longer. Then
 // cooldownMs before it's ready.
-export const BOOST = { durationMs: 60000, cooldownMs: 180000, speedUp: 1.5, tipMultiplier: 1.5, danceChance: 0.75, danceWeight: 5, joinShare: 0.65, staggerMs: [250, 2500], danceExtendMs: [20000, 40000], energy: 1.5 };
+export const BOOST = { durationMs: 60000, cooldownMs: 180000, speedUp: 1.5, tipMultiplier: 1.5, danceChance: 0.75, danceWeight: 5, joinShare: 0.65, staggerMs: [250, 2500], danceExtendMs: [20000, 40000], energy: 1.2, exciteMs: 10000, excitedEnergy: 1.8, excitePops: [2, 3] };
 // Drink Rush (see scene/boost.js): for durationMs, guests are drinkWeight
 // times as keen on a drink, and about joinShare of them head for the bars
 // over the first few seconds (staggerMs). Then cooldownMs before it's ready.

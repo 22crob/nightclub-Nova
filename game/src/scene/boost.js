@@ -65,7 +65,8 @@ export class BoostMixin {
     this.showBigPopup('Bass Boost!', 'Everybody to the dance floor!', 'boost');
     this.flashScreen(0xb070ff);
     this.pulseDanceFloor();
-    // Dancers get more energetic and keep going longer.
+    // Everyone on the dance floor goes wild for a few seconds and keeps
+    // dancing longer.
     for (const p of this.patrons) {
       if (!this.isDancing(p) || p.leaving || p.gone) continue;
       const a = p.activity;
@@ -73,8 +74,7 @@ export class BoostMixin {
         a.until += randRange(...BOOST.danceExtendMs);
         p.nextMoveAt = Math.max(p.nextMoveAt, a.until);
       }
-      this.energize(p);
-      this.popReaction(p, Math.random() < 0.5 ? 'note' : 'excited', randRange(0, 300));
+      this.exciteDancer(p);
     }
     this.rallyGuests('dance', BOOST);
     this.updateBoostButton();
@@ -100,10 +100,35 @@ export class BoostMixin {
     return typeof anim === 'string' && anim.startsWith('dance');
   }
 
-  // A dancer's moves go faster during a Bass Boost (see setPatronAnimation()).
+  // A dancer's moves go faster during a Bass Boost, and much faster while
+  // they're excited by it (see setPatronAnimation()).
   energize(p) {
     const sprite = p.container.patronSprite;
-    if (sprite && sprite.anims) sprite.anims.timeScale = this.isBoosted() && this.isDancing(p) ? BOOST.energy : 1;
+    if (!sprite || !sprite.anims) return;
+    const dancing = this.isDancing(p);
+    let speed = 1;
+    if (dancing && this.time.now < (p.excitedUntil || 0)) speed = BOOST.excitedEnergy;
+    else if (dancing && this.isBoosted()) speed = BOOST.energy;
+    sprite.anims.timeScale = speed;
+  }
+
+  // A dancer hit by the Bass Boost: wilder moves for BOOST.exciteMs, with
+  // heart eyes or an exclamation mark popping up now and then.
+  exciteDancer(p) {
+    const now = this.time.now;
+    p.excitedUntil = now + BOOST.exciteMs;
+    this.energize(p);
+    const pops = Math.round(randRange(BOOST.excitePops[0], BOOST.excitePops[1] + 0.49));
+    for (let i = 0; i < pops; i++) {
+      // Spread over the ten seconds, each at its own moment.
+      const at = ((i + Math.random()) / pops) * (BOOST.exciteMs - 1500);
+      this.time.delayedCall(at, () => {
+        if (p.gone || p.leaving || !this.isDancing(p)) return;
+        p.reactingUntil = 0;
+        this.popReaction(p, Math.random() < 0.5 ? 'hearts' : 'exclaim', 0, randRange(900, 1300));
+      });
+    }
+    this.time.delayedCall(BOOST.exciteMs + 50, () => { if (!p.gone) this.energize(p); });
   }
 
   // Who can answer the call: not leaving, arguing, in line at a bar (being
