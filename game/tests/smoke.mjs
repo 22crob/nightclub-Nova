@@ -691,6 +691,25 @@ const cardX = await page.evaluate(() => {
 });
 check('the card\'s red X stays in its corner, with the speech bubble and text below it', cardX.below && cardX.inCorner && cardX.clickable, JSON.stringify(cardX));
 
+// Tabs: the green check finishes what you're doing and closes the panel,
+// leaving just the tab logos; clicking an open tab again closes it too.
+await page.click('#tabStaff');
+const openStaff = await page.evaluate(() => ({ panel: getComputedStyle(document.getElementById('dockPanel')).display !== 'none', check: getComputedStyle(document.getElementById('storeOk')).display !== 'none' }));
+await page.evaluate(() => window.__clubNova.scene.getScene('club').selectProp('woodStool'));
+await page.click('#storeOk');
+const closedDock = await page.evaluate(() => {
+  const s = window.__clubNova.scene.getScene('club');
+  return { panel: getComputedStyle(document.getElementById('dockPanel')).display, tabs: [...document.querySelectorAll('.dockTab')].filter((t) => t.offsetParent).length, held: s.selectedProp, tab: s.dockTab };
+});
+await page.click('#tabExpand');
+await page.click('#tabExpand');
+const toggled = await page.evaluate(() => getComputedStyle(document.getElementById('dockPanel')).display);
+await page.click('#tabDecor');
+await page.click('#storeOk');
+const storeClosed = await page.evaluate(() => getComputedStyle(document.getElementById('dockPanel')).display);
+check('the green check finishes the action and closes the tab, leaving only the tab logos', openStaff.panel && openStaff.check && closedDock.panel === 'none' && closedDock.tabs === 6 && !closedDock.held && closedDock.tab === null && storeClosed === 'none', JSON.stringify({ openStaff, closedDock, storeClosed }));
+check('clicking an open tab again closes it', toggled === 'none', toggled);
+
 // Zoom buttons change the zoom and stay within limits.
 const zoom0 = await page.evaluate(() => window.__clubNova.scene.getScene('club').world.scaleX);
 await page.click('#zoomIn');

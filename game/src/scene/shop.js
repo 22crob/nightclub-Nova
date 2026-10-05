@@ -64,7 +64,12 @@ export class ShopMixin {
     this.dockTabs = {};
     for (const tab of document.querySelectorAll('.dockTab')) {
       this.dockTabs[tab.dataset.tab] = tab;
-      tab.addEventListener('click', () => { SFX.unlock(); this.setDockTab(tab.dataset.tab); });
+      // Clicking the open tab again closes it.
+      tab.addEventListener('click', () => {
+        SFX.unlock();
+        if (this.dockTab === tab.dataset.tab) this.closeDock();
+        else this.setDockTab(tab.dataset.tab);
+      });
     }
     const row = document.getElementById('storeTabs');
     this.storeTabButtons = {};
@@ -79,10 +84,8 @@ export class ShopMixin {
       this.storeTabButtons[category] = sub;
     }
     fillIcons(row);
-    document.getElementById('storeOk')?.addEventListener('click', () => {
-      if (this.selectedProp) this.deselectProp();
-      this.setDockTab(this.lastMainTab || 'inventory');
-    });
+    // The green check finishes what you're doing and closes the panel.
+    document.getElementById('storeOk')?.addEventListener('click', () => { SFX.unlock(); this.closeDock(); });
 
     // Arrows (and the mouse wheel) scroll the row of cards.
     const scrollBy = (dir) => this.shopItemsEl.scrollBy({ left: dir * this.shopItemsEl.clientWidth * 0.8, behavior: 'smooth' });
@@ -94,7 +97,7 @@ export class ShopMixin {
     }, { passive: false });
 
     this.activeShopCategory = STORE_CATEGORIES[0];
-    this.setDockTab('inventory');
+    this.closeDock(); // just the tab logos until one is opened
     this.updateSelectedChip();
   }
 
@@ -115,6 +118,24 @@ export class ShopMixin {
     hideTip();
     if (this.shopItemsEl) this.shopItemsEl.scrollLeft = 0;
     this.refreshDock();
+  }
+
+  // Finishes the current action (puts down whatever is held, calls off a
+  // move or an expansion) and closes the panel: just the tab logos show.
+  closeDock() {
+    if (this.selectedProp || this.movingBooth) this.deselectProp();
+    this.pendingExpand = null;
+    this.clearExpandPreview?.();
+    this.clearSelection?.();
+    this.dockTab = null;
+    for (const key in this.dockTabs || {}) this.dockTabs[key].classList.remove('active');
+    if (this.dockEl) {
+      this.dockEl.dataset.tab = '';
+      this.dockEl.dataset.mode = 'closed';
+    }
+    document.body.classList.remove('editing');
+    if (this.drawSelectionFootprint) this.drawSelectionFootprint();
+    hideTip();
   }
 
   // Redraws the open tab's cards.
