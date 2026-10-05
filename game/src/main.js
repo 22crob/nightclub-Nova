@@ -10,9 +10,10 @@ setupTooltips();
 
 const config = {
   type: Phaser.AUTO,
-  width: window.innerWidth,
-  height: window.innerHeight,
   parent: document.body,
+  // Fill the window and keep filling it when it's resized (the play link
+  // can open in a small panel and then be made bigger or full screen).
+  scale: { mode: Phaser.Scale.RESIZE, width: window.innerWidth, height: window.innerHeight },
   backgroundColor: '#0a0612',
   disableContextMenu: true, // right-click sells a placed prop instead of opening the browser menu
   scene: [ClubScene],

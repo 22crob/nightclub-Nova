@@ -119,6 +119,9 @@ export class ClubScene extends Phaser.Scene {
     this.buildTiles();
     this.buildWalls();
     this.centerView();
+    // The window changed size (the play link can open in a small panel and
+    // then go full screen): fit the club to the new size.
+    this.scale.on('resize', () => this.centerView());
 
     // Restore a previous save, if there is one — must happen after the
     // tile grid and layers above exist (restoreProp draws into propLayer)
