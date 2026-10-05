@@ -44,10 +44,11 @@ export class BarsMixin {
       .sort((a, b) => (b.atSpot ? 1 : 0) - (a.atSpot ? 1 : 0) || a.queuedAt - b.queuedAt);
   }
 
-  // Every tile of every worked bar's spots and lines, as "gx,gy" keys:
-  // wanderers keep off them so they don't block the line.
-  barLineTiles() {
-    const keys = new Set();
+  // Tiles nobody picks to stand, dance, chat or drink on, as "gx,gy" keys:
+  // every worked bar's spots and lines (so they don't block the line) and
+  // the doorway (so people can get in and out; see doorZone()).
+  keepOffTiles() {
+    const keys = new Set(this.doorZone());
     for (const rec of this.hireableRecords()) {
       if (!this.isWorked(rec)) continue;
       for (const [x, y] of this.barQueueTiles(rec)) keys.add(`${x},${y}`);

@@ -28,12 +28,13 @@ export class SecurityMixin {
   // The guard's spot: just inside the door, or the nearest open tile to it.
   guardPost() {
     const door = this.doorTile();
+    const doorway = new Set(this.doorZone());
     const want = [door.gx + 1, door.gy + 1];
     let best = null;
     let bestD = Infinity;
     for (let x = 0; x < this.gridW; x++) {
       for (let y = 0; y < this.gridH; y++) {
-        if (this.isBlockingProp(x, y) || (x === door.gx && y === door.gy)) continue;
+        if (this.isBlockingProp(x, y) || doorway.has(`${x},${y}`)) continue; // just out of the doorway
         const d = Math.abs(x - want[0]) + Math.abs(y - want[1]);
         if (d < bestD) { bestD = d; best = [x, y]; }
       }

@@ -79,6 +79,13 @@ export class PatronsMixin {
       leaving: false,
     };
     this.startVisit(patron); // their visit length and personality (see activities.js)
+    // Walk in off the doorway to a clear spot first, then decide what to do.
+    const inside = this.entrySpot();
+    if (inside) {
+      patron.entering = true;
+      [patron.targetGx, patron.targetGy] = inside;
+      patron.nextMoveAt = now + 150;
+    }
     this.patrons.push(patron);
     if (info && info.partyGuest) this.notePartyGuest(patron); // came for the party
     if (info && info.celeb) this.welcomeCelebrity(patron, info.celeb); // a celebrity dropping in
@@ -330,7 +337,7 @@ export class PatronsMixin {
     // is handled by the bar lines, see pickRoamTarget()); otherwise hang out
     // by the DJ booth.
     // Nobody hangs about in a bar line unless they're queueing.
-    const lines = this.barLineTiles();
+    const lines = this.keepOffTiles();
     const free = (t) => !lines.has(`${t[0]},${t[1]}`);
     danceTiles = danceTiles.filter(free);
     hangoutTiles = hangoutTiles.filter(free);
@@ -347,6 +354,7 @@ export class PatronsMixin {
   // Gives a patron somewhere to go: their place in a bar line, the next
   // step of what they're doing, or their next activity (see activities.js).
   pickRoamTarget(patron) {
+    if (patron.entering && patron.targetGx !== undefined && !(patron.gx === patron.targetGx && patron.gy === patron.targetGy)) return;
     // In line at a bar: stay in line.
     if (patron.queue) { this.updateQueueTarget(patron); if (patron.queue) return; }
     if (!patron.sitting) this.releaseSeat(patron); // a new plan replaces any seat they were headed for
@@ -490,7 +498,9 @@ export class PatronsMixin {
           // on the far side of an expanded club simply vanish mid-walk,
           // nowhere near the door yet — a real, visible bug, not just an
           // edge case.
-          const maxDepartureHops = this.gridW + this.gridH - 2 + 10;
+          // (Generous, so a guest finding their way round furniture still
+          // walks all the way out rather than vanishing mid-room.)
+          const maxDepartureHops = (this.gridW + this.gridH) * 3;
           if (arrived || patron.departureHops > maxDepartureHops) {
             // Actually reached the door on foot — now it can vanish.
             this.finalizeDeparture(patron);

@@ -8,6 +8,9 @@ import { SFX } from '../sfx.js';
 import { WALL_TEX_H, WALL_TEX_W, doorCanvas } from '../walls.js';
 import { bareFloorCanvas } from '../floors.js';
 
+// How far (in steps) from the door tile guests keep clear (see doorZone()).
+const DOOR_CLEAR = 2;
+
 export class WorldMixin {
   gridToScreen(gx, gy) {
     return {
@@ -161,6 +164,35 @@ export class WorldMixin {
   // like Nightclub City's. The line outside leads to it (see street.js).
   doorTile() {
     return { gx: 0, gy: 1 };
+  }
+
+  // The doorway: the door tile and the tiles just inside it (as "gx,gy"
+  // keys). Guests walk through it but never stop or do anything there.
+  doorZone() {
+    const { gx, gy } = this.doorTile();
+    const keys = [];
+    for (let x = 0; x < this.gridW; x++) {
+      for (let y = 0; y < this.gridH; y++) {
+        if (Math.abs(x - gx) + Math.abs(y - gy) <= DOOR_CLEAR) keys.push(`${x},${y}`);
+      }
+    }
+    return keys;
+  }
+
+  // A clear tile a few steps inside the door, for someone who just came in
+  // to walk to before deciding what to do.
+  entrySpot() {
+    const { gx, gy } = this.doorTile();
+    const off = this.keepOffTiles();
+    const spots = [];
+    for (let x = 0; x < this.gridW; x++) {
+      for (let y = 0; y < this.gridH; y++) {
+        const d = Math.abs(x - gx) + Math.abs(y - gy);
+        if (d <= DOOR_CLEAR || d > DOOR_CLEAR + 3 || off.has(`${x},${y}`) || this.isBlockingProp(x, y) || this.patronTileOccupied(x, y)) continue;
+        spots.push([x, y]);
+      }
+    }
+    return spots.length ? spots[Math.floor(Math.random() * spots.length)] : null;
   }
 
   // The club's front door (see doorCanvas() in walls.js), set into the left

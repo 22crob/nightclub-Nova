@@ -107,6 +107,7 @@ export class ActivitiesMixin {
   // A guest has reached the spot for their activity: start it.
   arriveForActivity(patron) {
     const now = this.time.now;
+    patron.entering = false; // in from the door (see trySpawnPatron())
     if (patron.seat && !patron.sitting) { this.sitDown(patron); return; }
     if (patron.queue) { this.waitInLine(patron); return; }
     const a = patron.activity;
@@ -147,7 +148,7 @@ export class ActivitiesMixin {
 
   // A free tile near a bar (not in anyone's line) to stand and drink at.
   pickDrinkingSpot(patron, bar) {
-    const lines = this.barLineTiles();
+    const lines = this.keepOffTiles();
     const near = bar ? this.barLayout(bar).counter : [patron.gx, patron.gy];
     const spots = [];
     for (let dx = -3; dx <= 3; dx++) {
@@ -167,7 +168,7 @@ export class ActivitiesMixin {
 
   // A dance floor tile nobody's on (or headed for), or null.
   freeDanceTile(patron) {
-    const lines = this.barLineTiles();
+    const lines = this.keepOffTiles();
     const taken = new Set();
     for (const p of this.patrons) {
       if (p === patron || p.gone) continue;
@@ -184,7 +185,7 @@ export class ActivitiesMixin {
 
   // Somewhere to wander to: often by the DJ booth, otherwise any open tile.
   pickWanderTile(patron) {
-    const lines = this.barLineTiles();
+    const lines = this.keepOffTiles();
     const poi = this.pickPointOfInterestTile();
     if (poi && Math.random() < 0.4) {
       [patron.targetGx, patron.targetGy] = poi;
@@ -210,13 +211,14 @@ export class ActivitiesMixin {
   // Finds someone nearby who's free (wandering or standing about), and
   // walks over to talk to them; they wait for you.
   startChat(patron) {
+    const doorway = new Set(this.doorZone());
     const free = (p) => p !== patron && !p.gone && !p.leaving && !p.queue && !p.sitting && !p.moving
       && (!p.activity || p.activity.kind === 'wander') && !p.chatWith;
     const near = this.patrons.filter((p) => free(p) && Math.abs(p.gx - patron.gx) + Math.abs(p.gy - patron.gy) <= 7);
     for (const other of near.sort((a, b) => (Math.abs(a.gx - patron.gx) + Math.abs(a.gy - patron.gy)) - (Math.abs(b.gx - patron.gx) + Math.abs(b.gy - patron.gy)))) {
       const spot = [[1, 0], [-1, 0], [0, 1], [0, -1]]
         .map(([dx, dy]) => [other.gx + dx, other.gy + dy])
-        .find(([x, y]) => this.inGrid(x, y) && !this.isBlockingProp(x, y)
+        .find(([x, y]) => this.inGrid(x, y) && !this.isBlockingProp(x, y) && !doorway.has(`${x},${y}`)
           && (!this.patronTileOccupied(x, y) || (x === patron.gx && y === patron.gy)));
       if (!spot) continue;
       patron.activity = { kind: 'chat' };

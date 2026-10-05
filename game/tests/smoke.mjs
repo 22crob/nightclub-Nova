@@ -710,6 +710,37 @@ const storeClosed = await page.evaluate(() => getComputedStyle(document.getEleme
 check('the green check finishes the action and closes the tab, leaving only the tab logos', openStaff.panel && openStaff.check && closedDock.panel === 'none' && closedDock.tabs === 6 && !closedDock.held && closedDock.tab === null && storeClosed === 'none', JSON.stringify({ openStaff, closedDock, storeClosed }));
 check('clicking an open tab again closes it', toggled === 'none', toggled);
 
+// The doorway stays clear: arrivals walk to a clear spot inside first,
+// nobody picks the doorway to stand, dance or chat on, and the guard
+// stands just out of it.
+const doorway = await page.evaluate(() => {
+  const s = window.__clubNova.scene.getScene('club');
+  const out = {};
+  const zone = new Set(s.doorZone());
+  const door = s.doorTile();
+  out.zone = zone.has(`${door.gx},${door.gy}`) && zone.size >= 4;
+  const cap = s.patronCapacity;
+  s.patronCapacity = () => 99;
+  s.patrons.filter((q) => q.gx === door.gx && q.gy === door.gy).forEach((q) => { q.gx = -50; });
+  s.trySpawnPatron();
+  s.patronCapacity = cap;
+  const p = s.patrons[s.patrons.length - 1];
+  out.walksIn = p.entering && !zone.has(`${p.targetGx},${p.targetGy}`) && p.nextMoveAt - s.time.now < 500;
+  // Wandering never stops in the doorway.
+  let inDoor = 0;
+  for (let i = 0; i < 200; i++) { s.pickWanderTile(p); if (zone.has(`${p.targetGx},${p.targetGy}`)) inDoor += 1; }
+  out.wanderClear = inDoor === 0;
+  out.guardClear = !s.guard || !zone.has(`${s.guardPost()[0]},${s.guardPost()[1]}`);
+  // Once in, they pick an activity.
+  [p.gx, p.gy] = [p.targetGx, p.targetGy];
+  p.moving = false;
+  s.arriveForActivity(p);
+  out.arrived = !p.entering;
+  s.startPatronDeparture(p);
+  return out;
+});
+check('the doorway stays clear: arrivals walk in to a clear spot first, and nobody idles in the doorway', doorway.zone && doorway.walksIn && doorway.wanderClear && doorway.guardClear && doorway.arrived, JSON.stringify(doorway));
+
 // Zoom buttons change the zoom and stay within limits.
 const zoom0 = await page.evaluate(() => window.__clubNova.scene.getScene('club').world.scaleX);
 await page.click('#zoomIn');
