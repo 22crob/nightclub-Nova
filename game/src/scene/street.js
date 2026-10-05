@@ -248,7 +248,8 @@ export class StreetMixin {
 
   // Someone walks up the street to join the line, if it isn't full. With
   // `already`, they're standing in line from the start.
-  // `info` marks a party guest ({ partyGuest, celeb }; see parties.js).
+  // `info` marks a party guest ({ partyGuest }, see parties.js) or a
+  // celebrity ({ celeb }, see celebrities.js).
   streetArrival(already = false, info = null) {
     if (!this.hasCharacterSprites() || this.streetQueue.length >= this.streetSpots().len) {
       if (!this.hasCharacterSprites()) this.trySpawnPatron();

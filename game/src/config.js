@@ -215,8 +215,7 @@ export const RUSH = { durationMs: 45000, cooldownMs: 180000, drinkWeight: 5, joi
 // in spots, so they're off for now (`glows: false`).
 // Parties (see scene/parties.js): one at a time; a countdown, then
 // PARTY_LENGTH_MS of party. crowd: how many extra guests turn up and line
-// up outside; celebs: [min, max] celebrities among them (from those
-// unlocked on the Celebrity List); leaveOverMs: after
+// up outside; leaveOverMs: after
 // the party, its guests head home over this spread. capacity: extra guests
 // allowed in;
 // arrivals/tips/thirst/fans: multipliers (arrivals: guests come this much
@@ -246,7 +245,8 @@ export const SECURITY = {
   danceTogetherChance: 0.35,
 };
 // The Celebrity List (see celebrities.js): each unlocks at a club level and
-// can then come to your parties. `fame` is their stars (1-5); `character`
+// from then on drops in on their own now and then: one every visitEveryMs
+// (the first firstVisitMs after the game opens), joining the line outside. `fame` is their stars (1-5); `character`
 // is their look (a patron sheet). Celebrities tip 1 + tipPerFame x fame
 // times as much and bring fansPerFame x fame extra fans leaving happy.
 export const CELEBRITIES = [
@@ -257,15 +257,15 @@ export const CELEBRITIES = [
   { key: 'tony', name: 'Tony Fame', level: 17, fame: 4, character: 9 },
   { key: 'jett', name: 'Jett Starr', level: 20, fame: 5, character: 11 },
 ];
-export const CELEB = { tipPerFame: 0.5, fansPerFame: 3 };
+export const CELEB = { tipPerFame: 0.5, fansPerFame: 3, visitEveryMs: [120000, 240000], firstVisitMs: [45000, 90000] };
 export const PARTIES = [
-  { key: 'house', label: 'House Party', emoji: '🏠', cost: 60, unlockLevel: 1, capacity: 2, arrivals: 1.3, tips: 1.25, thirst: 1.1, fans: 1.2, shade: 0x1a0b2e, crowd: 6, celebs: [0, 1], leaveOverMs: [10000, 70000],
+  { key: 'house', label: 'House Party', emoji: '🏠', cost: 60, unlockLevel: 1, capacity: 2, arrivals: 1.3, tips: 1.25, thirst: 1.1, fans: 1.2, shade: 0x1a0b2e, crowd: 6, leaveOverMs: [10000, 70000],
     blurb: 'Invite the neighbours. A couple more guests and a friendly crowd.' },
-  { key: 'hiphop', label: 'Hip Hop Night', emoji: '🎤', cost: 150, unlockLevel: 2, capacity: 3, arrivals: 1.5, tips: 1.4, thirst: 1.3, fans: 1.4, shade: 0x2e0b12, crowd: 9, celebs: [1, 1], leaveOverMs: [10000, 70000],
+  { key: 'hiphop', label: 'Hip Hop Night', emoji: '🎤', cost: 150, unlockLevel: 2, capacity: 3, arrivals: 1.5, tips: 1.4, thirst: 1.3, fans: 1.4, shade: 0x2e0b12, crowd: 9, leaveOverMs: [10000, 70000],
     blurb: 'Big beats, bigger crowd. Guests drink more and tip better.' },
-  { key: 'neon', label: 'Neon Night', emoji: '💜', cost: 300, unlockLevel: 4, capacity: 4, arrivals: 1.7, tips: 1.6, thirst: 1.4, fans: 1.7, shade: 0x2a0636, crowd: 12, celebs: [1, 2], leaveOverMs: [10000, 70000],
+  { key: 'neon', label: 'Neon Night', emoji: '💜', cost: 300, unlockLevel: 4, capacity: 4, arrivals: 1.7, tips: 1.6, thirst: 1.4, fans: 1.7, shade: 0x2a0636, crowd: 12, leaveOverMs: [10000, 70000],
     blurb: 'Glow sticks and neon paint. The whole town wants in.' },
-  { key: 'gala', label: 'VIP Gala', emoji: '🥂', cost: 600, unlockLevel: 6, capacity: 6, arrivals: 2, tips: 2, thirst: 1.5, fans: 2, shade: 0x2e2306, crowd: 15, celebs: [2, 3], leaveOverMs: [10000, 70000],
+  { key: 'gala', label: 'VIP Gala', emoji: '🥂', cost: 600, unlockLevel: 6, capacity: 6, arrivals: 2, tips: 2, thirst: 1.5, fans: 2, shade: 0x2e2306, crowd: 15, leaveOverMs: [10000, 70000],
     blurb: 'Red carpet, champagne, the A-list. Huge tips and fans.' },
 ];
 // A bartender's Bottoms Up! (see scene/guests.js): serves their whole line

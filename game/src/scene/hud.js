@@ -73,7 +73,7 @@ export class HudMixin {
       out.push({ name: '+1 Bartender', kind: 'You can hire one more bartender in the Staff tab', art: 'catStaff' });
     }
     for (const celeb of CELEBRITIES) {
-      if (celeb.level === level) out.push({ name: celeb.name, kind: `New celebrity (${'★'.repeat(celeb.fame)}): they can now come to your parties`, portrait: celeb.character });
+      if (celeb.level === level) out.push({ name: celeb.name, kind: `New celebrity (${'★'.repeat(celeb.fame)}): they'll drop in now and then`, portrait: celeb.character });
     }
     for (const limit of EXPANSION.limits) {
       if (limit.level === level && level > 1) out.push({ name: `Walls up to ${limit.size} tiles`, kind: 'Expand your club a row at a time in the Expand tab', art: 'tabExpand' });

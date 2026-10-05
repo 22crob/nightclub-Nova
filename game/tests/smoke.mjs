@@ -748,14 +748,23 @@ const extras = await page.evaluate(async () => {
   // portrait, name, fame stars and status. Only unlocked ones come to
   // parties; one in the club shows "In Club".
   const realLevel = s.levelInfo.bind(s);
-  out.noneEarly = s.levelInfo().level >= 5 || s.pickPartyCelebs(3).length === 0;
+  out.noneEarly = s.levelInfo().level >= 5 || (s.pickCelebs(3).length === 0 && (s.nextCelebAt = 0, s.celebDropIn()) === null);
   s.levelInfo = () => ({ ...realLevel(), level: 11 });
   const q = s.patrons.find((x) => !x.leaving && !x.gone);
-  s.notePartyGuest(q, { partyGuest: true, celeb: 'rico' });
+  s.welcomeCelebrity(q, 'rico');
   out.welcomed = q.celeb && q.celeb.key === 'rico' && q.name === 'Rico Diamond' && s.celebTipFactor(q) > 1
     && document.getElementById('bigPopup').querySelector('.bpSub').textContent.includes('★');
-  const picks = s.pickPartyCelebs(5).map((c) => c.key).sort().join();
+  const picks = s.pickCelebs(5).map((c) => c.key).sort().join();
   out.picks = picks === 'kai,max';
+  // They drop in on their own (not just at parties) once it's time.
+  const queue0 = s.streetQueue;
+  s.streetQueue = [];
+  s.nextCelebAt = s.time.now + 60000;
+  out.notYet = s.celebDropIn() === null;
+  s.nextCelebAt = 0;
+  const drop = s.celebDropIn();
+  out.dropIn = !!drop && ['max', 'kai'].includes(drop.celeb) && s.nextCelebAt > s.time.now + 100000;
+  s.streetQueue = queue0;
   document.getElementById('tabVip').click();
   const cards = [...document.querySelectorAll('#shopItems .celebSlot')];
   out.list = cards.map((c) => `${c.querySelector('.celebName').textContent}|${c.querySelector('.celebStars').textContent}|${c.querySelector('.propCost').textContent}|${!!c.querySelector('.icon').style.backgroundImage}`);
@@ -788,7 +797,7 @@ check('guests can only be seated at a VIP booth; the button is greyed out withou
 check('a drink on the house, once a visit', extras.onHouse, JSON.stringify(extras));
 check('a guest can be sent to the dance floor', extras.danced, JSON.stringify(extras));
 check('the Celebrity List shows six celebrities with portrait, name, fame stars and Locked / Available / In Club', extras.tab === 'Celebrities' && extras.listed, JSON.stringify(extras.list));
-check('only unlocked celebrities come to parties, and an arrival is announced with their stars', extras.noneEarly && extras.picks && extras.welcomed, JSON.stringify(extras));
+check('unlocked celebrities drop in on their own now and then, and an arrival is announced with their stars', extras.noneEarly && extras.picks && extras.notYet && extras.dropIn && extras.welcomed, JSON.stringify(extras));
 check('the club rating is the average of recent ratings, shown at the top', extras.rating === 3.5 && extras.ratingShown === '3.5' && extras.faster, JSON.stringify(extras));
 check('ratings are saved', extras.saved, JSON.stringify(extras));
 
@@ -870,7 +879,7 @@ check('a long bar can take more bartenders, spread along it, and let one go', lo
 check('a long bar keeps its bartender when the unit they stood at is sold', longBar.split && longBar.kept, JSON.stringify(longBar));
 
 // Throw a Party: the picker lists every party; a House Party costs $60,
-// counts down first, then a crowd (with maybe a celebrity) lines up outside
+// counts down first, then a crowd lines up outside
 // and is let in a few at a time; it lets more guests in with bigger tips;
 // one at a time; after 3 minutes its guests drift home and it earns fans.
 const party = await page.evaluate(() => {
@@ -921,7 +930,8 @@ const party = await page.evaluate(() => {
   // A celebrity wears a star and gets a welcome.
   const guest = s.patrons.find((p) => !p.leaving && !p.gone);
   if (guest) {
-    s.notePartyGuest(guest, { partyGuest: true, celeb: 'jett' });
+    s.notePartyGuest(guest);
+    s.welcomeCelebrity(guest, 'jett');
     out.celeb = guest.celeb && guest.name === 'Jett Starr' && !!guest.container.starIcon && s.celebTipFactor(guest) >= 3;
   }
   out.second = s.throwParty('hiphop');

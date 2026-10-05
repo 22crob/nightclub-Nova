@@ -1,16 +1,17 @@
 // ClubScene methods: the Celebrity List. Each celebrity (CELEBRITIES in
 // config.js) unlocks at a club level and has a fame rating of one to five
-// stars. Once unlocked, they can turn up at your parties (see parties.js):
-// they queue outside wearing a star, a big announcement shows their name
-// and fame as they walk in, and they tip and bring fans by their fame.
-// Higher levels bring more famous celebrities, and the earlier ones keep
-// coming back. The dock's Celebrities tab lists them all with their
+// stars. Once unlocked, they drop in on their own now and then, whenever
+// they like (CELEB.visitEveryMs): they queue outside wearing a star, a big
+// announcement shows their name and fame as they walk in, and they tip and
+// bring fans by their fame. Higher levels bring more famous celebrities,
+// and the earlier ones keep coming back. The dock's Celebrities tab lists them all with their
 // portrait, name, fame, unlock level and whether they're locked, available,
 // on their way or in the club.
 // Mixed into ClubScene (see ClubScene.js); `this` is the scene.
 import { PATRON_META, PATRON_SHEETS } from '../assets.js';
 import { CELEB, CELEBRITIES } from '../config.js';
 import { SFX } from '../sfx.js';
+import { randRange } from '../util.js';
 
 export const fameStars = (fame) => '★'.repeat(fame);
 
@@ -23,14 +24,26 @@ export class CelebritiesMixin {
   celebStatus(def) {
     if (this.levelInfo().level < def.level) return 'locked';
     if (this.patrons.some((p) => !p.gone && p.celeb && p.celeb.key === def.key)) return 'inside';
-    const waiting = (this.streetQueue || []).some((p) => p.info && p.info.celeb === def.key)
-      || (this.partyCrowd || []).some((g) => g.celeb === def.key);
+    const waiting = (this.streetQueue || []).some((p) => p.info && p.info.celeb === def.key);
     return waiting ? 'coming' : 'available';
   }
 
+  // Time for a celebrity to drop in? Returns { celeb } for the next arrival
+  // (see scheduleNextPatronSpawn()), or null.
+  celebDropIn() {
+    const now = this.time.now;
+    if (this.nextCelebAt === undefined) this.nextCelebAt = now + randRange(...CELEB.firstVisitMs);
+    if (now < this.nextCelebAt) return null;
+    if (this.streetQueue && this.streetQueue.length >= this.streetSpots().len) return null; // wait for room in line
+    const [celeb] = this.pickCelebs(1);
+    if (!celeb) return null; // none unlocked or free yet: try again next arrival
+    this.nextCelebAt = now + randRange(...CELEB.visitEveryMs);
+    return { celeb: celeb.key };
+  }
+
   // Up to `count` unlocked celebrities who aren't already here or on their
-  // way, for a party. More famous ones are a bit more likely to come.
-  pickPartyCelebs(count) {
+  // way. More famous ones are a bit more likely to come.
+  pickCelebs(count) {
     const pool = CELEBRITIES.filter((c) => this.celebStatus(c) === 'available');
     const picked = [];
     while (picked.length < count && pool.length) {
@@ -47,13 +60,12 @@ export class CelebritiesMixin {
   }
 
   // A celebrity has walked in: the star over their head, a gold glow, and
-  // a big announcement with their fame (see notePartyGuest()).
+  // a big announcement with their fame (see trySpawnPatron()).
   welcomeCelebrity(patron, key) {
     const def = this.celebDef(key);
     if (!def) return;
     patron.celeb = def;
     patron.name = def.name;
-    if (this.partyStats) this.partyStats.celebs += 1;
     const c = patron.container;
     this.addStarIcon(c);
     const shadow = c.list[0];
@@ -104,8 +116,8 @@ export class CelebritiesMixin {
     el.dataset.rendered = key;
     const label = { locked: '', available: 'Available', coming: 'On the way', inside: 'In Club' };
     const tip = {
-      locked: (c) => `Unlocks at level ${c.level}. Then they can come to your parties.`,
-      available: () => 'Available: they may come to your next party.',
+      locked: (c) => `Unlocks at level ${c.level}. Then they'll drop in now and then.`,
+      available: () => 'Available: they drop in now and then.',
       coming: () => 'On the way: waiting in line outside.',
       inside: () => 'In your club right now!',
     };

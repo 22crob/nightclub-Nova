@@ -2,7 +2,7 @@
 // themed party (PARTIES in config.js). It goes in three steps:
 //  1. a countdown (PARTY_COUNTDOWN_MS) while word gets out;
 //  2. the party (PARTY_LENGTH_MS): a big crowd (`crowd`) turns up and lines
-//     up outside the door, with a few celebrities among them (`celebs`), and
+//     up outside the door, and
 //     the bouncer lets them in a few at a time; guests tip, drink and bring
 //     fans more, and the room takes the party's colour;
 //  3. the end: party guests finish what they're doing and drift home, and
@@ -69,21 +69,14 @@ export class PartiesMixin {
     if (!def) return;
     this.partyPhase = 'running';
     this.partyStartedAt = this.time.now;
-    this.partyStats = { guests: 0, celebs: 0 };
+    this.partyStats = { guests: 0 };
     this.moodColor = def.shade;
     this.drawMoodShade();
     SFX.levelUp();
     this.showToast(`${def.emoji} The ${def.label} has started! Here comes the crowd.`);
-    // The crowd: everyone waits their turn in the line outside, and the
-    // celebrities are mixed in among them.
-    // Celebrities come from those unlocked on the Celebrity List.
-    const count = Math.floor(randRange(def.celebs[0], def.celebs[1] + 1));
+    // The crowd: everyone waits their turn in the line outside.
     this.partyCrowd = [];
     for (let i = 0; i < def.crowd; i++) this.partyCrowd.push({ partyGuest: true });
-    for (const celeb of this.pickPartyCelebs(count)) {
-      const at = Math.floor(Math.random() * (this.partyCrowd.length + 1));
-      this.partyCrowd.splice(at, 0, { partyGuest: true, celeb: celeb.key });
-    }
     // They arrive in a stream, filling the line.
     for (let i = 0; i < 8; i++) this.time.delayedCall(300 + i * 450, () => this.callPartyCrowd());
     this.updatePartyButton();
@@ -123,10 +116,9 @@ export class PartiesMixin {
   }
 
   // A party guest came in (see trySpawnPatron()).
-  notePartyGuest(patron, info) {
+  notePartyGuest(patron) {
     patron.partyGuest = true;
     if (this.partyStats) this.partyStats.guests += 1;
-    if (info.celeb) this.welcomeCelebrity(patron, info.celeb);
   }
 
   updatePartyButton() {
@@ -141,7 +133,7 @@ export class PartiesMixin {
       return;
     }
     let state = 'ready';
-    let text = `Pay for a themed party: a crowd, celebrities, bigger tips and more fans, for ${PARTY_LENGTH_MS / 60000} minutes.`;
+    let text = `Pay for a themed party: a packed club, more dancing and drinking, bigger tips and more fans, for ${PARTY_LENGTH_MS / 60000} minutes.`;
     if (def && this.partyPhase === 'countdown') {
       state = 'active';
       text = `${def.emoji} ${def.label} starts in ${clock(this.partyStartsAt - now)}!`;

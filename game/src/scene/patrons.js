@@ -26,7 +26,8 @@ export class PatronsMixin {
 
   scheduleNextPatronSpawn() {
     this.time.delayedCall(randRange(...PATRON_SPAWN_INTERVAL) * this.spawnDelayFactor(), () => {
-      this.streetArrival(); // someone walks up to the line outside
+      // Someone walks up to the line outside: now and then a celebrity.
+      this.streetArrival(false, this.celebDropIn());
       this.scheduleNextPatronSpawn();
     });
   }
@@ -39,7 +40,8 @@ export class PatronsMixin {
   }
 
   // Brings a patron in at the door (`character`: their look, from the line
-  // outside; `info`: a party guest, maybe a celebrity).
+  // outside; `info`: { partyGuest } for a party guest, { celeb } for a
+  // celebrity).
   trySpawnPatron(character, info) {
     if (!this.doorsOpen()) return; // last call or closed
     if (this.patrons.length >= this.patronCapacity()) return;
@@ -78,7 +80,8 @@ export class PatronsMixin {
     };
     this.startVisit(patron); // their visit length and personality (see activities.js)
     this.patrons.push(patron);
-    if (info) this.notePartyGuest(patron, info); // came for the party (maybe a celebrity)
+    if (info && info.partyGuest) this.notePartyGuest(patron); // came for the party
+    if (info && info.celeb) this.welcomeCelebrity(patron, info.celeb); // a celebrity dropping in
     this.chargeCover(patron);
     this.setPatronDepth(patron, gx + gy);
     this.updateUI(); // refresh the patrons-on-floor readout right away, not on the next tip/tick
