@@ -98,9 +98,12 @@ export const CAPACITY = { base: 8, perExpansion: 1 };
 // Fans are the game's XP. Level L needs first + step*(L-1) + curve*(L-1)^2
 // more fans to reach the next one, so each level takes longer.
 export const LEVEL_FANS = { first: 250, step: 150, curve: 15 };
-// Where fans (XP) come from: mostly good service, satisfied visits and
-// successful parties, not guests just moving between activities.
-export const XP = { drinkServed: 0.5, partyPerGuest: 1, partyMax: 60 };
+// Where XP (the save calls it fans) comes from: mostly good service,
+// satisfied visits and successful parties, not guests just moving between
+// activities; and buying things: perDollar XP for each $ spent on
+// furniture, decorations, floors, wallpaper and expansions. Moving gives
+// none, and selling takes back what the item gave.
+export const XP = { drinkServed: 0.5, partyPerGuest: 1, partyMax: 60, perDollar: 0.05 };
 // Guest visits (see scene/activities.js): a guest stays visitMs, moving
 // between activities that each last about their range (ms). They finish
 // what they're doing before leaving; overstayMs past that, they're sent off.
@@ -284,7 +287,7 @@ export const PARTIES = [
   { key: 'neon', label: 'Neon Night', emoji: '💜', cost: 300, unlockLevel: 4, arrivals: 1.7, tips: 1.6, thirst: 1.4, fans: 1.7, shade: 0x2a0636, crowd: 12, leaveOverMs: [10000, 70000],
     blurb: 'Glow sticks and neon paint. The whole town wants in.' },
   { key: 'gala', label: 'VIP Gala', emoji: '🥂', cost: 600, unlockLevel: 6, arrivals: 2, tips: 2, thirst: 1.5, fans: 2, shade: 0x2e2306, crowd: 15, leaveOverMs: [10000, 70000],
-    blurb: 'Red carpet, champagne, the A-list. Huge tips and fans.' },
+    blurb: 'Red carpet, champagne, the A-list. Huge tips and XP.' },
 ];
 // A bartender's Bottoms Up! (see scene/guests.js): serves their whole line
 // at once, then needs cooldownMs to recover. The game suggests it when a

@@ -417,10 +417,13 @@ export class StaffMixin {
     const refund = Math.round(PROP_TYPES[old.type].cost * SELL_REFUND_RATIO);
     if (this.cash + refund < def.cost) { SFX.denied(); return false; }
     const { facing, anchor } = old;
+    this.revokePurchaseXp(old.xp); // the old booth is traded in
     this.removeProp(old);
     const rec = this.restoreProp(type, facing, anchor);
     this.attachStaff(rec);
     this.cash += refund - def.cost;
+    const at = this.footprintCenter(rec.tiles);
+    rec.xp = this.awardPurchaseXp(def.cost, at.sx, at.sy - 80);
     SFX.levelUp();
     this.showToast(`🎧 Your DJ moved into the ${def.label}!`);
     this.updateUI();

@@ -20,7 +20,7 @@ const CATEGORIES = {
   Floors: { icon: 'catFloors', text: 'Dance floors, where guests dance, and regular floors, painted tile by tile.', includes: ['Dance Floors', 'Floors'] },
   Wallpaper: { icon: 'catWallpaper', text: 'Paper the walls, section by section.' },
   Decorations: { icon: 'catDecor', text: 'Plants, lights and statues to make the club fancier.' },
-  'DJ Booths': { icon: 'catBooths', text: 'Upgrade your DJ booth. A better booth brings more fans.' },
+  'DJ Booths': { icon: 'catBooths', text: 'Upgrade your DJ booth. A better booth earns more XP.' },
 };
 const STORE_CATEGORIES = Object.keys(CATEGORIES);
 

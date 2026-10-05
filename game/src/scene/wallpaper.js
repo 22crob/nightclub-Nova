@@ -95,6 +95,7 @@ export class WallpaperMixin {
     this.cash -= cost;
     this.wallpaper[section] = type;
     this.drawWallSection(section, type);
+    this.awardPurchaseXp(cost);
     SFX.place();
     this.updateUI();
     this.saveGame();

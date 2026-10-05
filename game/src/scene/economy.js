@@ -1,7 +1,7 @@
 // ClubScene methods: Fan rate, patron capacity and level progression.
 // Mixed into ClubScene (see ClubScene.js); `this` is the scene.
 import { FLOOR_DECAL_PROPS, PROP_TYPES } from '../catalog.js';
-import { BASE_GRID_SIZE, CAPACITY, LEVEL_FANS, LUXURY } from '../config.js';
+import { BASE_GRID_SIZE, CAPACITY, LEVEL_FANS, LUXURY, XP } from '../config.js';
 
 export class EconomyMixin {
   // Sums every placed prop's fanRate (dance tiles, DJ booth, neon floor —
@@ -27,6 +27,36 @@ export class EconomyMixin {
       rate += def.fanRate;
     }
     return rate;
+  }
+
+  // XP for buying something that cost `cost`, shown floating at (x, y) if
+  // given. Returns the XP, which the item keeps (rec.xp) so selling it can
+  // take it back.
+  awardPurchaseXp(cost, x, y) {
+    const xp = Math.max(0, cost) * XP.perDollar;
+    if (xp <= 0) return 0;
+    this.fans += xp;
+    if (x !== undefined && xp >= 0.5) this.floatText(x, y, `+${Math.round(xp)} XP`, '#9fe7ff');
+    return xp;
+  }
+
+  // Selling something takes back the XP it gave when bought.
+  revokePurchaseXp(xp, x, y) {
+    if (!xp) return;
+    this.fans = Math.max(0, this.fans - xp);
+    if (x !== undefined && xp >= 0.5) this.floatText(x, y, `-${Math.round(xp)} XP`, '#ff9a9a');
+  }
+
+  // Items in the inventory keep the XP they gave when bought (a list per
+  // type), so putting one away and selling it later still takes it back.
+  pushInventoryXp(type, xp) {
+    this.inventoryXp = this.inventoryXp || {};
+    (this.inventoryXp[type] = this.inventoryXp[type] || []).push(xp || 0);
+  }
+
+  takeInventoryXp(type) {
+    const list = this.inventoryXp && this.inventoryXp[type];
+    return list && list.length ? list.pop() : 0;
   }
 
   // How many guests fit: CAPACITY.base plus one for every row of floor

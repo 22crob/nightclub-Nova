@@ -120,7 +120,7 @@ export class MoodMixin {
     this.fans = Math.max(0, this.fans + fans);
     this.guestsServed = (this.guestsServed || 0) + 1;
     const c = patron.container;
-    const label = fans > 0 ? `${emoji} +${fans}★` : (fans < 0 ? `${emoji} ${fans}★` : emoji);
+    const label = fans > 0 ? `${emoji} +${fans} XP` : (fans < 0 ? `${emoji} ${fans} XP` : emoji);
     this.floatText(c.x, c.y - PATRON_POPUP_Y, label, fans < 0 ? '#ff8a8a' : '#ffe27a');
     this.updateUI();
   }

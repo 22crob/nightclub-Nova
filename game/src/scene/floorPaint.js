@@ -53,6 +53,7 @@ export class FloorPaintMixin {
     this.cash -= cost;
     this.floorPaint[key] = type;
     this.drawFloorPaint(gx, gy, type);
+    this.awardPurchaseXp(cost);
     SFX.place();
     this.updateUI();
     return true;

@@ -40,16 +40,18 @@ export class SaveMixin {
       const rec = this.placed[key];
       if (seen.has(rec)) continue;
       seen.add(rec);
-      placedList.push({ type: rec.type, facing: rec.facing, anchor: rec.anchor, ...(rec.staff ? { staff: true } : {}) });
+      placedList.push({ type: rec.type, facing: rec.facing, anchor: rec.anchor, ...(rec.staff ? { staff: true } : {}), ...(rec.xp ? { xp: rec.xp } : {}) });
     }
     // A DJ booth in the middle of a move is saved where it was.
     const inventory = { ...(this.inventory || {}) };
+    const inventoryXp = Object.fromEntries(Object.entries(this.inventoryXp || {}).map(([t, l]) => [t, [...l]]));
     if (this.movingBooth) {
-      placedList.push({ type: this.movingBooth.type, facing: this.movingBooth.facing, anchor: this.movingBooth.anchor, staff: true });
+      const xp = (inventoryXp[this.movingBooth.type] || []).pop() || 0;
+      placedList.push({ type: this.movingBooth.type, facing: this.movingBooth.facing, anchor: this.movingBooth.anchor, staff: true, xp });
       inventory[this.movingBooth.type] -= 1;
       if (inventory[this.movingBooth.type] <= 0) delete inventory[this.movingBooth.type];
     }
-    return { cash: this.cash, fans: this.fans, gridW: this.gridW, gridH: this.gridH, placed: placedList, wallpaper: { ...this.wallpaper }, floorPaint: { ...this.floorPaint }, nightStars: this.nightStars || [], inventory };
+    return { cash: this.cash, fans: this.fans, gridW: this.gridW, gridH: this.gridH, placed: placedList, wallpaper: { ...this.wallpaper }, floorPaint: { ...this.floorPaint }, nightStars: this.nightStars || [], inventory, inventoryXp };
   }
 
   saveGame() {
@@ -132,6 +134,7 @@ export class SaveMixin {
           }
         }
         if (rec && entry.staff && PROP_TYPES[entry.type].staff) this.attachStaff(rec);
+        if (rec && typeof entry.xp === 'number') rec.xp = entry.xp; // what it gave when bought
       }
     }
     // (Saves from when the club had separate nights also have night,
@@ -139,6 +142,12 @@ export class SaveMixin {
     if (data.inventory && typeof data.inventory === 'object') {
       this.inventory = {};
       for (const [type, n] of Object.entries(data.inventory)) if (PROP_TYPES[type] && n > 0) this.inventory[type] = Math.floor(n);
+    }
+    if (data.inventoryXp && typeof data.inventoryXp === 'object') {
+      this.inventoryXp = {};
+      for (const [type, list] of Object.entries(data.inventoryXp)) {
+        if (Array.isArray(list)) this.inventoryXp[type] = list.filter((x) => typeof x === 'number' && x >= 0);
+      }
     }
     if (Array.isArray(data.nightStars)) this.nightStars = data.nightStars.filter((n) => n >= 1 && n <= 5).slice(-5);
     this.restoreWallpaper(data.wallpaper);

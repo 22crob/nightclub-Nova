@@ -145,7 +145,7 @@ export class PartiesMixin {
       ['✋', 'Bonuses collected', `${stats.bonuses}${stats.bonusCash ? ` ($${stats.bonusCash})` : ''}`],
       [face || '🙂', 'Average happiness', happiness === null ? '-' : `${happiness}%`],
       ['💢', 'Fights / ejections', `${stats.fights} / ${stats.ejections}`],
-      ['❤️', 'Fans earned', `+${fans}`],
+      ['⭐', 'XP earned', `+${fans}`],
     ];
     document.getElementById('partySummaryTitle').textContent = `${def.emoji} ${def.label} wrap-up`;
     const list = document.getElementById('partySummaryRows');
@@ -187,7 +187,7 @@ export class PartiesMixin {
       return;
     }
     let state = 'ready';
-    let text = `Pay for a themed party: a packed club, more dancing and drinking, bigger tips and more fans, for ${PARTY_LENGTH_MS / 60000} minutes.`;
+    let text = `Pay for a themed party: a packed club, more dancing and drinking, bigger tips and more XP, for ${PARTY_LENGTH_MS / 60000} minutes.`;
     if (def && this.partyPhase === 'countdown') {
       state = 'active';
       text = `${def.emoji} ${def.label} starts in ${clock(this.partyStartsAt - now)}!`;

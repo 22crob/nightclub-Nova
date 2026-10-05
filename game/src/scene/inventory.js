@@ -56,6 +56,7 @@ export class InventoryMixin {
       this.movingBooth = { type: rec.type, facing: rec.facing, anchor: [...rec.anchor] };
       this.removeProp(rec);
       this.addToInventory(rec.type);
+      this.pushInventoryXp(rec.type, rec.xp);
       this.updateGhost();
       this.updateUI();
       return 'dj';
@@ -65,6 +66,7 @@ export class InventoryMixin {
     const keepsStaff = staffKind && this.barGroup(rec).length === 1 ? staffKind : null;
     this.removeProp(rec);
     this.addToInventory(rec.type);
+    this.pushInventoryXp(rec.type, rec.xp); // moving or storing gives (and loses) no XP
     this.updateGhost();
     this.updateUI();
     this.saveGame();
@@ -123,7 +125,9 @@ export class InventoryMixin {
     if (!m) return;
     this.movingBooth = null;
     this.addToInventory(m.type, -1);
+    const xp = this.takeInventoryXp(m.type);
     const rec = this.restoreProp(m.type, m.facing, m.anchor) || (this.ensureClubBooth(), this.clubBooth());
+    if (rec) rec.xp = xp;
     if (rec && !rec.staff) this.attachStaff(rec);
     if (this.selectedProp === m.type && this.holdingFromInventory) {
       this.selectedProp = null;

@@ -27,7 +27,7 @@ export class HudMixin {
     const { level, into, need, progress } = this.levelInfo();
     if (this.levelText) this.levelText.textContent = level;
     if (this.xpBarFill) this.xpBarFill.style.width = `${(progress * 100).toFixed(1)}%`;
-    if (this.xpText) this.xpText.textContent = `Level ${level}  ·  ${into} / ${need} fans`;
+    if (this.xpText) this.xpText.textContent = `Level ${level}  ·  ${into} / ${need} XP`;
     // this.currentLevel starts out set (in create(), right after loadGame())
     // to whatever level the game actually opened at, so this only fires
     // for a level actually crossed during THIS play session — never once

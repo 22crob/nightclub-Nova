@@ -242,6 +242,10 @@ export class PlacementMixin {
       this.placed[`${tx},${ty}`] = record;
     }
     this.createGlowFx(record); // a spotlight or disco ball shines (lighting.js)
+    // XP for a purchase; an item from the inventory brings back the XP it
+    // gave when it was first bought.
+    const center = this.footprintCenter(tiles);
+    record.xp = fromInventory ? this.takeInventoryXp(record.type) : this.awardPurchaseXp(cost, center.sx, center.sy - 60);
     if (fromInventory) this.placedFromInventory(record);
 
     SFX.place();
@@ -268,6 +272,8 @@ export class PlacementMixin {
 
     const refund = Math.round(PROP_TYPES[placed.type].cost * SELL_REFUND_RATIO);
     this.cash += refund;
+    const center = this.footprintCenter(placed.tiles);
+    this.revokePurchaseXp(placed.xp, center.sx, center.sy - 60); // no farming XP by buying and selling
     this.removeProp(placed);
 
     SFX.sell();

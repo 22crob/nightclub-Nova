@@ -630,6 +630,39 @@ const capacity = await page.evaluate(() => {
 });
 check('8 guests fit in a new club, +1 per expansion row, shown as "Guests: n/max", and a full club lets nobody in', capacity.base === 8 && capacity.one === 9 && capacity.three === 11 && capacity.matches && capacity.fullBlocks, JSON.stringify(capacity));
 
+// XP for purchases: buying gives XP by price, moving gives none, and
+// selling takes it back, so buying and selling can't farm levels.
+const buyXp = await page.evaluate(() => {
+  const s = window.__clubNova.scene.getScene('club');
+  const out = {};
+  s.cash += 2000;
+  let at = null;
+  for (let gy = 1; gy < s.gridH - 1 && !at; gy++) for (let gx = 1; gx < s.gridW - 1 && !at; gx++) {
+    if (s.footprintValid(s.getFootprint('woodSpeaker', 0, gx, gy), 'woodSpeaker')) at = [gx, gy];
+  }
+  const xp0 = s.fans;
+  s.selectProp('woodSpeaker');
+  s.currentFacing = 0;
+  s.placeProp(at[0], at[1]);
+  const rec = s.placed[`${at[0]},${at[1]}`];
+  out.gained = +(s.fans - xp0).toFixed(2);
+  out.expected = +(s.currentCost('woodSpeaker') * 0.05).toFixed(2);
+  s.deselectProp();
+  // Put it away and place it again: no XP either way.
+  const xp1 = s.fans;
+  s.pickUpProp(rec);
+  s.selectFromInventory('woodSpeaker');
+  s.placeProp(at[0], at[1]);
+  out.moveFree = Math.abs(s.fans - xp1) < 1e-9;
+  // Sell it: the XP goes back.
+  s.sellProp(at[0], at[1]);
+  out.sellBack = Math.abs(s.fans - xp0) < 1e-9;
+  s.updateUI();
+  out.label = document.querySelector('[data-tip-name="XP"]') !== null && /XP$/.test(document.getElementById('xpText')?.textContent || 'XP');
+  return out;
+});
+check('buying gives XP by price, moving gives none, and selling takes it back', buyXp.gained > 0 && buyXp.gained === buyXp.expected && buyXp.moveFree && buyXp.sellBack && buyXp.label, JSON.stringify(buyXp));
+
 // Zoom buttons change the zoom and stay within limits.
 const zoom0 = await page.evaluate(() => window.__clubNova.scene.getScene('club').world.scaleX);
 await page.click('#zoomIn');

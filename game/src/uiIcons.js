@@ -39,6 +39,7 @@ const ICONS = {
     <path d="M8 21.5V6h8v15.5" fill="${PINK}"/><circle cx="14" cy="13.6" r="1" fill="${GOLD}"/>
     <path d="M3 21.6h18" stroke="${W}" stroke-width="2" stroke-linecap="round"/>`,
   // Stats.
+  xp: `<path d="M12 1.8l2.6 2.1 3.3-.4.9 3.2 3 1.5-1.2 3.1 1.2 3.1-3 1.5-.9 3.2-3.3-.4L12 22.2l-2.6-2.1-3.3.4-.9-3.2-3-1.5 1.2-3.1-1.2-3.1 3-1.5.9-3.2 3.3.4Z" fill="${GOLD}"/><text x="12" y="15.6" text-anchor="middle" font-family="Arial Black, Arial, sans-serif" font-weight="900" font-size="9" fill="#10233d">XP</text>`,
   fans: `<path d="M12 21C5 15.6 2.4 12.2 2.4 8.7a4.7 4.7 0 0 1 9.6-1.9 4.7 4.7 0 0 1 9.6 1.9c0 3.5-2.6 6.9-9.6 12.3Z" fill="${PINK}"/>`,
   luxury: `<path d="M6.8 3.6h10.4l4.3 5.6L12 21.2 2.5 9.2Z" fill="${CYAN}"/>
     <path d="M2.5 9.2h19M9.2 3.6 7.4 9.2 12 21.2l4.6-12-1.8-5.6" fill="none" stroke="#1d6f88" stroke-width="1.1" stroke-linejoin="round"/>`,
