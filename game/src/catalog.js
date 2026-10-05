@@ -236,7 +236,7 @@ export const PROP_TYPES = {
   neonSign: decorTier('neonSign', 'Neon Sign', 200, 4, 'neonSign', 0.6),
   glowTube: decorTier('glowTube', 'Glow Tube', 220, 4, 'tube', 0.6),
   poolTable: decorTier('poolTable', 'Pool Table', 300, 5, 'pool', 0.7, { footprint: BOOTH_FOOTPRINT }),
-  spotlight: decorTier('spotlight', 'Spotlight', 260, 6, 'spotlight', 0.7),
+  spotlight: decorTier('spotlight', 'Spotlight', 260, 6, 'spotlight', 0.7, { spotBeam: true }), // shines a beam (createSpotBeam())
   aquarium: decorTier('aquarium', 'Aquarium', 350, 6, 'aquarium', 0.8),
   neonSpeaker: decorTier('neonSpeaker', 'Neon Speaker', 380, 7, 'neonSpeaker', 0.85),
   trophy: decorTier('trophy', 'Gold Trophy', 450, 8, 'trophy', 0.9),

@@ -445,6 +445,27 @@ check('Bass Boost: a popup, a pulse across the dance floor, and dancers dance fa
 check('guests answering react at once and head off; those in a bar line, leaving or arguing stay put', rally.joined >= 1 && rally.freeGoes && rally.othersStay, JSON.stringify(rally));
 check('Drink Rush: a popup, the bars light up, and guests head for a drink (those drinking carry on)', rally.rushPopup && rally.bars && rally.thirstyGo && rally.drinkerStays && rally.headsOff, JSON.stringify(rally));
 
+// The spotlight shines: a beam and a glow that turn with it and go when
+// it's sold.
+const spot = await page.evaluate(() => {
+  const s = window.__clubNova.scene.getScene('club');
+  let at = null;
+  for (let gy = 1; gy < s.gridH - 1 && !at; gy++) for (let gx = 1; gx < s.gridW - 1 && !at; gx++) {
+    if (s.footprintValid(s.getFootprint('spotlight', 0, gx, gy), 'spotlight')) at = [gx, gy];
+  }
+  const rec = s.restoreProp('spotlight', 0, at);
+  const out = { beam: !!rec.spotBeam && rec.spotBeam.parts.length >= 2 && rec.spotBeam.parts.every((p) => p.active) };
+  const first = rec.spotBeam.parts[0];
+  const angle0 = first.rotation;
+  s.rotatePlacedProp(`${at[0]},${at[1]}`);
+  out.turned = !first.active && !!rec.spotBeam && Math.abs(rec.spotBeam.parts[0].rotation - angle0) > 0.5;
+  const parts = rec.spotBeam.parts;
+  s.removeProp(rec);
+  out.gone = parts.every((p) => !p.active);
+  return out;
+});
+check('the spotlight shines a beam that turns with it and goes when it is removed', spot.beam && spot.turned && spot.gone, JSON.stringify(spot));
+
 // Zoom buttons change the zoom and stay within limits.
 const zoom0 = await page.evaluate(() => window.__clubNova.scene.getScene('club').world.scaleX);
 await page.click('#zoomIn');
