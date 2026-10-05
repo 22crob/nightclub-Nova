@@ -54,27 +54,10 @@ export class GuestsMixin {
 
   // --- Clicking people --------------------------------------------------------
 
-  // The guest or bartender drawn under a screen point, nearest the camera
-  // first, or null. People are hit anywhere on their body, not their tile.
-  personAt(screenX, screenY) {
-    const x = (screenX - this.world.x) / this.world.scaleX;
-    const y = (screenY - this.world.y) / this.world.scaleY;
-    const h = CHARACTER_DISPLAY_HEIGHT * 0.9;
-    const hit = (c) => Math.abs(x - c.x) < 16 && y < c.y + 2 && y > c.y - h;
-    let best = null;
-    const consider = (kind, target, c) => {
-      if (hit(c) && (!best || c.depth > best.c.depth)) best = { kind, target, c };
-    };
-    for (const p of this.patrons) if (!p.gone) consider('guest', p, p.container);
-    for (const rec of this.staffableRecords()) {
-      if (rec.staff && rec.staff.kind === 'bartender') consider('bartender', rec, rec.staff.container);
-    }
-    return best;
-  }
-
   // Opens the card of whoever was clicked. Returns true if someone was.
   clickPerson(pointer) {
-    const found = this.personAt(pointer.x, pointer.y);
+    const hit = this.objectAt(pointer.x, pointer.y); // what's drawn there (selection.js)
+    const found = hit && (hit.kind === 'guest' || hit.kind === 'bartender') ? hit : null;
     if (!found) return false;
     SFX.unlock();
     this.openInfoCard(found.kind, found.target);

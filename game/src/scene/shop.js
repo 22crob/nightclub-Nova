@@ -111,6 +111,7 @@ export class ShopMixin {
       this.dockEl.dataset.mode = tab === 'decor' ? 'store' : 'main';
     }
     document.body.classList.toggle('editing', tab === 'edit');
+    if (this.drawSelectionFootprint) this.drawSelectionFootprint();
     hideTip();
     if (this.shopItemsEl) this.shopItemsEl.scrollLeft = 0;
     this.refreshDock();

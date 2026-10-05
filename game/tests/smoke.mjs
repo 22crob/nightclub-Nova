@@ -558,6 +558,51 @@ const bonus = await page.evaluate((setup) => {
 check('a happy guest offers a high five or fist bump; clicking it pays $88 and opens no card', bonus.offered && bonus.paid === 88 && bonus.noCard && bonus.gone, JSON.stringify(bonus));
 check('an unclaimed bonus fades after about 8 seconds', bonus.life === 8 && bonus.expired, JSON.stringify(bonus));
 
+// Hovering and selecting: what's drawn under the cursor, pixel for pixel.
+// Hovering a three-tile booth anywhere glows the whole booth; clicking it
+// selects it and outlines its whole footprint; the Edit tools act on it.
+const select = await page.evaluate(() => {
+  const s = window.__clubNova.scene.getScene('club');
+  const out = {};
+  s.cash += 2000;
+  let at = null;
+  for (let gy = 2; gy < s.gridH - 3 && !at; gy++) for (let gx = 2; gx < s.gridW - 3 && !at; gx++) {
+    if (s.footprintValid(s.getFootprint('blackBooth', 0, gx, gy), 'blackBooth')) at = [gx, gy];
+  }
+  const rec = s.restoreProp('blackBooth', 0, at);
+  out.tiles = rec.tiles.length;
+  // Keep guests out of the way for the check.
+  const everyone = s.patrons;
+  s.patrons = [];
+  // A point on the booth's picture far from its anchor tile.
+  const img = rec.gameObject;
+  const b = img.getBounds();
+  const pts = [];
+  for (let fx = 0.1; fx <= 0.9; fx += 0.1) for (let fy = 0.2; fy <= 0.9; fy += 0.1) {
+    pts.push({ x: b.x + b.width * fx, y: b.y + b.height * fy }); // getBounds() is already in screen space
+  }
+  const onIt = pts.filter((p) => { const h = s.objectAt(p.x, p.y); return h && h.target === rec; });
+  out.hitPoints = onIt.length;
+  const p = onIt[onIt.length - 1];
+  s.updateHoverObject(p);
+  out.glow = s.hovered && s.hovered.target === rec && (!img.preFX || !!img.selectGlow);
+  s.clickObject(p);
+  out.selected = s.selected && s.selected.target === rec && s.selectionOutline.commandBuffer.length > 0;
+  s.clearSelection();
+  out.cleared = !s.selected && (!img.preFX || !img.selectGlow);
+  // Edit > Move picks up the whole booth from anywhere on it.
+  s.setDockTab('edit');
+  s.editTool = 'move';
+  s.clickObject(p);
+  out.pickedUp = !s.placed[`${at[0]},${at[1]}`] && s.selectedProp === 'blackBooth';
+  s.deselectProp();
+  s.setDockTab('inventory');
+  s.patrons = everyone;
+  return out;
+});
+check('hovering any part of a three-tile booth glows the whole booth; clicking selects it and outlines its footprint', select.tiles === 9 && select.hitPoints > 3 && select.glow && select.selected && select.cleared, JSON.stringify(select));
+check('in Edit, clicking anywhere on the booth picks the whole booth up', select.pickedUp, JSON.stringify(select));
+
 // Zoom buttons change the zoom and stay within limits.
 const zoom0 = await page.evaluate(() => window.__clubNova.scene.getScene('club').world.scaleX);
 await page.click('#zoomIn');

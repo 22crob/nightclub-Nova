@@ -279,6 +279,7 @@ export class PlacementMixin {
   // Takes a placed prop out of the club (its tiles, art, staff and lights),
   // with no refund: used by selling and by swapping the DJ booth.
   removeProp(placed) {
+    this.forgetHovered(placed); // no glow or outline left on it (selection.js)
     // A long bar keeps its bartender when one of its units goes.
     const mates = placed.staff && placed.staff.kind === 'bartender' ? this.barGroup(placed).filter((r) => r !== placed) : [];
     if (PROP_TYPES[placed.type].seats) this.releaseSeats(placed);

@@ -33,6 +33,7 @@ import { ReactionsMixin } from './reactions.js';
 import { BarsMixin } from './bars.js';
 import { BonusesMixin } from './bonuses.js';
 import { SpeakersMixin } from './speakers.js';
+import { SelectionMixin } from './selection.js';
 import { Music } from '../music.js';
 import { applyMixins } from './applyMixins.js';
 
@@ -182,6 +183,7 @@ export class ClubScene extends Phaser.Scene {
         }
       }
       this.updateHoverFromPointer(p);
+      if (!this.isDragging) this.updateHoverObject(p); // outline glow (selection.js)
       if (this.paintingFloor && this.hoverTile) this.paintFloor(this.hoverTile.gx, this.hoverTile.gy);
     });
 
@@ -203,12 +205,17 @@ export class ClubScene extends Phaser.Scene {
         if (p.event.button === 0 && this.hoverWall) this.paintWall(this.hoverWall);
         return;
       }
-      // The Edit tab's tools act on whatever was clicked.
+      // With nothing in hand, a click goes to whatever is drawn under the
+      // cursor: the Edit tools act on the piece clicked (anywhere on it), a
+      // person opens their card, furniture is selected (selection.js).
+      // With something in hand, a click always places it.
+      if (p.event.button === 0 && !this.selectedProp && this.clickObject(p)) return;
       if (p.event.button === 0 && this.dockTab === 'edit' && !this.selectedProp && this.hoverTile
         && this.editClick(this.hoverTile.gx, this.hoverTile.gy)) return;
-      // With something in hand, a click always places it (never opens a
-      // card for someone standing there).
-      if (p.event.button === 0 && !this.selectedProp && this.clickPerson(p)) return; // a guest's or bartender's card
+      if (p.event.button === 2) {
+        const hit = this.objectAt(p.x, p.y);
+        if (hit && hit.kind === 'prop') { this.sellProp(hit.target.anchor[0], hit.target.anchor[1]); return; }
+      }
       if (!this.hoverTile) return;
       if (p.event.button === 0) {
         this.placeProp(this.hoverTile.gx, this.hoverTile.gy);
@@ -224,7 +231,7 @@ export class ClubScene extends Phaser.Scene {
     // ESC: quick way to stop holding whatever's selected, same as
     // re-clicking it in the shop.
     // A second Esc (with nothing held) puts the shop away.
-    this.input.keyboard.on('keydown-ESC', () => { if (this.selectedProp) this.deselectProp(); });
+    this.input.keyboard.on('keydown-ESC', () => { if (this.selectedProp) this.deselectProp(); this.clearSelection(); });
 
     // Zoom: mouse wheel zooms toward the cursor, +/- keys and the on-screen
     // buttons zoom around the screen centre.
@@ -375,4 +382,5 @@ applyMixins(ClubScene, [
   BarsMixin,
   BonusesMixin,
   SpeakersMixin,
+  SelectionMixin,
 ]);

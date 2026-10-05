@@ -255,6 +255,11 @@ export const REACTIONS = {
 // within lifeMs collects `amount`. size: the badge, in px.
 export const BONUS = { amount: 88, everyMs: [30000, 60000], lifeMs: 8000, minMood: 70, size: 30 };
 
+// Hovering and selecting (see selection.js): the outline glow round
+// whatever's under the cursor (colour, strength), round a selected piece,
+// the room the glow needs, and how opaque a pixel must be to count as hit.
+export const HOVER = { color: 0xffffff, strength: 2.5, selectColor: 0x5dff8a, selectStrength: 4, padding: 10, alphaHit: 40 };
+
 export const SECURITY = {
   character: 4, scale: 1.12, stepMs: 380, // all in black, like the bouncer
   argueChance: 0.12, cooldownMs: 90 * 1000, argueMs: [8000, 12000],
