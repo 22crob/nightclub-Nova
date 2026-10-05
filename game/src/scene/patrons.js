@@ -232,8 +232,6 @@ export class PatronsMixin {
         continue;
       }
       this.tickActivity(patron);
-      // On a bar stool, waiting: the bartender serves them.
-      if (patron.sitting && patron.serveAt && now >= patron.serveAt) this.serveAtStool(patron);
       if (!patron.moving && now >= patron.nextMoveAt) {
         this.movePatronRandomly(patron);
       }

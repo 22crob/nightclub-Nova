@@ -66,7 +66,7 @@ export class MoodMixin {
       if (patron.thirstSince == null) patron.thirstSince = now;
       if (now - patron.thirstSince > MOOD.thirstGrace) {
         // In line for a drink, they're more patient.
-        mood -= MOOD.thirstMoodPerSec * dt * (patron.queue || patron.stoolBar ? MOOD.queuePatience : 1);
+        mood -= MOOD.thirstMoodPerSec * dt * (patron.queue ? MOOD.queuePatience : 1);
         this.moodBubble(patron, '🍹?');
       }
     } else {

@@ -60,7 +60,7 @@ export class ActivitiesMixin {
   beginActivity(patron, kind) {
     const now = this.time.now;
     if (kind === 'drink') {
-      if (!this.joinBarStoolOrQueue(patron)) return false;
+      if (!this.joinBarQueue(patron)) return false;
       patron.activity = { kind, phase: 'queue' };
       return true;
     }
@@ -131,9 +131,9 @@ export class ActivitiesMixin {
     if (kind !== 'wander') patron.activity = null;
   }
 
-  // Served a drink (at the bar, from a stool, by Bottoms Up! or on the
-  // house): the guest drinks it for a while, staying on their stool or
-  // stepping away from the counter so the next customer can order.
+  // Served a drink (at the bar, by Bottoms Up! or on the house): the guest
+  // drinks it for a while, stepping away from the counter so the next
+  // customer can order (or staying put if they're sitting).
   startDrinking(patron, bar) {
     patron.activity = { kind: 'drink', phase: 'drinking', until: this.time.now + randRange(...VISIT.drinkMs), bar };
     if (patron.sitting) {
@@ -281,22 +281,6 @@ export class ActivitiesMixin {
         other.nextMoveAt = Math.min(other.nextMoveAt, this.time.now + 800);
       }
     }
-  }
-
-  // Heads for a drink: a free stool at a staffed bar (sit and get served
-  // across the counter) or the shortest line at one. Stools are popular,
-  // but some guests just queue.
-  joinBarStoolOrQueue(patron) {
-    const stools = this.freeBarStools();
-    const takeStool = () => {
-      if (stools.length === 0) return false;
-      const seat = Phaser.Utils.Array.GetRandom(stools);
-      this.claimSpecificSeat(patron, seat);
-      patron.stoolBar = seat.bar;
-      return true;
-    };
-    if (Math.random() < 0.65 && takeStool()) return true;
-    return this.joinBarQueue(patron) || takeStool();
   }
 
   // Runs every patron tick: chat bubbles for chatters.

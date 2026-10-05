@@ -11,11 +11,6 @@
 import { PROP_TYPES } from '../catalog.js';
 import { TILE_W, VISIT } from '../config.js';
 
-// Stools, which serve as bar stools when they stand in front of a counter.
-const STOOLS = new Set(['woodStool', 'barStool']);
-// How long a guest on a bar stool waits to be served (ms).
-const STOOL_SERVE_MS = [1500, 4000];
-
 // Screen pixels per Blender unit of height, for sitLift.
 const UNIT_HEIGHT_PX = (TILE_W / Math.SQRT2) * Math.cos(Math.PI / 6);
 const randRange = (min, max) => min + Math.random() * (max - min);
@@ -98,49 +93,12 @@ export class SeatingMixin {
     patron.path = null;
   }
 
-  // --- Bar stools -------------------------------------------------------------
-  // A stool standing right in front of a bar's counter (where its line
-  // would start) is a service seat: a guest sits there and the bartender
-  // serves them across the counter.
-
-  // The bar unit a stool serves, or null.
-  stoolBar(rec) {
-    if (!STOOLS.has(rec.type)) return null;
-    const [sx, sy] = rec.anchor;
-    for (const bar of this.hireableRecords()) {
-      const { counter, out } = this.barLayout(bar);
-      if (!out) continue;
-      if (counter[0] + out[0] === sx && counter[1] + out[1] === sy) return bar;
-    }
-    return null;
-  }
-
-  // Free stools at bars someone's working, as seats with their bar.
-  freeBarStools() {
-    return this.freeSeats(STOOLS)
-      .map((seat) => ({ ...seat, bar: this.stoolBar(seat.rec) }))
-      .filter((seat) => seat.bar && this.isWorked(seat.bar));
-  }
-
-  // A guest waiting on a stool gets served once the bartender gets to them
-  // (see tickPatrons()); if nobody works the bar any more, they give up.
-  serveAtStool(patron) {
-    const bar = patron.stoolBar;
-    patron.serveAt = null;
-    if (!bar || !this.isWorked(bar) || !this.placed[`${bar.anchor[0]},${bar.anchor[1]}`]) {
-      patron.nextMoveAt = this.time.now;
-      return;
-    }
-    this.serveDrink(bar, patron); // they drink it on the stool (startDrinking())
-  }
-
   // Drops a patron's seat reservation (not while seated).
   releaseSeat(patron) {
     const seat = patron.seat;
     if (!seat) return;
     if (seat.rec.seatTaken && seat.rec.seatTaken[seat.i] === patron) seat.rec.seatTaken[seat.i] = null;
     patron.seat = null;
-    patron.stoolBar = null;
   }
 
   // The patron has reached their seat's access tile: hop onto the seat.
@@ -159,9 +117,7 @@ export class SeatingMixin {
     // is then the nearer layer (see setPropDepth()), hides them.
     let facingCamera = true;
     if (c.patronSprite) {
-      // On a bar stool they face the counter; otherwise the seat's front.
-      const bar = patron.stoolBar && this.barLayout(patron.stoolBar);
-      const [fx, fy] = bar ? [-bar.out[0], -bar.out[1]] : spot.front;
+      const [fx, fy] = spot.front;
       facingCamera = fx > 0 || fy > 0;
       c.patronDir = facingCamera ? 'front' : 'back';
       c.scaleX = (fx !== 0 ? -1 : 1) * patron.scaleVariance;
@@ -177,13 +133,6 @@ export class SeatingMixin {
       ease: 'Sine.easeOut',
       onComplete: () => {
         patron.moving = false;
-        // At a bar stool: wait to be served (then drink, see
-        // startDrinking()). Otherwise sit a while (VISIT.sitMs).
-        if (patron.stoolBar) {
-          patron.serveAt = this.time.now + randRange(...STOOL_SERVE_MS);
-          patron.nextMoveAt = this.time.now + 60000;
-          return;
-        }
         patron.nextMoveAt = this.time.now + randRange(...VISIT.sitMs);
       },
     });
@@ -201,8 +150,6 @@ export class SeatingMixin {
     }
     this.releaseSeat(patron);
     patron.sitting = false;
-    patron.stoolBar = null;
-    patron.serveAt = null;
     patron.moving = true;
     patron.gx = access[0];
     patron.gy = access[1];
@@ -239,8 +186,6 @@ export class SeatingMixin {
         this.setPatronDepth(patron, patron.gx + patron.gy);
       }
       this.releaseSeat(patron);
-      patron.stoolBar = null;
-      patron.serveAt = null;
       patron.targetGx = undefined;
       patron.path = null;
     }

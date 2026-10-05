@@ -307,18 +307,13 @@ export class GuestsMixin {
   // The bartender serves everyone in line at once.
   bottomsUp(rec) {
     if (!rec || !rec.staff || !this.bottomsUpReady(rec) || !this.clubOpen()) { SFX.denied(); return 0; }
-    const group = this.barGroup(rec);
-    const onStools = this.patrons.filter((p) => p.sitting && p.serveAt && group.includes(p.stoolBar));
-    const line = [...this.barGroupQueue(rec).filter((p) => !p.gone && !p.leaving), ...onStools];
+    const line = this.barGroupQueue(rec).filter((p) => !p.gone && !p.leaving);
     if (line.length === 0) {
       SFX.denied();
       this.showToast('🍹 Nobody is waiting at this bar right now.');
       return 0;
     }
-    for (const p of line) {
-      p.serveAt = null;
-      this.serveDrink(p.queue || p.stoolBar || rec, p);
-    }
+    for (const p of line) this.serveDrink(p.queue || rec, p);
     for (const unit of this.barGroup(rec)) this.clearBarQueue(unit);
     rec.staff.bottomsUpAt = this.time.now + BOTTOMS_UP.cooldownMs;
     const { x, y } = rec.staff.container;
