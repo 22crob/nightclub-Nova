@@ -261,10 +261,12 @@ export class GuestsMixin {
   // The bartender serves everyone in line at once.
   bottomsUp(rec) {
     if (!rec || !rec.staff || !this.bottomsUpReady(rec) || !this.clubOpen()) { SFX.denied(); return 0; }
-    const line = this.barGroupQueue(rec).filter((p) => !p.gone && !p.leaving);
+    // Everyone standing at the counter gets served at once; those still on
+    // their way, or waiting behind, step up afterwards.
+    const line = this.barGroupQueue(rec).filter((p) => !p.gone && !p.leaving && this.atServiceSpot(p));
     if (line.length === 0) {
       SFX.denied();
-      this.showToast('🍹 Nobody is waiting at this bar right now.');
+      this.showToast('🍹 Nobody is at the counter right now.');
       return 0;
     }
     for (const p of line) {

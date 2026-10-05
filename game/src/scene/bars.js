@@ -169,6 +169,14 @@ export class BarsMixin {
     this.faceToward(patron, sx, sy);
   }
 
+  // True if a customer is standing still on their service spot: the only
+  // place a drink can be handed over.
+  atServiceSpot(p) {
+    if (!p.queue || !p.atSpot || p.moving) return false;
+    const spot = this.barServiceSpot(p.queue);
+    return !!spot && spot[0] === p.gx && spot[1] === p.gy;
+  }
+
   // A customer has reached their place: at a spot they wait to be served,
   // otherwise for a spot to free up.
   waitInLine(patron) {
@@ -197,7 +205,7 @@ export class BarsMixin {
         const t = b.task;
         if (!t) continue;
         const p = t.patron;
-        if (p.gone || p.leaving || p.queue !== t.unit || !p.atSpot || !group.includes(t.unit)) {
+        if (p.gone || p.leaving || p.queue !== t.unit || !this.atServiceSpot(p) || !group.includes(t.unit)) {
           this.releaseBartender(b);
         } else if (t.phase === 'serve' && now >= t.until) {
           this.releaseBartender(b);
@@ -208,7 +216,7 @@ export class BarsMixin {
       }
       // Free bartenders go to the nearest customer waiting at a spot nobody
       // else is serving.
-      const ready = this.barGroupQueue(group[0]).filter((p) => p.atSpot && p.readyToOrder && !p.servedBy && !p.leaving);
+      const ready = this.barGroupQueue(group[0]).filter((p) => p.readyToOrder && this.atServiceSpot(p) && !p.servedBy && !p.leaving);
       for (const b of staff) {
         if (b.task || ready.length === 0) continue;
         const at = group.indexOf(b.atUnit);

@@ -794,6 +794,13 @@ const queue = await page.evaluate(() => {
   const freed = where(guests[0]);
   s.leaveBarQueue(guests[0]);
   out.stepUp = guests[2].atSpot && where(guests[2]) === freed;
+  // Someone still walking to the counter isn't served.
+  guests[1].readyToOrder = true;
+  guests[1].moving = true;
+  s.tickBars();
+  out.notWhileWalking = !guests[1].servedBy;
+  guests[1].readyToOrder = false;
+  guests[1].moving = false;
   // Two bartenders, two customers ready: each takes a different spot.
   s.hireStaff(barB);
   const ready = [guests[1], guests[2]];
@@ -837,7 +844,7 @@ const queue = await page.evaluate(() => {
   return out;
 });
 check('customers fill every spot along a long bar, then wait in rows behind and step up', queue.group && queue.spotsOk && queue.lineOk && queue.stepUp, JSON.stringify(queue));
-check('bartenders each claim a different customer, take 3 s to serve, then serve', queue.ready && queue.claimed && queue.notYet && queue.served, JSON.stringify(queue));
+check('bartenders each claim a different customer, take 3 s to serve, then serve (never while they walk)', queue.notWhileWalking && queue.ready && queue.claimed && queue.notYet && queue.served, JSON.stringify(queue));
 check('nobody gives up on the bar before 20 s; after that some walk off angry', queue.stillWaiting && queue.gaveUp, JSON.stringify(queue));
 
 // Regular floors: pick one and click (or drag across) tiles to paint them.
@@ -973,12 +980,19 @@ const people = await page.evaluate(() => {
   const line = s.patrons.filter((q) => !q.leaving && !q.gone).slice(0, 3);
   for (const q of s.patrons) if (q.queue) s.leaveBarQueue(q);
   for (const q of line) s.joinBarQueue(q);
+  // Bottoms Up! serves those at the counter; anyone still on their way, or
+  // waiting behind, isn't served.
+  for (const q of line) { if (q.atSpot) { [q.gx, q.gy] = [q.targetGx, q.targetGy]; q.moving = false; } }
+  const atCounter = line.filter((q) => s.atServiceSpot(q)).length;
+  const behind = line.filter((q) => !s.atServiceSpot(q));
   const drinks0 = s.drinksSold || 0;
   const cash0 = s.cash;
   document.getElementById('bottomsUp').click();
   out.served = (s.drinksSold || 0) - drinks0;
+  out.atCounter = atCounter;
+  out.behindWait = behind.every((q) => !!q.queue && (q.drinks || 0) === 0);
   out.paid = s.cash - cash0;
-  out.lineEmpty = s.barGroupQueue(bar).length === 0 && line.every((q) => !q.queue);
+  out.lineEmpty = line.filter((q) => !behind.includes(q)).every((q) => !q.queue);
   out.cooling = !s.bottomsUpReady(bar) && s.bottomsUp(bar) === 0;
   s.closeInfoCard();
   const lux0 = s.luxury();
@@ -993,7 +1007,7 @@ const people = await page.evaluate(() => {
 });
 check('guests have names, and clicking one opens their card', people.named && people.clickedGuest && people.card && people.quote.length > 2, JSON.stringify(people));
 check('guests have no lasting thought bubbles over their heads', people.bubble, JSON.stringify(people));
-check('Bottoms Up serves the whole line at once, then recovers', people.clickedBar && people.barCard && people.served >= 1 && people.paid > 0 && people.lineEmpty && people.cooling, JSON.stringify(people));
+check('Bottoms Up serves everyone at the counter at once (not those still on their way), then recovers', people.clickedBar && people.barCard && people.served >= 1 && people.served === people.atCounter && people.behindWait && people.paid > 0 && people.lineEmpty && people.cooling, JSON.stringify(people));
 check('Luxury grows with what you place, shows in the top bar and raises tips', people.luxuryUp > 0 && people.tipsUp && people.luxuryShown, JSON.stringify(people));
 
 // From the owner's screenshots, part two: the DJ's song box (Change, Like),
