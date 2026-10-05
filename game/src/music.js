@@ -111,6 +111,7 @@ export const Music = {
   playStep(i, t) {
     const tr = this.track;
     const s = i % 16;
+    if (this.onStep) this.onStep(s, t - SFX.ctx.currentTime); // the speakers move to it (speakers.js)
     if (tr.kick.includes(s)) this.kick(t);
     if (tr.clap.includes(s)) this.clap(t);
     if (tr.hats === 'house') {

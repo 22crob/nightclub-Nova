@@ -268,11 +268,11 @@ export class LightingMixin {
 
   // Removes the spotlight's beam or the disco ball's glow.
   destroyGlowFx(rec) {
-    for (const key of ['spotBeam', 'discoGlow']) {
+    for (const key of ['spotBeam', 'discoGlow', 'speakerFx']) {
       const fx = rec[key];
       if (!fx) continue;
       fx.tweens.forEach((t) => t.remove());
-      fx.parts.forEach((p) => p.destroy());
+      fx.parts.forEach((p) => { this.tweens.killTweensOf(p); p.destroy(); });
       rec[key] = null;
     }
   }
@@ -282,5 +282,6 @@ export class LightingMixin {
     const def = PROP_TYPES[rec.type];
     if (def.spotBeam) rec.spotBeam = this.createSpotBeam(rec);
     if (def.discoGlow) rec.discoGlow = this.createDiscoGlow(rec);
+    if (def.speakerCones) rec.speakerFx = this.createSpeakerFx(rec);
   }
 }

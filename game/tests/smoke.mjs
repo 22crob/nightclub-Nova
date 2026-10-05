@@ -484,6 +484,27 @@ const disco = await page.evaluate(() => {
   return out;
 });
 check('the disco ball glows (halo, rays, sparkles), and the glow goes when it is removed', disco.glow && disco.gone, JSON.stringify(disco));
+const speakers = await page.evaluate(() => {
+  const s = window.__clubNova.scene.getScene('club');
+  let at = null;
+  for (let gy = 1; gy < s.gridH - 1 && !at; gy++) for (let gx = 1; gx < s.gridW - 1 && !at; gx++) {
+    if (s.footprintValid(s.getFootprint('speakerTower', 0, gx, gy), 'speakerTower')) at = [gx, gy];
+  }
+  const rec = s.restoreProp('speakerTower', 0, at);
+  const out = { cones: rec.speakerFx && rec.speakerFx.cones.length };
+  s.pulseSpeakers('kick');
+  const big = rec.speakerFx.cones.find((c) => c.big);
+  out.bump = big.wave.alpha > 0.5 && s.tweens.isTweening(big.cone);
+  // Turned with its back to you, no cones show.
+  s.rotatePlacedProp(`${at[0]},${at[1]}`);
+  s.rotatePlacedProp(`${at[0]},${at[1]}`);
+  out.backHidden = rec.facing === 180 && rec.speakerFx.cones.length === 0;
+  const parts = rec.speakerFx.parts;
+  s.removeProp(rec);
+  out.gone = parts.every((p) => !p.active) && !rec.speakerFx;
+  return out;
+});
+check('speaker cones bump to the beat (and hide when the speaker faces away)', speakers.cones === 3 && speakers.bump && speakers.backHidden && speakers.gone, JSON.stringify(speakers));
 
 // Bonuses: a happy guest now and then holds up a high five or fist bump.
 // Clicking it collects $88 (and opens no card); left alone it fades.

@@ -227,18 +227,18 @@ export const PROP_TYPES = {
   // the keys of the original placeholder decorations, kept for old saves.
   crates: decorTier('crates', 'Beer Crates', 40, 1, 'crates', 0.15),
   plant: decorTier('plant', 'Potted Fern', 50, 1, 'fern', 0.2),
-  woodSpeaker: decorTier('woodSpeaker', 'Wood Speaker', 80, 1, 'woodSpeaker', 0.3),
+  woodSpeaker: decorTier('woodSpeaker', 'Wood Speaker', 80, 1, 'woodSpeaker', 0.3, { speakerCones: 'woodSpeaker' }),
   discoBall: decorTier('discoBall', 'Disco Ball', 120, 1, 'disco', 0.45, { lightRig: true, discoGlow: true }), // glows (createDiscoGlow())
   velvetRope: decorTier('velvetRope', 'Velvet Rope', 90, 2, 'rope', 0.3),
   palm: decorTier('palm', 'Palm Tree', 110, 2, 'palm', 0.35),
   lavaLamp: decorTier('lavaLamp', 'Lava Lamp', 140, 3, 'lava', 0.45),
-  speakerTower: decorTier('speakerTower', 'Speaker Tower', 160, 3, 'speaker', 0.5),
+  speakerTower: decorTier('speakerTower', 'Speaker Tower', 160, 3, 'speaker', 0.5, { speakerCones: 'speaker' }),
   neonSign: decorTier('neonSign', 'Neon Sign', 200, 4, 'neonSign', 0.6),
   glowTube: decorTier('glowTube', 'Glow Tube', 220, 4, 'tube', 0.6),
   poolTable: decorTier('poolTable', 'Pool Table', 300, 5, 'pool', 0.7, { footprint: BOOTH_FOOTPRINT }),
   spotlight: decorTier('spotlight', 'Spotlight', 260, 6, 'spotlight', 0.7, { spotBeam: true }), // shines a beam (createSpotBeam())
   aquarium: decorTier('aquarium', 'Aquarium', 350, 6, 'aquarium', 0.8),
-  neonSpeaker: decorTier('neonSpeaker', 'Neon Speaker', 380, 7, 'neonSpeaker', 0.85),
+  neonSpeaker: decorTier('neonSpeaker', 'Neon Speaker', 380, 7, 'neonSpeaker', 0.85, { speakerCones: 'neonSpeaker' }),
   trophy: decorTier('trophy', 'Gold Trophy', 450, 8, 'trophy', 0.9),
   luckyCat: decorTier('luckyCat', 'Lucky Cat', 550, 9, 'luckyCat', 1.0),
   // Wallpaper (src/walls.js, drawn in code): simple to fancy across the
