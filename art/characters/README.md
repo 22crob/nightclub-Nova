@@ -11,8 +11,14 @@ The owner's base model for all the girl patrons, shared 2026-10-06. She
 isn't animated yet; that comes later, the same way as the guy (cut into
 parts, then idle/walk/dance/sit sheets x front/back).
 
-Put the drawing here as `girl_base.png` (the owner pastes it in chat,
-which doesn't reach the repo, so it has to be uploaded to this folder).
+The owner's 3D model of her is `girl_base.blend` (a grey clay chibi in a
+T-pose, built from the drawing: hair, closed smiling eyes, T-shirt,
+shorts, flat shoes; no rig or UV maps yet). `art/blender/paint_girl.py`
+paints it in a look (skin, hair, shirt with a front print, denim or
+cotton shorts, shoes, blush, gold hoops, outlines) and renders the front;
+`art/previews/girl_looks.png` shows the three looks so far (Pink Pop,
+Neon Night, Sunny). The drawing itself can go here as `girl_base.png`
+(pasting it in chat doesn't reach the repo).
 
 What the drawing shows (front view, clean black line art on white, with
 a light centre line and ground line as construction guides):
