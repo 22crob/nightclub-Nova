@@ -52,10 +52,13 @@ outline): the 6 stray vertices deleted, the "sharp" marks cleared from
 its edges (nearly all were marked, which shaded it in flat steps), the
 -X side mirrored onto +X so the ears match, and smoothing only where
 asked, through vertex groups: "Smooth neck" and "Flatten neck lumps"
-(the whole neck, shoulders to the underside of the chin; the plain smooth
-irons out the lumps that were under the chin) and "Smooth ears" (gentle, tidying their torn tops),
+(the whole neck, shoulders to the underside of the chin, fading out
+before the front of the face so the jaw and mouth area keep their shape;
+the plain smooth irons out the lumps that were under the chin; a version
+that reached up to z 1.02 everywhere melted the jaw into the neck) and "Smooth ears" (gentle, tidying their torn tops),
 plus a 1-level "Soft finish" subdivision. The smoothing and subdivision
 are modifiers, so they can be tuned in Blender. (A first pass that
 smoothed everything lost the eye sockets; the owner asked for them back.)
 Before and after: `art/previews/character_model_1_clean.png`, and the
-neck up close: `art/previews/character_model_1_neck.png`.
+neck up close: `art/previews/character_model_1_neck.png` (original,
+too high, now), the head: `art/previews/character_model_1_head.png`.

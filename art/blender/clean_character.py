@@ -26,8 +26,12 @@ import sys
 import bpy  # first: it makes bmesh importable outside Blender
 import bmesh
 
-# The whole neck, from the shoulders up to the underside of the chin.
-NECK = dict(z=(0.80, 1.02), core=(0.84, 0.985), half_width=0.27, iterations=20, strength=0.8, flatten=40)
+# The whole neck, from the shoulders up to the underside of the chin. The
+# face's front (mouth, jaw) starts just above the neck, so the smoothing
+# fades out toward the front (`face_front`: full behind the first y, none
+# in front of the second) and never reaches the face.
+NECK = dict(z=(0.80, 0.98), core=(0.84, 0.94), half_width=0.27, face_front=(-0.10, -0.145),
+            iterations=20, strength=0.8, flatten=40)
 EARS = dict(x_from=0.255, z=(1.03, 1.43), top_from=1.28, iterations=8, strength=0.5)
 
 
@@ -93,7 +97,10 @@ def main():
 
     nz0, nz1 = NECK['z']
     nc0, nc1 = NECK['core']
-    neck = add_group(obj, 'Neck', lambda c: ramp(c.z, nz0, nc0, nc1, nz1) * ramp(abs(c.x), -1, -1, NECK['half_width'] * 0.7, NECK['half_width']))
+    fy0, fy1 = NECK['face_front']
+    neck = add_group(obj, 'Neck', lambda c: ramp(c.z, nz0, nc0, nc1, nz1)
+                     * ramp(abs(c.x), -1, -1, NECK['half_width'] * 0.7, NECK['half_width'])
+                     * min(1.0, max(0.0, (c.y - fy1) / (fy0 - fy1))))
     ez0, ez1 = EARS['z']
     # Ears: gently all over, fully at the top where they were torn.
     ears = add_group(obj, 'Ears', lambda c: (0.0 if abs(c.x) < EARS['x_from'] or not ez0 < c.z < ez1 else
