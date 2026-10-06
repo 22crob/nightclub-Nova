@@ -7,13 +7,16 @@ body):
   which made it shade in flat steps),
 - makes it exactly symmetrical by mirroring one side onto the other (the
   side with the cleaner ear, the -X side by default), so both ears match,
-- smooths only where it's needed, through vertex groups: the neck
-  (strongly, so it runs cleanly from the chin into the shoulders) and the
+- smooths only where it's needed, through vertex groups: the whole neck,
+  shoulders to the underside of the chin (strongly, and with a plain
+  smooth that irons out the lumps under the chin, so it runs cleanly into
+  the shoulders) and the
   ears (gently, which tidies the torn tops where they join the head),
 - and adds a light subdivision so it isn't faceted.
 
 The mirroring and clean-up are applied to the mesh; the smoothing and
-subdivision are modifiers ("Smooth neck", "Smooth ears", "Soft finish"),
+subdivision are modifiers ("Smooth neck", "Flatten neck lumps", "Smooth
+ears", "Soft finish"),
 so they can be tuned in Blender.
 
     python clean_character.py SRC.blend OUT.blend [--keep +X]
@@ -23,7 +26,8 @@ import sys
 import bpy  # first: it makes bmesh importable outside Blender
 import bmesh
 
-NECK = dict(z=(0.82, 0.99), core=(0.855, 0.955), half_width=0.27, iterations=20, strength=0.8)
+# The whole neck, from the shoulders up to the underside of the chin.
+NECK = dict(z=(0.80, 1.02), core=(0.84, 0.985), half_width=0.27, iterations=20, strength=0.8, flatten=40)
 EARS = dict(x_from=0.255, z=(1.03, 1.43), top_from=1.28, iterations=8, strength=0.5)
 
 
@@ -95,6 +99,12 @@ def main():
     ears = add_group(obj, 'Ears', lambda c: (0.0 if abs(c.x) < EARS['x_from'] or not ez0 < c.z < ez1 else
                                              min(1.0, 0.45 + max(0.0, c.z - EARS['top_from']) * 6)))
     add_smooth(obj, 'Smooth neck', neck, NECK['iterations'], NECK['strength'])
+    # Then a plain smooth, which pulls bumps in rather than keeping their
+    # volume: it irons out the lumps under the chin.
+    flat = obj.modifiers.new('Flatten neck lumps', 'SMOOTH')
+    flat.factor = 1.0
+    flat.iterations = NECK['flatten']
+    flat.vertex_group = neck.name
     add_smooth(obj, 'Smooth ears', ears, EARS['iterations'], EARS['strength'])
 
     sub = obj.modifiers.new('Soft finish', 'SUBSURF')

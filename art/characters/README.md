@@ -51,9 +51,11 @@ mesh, `Retopology_hp`, about 13,500 faces, T-pose), shared 2026-10-06.
 outline): the 6 stray vertices deleted, the "sharp" marks cleared from
 its edges (nearly all were marked, which shaded it in flat steps), the
 -X side mirrored onto +X so the ears match, and smoothing only where
-asked, through vertex groups: "Smooth neck" (strong, so the neck runs
-into the shoulders) and "Smooth ears" (gentle, tidying their torn tops),
+asked, through vertex groups: "Smooth neck" and "Flatten neck lumps"
+(the whole neck, shoulders to the underside of the chin; the plain smooth
+irons out the lumps that were under the chin) and "Smooth ears" (gentle, tidying their torn tops),
 plus a 1-level "Soft finish" subdivision. The smoothing and subdivision
 are modifiers, so they can be tuned in Blender. (A first pass that
 smoothed everything lost the eye sockets; the owner asked for them back.)
-Before and after: `art/previews/character_model_1_clean.png`.
+Before and after: `art/previews/character_model_1_clean.png`, and the
+neck up close: `art/previews/character_model_1_neck.png`.
