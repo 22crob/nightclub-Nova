@@ -8,7 +8,7 @@
 // While seated, patron.gx/gy is the seat's own tile, which frees the access
 // tile for others. Sitting slowly cheers them up (see updatePatronMood());
 // after a while, or when thirsty, they hop back down.
-import { PROP_TYPES } from '../catalog.js';
+import { PROP_TYPES, VIP_BOOTHS } from '../catalog.js';
 import { TILE_W, VISIT } from '../config.js';
 
 // Screen pixels per Blender unit of height, for sitLift.
@@ -112,6 +112,7 @@ export class SeatingMixin {
     const c = patron.container;
     patron.sitting = true;
     patron.moving = true;
+    if (VIP_BOOTHS.has(rec.type)) patron.vipSeated = true; // a celebrity likes that (see celebVisitOver())
     patron.gx = Math.round(spot.gx);
     patron.gy = Math.round(spot.gy);
     // Facing the camera, they sit on top of the cushions (in front of the

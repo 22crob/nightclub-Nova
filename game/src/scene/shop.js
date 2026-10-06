@@ -7,21 +7,22 @@ import { SFX } from '../sfx.js';
 import { hideTip } from '../tooltips.js';
 import { fillIcons } from '../uiIcons.js';
 
-// The shop, like Nightclub City's: round drawn buttons in the bottom
-// corners (Edit Furniture, Edit Floor, the big Store button, Inventory and
-// Clear Club on the left; Staff, Expand, Celebrities, Sell and OK on the
-// right), and the open one's glossy panel between them. The Store shows a
-// row of drawn categories on the panel's edge (NEW first) with the items
-// standing on the panel and their prices under them. Everything is a
-// picture; names and descriptions are in the hover tips.
+// The shop sits in the DJ desk along the bottom: four light-up pads (Shop,
+// Edit and Storage on the left; Celebrities and OK on the right) and the
+// open one's screen between them. The Shop shows a row of categories on
+// the screen's edge (NEW first, then the store, then Staff and Expand),
+// with the items standing on the screen and their prices under them.
+// Everything is a picture; names and descriptions are in the hover tips.
 const CATEGORIES = {
-  New: { icon: 'catNew', text: 'Everything you unlocked at your last two levels.', isNew: true },
-  Bars: { icon: 'catBars', text: 'Bars sell drinks. Each long bar needs one bartender.' },
-  Seating: { icon: 'catSeating', text: 'Couches and booths where guests sit down and relax.' },
-  Floors: { icon: 'catFloors', text: 'Dance floors, where guests dance, and regular floors, painted tile by tile.', includes: ['Dance Floors', 'Floors'] },
-  Wallpaper: { icon: 'catWallpaper', text: 'Paper the walls, section by section.' },
-  Decorations: { icon: 'catDecor', text: 'Plants, lights and statues to make the club fancier.' },
-  'DJ Booths': { icon: 'catBooths', text: 'Upgrade your DJ booth. A better booth earns more XP.' },
+  New: { icon: 'newGlyph', text: 'Everything you unlocked at your last two levels.', isNew: true },
+  Bars: { icon: 'bars', text: 'Bars sell drinks. Each long bar needs one bartender.' },
+  Seating: { icon: 'seating', text: 'Couches and booths where guests sit down and relax.' },
+  Floors: { icon: 'floors', text: 'Dance floors, where guests dance, and regular floors, painted tile by tile.', includes: ['Dance Floors', 'Floors'] },
+  Wallpaper: { icon: 'roller', text: 'Paper the walls, section by section.' },
+  Decorations: { icon: 'lamp', text: 'Plants, lights and statues to make the club fancier.' },
+  'DJ Booths': { icon: 'turntable', text: 'Upgrade your DJ booth. A better booth earns more XP.' },
+  Staff: { icon: 'staff', text: 'Hire bartenders for your bars. Your level sets how many you can have.', tab: 'staff' },
+  Expand: { icon: 'expand', text: 'Make the club bigger, a row of floor at a time.', tab: 'expand' },
 };
 const STORE_CATEGORIES = Object.keys(CATEGORIES);
 
@@ -82,6 +83,7 @@ export class ShopMixin {
     }
     fillIcons(this.dockEl);
     this.setupClearClub();
+    this.setupBeatUI();
     const row = document.getElementById('storeTabs');
     this.storeTabButtons = {};
     for (const category of STORE_CATEGORIES) {
@@ -90,7 +92,7 @@ export class ShopMixin {
       sub.dataset.icon = CATEGORIES[category].icon;
       sub.dataset.tipName = category;
       sub.dataset.tipText = CATEGORIES[category].text;
-      sub.addEventListener('click', () => this.setShopCategory(category));
+      sub.addEventListener('click', () => (CATEGORIES[category].tab ? this.setDockTab(CATEGORIES[category].tab) : this.setShopCategory(category)));
       row.appendChild(sub);
       this.storeTabButtons[category] = sub;
     }
@@ -112,12 +114,9 @@ export class ShopMixin {
     this.updateSelectedChip();
   }
 
-  // Which corner button is lit: the open tab, except that the store on
-  // Floors is Edit Floor and Edit with the Sell tool is Sell.
+  // Which pad is lit: the open tab, with Staff and Expand part of the Shop.
   activeDockKey() {
-    if (this.dockTab === 'decor') return this.activeShopCategory === 'Floors' ? 'floors' : 'decor';
-    if (this.dockTab === 'edit') return this.editTool === 'sell' ? 'sell' : 'edit';
-    return this.dockTab;
+    return ['decor', 'staff', 'expand'].includes(this.dockTab) ? 'decor' : this.dockTab;
   }
 
   refreshDockButtons() {
@@ -126,13 +125,8 @@ export class ShopMixin {
   }
 
   // Switches the dock to a tab: 'decor' (the store), 'inventory', 'edit',
-  // 'staff', 'expand' or 'celebs'; 'floors' opens the store on Floors and
-  // 'sell' opens Edit with the Sell tool.
+  // 'staff', 'expand' (both in the Shop) or 'celebs'.
   setDockTab(tab) {
-    if (tab === 'floors') { this.activeShopCategory = 'Floors'; tab = 'decor'; }
-    else if (tab === 'sell') { this.editTool = 'sell'; tab = 'edit'; }
-    else if (tab === 'edit' && this.editTool === 'sell') this.editTool = 'move';
-    else if (tab === 'decor' && this.activeShopCategory === 'Floors') this.activeShopCategory = this.lastStoreCategory || STORE_CATEGORIES[1];
     if (tab !== 'decor') this.lastMainTab = tab;
     if (tab !== 'expand') { this.pendingExpand = null; this.clearExpandPreview?.(); }
     if (this.dockTab === 'edit' && tab !== 'edit' && this.selectedProp && this.holdingFromInventory) this.deselectProp();
@@ -140,8 +134,11 @@ export class ShopMixin {
     this.refreshDockButtons();
     if (this.dockEl) {
       this.dockEl.dataset.tab = tab;
-      this.dockEl.dataset.mode = tab === 'decor' ? 'store' : 'main';
+      this.dockEl.dataset.mode = ['decor', 'staff', 'expand'].includes(tab) ? 'store' : 'main';
     }
+    // In the Shop, its category tab is lit (Staff and Expand are categories).
+    const lit = tab === 'staff' ? 'Staff' : tab === 'expand' ? 'Expand' : this.activeShopCategory;
+    for (const cat in this.storeTabButtons || {}) this.storeTabButtons[cat].classList.toggle('active', cat === lit);
     document.body.classList.toggle('editing', tab === 'edit');
     if (this.drawSelectionFootprint) this.drawSelectionFootprint();
     hideTip();
@@ -182,10 +179,9 @@ export class ShopMixin {
   setShopCategory(category) {
     if (category === 'Dance Floors') category = 'Floors';
     this.activeShopCategory = category;
-    if (category !== 'Floors') this.lastStoreCategory = category;
     for (const cat in this.storeTabButtons || {}) this.storeTabButtons[cat].classList.toggle('active', cat === category);
     if (this.dockTab !== 'decor') {
-      this.setDockTab(category === 'Floors' ? 'floors' : 'decor');
+      this.setDockTab('decor');
       return;
     }
     this.refreshDockButtons();
@@ -232,7 +228,7 @@ export class ShopMixin {
     if (keysInCategory.length === 0) {
       const { slot, icon, cost } = this.makeCard('Nothing new yet', 'Level up to unlock new things: they show up here, marked NEW.', null);
       slot.classList.add('emptySlot');
-      icon.dataset.icon = 'catNew';
+      icon.dataset.icon = 'newGlyph';
       cost.textContent = 'New things show up here when you level up';
       fillIcons(slot);
       this.shopItemsEl.appendChild(slot);

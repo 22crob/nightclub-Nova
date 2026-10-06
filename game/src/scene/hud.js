@@ -44,6 +44,24 @@ export class HudMixin {
     this.muteButton.classList.toggle('muted', SFX.muted);
   }
 
+  // The DJ desk moves with the music: on each kick or clap some pads flash
+  // (body.kick / body.clap, see style.css) and the level meters under the
+  // stats jump to a new height (--meter on each box).
+  beatUI(kind) {
+    const body = document.body;
+    body.classList.remove(kind);
+    void body.offsetWidth; // restart the flash
+    body.classList.add(kind);
+    clearTimeout(this.beatTimers?.[kind]);
+    this.beatTimers = this.beatTimers || {};
+    this.beatTimers[kind] = setTimeout(() => body.classList.remove(kind), 140);
+    for (const box of this.meterBoxes || []) box.style.setProperty('--meter', `${Math.round(35 + Math.random() * 65)}%`);
+  }
+
+  setupBeatUI() {
+    this.meterBoxes = [...document.querySelectorAll('#hudStats .statButton')];
+  }
+
   // The zoom slider on the right edge follows the zoom however it changes
   // (wheel, keys, buttons). Up is closer; it moves on a log scale.
   syncZoomSlider() {
@@ -85,13 +103,13 @@ export class HudMixin {
       if (party.unlockLevel === level) out.push({ name: party.label, kind: 'New party', emoji: party.emoji });
     }
     if (level > 1 && BARTENDERS.levels.includes(level)) {
-      out.push({ name: '+1 Bartender', kind: 'You can hire one more bartender in the Staff tab', art: 'catStaff' });
+      out.push({ name: '+1 Bartender', kind: 'You can hire one more bartender (Shop, Staff)', art: 'catStaff' });
     }
     for (const celeb of CELEBRITIES) {
-      if (celeb.level === level) out.push({ name: celeb.name, kind: `New celebrity (${'★'.repeat(celeb.fame)}): they'll drop in now and then`, portrait: celeb.character });
+      if (celeb.level === level) out.push({ name: celeb.name, kind: `New celebrity (${'★'.repeat(celeb.fame)}): invite them from the Celebrities panel`, portrait: celeb.character });
     }
     for (const limit of EXPANSION.limits) {
-      if (limit.level === level && level > 1) out.push({ name: `Walls up to ${limit.size} tiles`, kind: 'Expand your club a row at a time in the Expand tab', art: 'tabExpand' });
+      if (limit.level === level && level > 1) out.push({ name: `Walls up to ${limit.size} tiles`, kind: 'Expand your club a row at a time (Shop, Expand)', art: 'tabExpand' });
     }
     return out;
   }

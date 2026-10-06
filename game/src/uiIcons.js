@@ -62,6 +62,39 @@ const ICONS = {
     <path d="M20.6 3.4 20.4 9.6 14.4 8.6Z" fill="${W}"/>`,
   plus: `<path d="M12 4.5v15M4.5 12h15" stroke="${W}" stroke-width="3.6" stroke-linecap="round"/>`,
   minus: `<path d="M4.5 12h15" stroke="${W}" stroke-width="3.6" stroke-linecap="round"/>`,
+  // The DJ desk's pads and the shop: one clean white style (the pads give
+  // the colour).
+  padShop: `<path d="M4.6 8h14.8l-1.2 12.4a1.6 1.6 0 0 1-1.6 1.4H7.4a1.6 1.6 0 0 1-1.6-1.4Z" fill="${W}"/>
+    <path d="M8.8 10.2V6.8a3.2 3.2 0 0 1 6.4 0v3.4" fill="none" stroke="${W}" stroke-width="2" stroke-linecap="round"/>
+    <path d="M12 11.6l1.1 2.2 2.4.35-1.75 1.7.42 2.4L12 17.1l-2.17 1.15.42-2.4-1.75-1.7 2.4-.35Z" fill="${INK}"/>`,
+  padEdit: `<g transform="rotate(-40 12 12)"><rect x="10.7" y="9" width="2.6" height="13.5" rx="1.2" fill="${W}"/>
+    <path d="M6 4.2h9.6a1.4 1.4 0 0 1 1.4 1.4v2.6a1.4 1.4 0 0 1-1.4 1.4H6c-1.4 0-2.4-1.2-2.4-2.7S4.6 4.2 6 4.2Z" fill="${W}"/></g>`,
+  padStorage: `<path d="M3 8.2 12 3.8l9 4.4v9.6l-9 4.4-9-4.4Z" fill="${W}"/>
+    <path d="M3 8.2l9 4.4 9-4.4M12 12.6v9.6M7.5 6l9 4.4" fill="none" stroke="${INK}" stroke-width="1.5" stroke-linejoin="round"/>`,
+  padCelebs: `<path d="M11 3.4l2.5 5.3 5.8.8-4.2 4 1 5.8L11 16.5l-5.1 2.8 1-5.8-4.2-4 5.8-.8Z" fill="${W}"/>
+    <path d="M19.4 1.8l.7 1.7 1.7.7-1.7.7-.7 1.7-.7-1.7-1.7-.7 1.7-.7ZM19.6 15.5l.5 1.2 1.2.5-1.2.5-.5 1.2-.5-1.2-1.2-.5 1.2-.5Z" fill="${W}"/>`,
+  newGlyph: `<rect x="1.4" y="6.4" width="21.2" height="11.2" rx="3" fill="${W}"/>
+    <text x="12" y="15.4" text-anchor="middle" font-family="Arial Black, Arial, sans-serif" font-weight="900" font-size="7.6" fill="${INK}">NEW</text>`,
+  lamp: `<path d="M9.2 2.8h5.6l2.6 13H6.6Z" fill="${W}"/><circle cx="11" cy="7.6" r="1.4" fill="${INK}"/><circle cx="13.2" cy="11.6" r="1.9" fill="${INK}"/>
+    <path d="M6 16.4h12l1.6 5H4.4Z" fill="${W}"/>`,
+  turntable: `<rect x="2.4" y="5" width="19.2" height="14" rx="2.2" fill="${W}"/><circle cx="10.4" cy="12" r="5.1" fill="${INK}"/><circle cx="10.4" cy="12" r="1.5" fill="${W}"/>
+    <path d="M18.6 7.4v5.8l-2.8 2" fill="none" stroke="${INK}" stroke-width="1.7" stroke-linecap="round"/>`,
+  roller: `<rect x="2.5" y="3" width="15" height="6.4" rx="2" fill="${W}"/>
+    <path d="M17.5 6.2h3v5.2h-8.6v3" fill="none" stroke="${W}" stroke-width="2" stroke-linejoin="round"/><rect x="10.2" y="14" width="3.4" height="7.6" rx="1.4" fill="${W}"/>`,
+  toolMove: `<path d="M12 2.2l3.4 3.8h-2.2v4.8H18V8.6l3.8 3.4-3.8 3.4v-2.2h-4.8v4.8h2.2L12 21.8 8.6 18h2.2v-4.8H6v2.2L2.2 12 6 8.6v2.2h4.8V6H8.6Z" fill="${W}"/>`,
+  toolRotate: `<path d="M18.4 8.2A7.6 7.6 0 1 0 19.6 13" fill="none" stroke="${W}" stroke-width="2.8" stroke-linecap="round"/><path d="M20.8 3.2 20.6 9.8 14.2 8.6Z" fill="${W}"/>`,
+  toolStore: `<path d="M3 11.2 12 7l9 4.2v7.4L12 22.8l-9-4.2Z" fill="${W}"/><path d="M3 11.2l9 4.2 9-4.2M12 15.4v7.4" fill="none" stroke="${INK}" stroke-width="1.4" stroke-linejoin="round"/>
+    <path d="M12 1.2v6M9.2 4.6 12 7.6l2.8-3" fill="none" stroke="${W}" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>`,
+  toolSell: `<path d="M2.8 12.4V4.2A1.4 1.4 0 0 1 4.2 2.8h8.2l9 9-9.4 9.4Z" fill="${W}"/><circle cx="7.4" cy="7.4" r="1.7" fill="${INK}"/>
+    <text x="13" y="16.6" text-anchor="middle" font-family="Arial Black, Arial, sans-serif" font-weight="900" font-size="8.5" fill="${INK}">$</text>`,
+  toolClear: `<path d="M20 2.4 12.4 10.8" stroke="${W}" stroke-width="2.4" stroke-linecap="round"/>
+    <path d="M10 9.4l4.8 4.4-3.4 7.6c-2.8.6-6.8-3-7.2-5.8Z" fill="${W}"/>
+    <path d="M6.2 16.6l3.6-3.6M8.6 18.8l3.2-3.8" stroke="${INK}" stroke-width="1.2" stroke-linecap="round"/>
+    <path d="M3.6 3.4l.6 1.4 1.4.6-1.4.6-.6 1.4-.6-1.4-1.4-.6 1.4-.6Z" fill="${W}"/>`,
+  goalsGlyph: `<path d="M7 3h10v5.5a5 5 0 0 1-10 0Z" fill="${W}"/>
+    <path d="M7 5H3.6v1.6A3.6 3.6 0 0 0 7.4 10M17 5h3.4v1.6A3.6 3.6 0 0 1 16.6 10" fill="none" stroke="${W}" stroke-width="2"/>
+    <path d="M10.6 13.2h2.8v3.6h-2.8Z" fill="${W}"/><rect x="7.2" y="16.6" width="9.6" height="4.4" rx="1" fill="${W}"/>
+    <path d="M12 4.6l.8 1.6 1.7.25-1.25 1.2.3 1.7-1.55-.8-1.55.8.3-1.7-1.25-1.2 1.7-.25Z" fill="${INK}"/>`,
   check: `<path d="M4.5 12.5l5 5L20 7" fill="none" stroke="${W}" stroke-width="3.6" stroke-linecap="round" stroke-linejoin="round"/>`,
   // Shop categories.
   bars: `<path d="M3 4h18l-9 9.4Z" fill="${CYAN}"/><path d="M5.6 6.6h12.8" stroke="${W}" stroke-width="1.2"/>
@@ -107,17 +140,6 @@ function expandArt(mirror) {
     </g>`;
 }
 const ART = {
-  // Decorations: a paint can brimming with purple paint, dripping down.
-  tabDecor: `<defs><linearGradient id="gCan" x1="0" x2="1"><stop offset="0" stop-color="#8a95a8"/><stop offset=".3" stop-color="#f4f7fb"/><stop offset=".65" stop-color="#b8c2d2"/><stop offset="1" stop-color="#6d7890"/></linearGradient>
-    <radialGradient id="gPaint" cx=".4" cy=".35" r=".8"><stop offset="0" stop-color="#d48bff"/><stop offset="1" stop-color="#7a1fd6"/></radialGradient></defs>
-    <path d="M9.5 21C11 8 37 8 38.5 21" fill="none" stroke="#56607a" stroke-width="2.4" stroke-linecap="round"/>
-    <path d="M9 19h30l-3 22c-.4 3-23.6 3-24 0Z" fill="url(#gCan)" stroke="${O}" stroke-width="1.8" stroke-linejoin="round"/>
-    <path d="M10.6 27h26.8l-.6 5H11.3Z" fill="#9b3cf0" stroke="${O}" stroke-width="1.2"/>
-    <ellipse cx="24" cy="19" rx="15" ry="4.6" fill="#dfe5ee" stroke="${O}" stroke-width="1.8"/>
-    <ellipse cx="24" cy="19" rx="12.6" ry="3.4" fill="url(#gPaint)"/>
-    <path d="M12 19.6c0 3.6.4 7.4 2.2 7.4s1.6-3.6 2-5.6c.6 2.2.8 3.8 2.2 3.8s1.4-3 1.6-4.6Z" fill="#9b3cf0" stroke="${O}" stroke-width="1.2" stroke-linejoin="round"/>
-    <path d="M14.4 30.6 15 38" stroke="#fff" stroke-width="2.2" stroke-linecap="round" opacity=".75"/>
-    <ellipse cx="20" cy="17.8" rx="4" ry="1" fill="#fff" opacity=".6"/>`,
   // Expand: a cardboard box with green arrows pointing out of each corner.
   tabExpand: `<defs><linearGradient id="gArrow" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#b6ff8a"/><stop offset="1" stop-color="#2fae2a"/></linearGradient></defs>
     <path d="M24 13 37 19.5 24 26 11 19.5Z" fill="#f6dcaa" stroke="${O}" stroke-width="1.6" stroke-linejoin="round"/>
@@ -147,117 +169,12 @@ const ART = {
     <ellipse cx="29.5" cy="17.2" rx="4.2" ry="2.4" fill="#3aa336" stroke="#0d3a10" stroke-width=".8"/>
     <text x="29.5" y="18.9" font-family="Arial Black,Arial" font-weight="900" font-size="5" text-anchor="middle" fill="#eaffdf">$</text>`,
 
-  // Inventory: a wooden storage crate.
-  tabInventory: `<path d="M8 15 24 8l16 7-16 7Z" fill="#e8b46a" stroke="${O}" stroke-width="1.6" stroke-linejoin="round"/>
-    <path d="M8 15l16 7v19L8 34Z" fill="#c98b3e" stroke="${O}" stroke-width="1.6" stroke-linejoin="round"/>
-    <path d="M24 22l16-7v19l-16 7Z" fill="#a96f2a" stroke="${O}" stroke-width="1.6" stroke-linejoin="round"/>
-    <path d="M8 21.3l16 7M8 27.6l16 7M24 28.3l16-7M24 34.6l16-7M12 11.2l16 7M20 11.5l16 7" stroke="#7a4a17" stroke-width="1"/>
-    <path d="M25 23.4 39 33" stroke="#7a4a17" stroke-width="2.4" stroke-linecap="round"/>
-    <ellipse cx="16" cy="28" rx="3.2" ry="3.8" fill="#e5483e" stroke="${O}" stroke-width="1"/>`,
-  // Edit: a hammer crossed over a wrench.
-  tabEdit: `<defs><linearGradient id="gSteel" x1="0" x2="1"><stop offset="0" stop-color="#7f8aa0"/><stop offset=".45" stop-color="#eef2f7"/><stop offset="1" stop-color="#8d98ad"/></linearGradient>
-    <mask id="mJaw"><rect width="48" height="48" fill="#fff"/><rect x="21.4" y="1" width="5.2" height="9.5" fill="#000"/></mask></defs>
-    <g transform="rotate(42 24 24)"><rect x="21.6" y="14" width="4.8" height="29" rx="2.4" fill="url(#gSteel)" stroke="${O}" stroke-width="1.5"/>
-      <circle cx="24" cy="11" r="7.6" fill="url(#gSteel)" stroke="${O}" stroke-width="1.5" mask="url(#mJaw)"/></g>
-    <g transform="rotate(-40 24 24)"><rect x="21.8" y="15" width="4.4" height="28" rx="2" fill="#c98b3e" stroke="${O}" stroke-width="1.5"/>
-      <path d="M13 8.5h20.5a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2H13c-2.4 0-4-1.2-5-3.4l-.6-1.6c.8-2.6 2.8-4 5.6-4Z" fill="#5d6b80" stroke="${O}" stroke-width="1.5"/>
-      <path d="M14 10.5h18" stroke="#a7b3c6" stroke-width="1.4" stroke-linecap="round"/></g>`,
-  // Store: a little shop front with a striped awning and a gold sign.
-  tabStore: `<defs><linearGradient id="gWin" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#d8f6ff"/><stop offset="1" stop-color="#3fa9e8"/></linearGradient>
-    <linearGradient id="gSign" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#fff2a0"/><stop offset="1" stop-color="#f0a800"/></linearGradient></defs>
-    <rect x="8" y="17" width="32" height="26" rx="2" fill="#eef5fc" stroke="${O}" stroke-width="1.6"/>
-    <rect x="11.5" y="25" width="14" height="12" rx="1.5" fill="url(#gWin)" stroke="${O}" stroke-width="1.3"/>
-    <path d="M14 34.5 22 27.5" stroke="#fff" stroke-width="1.6" stroke-linecap="round" opacity=".8"/>
-    <rect x="28.5" y="25" width="8.5" height="18" rx="1.2" fill="#c98b3e" stroke="${O}" stroke-width="1.3"/>
-    <circle cx="34.6" cy="34.4" r="1" fill="#ffd24d"/>
-    ${[0, 1, 2, 3, 4, 5].map((i) => `<path d="M${5 + i * 6.33} 12h6.33v6a3.17 2.4 0 0 1-6.33 0Z" fill="${i % 2 ? '#fff' : '#ef3b4f'}" stroke="${O}" stroke-width="1.2" stroke-linejoin="round"/>`).join('')}
-    <rect x="13" y="3" width="22" height="9" rx="2.5" fill="url(#gSign)" stroke="${O}" stroke-width="1.5"/>
-    <path d="M24 4.6l1.1 2.2 2.4.3-1.8 1.6.5 2.4-2.2-1.2-2.2 1.2.5-2.4-1.8-1.6 2.4-.3Z" fill="#ff4fa8" stroke="${O}" stroke-width=".7" stroke-linejoin="round"/>`,
-  // NEW: a red starburst with NEW across it.
-  catNew: `<defs><radialGradient id="gBurst" cx=".45" cy=".35" r=".75"><stop offset="0" stop-color="#ffb35c"/><stop offset=".6" stop-color="#ff3b3b"/><stop offset="1" stop-color="#b8101e"/></radialGradient></defs>
-    <path d="${Array.from({ length: 24 }, (_, k) => { const a = (k * Math.PI) / 12 - Math.PI / 2; const r = k % 2 ? 15.5 : 21.5; return `${k ? 'L' : 'M'}${(24 + r * Math.cos(a)).toFixed(1)} ${(24 + r * Math.sin(a)).toFixed(1)}`; }).join('')}Z" fill="url(#gBurst)" stroke="${O}" stroke-width="1.8" stroke-linejoin="round"/>
-    <text x="24" y="28.4" text-anchor="middle" font-family="Arial Black, Arial, sans-serif" font-weight="900" font-size="12" fill="#fff" stroke="${O}" stroke-width="2.4" paint-order="stroke">NEW</text>
-    <path d="M14 15.5c2-2.4 4.6-3.8 7.4-4.2" fill="none" stroke="#fff" stroke-width="1.8" stroke-linecap="round" opacity=".7"/>`,
-  // Clear Club: a broom sweeping, with sparkles.
-  clearClub: `<defs><linearGradient id="gStraw" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#ffe680"/><stop offset="1" stop-color="#e0a020"/></linearGradient></defs>
-    <path d="M36.5 4.5 21.5 26" stroke="${O}" stroke-width="5" stroke-linecap="round"/>
-    <path d="M36.5 4.5 21.5 26" stroke="#c98b3e" stroke-width="2.6" stroke-linecap="round"/>
-    <path d="M17 24.5 25.6 30.4 21 43.5c-4.6 1.4-11.8-3.6-12.6-8.4Z" fill="url(#gStraw)" stroke="${O}" stroke-width="1.6" stroke-linejoin="round"/>
-    <path d="M17.6 25 25 30" stroke="#e5483e" stroke-width="3" stroke-linecap="round"/>
-    <path d="M12.4 36.8l5-6.4M15.6 39.4l5-7.2M18.8 41.4l3.6-7.4" stroke="#b07a10" stroke-width="1" stroke-linecap="round"/>
-    <path d="M38 30l1.2 2.8 2.8 1.2-2.8 1.2-1.2 2.8-1.2-2.8-2.8-1.2 2.8-1.2ZM31 38.5l.8 1.8 1.8.8-1.8.8-.8 1.8-.8-1.8-1.8-.8 1.8-.8Z" fill="#5fe3ff" stroke="${O}" stroke-width=".8" stroke-linejoin="round"/>`,
-  // Goals: a target with a dart in the bullseye.
-  goals: `<circle cx="22" cy="26" r="17" fill="#ef3b4f" stroke="${O}" stroke-width="1.8"/>
-    <circle cx="22" cy="26" r="12" fill="#fff" stroke="${O}" stroke-width="1.2"/>
-    <circle cx="22" cy="26" r="7" fill="#ef3b4f" stroke="${O}" stroke-width="1.2"/>
-    <circle cx="22" cy="26" r="2.6" fill="#ffd24d" stroke="${O}" stroke-width="1"/>
-    <path d="M22.5 25.5 39 9" stroke="${O}" stroke-width="3.6" stroke-linecap="round"/><path d="M22.5 25.5 39 9" stroke="#eef2f7" stroke-width="1.8" stroke-linecap="round"/>
-    <path d="M37.5 10.5 37 4.2 41 7.4ZM37.5 10.5l6.3.5L40.6 7Z" fill="#5fe3ff" stroke="${O}" stroke-width="1.1" stroke-linejoin="round"/>
-    <path d="M10.5 17.5c2-3 5-4.8 8.4-5.4" fill="none" stroke="#fff" stroke-width="1.8" stroke-linecap="round" opacity=".6"/>`,
-  // Store categories.
-  catBars: `<defs><linearGradient id="gDrink" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#ff9ad0"/><stop offset="1" stop-color="#e0217f"/></linearGradient></defs>
-    <path d="M27 5.5 37.5 17" stroke="#fff" stroke-width="1.4"/><circle cx="31.5" cy="10.8" r="3.2" fill="#7be36b" stroke="${O}" stroke-width="1.2"/>
-    <path d="M7 9h34L24 27Z" fill="#e8f6ff" fill-opacity=".85" stroke="${O}" stroke-width="1.6" stroke-linejoin="round"/>
-    <path d="M10.6 12.4h26.8L24 25Z" fill="url(#gDrink)"/>
-    <path d="M22.6 26.4h2.8v11h-2.8Z" fill="#dfe6ef" stroke="${O}" stroke-width="1.2"/>
-    <ellipse cx="24" cy="39.4" rx="9" ry="2.8" fill="#dfe6ef" stroke="${O}" stroke-width="1.5"/>
-    <path d="M13.5 13.6 18 18" stroke="#fff" stroke-width="1.8" stroke-linecap="round" opacity=".8"/>`,
-  catSeating: `<defs><linearGradient id="gRed" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#ff7a7a"/><stop offset="1" stop-color="#c41a1a"/></linearGradient></defs>
-    <path d="M11 11c8-5 18-5 26 0v16H11Z" fill="url(#gRed)" stroke="${O}" stroke-width="1.6" stroke-linejoin="round"/>
-    <circle cx="18" cy="16" r="1.1" fill="#8e0e0e"/><circle cx="24" cy="14.6" r="1.1" fill="#8e0e0e"/><circle cx="30" cy="16" r="1.1" fill="#8e0e0e"/>
-    <rect x="10" y="32" width="28" height="6" rx="2" fill="#a51414" stroke="${O}" stroke-width="1.5"/>
-    <rect x="12" y="24.5" width="24" height="9" rx="3.5" fill="#ec4040" stroke="${O}" stroke-width="1.5"/>
-    <rect x="5.5" y="20" width="9" height="17" rx="4" fill="url(#gRed)" stroke="${O}" stroke-width="1.5"/>
-    <rect x="33.5" y="20" width="9" height="17" rx="4" fill="url(#gRed)" stroke="${O}" stroke-width="1.5"/>
-    <path d="M11 38v4M37 38v4" stroke="${O}" stroke-width="2.6" stroke-linecap="round"/>
-    <path d="M14 12.6c4-2 9-2.6 13-2" stroke="#fff" stroke-width="1.8" stroke-linecap="round" opacity=".7"/>`,
-  catFloors: `<path d="M4 18v4l20 10 20-10v-4L24 28Z" fill="#26304a" stroke="${O}" stroke-width="1.5" stroke-linejoin="round"/>
-    <path d="M24 8 34 13 24 18 14 13Z" fill="#62e6ff"/><path d="M34 13 44 18 34 23 24 18Z" fill="#ff6fd0"/>
-    <path d="M24 18 34 23 24 28 14 23Z" fill="#62e6ff"/><path d="M14 13 24 18 14 23 4 18Z" fill="#ff6fd0"/>
-    <path d="M24 8 44 18 24 28 4 18Z M14 13 34 23 M34 13 14 23" fill="none" stroke="${O}" stroke-width="1.5" stroke-linejoin="round"/>
-    <path d="M22 11.4 26 13.4M32 16.4 36 18.4" stroke="#fff" stroke-width="1.4" stroke-linecap="round" opacity=".85"/>`,
-  catWallpaper: `<path d="M9 12h22v29H9Z" fill="#ff9a3c" stroke="${O}" stroke-width="1.6" stroke-linejoin="round"/>
-    <path d="M14 17l2.5 3-2.5 3-2.5-3ZM24 17l2.5 3-2.5 3-2.5-3ZM19 25l2.5 3-2.5 3-2.5-3ZM14 33l2.5 3-2.5 3-2.5-3ZM24 33l2.5 3-2.5 3-2.5-3Z" fill="#ffd08a"/>
-    <rect x="7" y="5.5" width="31" height="9" rx="4.5" fill="#f07f1c" stroke="${O}" stroke-width="1.6"/>
-    <ellipse cx="38" cy="10" rx="3.2" ry="4.5" fill="#ffd0a0" stroke="${O}" stroke-width="1.4"/><ellipse cx="38" cy="10" rx="1.2" ry="1.7" fill="#a5520e"/>
-    <path d="M10 8.5h20" stroke="#fff" stroke-width="1.6" stroke-linecap="round" opacity=".6"/>`,
-  catDecor: `<defs><linearGradient id="gLava" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#ff9ad8"/><stop offset="1" stop-color="#b8166f"/></linearGradient></defs>
-    <path d="M17 12.5c2-6 12-6 14 0l3 21.5H14Z" fill="url(#gLava)" stroke="${O}" stroke-width="1.6" stroke-linejoin="round"/>
-    <ellipse cx="22" cy="18" rx="2.6" ry="3.2" fill="#ffd24d"/><ellipse cx="27" cy="25.5" rx="3.4" ry="3.8" fill="#ffd24d"/><ellipse cx="20.5" cy="30.5" rx="2.4" ry="2" fill="#ffd24d"/>
-    <path d="M19 12.5h10l-1.8-6h-6.4Z" fill="#4a2a7a" stroke="${O}" stroke-width="1.4" stroke-linejoin="round"/>
-    <path d="M14 34h20l3.4 10H10.6Z" fill="#4a2a7a" stroke="${O}" stroke-width="1.6" stroke-linejoin="round"/>
-    <path d="M18.6 15.5 17.4 26" stroke="#fff" stroke-width="1.8" stroke-linecap="round" opacity=".7"/>`,
-  catBooths: `<path d="M5 22v6l19 9.5L43 28v-6L24 31.5Z" fill="#1f2536" stroke="${O}" stroke-width="1.5" stroke-linejoin="round"/>
-    <path d="M5 22 24 12.5 43 22 24 31.5Z" fill="#3e4760" stroke="${O}" stroke-width="1.5" stroke-linejoin="round"/>
-    <ellipse cx="21" cy="22" rx="10.5" ry="5.4" fill="#111" stroke="${O}" stroke-width="1"/>
-    <ellipse cx="21" cy="22" rx="7.4" ry="3.7" fill="none" stroke="#3a3a3a" stroke-width=".8"/>
-    <ellipse cx="21" cy="22" rx="3" ry="1.5" fill="#ff4fa8"/>
-    <path d="M36 16.5 29.5 22.5" stroke="#dfe6ef" stroke-width="1.8" stroke-linecap="round"/><circle cx="36.4" cy="16.2" r="2" fill="#dfe6ef" stroke="${O}" stroke-width="1"/>
-    <circle cx="37" cy="25" r="1.3" fill="#5fe3ff"/><circle cx="33" cy="27" r="1.3" fill="#7be36b"/>`,
   catStaff: `<defs><linearGradient id="gSteelS" x1="0" x2="1"><stop offset="0" stop-color="#7f8aa0"/><stop offset=".45" stop-color="#eef2f7"/><stop offset="1" stop-color="#8d98ad"/></linearGradient></defs>
     <path d="M16 19h16l-2 22c-.3 2.6-11.7 2.6-12 0Z" fill="url(#gSteelS)" stroke="${O}" stroke-width="1.6" stroke-linejoin="round"/>
     <path d="M17.5 11h13l1.5 8H16Z" fill="url(#gSteelS)" stroke="${O}" stroke-width="1.6" stroke-linejoin="round"/>
     <rect x="20.5" y="5.5" width="7" height="5.5" rx="2" fill="url(#gSteelS)" stroke="${O}" stroke-width="1.4"/>
     <path d="M24 28.5 18.6 25.4v6.2ZM24 28.5l5.4-3.1v6.2Z" fill="#ff4fa8" stroke="${O}" stroke-width="1.1" stroke-linejoin="round"/><circle cx="24" cy="28.5" r="1.5" fill="#ff4fa8" stroke="${O}" stroke-width="1"/>
     <path d="M38 8l1 2.4 2.4 1-2.4 1-1 2.4-1-2.4-2.4-1 2.4-1Z" fill="#ffd24d"/>`,
-  // Edit tools.
-  toolMove: `<defs><linearGradient id="gArrowT" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#b6ff8a"/><stop offset="1" stop-color="#2fae2a"/></linearGradient></defs><path d="M24 4l7 8h-4v9h9v-4l8 7-8 7v-4h-9v9h4l-7 8-7-8h4v-9h-9v4l-8-7 8-7v4h9v-9h-4Z" fill="url(#gArrowT)" stroke="${O}" stroke-width="1.6" stroke-linejoin="round"/>`,
-  toolRotate: `<path d="M35.5 15.5A14 14 0 1 0 38 29.5" fill="none" stroke="${O}" stroke-width="9" stroke-linecap="round"/>
-    <path d="M35.5 15.5A14 14 0 1 0 38 29.5" fill="none" stroke="#5fe3ff" stroke-width="5.4" stroke-linecap="round"/>
-    <path d="M41 6.5 42.5 21 29 17.5Z" fill="#5fe3ff" stroke="${O}" stroke-width="1.6" stroke-linejoin="round"/>`,
-  toolStore: `<defs><linearGradient id="gArrowT" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#b6ff8a"/><stop offset="1" stop-color="#2fae2a"/></linearGradient></defs><g transform="translate(5 11) scale(.8)"><path d="M8 15 24 8l16 7-16 7Z" fill="#e8b46a" stroke="${O}" stroke-width="1.6" stroke-linejoin="round"/>
-    <path d="M8 15l16 7v19L8 34Z" fill="#c98b3e" stroke="${O}" stroke-width="1.6" stroke-linejoin="round"/>
-    <path d="M24 22l16-7v19l-16 7Z" fill="#a96f2a" stroke="${O}" stroke-width="1.6" stroke-linejoin="round"/>
-    <path d="M8 21.3l16 7M8 27.6l16 7M24 28.3l16-7M24 34.6l16-7M12 11.2l16 7M20 11.5l16 7" stroke="#7a4a17" stroke-width="1"/>
-    <path d="M25 23.4 39 33" stroke="#7a4a17" stroke-width="2.4" stroke-linecap="round"/>
-    <ellipse cx="16" cy="28" rx="3.2" ry="3.8" fill="#e5483e" stroke="${O}" stroke-width="1"/></g>
-    <path d="M24 2.5v9h4.5L22 19l-6.5-7.5H20v-9Z" fill="url(#gArrowT)" stroke="${O}" stroke-width="1.5" stroke-linejoin="round" transform="translate(2 0)"/>`,
-  toolSell: `<path d="M31 15V10" stroke="${O}" stroke-width="2.4"/><rect x="25" y="4" width="14" height="7.5" rx="1.6" fill="#8fe0ff" stroke="${O}" stroke-width="1.5"/>
-    <path d="M10 31l4-15h22l4 15Z" fill="#f4f7fb" stroke="${O}" stroke-width="1.6" stroke-linejoin="round"/>
-    <path d="M16 20h3M21 20h3M26 20h3M15 24.5h3M20.5 24.5h3M26 24.5h3" stroke="#7d889c" stroke-width="2.2" stroke-linecap="round"/>
-    <rect x="7" y="30.5" width="34" height="11" rx="2" fill="#dfe5ee" stroke="${O}" stroke-width="1.6"/>
-    <path d="M13 41.5h22v3.5H13Z" fill="#5cc94a" stroke="${O}" stroke-width="1.3"/>
-    <path d="M10 33h28" stroke="#fff" stroke-width="1.4" opacity=".8"/>`,
 };
 
 // Each copy of a drawing gets its own gradient/mask ids: a page can show

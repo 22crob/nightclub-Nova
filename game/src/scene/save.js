@@ -51,7 +51,7 @@ export class SaveMixin {
       inventory[this.movingBooth.type] -= 1;
       if (inventory[this.movingBooth.type] <= 0) delete inventory[this.movingBooth.type];
     }
-    return { cash: this.cash, fans: this.fans, gridW: this.gridW, gridH: this.gridH, placed: placedList, wallpaper: { ...this.wallpaper }, floorPaint: { ...this.floorPaint }, nightStars: this.nightStars || [], inventory, inventoryXp, goalsDone: this.goalsDone || [], goalStats: this.goalStats || {} };
+    return { cash: this.cash, fans: this.fans, gridW: this.gridW, gridH: this.gridH, placed: placedList, wallpaper: { ...this.wallpaper }, floorPaint: { ...this.floorPaint }, nightStars: this.nightStars || [], inventory, inventoryXp, goalsDone: this.goalsDone || [], goalStats: this.goalStats || {}, celebs: this.celebState || {}, celebInvited: Object.keys(this.celebInvites || {}) };
   }
 
   saveGame() {
@@ -144,6 +144,16 @@ export class SaveMixin {
       for (const [type, n] of Object.entries(data.inventory)) if (PROP_TYPES[type] && n > 0) this.inventory[type] = Math.floor(n);
     }
     if (Array.isArray(data.goalsDone)) this.goalsDone = data.goalsDone.filter((id) => typeof id === 'string');
+    // What each celebrity thinks of the club (see celebrities.js).
+    this.celebState = {};
+    if (data.celebs && typeof data.celebs === 'object') {
+      for (const [key, rec] of Object.entries(data.celebs)) {
+        if (rec && typeof rec === 'object') this.celebState[key] = { visits: Math.max(0, rec.visits | 0), liking: Math.max(0, Math.min(100, Number(rec.liking) || 0)) };
+      }
+    }
+    // Invitations already paid for: they turn up as soon as there's room.
+    this.celebInvites = {};
+    if (Array.isArray(data.celebInvited)) for (const key of data.celebInvited) if (typeof key === 'string') this.celebInvites[key] = 0;
     if (data.goalStats && typeof data.goalStats === 'object') {
       this.goalStats = {};
       for (const [k, v] of Object.entries(data.goalStats)) if (typeof v === 'number') this.goalStats[k] = v;

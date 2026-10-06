@@ -102,6 +102,7 @@ export class MoodMixin {
   // Fans from a patron as they leave, by mood; a patron who stormed out
   // costs fans. Shows their verdict over the door.
   patronLeaves(patron) {
+    if (patron.celeb) this.celebVisitOver(patron); // how much they liked it
     let fans;
     let emoji;
     if (patron.ejected) {

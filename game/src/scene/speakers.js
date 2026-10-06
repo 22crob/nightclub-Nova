@@ -100,13 +100,14 @@ export class SpeakersMixin {
     return out;
   }
 
-  // Hooks the speakers to the beat: the music tells us each kick and clap
+  // Hooks the speakers (and the DJ desk's pads and meters, see beatUI()) to
+  // the beat: the music tells us each kick and clap
   // as it schedules them; with no sound, a clock at the song's tempo.
   setupSpeakers() {
     Music.onStep = (step, delaySec) => {
       const tr = Music.track;
       const kind = tr.kick.includes(step) ? 'kick' : tr.clap.includes(step) ? 'clap' : null;
-      if (kind) setTimeout(() => this.pulseSpeakers(kind), Math.max(0, delaySec * 1000));
+      if (kind) setTimeout(() => { this.pulseSpeakers(kind); this.beatUI(kind); }, Math.max(0, delaySec * 1000));
     };
     this.silentStepAt = 0;
     this.silentStep = 0;
@@ -119,8 +120,8 @@ export class SpeakersMixin {
       const s = this.silentStep;
       this.silentStep = (s + 1) % 16;
       const tr = Music.track;
-      if (tr.kick.includes(s)) this.pulseSpeakers('kick');
-      else if (tr.clap.includes(s)) this.pulseSpeakers('clap');
+      const kind = tr.kick.includes(s) ? 'kick' : tr.clap.includes(s) ? 'clap' : null;
+      if (kind) { this.pulseSpeakers(kind); this.beatUI(kind); }
     });
   }
 }

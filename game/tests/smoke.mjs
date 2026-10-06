@@ -101,7 +101,7 @@ await page.evaluate(() => { const s = window.__clubNova.scene.getScene('club'); 
 const tabs = await page.$$eval('.dockTab', (els) => els.map((e) => e.dataset.tipName));
 await page.click('#tabDecor');
 const storeTabs = await page.$$eval('.storeTab', (els) => els.map((e) => e.dataset.tipName));
-check('the shop has Edit Furniture, Edit Floor, Store, Inventory, Staff, Expand, Celebrities and Sell buttons; the store has NEW and 6 categories', tabs.join() === 'Edit Furniture,Edit Floor,Store,Inventory,Staff,Expand,Celebrities,Sell' && storeTabs.join() === 'New,Bars,Seating,Floors,Wallpaper,Decorations,DJ Booths', `${tabs.join(' / ')} | ${storeTabs.join(' / ')}`);
+check('the desk has four pads (Shop, Edit, Storage, Celebrities); the shop has NEW, 6 store categories, Staff and Expand', tabs.join() === 'Shop,Edit,Storage,Celebrities' && storeTabs.join() === 'New,Bars,Seating,Floors,Wallpaper,Decorations,DJ Booths,Staff,Expand', `${tabs.join(' / ')} | ${storeTabs.join(' / ')}`);
 check('bar shows its real sprite icon', await page.locator('.propButton .icon').first().evaluate((el) => el.style.backgroundImage.includes('data:image/png')));
 // Floors: dance floors and regular floors in one category, the tip says which.
 await page.click('.storeTab[data-tip-name="Floors"]');
@@ -120,7 +120,7 @@ check('clicking a shop card picks the item up, clicking again puts it down', pic
 await page.click('#storeOk');
 // Expand: a card for each open edge, each adding one row of floor. Hovering
 // or clicking one shows the new row in green; a confirm card buys it.
-await page.click('#tabExpand');
+await page.evaluate(() => window.__clubNova.scene.getScene('club').setDockTab('expand'));
 const expandCard = await page.evaluate(() => {
   const slots = [...document.querySelectorAll('#shopItems .expandSlot')];
   return { cards: slots.length, sides: slots.map((e) => e.dataset.side).join(), tip: slots[0]?.dataset.tipText, price: slots[0]?.querySelector('.propCost')?.textContent };
@@ -224,7 +224,7 @@ const openingRate = await page.evaluate(() => window.__clubNova.scene.getScene('
 check('the DJ booth earns fans from the start', openingRate > 0, `rate ${openingRate}`);
 await page.keyboard.press('Escape');
 await page.evaluate(() => window.__clubNova.scene.getScene('club').setDockTab('inventory'));
-await page.click('#tabStaff');
+await page.evaluate(() => window.__clubNova.scene.getScene('club').setDockTab('staff'));
 const staffRows = await page.locator('.staffSlot').count();
 check('Staff lists just the bar (the DJ is free)', staffRows === 1, `${staffRows} cards`);
 await page.locator('.staffSlot:not(.staffed)').first().click();
@@ -699,7 +699,7 @@ check('the card\'s red X stays in its corner, with the speech bubble and text be
 
 // Tabs: the green check finishes what you're doing and closes the panel,
 // leaving just the tab logos; clicking an open tab again closes it too.
-await page.click('#tabStaff');
+await page.evaluate(() => window.__clubNova.scene.getScene('club').setDockTab('staff'));
 const openStaff = await page.evaluate(() => ({ panel: getComputedStyle(document.getElementById('dockPanel')).display !== 'none', check: getComputedStyle(document.getElementById('storeOk')).display !== 'none' }));
 await page.evaluate(() => window.__clubNova.scene.getScene('club').selectProp('woodStool'));
 await page.click('#storeOk');
@@ -707,13 +707,13 @@ const closedDock = await page.evaluate(() => {
   const s = window.__clubNova.scene.getScene('club');
   return { panel: getComputedStyle(document.getElementById('dockPanel')).display, tabs: [...document.querySelectorAll('.dockTab')].filter((t) => t.offsetParent).length, held: s.selectedProp, tab: s.dockTab };
 });
-await page.click('#tabExpand');
-await page.click('#tabExpand');
+await page.click('#tabEdit');
+await page.click('#tabEdit');
 const toggled = await page.evaluate(() => getComputedStyle(document.getElementById('dockPanel')).display);
 await page.click('#tabDecor');
 await page.click('#storeOk');
 const storeClosed = await page.evaluate(() => getComputedStyle(document.getElementById('dockPanel')).display);
-check('the green check finishes the action and closes the tab, leaving only the corner buttons', openStaff.panel && openStaff.check && closedDock.panel === 'none' && closedDock.tabs === 8 && !closedDock.held && closedDock.tab === null && storeClosed === 'none', JSON.stringify({ openStaff, closedDock, storeClosed }));
+check('the green check finishes the action and closes the tab, leaving only the corner buttons', openStaff.panel && openStaff.check && closedDock.panel === 'none' && closedDock.tabs === 4 && !closedDock.held && closedDock.tab === null && storeClosed === 'none', JSON.stringify({ openStaff, closedDock, storeClosed }));
 check('clicking an open tab again closes it', toggled === 'none', toggled);
 
 // The doorway stays clear: arrivals walk to a clear spot inside first,
@@ -1262,40 +1262,86 @@ const extras = await page.evaluate(async () => {
   s.closeInfoCard();
   if (couch) s.removeProp(couch);
   if (booth) s.removeProp(booth);
-  // The Celebrity List: six celebrities by unlock level, each with a
-  // portrait, name, fame stars and status. Only unlocked ones come to
-  // parties; one in the club shows "In Club".
+  // The Celebrity List: six celebrities by unlock level. The first visit
+  // is by paid invitation; how good a time they have builds how much they
+  // like the club, and once they've been and like it they come back on
+  // their own, more often the more they like it.
   const realLevel = s.levelInfo.bind(s);
-  out.noneEarly = s.levelInfo().level >= 5 || (s.pickCelebs(3).length === 0 && (s.nextCelebAt = 0, s.celebDropIn()) === null);
   s.levelInfo = () => ({ ...realLevel(), level: 11 });
-  const q = s.patrons.find((x) => !x.leaving && !x.gone);
-  s.welcomeCelebrity(q, 'rico');
-  out.welcomed = q.celeb && q.celeb.key === 'rico' && q.name === 'Rico Diamond' && s.celebTipFactor(q) > 1
-    && document.getElementById('bigPopup').querySelector('.bpSub').textContent.includes('★');
-  const picks = s.pickCelebs(5).map((c) => c.key).sort().join();
-  out.picks = picks === 'kai,max';
-  // They drop in on their own (not just at parties) once it's time.
   const queue0 = s.streetQueue;
   s.streetQueue = [];
-  s.nextCelebAt = s.time.now + 60000;
-  out.notYet = s.celebDropIn() === null;
-  s.nextCelebAt = 0;
+  s.celebState = {};
+  s.celebInvites = {};
+  s.celebNextAt = {};
+  out.noFreeVisits = s.celebDropIn() === null;
+  const cash0 = s.cash;
+  s.cash = 1000;
+  out.invited = s.inviteCelebrity('rico') && s.cash === 1000 - 250 && s.celebStatus(s.celebDef('rico')) === 'invited';
+  out.notTwice = s.inviteCelebrity('rico') === false;
+  out.locked = s.inviteCelebrity('leo') === false; // level 14
+  s.celebInvites.rico = 0;
   const drop = s.celebDropIn();
-  out.dropIn = !!drop && ['max', 'kai'].includes(drop.celeb) && s.nextCelebAt > s.time.now + 100000;
-  s.streetQueue = queue0;
+  out.arrives = !!drop && drop.celeb === 'rico' && !s.celebInvites.rico;
+  s.cash = cash0;
+  const q = s.patrons.find((x) => !x.leaving && !x.gone);
+  const others = s.patrons.filter((x) => x !== q && !x.gone && !x.leaving);
+  others.forEach((x) => { x.reactingUntil = 0; });
+  const cashBefore = s.cash;
+  const rnd = Math.random;
+  Math.random = () => 0.1; // everyone reacts and tips
+  s.welcomeCelebrity(q, 'rico');
+  Math.random = rnd;
+  out.welcomed = q.celeb && q.celeb.key === 'rico' && q.name === 'Rico Diamond' && s.celebTipFactor(q) > 1
+    && document.getElementById('bigPopup').querySelector('.bpSub').textContent.includes('★');
+  out.crowdReacts = others.length === 0 || others.every((x) => x.reactingUntil > s.time.now);
+  out.reactionTex = s.textures.exists('react_stars');
+  // A great visit: happy, seated at a VIP booth, a drink on the house.
+  q.mood = 90; q.vipSeated = true; q.onTheHouse = true;
+  const delta = s.celebVisitOver(q);
+  const rec = s.celebRecord('rico');
+  out.celebLiked = delta > 20 && rec.visits === 1 && rec.liking === delta;
+  q.celeb = null; // they've gone home
+  // Now they come back on their own when their time comes.
+  s.celebNextAt.rico = s.time.now + 60000;
+  out.notYet = s.celebDropIn() === null;
+  s.celebNextAt.rico = 0;
+  const back = s.celebDropIn();
+  out.returns = !!back && back.celeb === 'rico';
+  // The more they like the club, the sooner they're back.
+  rec.liking = 100;
+  const soon = s.celebReturnMs('rico');
+  rec.liking = 15;
+  out.fasterWhenLiked = soon < s.celebReturnMs('rico');
+  rec.liking = 80;
+  out.regular = s.isRegular('rico');
+  // A bad visit costs liking; below the line they don't come back alone.
+  const max = s.celebRecord('max');
+  max.visits = 1; max.liking = 5;
+  s.celebNextAt.max = 0;
+  out.coldNoReturn = !s.celebDropIn() || s.celebDropIn().celeb !== 'max';
+  out.flagsReset = true;
+  s.streetQueue = [];
+  q.celeb = s.celebDef('rico');
   document.getElementById('tabVip').click();
   const cards = [...document.querySelectorAll('#shopItems .celebSlot')];
   out.list = cards.map((c) => `${c.querySelector('.celebName').textContent}|${c.querySelector('.celebStars').textContent}|${c.querySelector('.propCost').textContent}|${!!c.querySelector('.icon').style.backgroundImage}`);
   out.listed = cards.length === 6
     && out.list[0] === 'Rico Diamond|★|In Club|true'
-    && out.list[1] === 'Max Volt|★|Available|true'
-    && out.list[2] === 'DJ Kai Blaze|★★|Available|true'
+    && out.list[1] === 'Max Volt|★|Invite $250|true'
+    && out.list[2] === 'DJ Kai Blaze|★★|Invite $500|true'
     && out.list[3].startsWith('Leo Lux|★★★|🔒 Lv 14')
     && out.list[5].startsWith('Jett Starr|★★★★★|🔒 Lv 20')
-    && cards[3].classList.contains('locked');
+    && cards[3].classList.contains('locked')
+    && !!cards[0].querySelector('.regularTag') && !!cards[0].querySelector('.celebLiking');
   out.tab = document.getElementById('tabVip').dataset.tipName;
+  s.saveGame();
+  const savedC = JSON.parse(localStorage.getItem('clubNovaSave_v2'));
+  out.celebSaved = savedC.celebs && savedC.celebs.rico && savedC.celebs.rico.liking === 80 && savedC.celebs.rico.visits === 1;
   document.getElementById('tabDecor').click();
+  s.streetQueue = queue0;
   s.levelInfo = realLevel;
+  s.celebState = {};
+  s.celebNextAt = {};
   q.celeb = null;
   // Rating: the average of recent ratings.
   const stars0 = s.nightStars;
@@ -1314,8 +1360,11 @@ check('the song box changes tracks, and Like gives a fan once a song', extras.ch
 check('guests can only be seated at a VIP booth; the button is greyed out without one', extras.greyed && extras.couchOnly && extras.lit && extras.seated, JSON.stringify(extras));
 check('a drink on the house, once a visit', extras.onHouse, JSON.stringify(extras));
 check('a guest can be sent to the dance floor', extras.danced, JSON.stringify(extras));
-check('the Celebrity List shows six celebrities with portrait, name, fame stars and Locked / Available / In Club', extras.tab === 'Celebrities' && extras.listed, JSON.stringify(extras.list));
-check('unlocked celebrities drop in on their own now and then, and an arrival is announced with their stars', extras.noneEarly && extras.picks && extras.notYet && extras.dropIn && extras.welcomed, JSON.stringify(extras));
+check('the Celebrity List shows six celebrities with portrait, name, fame stars, how much they like the club, and their invite fee', extras.tab === 'Celebrities' && extras.listed, JSON.stringify(extras.list));
+check('celebrities come first by paid invitation only', extras.noFreeVisits && extras.invited && extras.notTwice && extras.locked && extras.arrives, JSON.stringify(extras));
+check('when a celebrity walks in, the crowd gets star eyes, goes wild and tips', extras.welcomed && extras.crowdReacts && extras.reactionTex, JSON.stringify(extras));
+check('a great visit (VIP booth, drink on the house) builds liking; they come back on their own, sooner the more they like the club, and become regulars', extras.celebLiked && extras.notYet && extras.returns && extras.fasterWhenLiked && extras.regular && extras.coldNoReturn, JSON.stringify(extras));
+check('what celebrities think of the club is saved', extras.celebSaved, JSON.stringify(extras));
 check('the club rating is the average of recent ratings, shown at the top', extras.rating === 3.5 && extras.ratingShown === '3.5' && extras.faster, JSON.stringify(extras));
 check('ratings are saved', extras.saved, JSON.stringify(extras));
 
@@ -1740,7 +1789,7 @@ const inv = await page.evaluate(() => {
   out.boothHome = s.clubBooth()?.anchor.join() === home.join();
   return out;
 });
-check('Edit has Move, Turn, Put away and Sell', inv.tools === 'move,rotate,store,sell', inv.tools);
+check('Edit has Move, Turn, Put away, Sell and Clear Club', inv.tools === 'move,rotate,store,sell,clear', inv.tools);
 check('Move picks an item up and it goes back down for free', inv.moved && inv.placedFree, JSON.stringify(inv));
 check('Put away sends an item to the saved inventory, and it places from there for free', inv.stored && inv.saved && inv.listed && inv.fromInventory, JSON.stringify(inv));
 check('things in the inventory place even if they unlock at a later level', inv.lockedPlaced, JSON.stringify(inv));
@@ -1795,7 +1844,7 @@ await page.click('#tabInventory');
 // Buttons are drawn icons with no words on them; hovering one pops up its
 // name and what it does.
 const icons = await page.evaluate(() => {
-  const ids = ['tabDecor', 'tabInventory', 'tabEdit', 'tabFloors', 'tabStaff', 'tabExpand', 'tabVip', 'tabSell', 'clearClub', 'boostButton', 'rushButton', 'partyButton', 'songChange', 'songLike',
+  const ids = ['tabDecor', 'tabInventory', 'tabEdit', 'tabVip', 'boostButton', 'rushButton', 'partyButton', 'songChange', 'songLike',
     'tipsButton', 'goalsButton', 'muteButton', 'restartButton', 'zoomIn', 'zoomOut'];
   const bare = ids.filter((id) => {
     const el = document.getElementById(id);
@@ -1815,7 +1864,7 @@ const hoverTip = await page.evaluate(() => {
   return { shown: !!t && t.classList.contains('show'), name: t?.querySelector('.tipName').textContent, text: t?.querySelector('.tipText').textContent };
 });
 await page.mouse.move(5, 400);
-check('buttons and shop tabs are icons with no words, each with a hover name', icons.bare.length === 0 && icons.tabs === 7 && icons.tabIcons === 7, JSON.stringify(icons));
+check('buttons and shop tabs are icons with no words, each with a hover name', icons.bare.length === 0 && icons.tabs === 9 && icons.tabIcons === 9, JSON.stringify(icons));
 check('hovering Bass Boost pops up its name and what it does', hoverTip.shown && hoverTip.name === 'Bass Boost!' && hoverTip.text.length > 10, JSON.stringify(hoverTip));
 
 // Goals: three show at a time with their progress; finishing one pays its
@@ -1856,14 +1905,15 @@ const shopUi = await page.evaluate(() => {
   const lit = () => [...document.querySelectorAll('.dockTab.active')].map((e) => e.id).join();
   const out = {};
   s.closeDock();
-  document.getElementById('tabFloors').click();
-  out.floors = { tab: s.dockTab, cat: s.activeShopCategory, lit: lit() };
   document.getElementById('tabDecor').click();
-  out.store = { cat: s.activeShopCategory, lit: lit() };
-  document.getElementById('tabSell').click();
-  out.sell = { tab: s.dockTab, tool: s.editTool, lit: lit() };
+  document.querySelector('.storeTab[data-tip-name="Staff"]').click();
+  out.staff = { tab: s.dockTab, mode: document.getElementById('dock').dataset.mode, lit: lit(), cards: document.querySelectorAll('#shopItems .staffSlot').length };
+  document.querySelector('.storeTab[data-tip-name="Expand"]').click();
+  out.expand = { tab: s.dockTab, lit: lit(), cards: document.querySelectorAll('#shopItems .expandSlot').length };
+  document.querySelector('.storeTab[data-tip-name="Bars"]').click();
+  out.bars = { tab: s.dockTab, lit: lit() };
   document.getElementById('tabEdit').click();
-  out.edit = { tool: s.editTool, lit: lit() };
+  out.tools = [...document.querySelectorAll('#shopItems .toolSlot')].map((e) => e.dataset.tool).join();
   // NEW: at level 5, things that unlock at levels 4 and 5.
   const real = s.levelInfo.bind(s);
   s.levelInfo = () => ({ ...real(), level: 5 });
@@ -1883,10 +1933,11 @@ const shopUi = await page.evaluate(() => {
   s.updateShopUI();
   out.badgeEmpty = document.getElementById('inventoryBadge').textContent;
   // Clear Club.
-  s.closeDock();
   const plant = s.restoreProp('plant', 0, [9, 9]);
   const counted = () => Object.values(s.placed).filter((r, i, a) => a.indexOf(r) === i);
-  document.getElementById('clearClub').click();
+  s.setDockTab('edit');
+  document.querySelector('#shopItems .toolSlot[data-tool="clear"]').click();
+  out.toolKept = s.editTool !== 'clear';
   out.asked = document.getElementById('clearConfirm').classList.contains('open');
   document.getElementById('clearYes').click();
   const left = counted().map((r) => r.type);
@@ -1899,11 +1950,12 @@ const shopUi = await page.evaluate(() => {
   s.updateShopUI();
   return out;
 });
-check('Edit Floor opens the store on Floors and lights up; Store goes back to the last category', shopUi.floors.tab === 'decor' && shopUi.floors.cat === 'Floors' && shopUi.floors.lit === 'tabFloors' && shopUi.store.cat !== 'Floors' && shopUi.store.lit === 'tabDecor', JSON.stringify(shopUi));
-check('Sell opens Edit with the Sell tool; Edit Furniture goes back to Move', shopUi.sell.tab === 'edit' && shopUi.sell.tool === 'sell' && shopUi.sell.lit === 'tabSell' && shopUi.edit.tool === 'move' && shopUi.edit.lit === 'tabEdit', JSON.stringify(shopUi));
+check('Staff and Expand are Shop categories (the Shop pad stays lit)', shopUi.staff.tab === 'staff' && shopUi.staff.mode === 'store' && shopUi.staff.lit === 'tabDecor' && shopUi.staff.cards >= 1
+  && shopUi.expand.tab === 'expand' && shopUi.expand.lit === 'tabDecor' && shopUi.expand.cards === 2 && shopUi.bars.tab === 'decor', JSON.stringify(shopUi));
+check('Edit has Move, Turn, Put away, Sell and Clear Club', shopUi.tools === 'move,rotate,store,sell,clear', JSON.stringify(shopUi));
 check('NEW lists what the last two levels unlocked, each tagged NEW, and the tags show in other categories too', shopUi.newCount > 3 && shopUi.allTagged && /Neon Bar/.test(shopUi.barTags) && !/Pub Bar/.test(shopUi.barTags), JSON.stringify(shopUi));
 check('the Inventory button shows how many things are in it', shopUi.badge === '3' && shopUi.badgeEmpty === '', JSON.stringify(shopUi));
-check('Clear Club asks first, then puts everything but the DJ booth and bars into the inventory', shopUi.asked && shopUi.cleared && shopUi.plantStored && shopUi.closedAsk, JSON.stringify(shopUi));
+check('Clear Club asks first, then puts everything but the DJ booth and bars into the inventory', shopUi.asked && shopUi.toolKept && shopUi.cleared && shopUi.plantStored && shopUi.closedAsk, JSON.stringify(shopUi));
 
 // The top bar: the cash sits in the strip with the XP bar; the Goals
 // button opens and closes the goals, and a finished goal puts a ! on it.

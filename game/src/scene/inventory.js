@@ -1,8 +1,9 @@
 // ClubScene methods: the inventory and the Edit tab, like Nightclub City's.
 // The inventory holds things you own but haven't placed (this.inventory,
-// { type: count }, saved). The Edit tab has four tools; with one chosen,
-// clicking a placed item in the club moves it (picks it up to place again
-// for free), turns it, puts it away in the inventory, or sells it.
+// { type: count }, saved; the Storage pad). The Edit tab has four tools;
+// with one chosen, clicking a placed item in the club moves it (picks it up
+// to place again for free), turns it, puts it away in storage, or sells it;
+// a fifth card clears the club (clearClub()).
 // Mixed into ClubScene (see ClubScene.js); `this` is the scene.
 import { FLOOR_DECAL_PROPS, PROP_TYPES } from '../catalog.js';
 import { SELL_REFUND_RATIO, XP } from '../config.js';
@@ -15,6 +16,7 @@ export const EDIT_TOOLS = {
   rotate: { icon: 'toolRotate', name: 'Turn', text: 'Click something in your club to turn it.' },
   store: { icon: 'toolStore', name: 'Put away', text: 'Click something in your club (furniture or a floor tile) to put it in your inventory, to place again later for free.' },
   sell: { icon: 'toolSell', name: 'Sell', text: `Click something in your club (furniture or a floor tile) to sell it back for ${Math.round(SELL_REFUND_RATIO * 100)}% of its price. The basic floor shows under a floor you take up.` },
+  clear: { icon: 'toolClear', name: 'Clear Club', text: 'Put everything except your DJ booth and bars into storage, to lay the club out again for free. Asks first.', once: true },
 };
 
 export class InventoryMixin {
@@ -182,7 +184,7 @@ export class InventoryMixin {
     if (types.length === 0) {
       const { slot, icon, cost } = this.makeCard('Your inventory is empty', 'Things you put away with the Edit tab wait here, to place again for free.', null);
       slot.classList.add('emptySlot');
-      icon.dataset.icon = 'tabInventory';
+      icon.dataset.icon = 'padStorage';
       fillIcons(slot);
       cost.textContent = '';
       el.appendChild(slot);
@@ -214,10 +216,10 @@ export class InventoryMixin {
       icon.dataset.icon = tool.icon;
       button.classList.toggle('selected', this.editTool === key);
       slot.addEventListener('click', () => {
+        if (tool.once) { this.askClearClub(); return; } // Clear Club isn't a tool you hold
         this.editTool = key;
         if (this.selectedProp) this.deselectProp();
         this.renderEditTools();
-        this.refreshDockButtons(); // Sell lights the Sell button
       });
       el.appendChild(slot);
     }
@@ -251,12 +253,16 @@ export class InventoryMixin {
     return count;
   }
 
-  // The Clear Club button asks first (see #clearConfirm in index.html).
+  askClearClub() {
+    SFX.unlock();
+    document.getElementById('clearConfirm')?.classList.add('open');
+  }
+
+  // Clear Club (an Edit tool) asks first (see #clearConfirm in index.html).
   setupClearClub() {
     const box = document.getElementById('clearConfirm');
     if (!box || box.dataset.wired) return;
     box.dataset.wired = '1';
-    document.getElementById('clearClub')?.addEventListener('click', () => { SFX.unlock(); box.classList.add('open'); });
     document.getElementById('clearNo')?.addEventListener('click', () => box.classList.remove('open'));
     document.getElementById('clearYes')?.addEventListener('click', () => { box.classList.remove('open'); this.clearClub(); });
   }

@@ -128,6 +128,32 @@ export class ReactionsMixin {
       g.strokePath();
     });
 
+    // Star eyes: the happy face with two gold stars for eyes and a big grin
+    // (guests seeing a celebrity walk in).
+    make('react_stars', (g) => {
+      face(g);
+      const star = (cx, cy, R) => {
+        const pts = [];
+        for (let k = 0; k < 10; k++) {
+          const a = -Math.PI / 2 + (k * Math.PI) / 5;
+          const rr = k % 2 ? R * 0.45 : R;
+          pts.push({ x: cx + rr * Math.cos(a), y: cy + rr * Math.sin(a) });
+        }
+        g.fillStyle(0xfff3a0, 1);
+        g.fillPoints(pts, true);
+        g.lineStyle(2, 0xb87400, 1);
+        g.strokePoints(pts, true);
+      };
+      star(r - 10, r - 4, 8.5);
+      star(r + 10, r - 4, 8.5);
+      g.fillStyle(0x5a1a10, 1);
+      g.slice(r, r + 7, 11, 0, Math.PI, false);
+      g.fillPath();
+      g.lineStyle(3, ink, 1);
+      g.slice(r, r + 7, 11, 0, Math.PI, false);
+      g.strokePath();
+    });
+
     // An exclamation mark on an orange badge.
     make('react_exclaim', (g) => {
       g.fillStyle(0xff8a1a, 1);

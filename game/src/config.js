@@ -326,7 +326,24 @@ export const CELEBRITIES = [
   { key: 'tony', name: 'Tony Fame', level: 17, fame: 4, character: 9 },
   { key: 'jett', name: 'Jett Starr', level: 20, fame: 5, character: 11 },
 ];
-export const CELEB = { tipPerFame: 0.5, fansPerFame: 3, visitEveryMs: [120000, 240000], firstVisitMs: [45000, 90000] };
+// Celebrities (see celebrities.js). The first visit is by invitation only:
+// inviteCost by fame (index = stars), and they turn up inviteArriveMs later.
+// How good a time they have adds to their liking for the club (0-100,
+// `liking`: mood above or below 50 times `mood`, a VIP booth seat, a drink
+// on the house, `perStar` for each star the club is rated above 3, minus
+// `stormedOut` if they leave angry). Once they've been, they come back on
+// their own if they like the club at least minLikingToReturn: every
+// returnEveryMs[0] at that, down to returnEveryMs[1] at full liking (give
+// or take returnJitter). At regularLiking they're a VIP regular. When one
+// walks in, guests inside get star eyes or go wild, and fanTipChance of
+// them throw a tip of fanTip dollars.
+export const CELEB = {
+  tipPerFame: 0.5, fansPerFame: 3,
+  inviteCost: [0, 250, 500, 1000, 1800, 3000], inviteArriveMs: [5000, 12000],
+  liking: { mood: 0.4, vipSeat: 10, onTheHouse: 8, perStar: 4, stormedOut: 25 },
+  minLikingToReturn: 10, returnEveryMs: [600000, 120000], returnJitter: 0.3, regularLiking: 70,
+  fanTipChance: 0.45, fanTip: [5, 20],
+};
 export const PARTIES = [
   { key: 'house', label: 'House Party', emoji: '🏠', cost: 60, unlockLevel: 1, arrivals: 1.3, tips: 1.25, thirst: 1.1, fans: 1.2, shade: 0x1a0b2e, crowd: 6, leaveOverMs: [10000, 70000],
     blurb: 'Invite the neighbours. A couple more guests and a friendly crowd.' },
