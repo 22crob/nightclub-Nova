@@ -1,11 +1,12 @@
 // ClubScene methods: Top bar readouts, mute button, level-up celebration and toasts.
 // Mixed into ClubScene (see ClubScene.js); `this` is the scene.
 import { EXPANSION, FLOOR_DECAL_PROPS, PROP_TYPES } from '../catalog.js';
-import { BARTENDERS, CELEBRITIES, PARTIES, ZOOM_MAX, ZOOM_MIN } from '../config.js';
+import { BARTENDERS, CELEBRITIES, PARTIES } from '../config.js';
 import { realSpriteIconFor, renderIsoIcon } from '../icons.js';
 import { SFX } from '../sfx.js';
 import { hideTip } from '../tooltips.js';
 import { iconSvg } from '../uiIcons.js';
+import { formatMoney } from '../util.js';
 
 // What kind of thing each shop category is, for the level-up menu's tips.
 const KIND = {
@@ -22,7 +23,7 @@ export class HudMixin {
     const ratingEl = document.getElementById('ratingVal');
     if (ratingEl) ratingEl.textContent = rating == null ? '–' : String(rating);
     // Guests inside out of how many fit (see patronCapacity()).
-    if (this.placedText) this.placedText.textContent = `Guests: ${this.guestCount()}/${this.patronCapacity()}`;
+    if (this.placedText) this.placedText.textContent = `${this.guestCount()}/${this.patronCapacity()}`;
 
     const { level, into, need, progress } = this.levelInfo();
     if (this.levelText) this.levelText.textContent = level;
@@ -42,7 +43,7 @@ export class HudMixin {
   // glowing while it rolls (.rolling in style.css).
   rollCash(target) {
     const el = this.cashText;
-    if (this.cashShown == null) { this.cashShown = target; el.textContent = target; return; }
+    if (this.cashShown == null) { this.cashShown = target; el.textContent = formatMoney(target); return; }
     if (target === this.cashShownTarget) return;
     this.cashShownTarget = target;
     cancelAnimationFrame(this.cashRaf);
@@ -53,7 +54,7 @@ export class HudMixin {
     const step = (now) => {
       const t = Math.min(1, (now - start) / ms);
       this.cashShown = Math.round(from + (target - from) * (1 - (1 - t) ** 3));
-      el.textContent = this.cashShown;
+      el.textContent = formatMoney(this.cashShown);
       if (t < 1) this.cashRaf = requestAnimationFrame(step);
       else el.classList.remove('rolling');
     };
@@ -84,23 +85,6 @@ export class HudMixin {
     this.meterBoxes = [...document.querySelectorAll('#hudStats .statButton')];
   }
 
-  // The zoom slider on the right edge follows the zoom however it changes
-  // (wheel, keys, buttons). Up is closer; it moves on a log scale.
-  syncZoomSlider() {
-    const el = this.zoomSlider || (this.zoomSlider = document.getElementById('zoomSlider'));
-    if (!el || !this.world) return;
-    const t = Math.log(this.world.scaleX / ZOOM_MIN) / Math.log(ZOOM_MAX / ZOOM_MIN);
-    el.value = String(Math.round(Math.max(0, Math.min(1, t)) * 100));
-  }
-
-  setupZoomSlider() {
-    const el = document.getElementById('zoomSlider');
-    if (!el) return;
-    this.zoomSlider = el;
-    el.addEventListener('input', () => this.zoomTo(ZOOM_MIN * (ZOOM_MAX / ZOOM_MIN) ** (Number(el.value) / 100)));
-    this.syncZoomSlider();
-  }
-
   // Celebrates hitting a new level: a fanfare plus a banner naming
   // anything that just became buyable at this level (see PROP_TYPES'
   // unlockLevel), since that's the actual payoff of leveling up and is
@@ -125,13 +109,13 @@ export class HudMixin {
       if (party.unlockLevel === level) out.push({ name: party.label, kind: 'New party', emoji: party.emoji });
     }
     if (level > 1 && BARTENDERS.levels.includes(level)) {
-      out.push({ name: '+1 Bartender', kind: 'You can hire one more bartender (Shop, Staff)', art: 'catStaff' });
+      out.push({ name: '+1 Bartender', kind: 'You can hire one more bartender (Staff)', art: 'catStaff' });
     }
     for (const celeb of CELEBRITIES) {
-      if (celeb.level === level) out.push({ name: celeb.name, kind: `New celebrity (${'★'.repeat(celeb.fame)}): invite them from the Celebrities panel`, portrait: celeb.character });
+      if (celeb.level === level) out.push({ name: celeb.name, kind: `New celebrity (${'★'.repeat(celeb.fame)}): invite them from Club, Celebrities`, portrait: celeb.character });
     }
     for (const limit of EXPANSION.limits) {
-      if (limit.level === level && level > 1) out.push({ name: `Walls up to ${limit.size} tiles`, kind: 'Expand your club a row at a time (Shop, Expand)', art: 'tabExpand' });
+      if (limit.level === level && level > 1) out.push({ name: `Walls up to ${limit.size} tiles`, kind: 'Expand your club a row at a time (Club, Expand)', art: 'tabExpand' });
     }
     return out;
   }

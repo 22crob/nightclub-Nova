@@ -28,6 +28,10 @@
   --well: #1a0b30;               /* sunken spots: bars, the item window */
   --key: var(--shine), linear-gradient(180deg, #5a3290, #2d1650);
   --price: var(--shine), linear-gradient(180deg, #ffe680, #ffb000);
+  /* The HUD's dark glass panels, and the clean font for money and numbers. */
+  --glass: linear-gradient(180deg, rgba(70, 36, 118, 0.86) 0%, rgba(30, 14, 56, 0.9) 100%);
+  --glass-shadow: 0 0 0 1px rgba(255, 140, 230, 0.45), inset 0 1px 0 rgba(255, 255, 255, 0.18), 0 6px 18px rgba(0, 0, 0, 0.55);
+  --money-font: 'Segoe UI', Roboto, 'Helvetica Neue', Helvetica, Arial, sans-serif;
 }
 
 html, body { margin: 0; padding: 0; background: #07040c; overflow: hidden; }
@@ -45,23 +49,23 @@ body { font-family: var(--ui-font); color: var(--ink); }
 }
 .uiArt { display: block; width: 100%; height: 100%; overflow: visible; filter: drop-shadow(0 3px 2px rgba(0, 0, 0, 0.5)); }
 /* The detailed drawings on the big buttons spill a little past the padding. */
-.sideButton > .uiArt, .roundButton > .uiArt { margin: -6px; width: calc(100% + 12px); height: calc(100% + 12px); }
+.roundButton > .uiArt { margin: -6px; width: calc(100% + 12px); height: calc(100% + 12px); }
 
 /* ------------------------------------------------------------------ */
 /* Candy buttons: a glossy dome in the button's own colour (--c), a     */
 /* white rim, a soft glow and a dark drop; they bounce when hovered.    */
 /* ------------------------------------------------------------------ */
-.sideButton, .toolButton, .zoomButton, .dockArrow, #storeOk, .roundButton, .summaryButton, .levelButton, .songButton, .actionButton {
+.toolButton, .dockArrow, #storeOk, .roundButton, .summaryButton, .levelButton, .songButton, .actionButton {
   --c: #5ff0ff;
   box-sizing: border-box; cursor: pointer; user-select: none; border: 3px solid #fff;
   background: var(--shine), radial-gradient(circle at 50% 30%, color-mix(in srgb, var(--c) 75%, white), var(--c) 45%, color-mix(in srgb, var(--c) 45%, black));
   box-shadow: 0 0 0 2px var(--edge), 0 0 14px var(--c), 0 5px 0 var(--edge);
   transition: filter 0.15s ease;
 }
-.sideButton:hover, .toolButton:hover, .zoomButton:hover, .dockArrow:hover, #storeOk:hover, .roundButton:hover, .summaryButton:hover, .levelButton:hover, .actionButton:hover {
+.toolButton:hover, .dockArrow:hover, #storeOk:hover, .roundButton:hover, .summaryButton:hover, .levelButton:hover, .actionButton:hover {
   animation: boing 0.35s ease-out forwards;
 }
-.sideButton:active, .toolButton:active, .zoomButton:active, #storeOk:active, .roundButton:active, .summaryButton:active, .actionButton:active { filter: brightness(0.9); }
+.toolButton:active, #storeOk:active, .roundButton:active, .summaryButton:active, .actionButton:active { filter: brightness(0.9); }
 
 /* A red count bubble on a button's corner (storage, goals). */
 .countBadge {
@@ -73,129 +77,114 @@ body { font-family: var(--ui-font); color: var(--ink); }
 .countBadge:empty { display: none; }
 
 /* ------------------------------------------------------------------ */
-/* Top left: a panel with a spinning record (the level badge on it),    */
-/* the XP bar and the cash.                                             */
+/* The HUD is quiet so the club comes first: a few dark glass panels    */
+/* (--glass) instead of many separate bubbles.                          */
 /* ------------------------------------------------------------------ */
+
+/* Top left: the player panel. The level (on a spinning record) and the */
+/* XP bar, the cash under it, and the song playing in a smaller row     */
+/* with tiny audio controls.                                            */
 #hudProfile {
   position: fixed; top: calc(8px + env(safe-area-inset-top, 0px)); left: 10px; z-index: 10;
-  display: flex; gap: 14px; align-items: center; padding: 8px 16px 8px 10px; border-radius: 14px;
-  background: var(--panel); box-shadow: var(--panel-shadow);
+  display: flex; flex-direction: column; gap: 6px; width: 310px; box-sizing: border-box;
+  padding: 8px 10px 7px; border-radius: 16px;
+  background: var(--glass); box-shadow: var(--glass-shadow); backdrop-filter: blur(6px);
 }
+.profileTop { display: flex; gap: 12px; align-items: center; }
 .portrait {
-  position: relative; width: 58px; height: 58px; flex: 0 0 auto; border-radius: 50%; box-shadow: 0 0 0 2px var(--edge), 0 0 12px rgba(255, 61, 220, 0.5);
-  background: radial-gradient(circle, transparent 0 13px, #0b0b0d 13px), repeating-radial-gradient(circle, #1c1c20 0 1px, #0a0a0c 1px 3px);
+  position: relative; width: 50px; height: 50px; flex: 0 0 auto; border-radius: 50%; box-shadow: 0 0 0 2px var(--edge), 0 0 10px rgba(255, 61, 220, 0.45);
+  background: radial-gradient(circle, transparent 0 11px, #0b0b0d 11px), repeating-radial-gradient(circle, #1c1c20 0 1px, #0a0a0c 1px 3px);
 }
 .portraitFace {
-  width: 26px; height: 26px; margin: 16px; border-radius: 50%; font-size: 0;
+  width: 22px; height: 22px; margin: 14px; border-radius: 50%; font-size: 0;
   background: radial-gradient(circle, #fff 0 2px, transparent 3px), conic-gradient(var(--pink) 0 25%, var(--cyan) 0 50%, var(--pink) 0 75%, var(--cyan) 0);
   animation: spin 1.8s linear infinite;
 }
 .levelStar {
-  position: absolute; right: -10px; bottom: -8px; min-width: 30px; height: 30px; box-sizing: border-box; padding: 0 4px; border-radius: 15px;
+  position: absolute; right: -8px; bottom: -6px; min-width: 26px; height: 26px; box-sizing: border-box; padding: 0 4px; border-radius: 13px;
   display: flex; align-items: center; justify-content: center;
-  background: var(--shine), linear-gradient(180deg, #ffd84a, #ff8a1f); border: 2px solid #fff; box-shadow: 0 0 0 2px var(--edge), 0 0 10px #ffb03a;
+  background: var(--shine), linear-gradient(180deg, #ffd84a, #ff8a1f); border: 2px solid #fff; box-shadow: 0 0 0 2px var(--edge), 0 0 8px #ffb03a;
 }
-.levelStar span { font-family: var(--display-font); font-weight: 900; font-size: 14px; line-height: 1; color: #3a1a00; }
-.profileRight { display: flex; flex-direction: column; gap: 4px; }
+.levelStar span { font-family: var(--display-font); font-weight: 900; font-size: 12px; line-height: 1; color: #3a1a00; }
+.profileRight { flex: 1 1 auto; min-width: 0; display: flex; flex-direction: column; gap: 3px; }
 .xpBar {
-  position: relative; width: min(230px, 30vw); height: 20px; border-radius: 10px; overflow: hidden;
-  background: var(--well); border: 2px solid #fff; box-shadow: 0 0 0 2px var(--edge), inset 0 2px 4px rgba(0, 0, 0, 0.6);
+  position: relative; height: 16px; border-radius: 8px; overflow: hidden;
+  background: rgba(10, 4, 22, 0.8); box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.35), inset 0 2px 4px rgba(0, 0, 0, 0.6);
 }
 .xpFill { height: 100%; width: 0%; transition: width 0.4s ease; background: var(--shine), linear-gradient(90deg, var(--pink), #ffb03a); }
 .xpText {
   position: absolute; inset: 0; z-index: 1; display: flex; align-items: center; justify-content: center;
-  font-family: var(--display-font); font-weight: 900; font-size: 11px; text-shadow: var(--outline); white-space: nowrap;
+  font-family: var(--money-font); font-weight: 700; font-size: 10.5px; letter-spacing: 0.02em; text-shadow: 0 1px 2px #000; white-space: nowrap;
 }
-#hudCash { display: flex; align-items: center; gap: 4px; height: 34px; }
-.cashStack { width: 40px; height: 40px; margin: -6px 0 -4px -4px; }
+/* The cash: a clean money font, "$3,000", not a chunky cartoon one. */
+#hudCash { display: flex; align-items: center; gap: 6px; height: 30px; }
+.cashStack { width: 32px; height: 32px; flex: 0 0 auto; margin: -2px 0 -2px -2px; }
 #hudCash .amount {
-  font-family: var(--display-font); font-weight: 900; font-size: 26px; letter-spacing: 0.01em; color: #fff;
-  font-variant-numeric: tabular-nums; -webkit-text-stroke: 1.5px var(--edge); paint-order: stroke fill;
-  text-shadow: 0 3px 0 var(--edge), 0 0 14px rgba(125, 255, 90, 0.7);
+  font-family: var(--money-font); font-weight: 700; font-size: 23px; letter-spacing: 0.01em; color: #eaffe2;
+  font-variant-numeric: tabular-nums lining-nums; text-shadow: 0 1px 0 #0a2a10, 0 0 10px rgba(80, 230, 110, 0.55);
+  transition: color 0.2s ease;
 }
-#hudCash .amount.rolling { color: #d8ffc4; }
+#hudCash .amount.rolling { color: #9dff8a; }
 
-/* Under it: little candy buttons (Goals, sound, how to play, new club). */
-#hudTools {
-  position: fixed; top: calc(92px + env(safe-area-inset-top, 0px)); left: 12px; z-index: 10;
-  display: flex; align-items: center; gap: 8px;
-}
-.toolButton { position: relative; width: 34px; height: 34px; padding: 6px; border-radius: 50%; border-width: 2px; --c: #a24bff; }
-#muteButton { --c: #2fb8ff; }
+/* How to play and New club: tiny round buttons at the panel's top right. */
+#hudTools { display: flex; flex-direction: column; gap: 5px; align-self: flex-start; }
+.toolButton { position: relative; width: 24px; height: 24px; padding: 4px; border-radius: 50%; border-width: 2px; --c: #a24bff; }
 #tipsButton { --c: #43e04a; }
 #restartButton { --c: #ff4f6a; }
-#muteButton.muted { filter: grayscale(0.7) brightness(0.8); }
-.goalsButton { --c: #ffc21f; width: 44px; height: 44px; padding: 8px; }
-.goalsButton.open { box-shadow: 0 0 0 2px var(--edge), 0 0 0 5px #fff, 0 0 18px var(--c); }
-.goalsButton.cheer { animation: cheer 0.9s ease-out 2; }
-@keyframes cheer { 0%, 100% { transform: scale(1); } 30% { transform: scale(1.25) rotate(-8deg); } 60% { transform: scale(1.1) rotate(6deg); } }
 
-/* Goals (see goals.js): a panel the Goals button opens. */
-#goals {
-  position: fixed; left: 10px; top: calc(146px + env(safe-area-inset-top, 0px)); z-index: 12; width: 252px;
-  padding: 8px 10px 10px; border-radius: 18px; box-sizing: border-box;
-  background: var(--screen); box-shadow: var(--screen-shadow); text-shadow: var(--outline); animation: summaryIn 0.2s ease-out;
-}
-#goals.collapsed { display: none; }
-.goalRow { padding: 6px 8px; margin-top: 6px; border-radius: 10px; background: rgba(255, 255, 255, 0.07); border: 1px solid rgba(255, 140, 230, 0.45); }
-.goalRow.done { font-size: 12px; font-weight: 700; text-align: center; }
-.goalText { font-size: 12px; font-weight: 700; color: #fff; }
-.goalBar { height: 8px; margin: 5px 0 3px; border-radius: 4px; background: var(--well); border: 1px solid rgba(255, 255, 255, 0.4); overflow: hidden; }
-.goalFill { height: 100%; background: var(--shine), linear-gradient(90deg, var(--pink), #ffb03a); transition: width 0.4s ease; }
-.goalMeta { display: flex; justify-content: space-between; font-size: 10px; font-weight: 700; color: var(--muted); }
-.goalReward { font-weight: 900; color: var(--gold); }
-
-/* Now playing (scene/songs.js): a spinning record and the song. */
+/* Now playing (scene/songs.js): one smaller row, a spinning record, the */
+/* song and its artist, and like / skip / sound.                         */
 #songBox {
-  position: fixed; left: 10px; top: calc(146px + env(safe-area-inset-top, 0px)); z-index: 10;
-  display: flex; gap: 10px; align-items: center; padding: 8px 16px 8px 10px; border-radius: 14px;
-  background: var(--panel); box-shadow: var(--panel-shadow); text-shadow: var(--outline);
+  display: flex; gap: 8px; align-items: center; padding: 5px 6px 5px 5px; border-radius: 11px;
+  background: rgba(10, 4, 22, 0.55); box-shadow: inset 0 0 0 1px rgba(255, 140, 230, 0.25);
 }
 #songBox.off { filter: grayscale(0.8) brightness(0.7); }
 #songBox.off .songDisc { animation-play-state: paused; }
 .songDisc {
-  width: 44px; height: 44px; border-radius: 50%; font-size: 0; border: 2px solid var(--edge);
-  background: radial-gradient(circle, var(--pink) 0 5px, #111 6px 12px, transparent 13px), repeating-radial-gradient(circle, #1c1c20 0 1px, #0a0a0c 1px 3px);
-  box-shadow: 0 0 12px var(--pink); animation: spin 2.2s linear infinite;
+  flex: 0 0 auto; width: 24px; height: 24px; border-radius: 50%; font-size: 0;
+  background: radial-gradient(circle, var(--pink) 0 3px, #111 3.5px 7px, transparent 7.5px), repeating-radial-gradient(circle, #1c1c20 0 1px, #0a0a0c 1px 2.5px);
+  box-shadow: 0 0 0 1px var(--edge), 0 0 8px var(--pink); animation: spin 2.2s linear infinite;
 }
-.songTitle { font-family: var(--display-font); font-weight: 900; font-size: 13px; color: #ff8ae6; }
-.songArtist { font-size: 11px; color: var(--muted); font-weight: 700; }
-.songButtons { display: flex; gap: 5px; margin-top: 4px; }
-.songButton { --c: #a24bff; width: 30px; height: 22px; padding: 2px 6px; border-radius: 11px; border-width: 2px; box-shadow: 0 0 0 1px var(--edge); }
+.songText { flex: 1 1 auto; min-width: 0; display: flex; align-items: baseline; gap: 6px; white-space: nowrap; overflow: hidden; }
+.songTitle { font-weight: 800; font-size: 12px; color: #ff9be9; overflow: hidden; text-overflow: ellipsis; }
+.songArtist { font-size: 10.5px; color: var(--muted); font-weight: 700; overflow: hidden; text-overflow: ellipsis; }
+/* How long the song has left is in the row's hover tip, to keep the row short. */
+.songEnds { display: none; }
+.songButtons { flex: 0 0 auto; display: flex; gap: 4px; }
+.songButton { --c: #a24bff; width: 22px; height: 22px; padding: 3px; border-radius: 50%; border-width: 1.5px; box-sizing: border-box; box-shadow: 0 0 0 1px var(--edge); }
 .songButton.like.liked { --c: #43e04a; }
-.songEnds { font-size: 10px; color: var(--muted); margin-top: 3px; font-weight: 700; }
-@media (width <= 900px) { #songBox { display: none; } }
+#muteButton { --c: #2fb8ff; }
+#muteButton.muted { --c: #6a5a86; }
+@media (width <= 700px) { #hudProfile { width: 250px; } .songArtist { display: none; } }
 
-/* ------------------------------------------------------------------ */
-/* Top right: stat panels with a little meter that bounces on the beat, */
-/* and the round action buttons under them.                             */
-/* ------------------------------------------------------------------ */
-#hudStats {
+/* Top right: the stats in one panel, the action buttons in one straight */
+/* row under them, the same width. The stat meters bounce on the beat.   */
+#hudRight {
   position: fixed; top: calc(8px + env(safe-area-inset-top, 0px)); right: 10px; z-index: 10;
-  display: flex; gap: 6px;
+  display: flex; flex-direction: column; gap: 8px; width: 228px;
+}
+#hudStats {
+  display: flex; padding: 5px 4px; border-radius: 14px;
+  background: var(--glass); box-shadow: var(--glass-shadow); backdrop-filter: blur(6px);
 }
 .statButton {
   --meter: 55%;
-  display: flex; flex-direction: column; justify-content: center; align-items: center;
-  min-width: 78px; padding: 5px 12px 6px; cursor: default; border-radius: 12px; text-align: center; box-sizing: border-box;
-  background: var(--panel); box-shadow: var(--panel-shadow);
+  flex: 1 1 0; display: flex; flex-direction: column; justify-content: center; align-items: center;
+  padding: 2px 4px 3px; cursor: default; text-align: center; box-sizing: border-box;
 }
+.statButton + .statButton { border-left: 1px solid rgba(255, 140, 230, 0.25); }
 .statValue {
-  display: flex; align-items: center; justify-content: center; gap: 5px;
-  font-family: var(--display-font); font-weight: 900; font-size: 17px; text-shadow: var(--outline); font-variant-numeric: tabular-nums; white-space: nowrap;
+  display: flex; align-items: center; justify-content: center; gap: 4px;
+  font-family: var(--money-font); font-weight: 800; font-size: 14px; text-shadow: 0 1px 2px #000; font-variant-numeric: tabular-nums; white-space: nowrap;
 }
-.statLabel { font-family: var(--display-font); font-weight: 900; font-size: 9px; letter-spacing: 0.08em; text-transform: uppercase; color: #ff8ae6; }
-.statIcon { display: inline-flex; width: 18px; height: 18px; }
+.statLabel { font-weight: 800; font-size: 8.5px; letter-spacing: 0.1em; text-transform: uppercase; color: #ff9be9; margin-top: 1px; }
+.statIcon { display: inline-flex; width: 15px; height: 15px; }
 .statButton::after {
-  content: ''; display: block; align-self: stretch; width: var(--meter); height: 4px; margin-top: 3px; border-radius: 2px; transition: width 0.12s ease-out;
-  background: linear-gradient(90deg, var(--pink), #ffb03a); box-shadow: 0 0 6px rgba(255, 61, 220, 0.7);
+  content: ''; display: block; align-self: center; width: calc(var(--meter) * 0.8); height: 3px; margin-top: 3px; border-radius: 2px; transition: width 0.12s ease-out;
+  background: linear-gradient(90deg, var(--pink), #ffb03a); box-shadow: 0 0 5px rgba(255, 61, 220, 0.7);
 }
-
-#actionButtons {
-  position: fixed; top: calc(80px + env(safe-area-inset-top, 0px)); right: 14px; z-index: 10;
-  display: flex; gap: 16px;
-}
-.roundButton { position: relative; width: 60px; height: 60px; padding: 12px; border-radius: 18px; }
+#actionButtons { display: flex; justify-content: space-between; padding: 0 4px; }
+.roundButton { position: relative; width: 62px; height: 52px; padding: 9px 14px; border-radius: 14px; box-sizing: border-box; }
 .roundTimer {
   position: absolute; left: 50%; bottom: -14px; transform: translateX(-50%); z-index: 1;
   padding: 1px 7px; border-radius: 9px; background: var(--edge); border: 2px solid #fff;
@@ -213,8 +202,8 @@ body { font-family: var(--ui-font); color: var(--ink); }
 
 /* The party banner while a party is on (see parties.js). */
 .partyBanner {
-  display: none; position: fixed; top: calc(160px + env(safe-area-inset-top, 0px)); right: 10px; z-index: 10;
-  width: 214px; padding: 6px 12px 8px; border-radius: 14px; text-align: right; box-sizing: border-box;
+  display: none; position: fixed; top: calc(140px + env(safe-area-inset-top, 0px)); right: 10px; z-index: 10;
+  width: 228px; padding: 6px 12px 8px; border-radius: 14px; text-align: right; box-sizing: border-box;
   background: var(--shine), linear-gradient(180deg, #ff6fe0 0%, #b81f9c 55%, #5e0b50 100%);
   box-shadow: 0 0 0 3px #fff, 0 0 0 5px var(--edge), 0 0 20px var(--pink); text-shadow: var(--outline);
 }
@@ -225,78 +214,130 @@ body { font-family: var(--ui-font); color: var(--ink); }
 #bannerFill { height: 100%; width: 0%; background: linear-gradient(90deg, var(--cyan), var(--gold)); transition: width 0.5s linear; }
 
 /* ------------------------------------------------------------------ */
-/* Right edge: zoom in, a slider, zoom out.                             */
+/* Right edge: the drink meter (scene/meter.js), a glass cylinder of    */
+/* purple liquid (--fill) that fills with drinks, tips and bonuses;     */
+/* full, it glows and drains while drinks cost double.                  */
 /* ------------------------------------------------------------------ */
-#zoomBar {
-  position: fixed; right: 12px; top: 50%; transform: translateY(-40%); z-index: 10;
-  display: flex; flex-direction: column; align-items: center; gap: 8px; padding: 8px 6px; border-radius: 22px;
-  background: var(--panel); box-shadow: var(--panel-shadow);
+#drinkMeter {
+  --fill: 0%;
+  position: fixed; right: 18px; top: 50%; transform: translateY(-45%); z-index: 10;
+  display: flex; flex-direction: column; align-items: center; width: 46px; cursor: default;
 }
-.zoomButton { --c: var(--pink); width: 32px; height: 32px; padding: 6px; border-radius: 50%; border-width: 2px; }
-/* The slider is drawn sideways and turned upright: up zooms in. */
-#zoomSlider {
-  -webkit-appearance: none; appearance: none; width: 120px; height: 24px; margin: 48px -48px; transform: rotate(-90deg);
-  background: transparent; cursor: pointer;
+.meterCap {
+  width: 40px; height: 10px; border-radius: 6px 6px 3px 3px; margin-bottom: -3px; position: relative; z-index: 2;
+  background: linear-gradient(90deg, #8a8fa8, #f2f4fa 40%, #9aa0b8); box-shadow: 0 0 0 2px var(--edge);
 }
-#zoomSlider::-webkit-slider-runnable-track { height: 8px; border-radius: 4px; background: var(--well); border: 2px solid rgba(255, 255, 255, 0.6); }
-#zoomSlider::-moz-range-track { height: 8px; border-radius: 4px; background: var(--well); border: 2px solid rgba(255, 255, 255, 0.6); }
-#zoomSlider::-webkit-slider-thumb {
-  -webkit-appearance: none; width: 20px; height: 20px; margin-top: -8px; border-radius: 50%;
-  background: var(--shine), linear-gradient(180deg, #ffd84a, #ff8a1f); border: 2px solid #fff; box-shadow: 0 0 0 2px var(--edge);
+.meterGlass {
+  position: relative; width: 38px; height: 180px; border-radius: 6px 6px 16px 16px; overflow: hidden;
+  background: linear-gradient(90deg, rgba(255, 255, 255, 0.10), rgba(255, 255, 255, 0.03) 45%, rgba(255, 255, 255, 0.12)), rgba(16, 6, 34, 0.75);
+  box-shadow: 0 0 0 2px var(--edge), inset 0 0 0 2px rgba(255, 255, 255, 0.45), 0 0 14px rgba(170, 80, 255, 0.45);
 }
-#zoomSlider::-moz-range-thumb { width: 18px; height: 18px; border-radius: 50%; background: #ffb03a; border: 2px solid #fff; }
-@media (height <= 560px) { #zoomBar { display: none; } }
+.meterLiquid {
+  position: absolute; left: 0; right: 0; bottom: 0; height: var(--fill); transition: height 0.5s cubic-bezier(.3, 1.4, .5, 1);
+  background: linear-gradient(90deg, #6a1fd0, #b45cff 40%, #8a2be8 70%, #5a14b8);
+  box-shadow: inset 0 0 10px rgba(255, 180, 255, 0.35);
+}
+/* The liquid's top: a lighter surface that sloshes. */
+.meterLiquid::before {
+  content: ''; position: absolute; left: -10%; right: -10%; top: -5px; height: 10px; border-radius: 50%;
+  background: radial-gradient(ellipse at 50% 60%, #e2b4ff, #b45cff 70%); animation: slosh 2.4s ease-in-out infinite;
+}
+@keyframes slosh { 0%, 100% { transform: rotate(-3deg) translateY(0); } 50% { transform: rotate(3deg) translateY(1px); } }
+.meterBubbles {
+  position: absolute; inset: 0; overflow: hidden;
+  background: radial-gradient(circle at 30% 80%, rgba(255, 255, 255, 0.55) 0 2px, transparent 2.5px), radial-gradient(circle at 65% 60%, rgba(255, 255, 255, 0.45) 0 1.5px, transparent 2px), radial-gradient(circle at 45% 35%, rgba(255, 255, 255, 0.5) 0 2px, transparent 2.5px);
+  background-size: 100% 60px; animation: bubbles 2.2s linear infinite;
+}
+@keyframes bubbles { from { background-position: 0 0, 0 0, 0 0; } to { background-position: 0 -60px, 0 -60px, 0 -60px; } }
+.meterShine { position: absolute; left: 6px; top: 8px; bottom: 12px; width: 5px; border-radius: 3px; background: rgba(255, 255, 255, 0.45); }
+.meterTicks {
+  position: absolute; right: 4px; top: 10%; bottom: 8%; width: 7px;
+  background: repeating-linear-gradient(180deg, rgba(255, 255, 255, 0.55) 0 2px, transparent 2px 25%);
+}
+.meterBase {
+  width: 44px; height: 30px; margin-top: -6px; padding: 5px 12px; box-sizing: border-box; border-radius: 12px; position: relative; z-index: 2;
+  background: var(--shine), linear-gradient(180deg, #b45cff, #5a14b8); border: 2px solid #fff; box-shadow: 0 0 0 2px var(--edge), 0 0 10px rgba(180, 92, 255, 0.7);
+}
+.meterTimer {
+  margin-top: 5px; padding: 1px 7px; border-radius: 9px; background: var(--edge); border: 2px solid #fff;
+  font-family: var(--money-font); font-weight: 800; font-size: 11px; color: #fff; font-variant-numeric: tabular-nums;
+}
+.meterTimer:empty { display: none; }
+#drinkMeter.doubled .meterGlass { box-shadow: 0 0 0 2px var(--edge), inset 0 0 0 2px #fff, 0 0 26px #d27bff, 0 0 46px rgba(255, 79, 216, 0.6); animation: readyPulse 0.8s ease-in-out infinite; }
+#drinkMeter.doubled .meterBase::after {
+  content: 'x2'; position: absolute; top: -12px; right: -14px; padding: 1px 5px; border-radius: 8px; transform: rotate(10deg);
+  background: var(--price); color: #3a1a00; border: 2px solid #fff; font-family: var(--display-font); font-weight: 900; font-size: 11px;
+}
+@media (height <= 560px) { .meterGlass { height: 110px; } }
 
 /* ------------------------------------------------------------------ */
-/* Bottom: the desk. Candy pads in the corners and the open one's panel */
-/* between them (see scene/shop.js).                                    */
+/* Bottom: the navigation dock (see scene/shop.js). One glass bar of    */
+/* labelled pads, Build, Staff, Club, Inventory and Goals, the open one */
+/* glowing; its panel opens above the bar.                              */
 /* ------------------------------------------------------------------ */
 #dock {
   position: fixed; left: 0; right: 0; z-index: 30; pointer-events: none;
-  bottom: calc(6px + env(safe-area-inset-bottom, 0px));
-  display: flex; align-items: flex-end; justify-content: space-between; gap: 10px; padding: 0 12px;
+  bottom: calc(8px + env(safe-area-inset-bottom, 0px));
+  display: flex; flex-direction: column; align-items: center; gap: 8px; padding: 0 10px;
 }
-/* The desk itself: a dark purple strip with a pink neon edge. */
-#dock::before {
-  content: ''; position: fixed; left: 0; right: 0; bottom: 0; height: 70px; z-index: -1;
-  background: linear-gradient(180deg, #2d1650, #12061f); border-top: 2px solid var(--pink); box-shadow: 0 -4px 18px rgba(255, 61, 220, 0.45);
+#navBar {
+  pointer-events: auto; display: flex; align-items: center; gap: 6px; padding: 6px 8px; border-radius: 20px;
+  background: var(--glass); box-shadow: var(--glass-shadow); backdrop-filter: blur(6px);
 }
-.dockSide { display: flex; align-items: flex-end; gap: 10px; flex: none; pointer-events: auto; }
-.sideButton { position: relative; width: 60px; height: 60px; padding: 11px; border-radius: 16px; }
-.sideButton.big { width: 80px; height: 80px; padding: 15px; border-radius: 20px; }
-.sideButton.active { box-shadow: 0 0 0 2px var(--edge), 0 0 0 6px #fff, 0 0 26px var(--c); }
-#tabDecor { --c: #ff8a1f; }
-#tabEdit { --c: #2fb8ff; }
-#tabInventory { --c: #43e04a; }
-#tabVip { --c: #ffc21f; }
-/* On the beat: the kick lights Shop and Celebrities, the clap Edit and Storage. */
-body.kick #tabDecor, body.kick #tabVip, body.clap #tabEdit, body.clap #tabInventory { filter: brightness(1.3); transition: none; }
-#dockCenter {
-  flex: 1 1 auto; max-width: 780px; min-width: 0; display: flex; flex-direction: column; align-self: flex-end;
-  pointer-events: none;
+.navPad {
+  position: relative; width: 78px; height: 66px; box-sizing: border-box; padding: 4px 0 0; border-radius: 14px; cursor: pointer;
+  display: flex; flex-direction: column; align-items: center; justify-content: flex-start;
+  transition: background 0.15s ease, box-shadow 0.15s ease, transform 0.15s ease;
 }
+.navPad > .uiArt { width: 40px; height: 40px; flex: 0 0 auto; transition: transform 0.15s ease; }
+.navLabel { margin-top: 1px; font-weight: 800; font-size: 11.5px; letter-spacing: 0.02em; color: var(--muted); text-shadow: 0 1px 2px #000; }
+.navPad:hover { background: rgba(255, 255, 255, 0.08); }
+.navPad:hover > .uiArt { animation: boing 0.35s ease-out forwards; }
+/* The open one glows in its own colour and lifts a little. */
+.navPad.active {
+  background: radial-gradient(ellipse at 50% 30%, color-mix(in srgb, var(--c) 55%, transparent), color-mix(in srgb, var(--c) 18%, transparent) 70%);
+  box-shadow: inset 0 0 0 2px var(--c), 0 0 18px var(--c); transform: translateY(-3px);
+}
+.navPad.active .navLabel { color: #fff; }
+.navPad.cheer { animation: cheer 0.9s ease-out 2; }
+@keyframes cheer { 0%, 100% { transform: scale(1); } 30% { transform: scale(1.2) rotate(-8deg); } 60% { transform: scale(1.08) rotate(6deg); } }
+#navBuild { --c: #ff8a1f; }
+#navStaff { --c: #2fb8ff; }
+#navClub { --c: #b45cff; }
+#navInventory { --c: #43e04a; }
+#navGoals { --c: #ff4f8a; }
+.navPad .countBadge { top: 0; right: 8px; }
+/* On the beat the icons give a little bump. */
+body.kick .navPad > .uiArt { transform: scale(1.06); transition: none; }
+/* The green OK at the bar's end, while a panel is open. */
+#storeOk { --c: #43e04a; display: none; width: 56px; height: 56px; padding: 12px; border-radius: 14px; margin-left: 4px; }
+#dock[data-mode="store"] #storeOk, #dock[data-mode="main"] #storeOk { display: block; }
+
+/* The open panel, above the bar. */
+#dockCenter { width: min(860px, 100%); display: flex; flex-direction: column; pointer-events: none; }
 #dockCenter > * { pointer-events: auto; }
-/* The shop's categories: keys on the panel's top edge. */
+#dock[data-mode="closed"] #dockCenter, #dock[data-mode="closed"] #dockPanel { display: none; }
+/* Build's categories and Club's panels: keys on the panel's top edge. */
 #storeTabs {
   display: none; position: relative; z-index: 2; align-items: flex-end; gap: 4px;
-  height: 48px; padding-left: 18px; margin-bottom: -3px;
+  height: 46px; padding-left: 18px; margin-bottom: -3px;
 }
 #dock[data-mode="store"] #storeTabs { display: flex; }
+#dock[data-nav="build"] .storeTab[data-nav="club"], #dock[data-nav="club"] .storeTab[data-nav="build"] { display: none; }
 .storeTab {
-  position: relative; width: 46px; height: 42px; box-sizing: border-box; padding: 8px 10px; cursor: pointer;
+  position: relative; width: 46px; height: 40px; box-sizing: border-box; padding: 8px 10px; cursor: pointer;
   border-radius: 12px 12px 0 0; background: var(--key); border: 2px solid var(--edge); border-bottom: none;
   transition: height 0.1s ease;
 }
 .storeTab:hover { filter: brightness(1.25); }
-.storeTab.active { height: 48px; background: var(--shine), linear-gradient(180deg, #ff6fe0, #b81f9c); box-shadow: 0 0 14px var(--pink); }
+.storeTab.active { height: 46px; background: var(--shine), linear-gradient(180deg, #ff6fe0, #b81f9c); box-shadow: 0 0 14px var(--pink); }
 .storeTab.hasNew { animation: readyPulse 1.2s ease-in-out infinite; box-shadow: 0 0 10px #ff3b5a; }
 #dockPanel {
   position: relative; display: flex; align-items: center; gap: 8px;
-  height: 150px; padding: 10px 12px; box-sizing: border-box; border-radius: 18px;
-  background: var(--panel); box-shadow: var(--panel-shadow);
+  height: 146px; padding: 10px 12px; box-sizing: border-box; border-radius: 18px;
+  background: var(--glass); box-shadow: var(--glass-shadow); backdrop-filter: blur(6px);
 }
-#dock[data-mode="closed"] #dockPanel { display: none; }
-.dockArrow { --c: #a24bff; flex: 0 0 40px; height: 40px; border-radius: 50%; position: relative; border-width: 2px; }
+.dockArrow { --c: #a24bff; flex: 0 0 38px; height: 38px; border-radius: 50%; position: relative; border-width: 2px; }
 .dockArrow::before {
   content: ''; position: absolute; top: 50%; left: 50%; margin: -8px 0 0 -4px;
   border: 8px solid transparent; border-left: 11px solid #fff; border-right: 0; filter: drop-shadow(0 1px 0 var(--edge));
@@ -305,20 +346,33 @@ body.kick #tabDecor, body.kick #tabVip, body.clap #tabEdit, body.clap #tabInvent
 #shopItems {
   flex: 1 1 auto; display: flex; align-items: center; gap: 10px; height: 100%; padding: 0 8px;
   overflow-x: auto; overflow-y: hidden; scrollbar-width: none;
-  background: var(--screen); border-radius: 12px; box-shadow: inset 0 0 0 2px rgba(255, 120, 230, 0.4), inset 0 4px 10px rgba(0, 0, 0, 0.4);
+  background: var(--screen); border-radius: 12px; box-shadow: inset 0 0 0 1px rgba(255, 120, 230, 0.35), inset 0 4px 10px rgba(0, 0, 0, 0.4);
 }
 #shopItems::-webkit-scrollbar { display: none; }
-/* The green OK, while a panel is open. */
-#storeOk { --c: #43e04a; display: none; width: 72px; height: 60px; padding: 12px 20px; border-radius: 16px; }
-#dock[data-mode="store"] #storeOk, #dock[data-mode="main"] #storeOk { display: block; }
-@media (width <= 1100px) {
-  .sideButton { width: 52px; height: 52px; padding: 9px; }
-  .sideButton.big { width: 68px; height: 68px; padding: 13px; }
-  #storeOk { width: 60px; height: 52px; padding: 10px 16px; }
+/* Goals: the three showing, side by side, in place of the item row. */
+#goals {
+  display: none; gap: 10px; height: 146px; padding: 12px; box-sizing: border-box; border-radius: 18px;
+  background: var(--glass); box-shadow: var(--glass-shadow); backdrop-filter: blur(6px);
 }
-@media (width <= 820px) {
-  /* Narrow screens: the panel goes above the desk. */
-  #dockCenter { position: fixed; left: 8px; right: 8px; bottom: calc(86px + env(safe-area-inset-bottom, 0px)); max-width: none; }
+#dock[data-tab="goals"] #goals { display: flex; }
+#dock[data-tab="goals"] #dockPanel { display: none; }
+#goalList { flex: 1 1 auto; display: flex; gap: 10px; }
+.goalRow {
+  flex: 1 1 0; display: flex; flex-direction: column; justify-content: center; padding: 10px 14px; border-radius: 12px;
+  background: var(--screen); box-shadow: inset 0 0 0 1px rgba(255, 140, 230, 0.4);
+}
+.goalRow.done { font-size: 14px; font-weight: 800; text-align: center; }
+.goalText { font-size: 14px; font-weight: 800; color: #fff; line-height: 1.2; }
+.goalBar { height: 10px; margin: 8px 0 5px; border-radius: 5px; background: var(--well); box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.4); overflow: hidden; }
+.goalFill { height: 100%; background: var(--shine), linear-gradient(90deg, var(--pink), #ffb03a); transition: width 0.4s ease; }
+.goalMeta { display: flex; justify-content: space-between; font-family: var(--money-font); font-size: 12px; font-weight: 700; color: var(--muted); }
+.goalReward { font-weight: 800; color: #8dff7a; }
+@media (width <= 620px) {
+  .navPad { width: 58px; height: 58px; }
+  .navPad > .uiArt { width: 34px; height: 34px; }
+  .navLabel { font-size: 9.5px; }
+  #storeOk { width: 46px; height: 46px; padding: 10px; }
+  #goalList { flex-direction: column; } #goals { height: auto; }
 }
 
 /* What you're holding: a tag at the top, clear of the floor. */

@@ -1,13 +1,13 @@
 // ClubScene methods: goals, like Nightclub City's. A chain of small goals
 // (GOALS in config.js) gives the player something to aim for: three show
-// at a time in a panel on the left, each with its progress, and finishing
+// at a time in the Goals panel of the dock, each with its progress, and finishing
 // one pays its cash and XP straight away and brings in the next.
 //
 // Progress comes from counters (this.goalStats, saved) bumped where things
 // happen (bumpGoal()), from bests seen while playing (noteGoalBest()), or
 // from live values (the level, how many guests fit, the club's rating).
-// The panel opens from the Goals button under the top-left strip; a goal
-// finishing makes the button cheer and puts a ! on it until it's opened.
+// The panel opens from the Goals pad in the dock; a goal finishing makes
+// the pad cheer and puts a ! on it until it's opened.
 // Mixed into ClubScene (see ClubScene.js); `this` is the scene.
 import { GOALS } from '../config.js';
 import { SFX } from '../sfx.js';
@@ -67,8 +67,8 @@ export class GoalsMixin {
     SFX.levelUp();
     this.showToast(`🎯 Goal complete: ${goal.text}! +$${goal.cash}${goal.xp ? ` +${goal.xp} XP` : ''}`, 4500);
     this.justDone = goal.id;
-    const button = document.getElementById('goalsButton');
-    if (button && !button.classList.contains('open')) {
+    const button = document.getElementById('navGoals');
+    if (button && this.dockTab !== 'goals') {
       document.getElementById('goalsBadge').textContent = '!';
       button.classList.remove('cheer');
       void button.offsetWidth; // restart the animation
@@ -79,12 +79,12 @@ export class GoalsMixin {
   }
 
   // The panel: each showing goal, its progress and its reward.
-  renderGoals() {
+  renderGoals(force = false) {
     const list = document.getElementById('goalList');
     if (!list) return;
     const goals = this.activeGoals();
     const key = goals.map((g) => `${g.id}:${Math.min(g.target, this.goalProgress(g))}`).join('|');
-    if (list.dataset.rendered === key) return;
+    if (list.dataset.rendered === key && !force) return;
     list.dataset.rendered = key;
     list.innerHTML = '';
     if (goals.length === 0) {
@@ -117,20 +117,20 @@ export class GoalsMixin {
     this.checkGoals();
   }
 
-  // The Goals button opens and closes the panel.
+  // Opens (or closes) the Goals panel in the dock.
   toggleGoals(open) {
-    const panel = document.getElementById('goals');
-    const button = document.getElementById('goalsButton');
-    if (!panel) return;
-    const show = open ?? panel.classList.contains('collapsed');
-    panel.classList.toggle('collapsed', !show);
-    button?.classList.toggle('open', show);
-    if (show) document.getElementById('goalsBadge').textContent = '';
+    const show = open ?? this.dockTab !== 'goals';
+    if (show) this.setDockTab('goals');
+    else if (this.dockTab === 'goals') this.closeDock();
+  }
+
+  // The Goals panel was opened: the ! goes.
+  seenGoals() {
+    const badge = document.getElementById('goalsBadge');
+    if (badge) badge.textContent = '';
   }
 
   setupGoals() {
-    document.getElementById('goalsButton')?.addEventListener('click', () => { SFX.unlock(); this.toggleGoals(); });
-    document.getElementById('goalsHead')?.addEventListener('click', () => this.toggleGoals(false));
     this.checkGoals();
   }
 }

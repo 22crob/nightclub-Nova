@@ -143,7 +143,7 @@ export class CelebritiesMixin {
         this.noteIncome('tips', amount);
         p.spent = (p.spent || 0) + amount;
         SFX.tip();
-        this.floatMoney(p.container.x, p.container.y - PATRON_POPUP_Y, `$${amount}`, '#ff2a2a', false);
+        this.floatMoney(p.container.x, p.container.y - PATRON_POPUP_Y, `$${amount}`, false);
         this.updateUI();
       });
     }

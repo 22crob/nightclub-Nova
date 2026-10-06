@@ -8,6 +8,9 @@ import { SFX } from '../sfx.js';
 import { randRange } from '../util.js';
 import { MOOD } from './mood.js';
 
+// Money popping up over guests is always green (the owner asked for no red).
+const MONEY_GREEN = '#1fc94a';
+
 export class StaffMixin {
   // Every distinct placed prop that takes staff (bars, DJ booths), in a
   // stable order: by type, then position.
@@ -285,7 +288,7 @@ export class StaffMixin {
   // A patron gets a drink from a staffed bar and pays for it.
   serveDrink(rec, patron) {
     const now = this.time.now;
-    const price = PROP_TYPES[rec.type].drinkPrice || 10;
+    const price = (PROP_TYPES[rec.type].drinkPrice || 10) * this.drinkPriceFactor(); // doubled while the drink meter is full
     const tip = this.tipAmount(patron, price * randRange(...MONEY.drinkTip));
     this.cash += price + tip;
     this.noteIncome('drinkMoney', price);
@@ -354,11 +357,12 @@ export class StaffMixin {
     });
   }
 
-  // Money over a guest's head, like Nightclub City's: a big red amount with
+  // Money over a guest's head, like Nightclub City's: a big green amount with
   // a white outline that pops up and floats away. While a boost or a party
   // multiplies tips, "+2x Tip!" rides above it (unless `tipped` is false:
   // the cover charge and bonuses).
-  floatMoney(x, y, text, color = '#ff2a2a', tipped = true) {
+  floatMoney(x, y, text, tipped = true) {
+    const color = MONEY_GREEN;
     const mult = tipped ? (this.isBoosted() ? BOOST.tipMultiplier : 1) * this.partyEffect('tips', 1) : 1;
     const style = (size) => ({
       fontFamily: 'Arial Black, Arial, sans-serif', fontSize: `${size}px`, color,

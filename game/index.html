@@ -6,51 +6,43 @@
 <title>Club Nova</title>
 </head>
 <body>
-  <!-- Top-left, like Nightclub City: one glossy strip with the portrait and
-       its level badge, the XP bar, and the cash under it. -->
+  <!-- Top-left: the player panel, one glass panel with the level and XP,
+       the cash under it, and the song playing with tiny audio controls. -->
   <div id="hudProfile">
-    <div class="portrait">
-      <div class="portraitFace">🪩</div>
-      <div class="levelStar" data-tip-name="Level" data-tip-text="Your club's level. Earn XP to level up and unlock new things."><span id="levelVal">1</span></div>
-    </div>
-    <div class="profileRight">
-      <div class="xpBar" data-tip-name="XP" data-tip-text="Experience. You earn XP serving drinks, from happy guests and parties, and by buying furniture, decorations and expansions (selling takes it back). XP raises your level, which unlocks new items.">
-        <div class="xpFill" id="xpBarFill"></div>
-        <div class="xpText" id="xpText">Level 1</div>
+    <div class="profileTop">
+      <div class="portrait">
+        <div class="portraitFace">🪩</div>
+        <div class="levelStar" data-tip-name="Level" data-tip-text="Your club's level. Earn XP to level up and unlock new things."><span id="levelVal">1</span></div>
       </div>
-      <div id="hudCash" data-tip-name="Cash" data-tip-text="Your money. Drinks, the cover charge, tips and bonuses bring it in; furniture, staff and parties spend it.">
-        <div class="cashStack" data-icon="cash"></div>
-        <span class="amount" id="cashVal">500</span>
+      <div class="profileRight">
+        <div class="xpBar" data-tip-name="XP" data-tip-text="Experience. You earn XP serving drinks, from happy guests and parties, and by buying furniture, decorations and expansions (selling takes it back). XP raises your level, which unlocks new items.">
+          <div class="xpFill" id="xpBarFill"></div>
+          <div class="xpText" id="xpText">Level 1</div>
+        </div>
+        <div id="hudCash" data-tip-name="Cash" data-tip-text="Your money. Drinks, the cover charge, tips and bonuses bring it in; furniture, staff and parties spend it.">
+          <div class="cashStack" data-icon="cash"></div>
+          <span class="amount" id="cashVal">$500</span>
+        </div>
+      </div>
+      <div id="hudTools">
+        <div id="tipsButton" class="toolButton" data-icon="tips" data-tip-name="How to play"
+          data-tip-text="The club never closes. Happy guests tip and earn you XP; thirsty or bored ones leave. Click a guest or bartender for their card. Click to place, right-click to sell, R to rotate, Esc to put down, drag to move around, scroll (or + and -) to zoom."></div>
+        <div id="restartButton" class="toolButton" data-icon="restart" data-tip-name="New club" data-tip-text="Start a brand-new club from scratch"></div>
       </div>
     </div>
-  </div>
-  <!-- Under the strip: small round buttons, and Goals. -->
-  <div id="hudTools">
-    <div id="goalsButton" class="toolButton goalsButton" data-icon="goalsGlyph" data-tip-name="Goals" data-tip-text="Finish goals for cash and XP. Click to show or hide them."><span id="goalsBadge" class="countBadge"></span></div>
-    <div id="muteButton" class="toolButton" data-icon="sound" data-tip-name="Sound" data-tip-text="Turn the music and sounds on or off"></div>
-    <div id="tipsButton" class="toolButton" data-icon="tips" data-tip-name="How to play"
-      data-tip-text="The club never closes. Happy guests tip and earn you XP; thirsty or bored ones leave. Click a guest or bartender for their card. Click to place, right-click to sell, R to rotate, Esc to put down, drag to move around, scroll to zoom."></div>
-    <div id="restartButton" class="toolButton" data-icon="restart" data-tip-name="New club" data-tip-text="Start a brand-new club from scratch"></div>
-  </div>
-
-  <!-- Goals (see scene/goals.js): three at a time, in a panel the Goals
-       button opens. -->
-  <div id="goals" class="collapsed">
-    <div id="goalsHead">Goals</div>
-    <div id="goalList"></div>
-  </div>
-
-  <!-- Under the profile: the DJ's now-playing box (see scene/songs.js) -->
-  <div id="songBox">
-    <div class="songDisc">🎧</div>
-    <div class="songText">
-      <div class="songTitle" id="songTitle">Basement Lights</div>
-      <div class="songArtist" id="songArtist">DJ Nova</div>
+    <!-- Now playing (see scene/songs.js), with the audio controls. -->
+    <div id="songBox">
+      <div class="songDisc">🎧</div>
+      <div class="songText" data-tip-name="Now playing" data-tip-text="The DJ's current track">
+        <span class="songTitle" id="songTitle">Basement Lights</span>
+        <span class="songArtist" id="songArtist">DJ Nova</span>
+        <span class="songEnds" id="songEnds"></span>
+      </div>
       <div class="songButtons">
-        <div id="songChange" class="songButton iconOnly" data-icon="next" data-tip-name="Change song" data-tip-text="Skip to the DJ's next track"></div>
         <div id="songLike" class="songButton like iconOnly" data-icon="like" data-tip-name="Like this song" data-tip-text="+1 XP, once a song"></div>
+        <div id="songChange" class="songButton iconOnly" data-icon="next" data-tip-name="Change song" data-tip-text="Skip to the DJ's next track"></div>
+        <div id="muteButton" class="songButton" data-icon="sound" data-tip-name="Sound" data-tip-text="Turn the music and sounds on or off"></div>
       </div>
-      <div class="songEnds" id="songEnds">Ends: 9:10 PM</div>
     </div>
   </div>
 
@@ -94,36 +86,36 @@
     </div>
   </div>
 
-  <!-- Top-right: stat boxes, a number with a small label under it. -->
-  <div id="hudStats">
-    <div class="statButton" data-tip-name="Club rating" data-tip-text="How happy your crowd has been lately: the club gets stars every minute, and this is the average of the last five. A better-rated club draws guests faster.">
-      <div class="statValue"><span class="statIcon" data-icon="rating"></span><span id="ratingVal">–</span></div>
-      <div class="statLabel">Rating</div>
+  <!-- Top-right: the stats in a row, and the Bass Boost / Drink Rush /
+       Party buttons in one straight row under them, the same width. -->
+  <div id="hudRight">
+    <div id="hudStats">
+      <div class="statButton" data-tip-name="Club rating" data-tip-text="How happy your crowd has been lately: the club gets stars every minute, and this is the average of the last five. A better-rated club draws guests faster.">
+        <div class="statValue"><span class="statIcon" data-icon="rating"></span><span id="ratingVal">–</span></div>
+        <div class="statLabel">Rating</div>
+      </div>
+      <div class="statButton" data-tip-name="Luxury" data-tip-text="How fancy your club is. Everything you place, paint and paper adds to it, and a fancier club earns bigger tips.">
+        <div class="statValue"><span class="statIcon" data-icon="luxury"></span><span id="luxuryVal">0</span></div>
+        <div class="statLabel">Luxury</div>
+      </div>
+      <div class="statButton guestsStat" data-tip-name="Guests" data-tip-text="Guests in the club now, out of how many fit. Every row you expand by fits one more; when it's full, new arrivals wait outside.">
+        <div class="statValue"><span class="statIcon" data-icon="patrons"></span><span id="placedVal">0/0</span></div>
+        <div class="statLabel">Guests</div>
+      </div>
     </div>
-    <div class="statButton" data-tip-name="Luxury" data-tip-text="How fancy your club is. Everything you place, paint and paper adds to it, and a fancier club earns bigger tips.">
-      <div class="statValue"><span class="statIcon" data-icon="luxury"></span><span id="luxuryVal">0</span></div>
-      <div class="statLabel">Luxury</div>
-    </div>
-    <div class="statButton guestsStat" data-tip-name="Guests" data-tip-text="Guests in the club now, out of how many fit. Every row you expand by fits one more; when it's full, new arrivals wait outside.">
-      <div class="statValue"><span class="statIcon" data-icon="patrons"></span><span id="placedVal">0/0</span></div>
-    </div>
-  </div>
-
-  <!-- Top-right, under the stats: round icon buttons for Drop the Bass and
-       Throw a Party. Their names and state are in the hover tip; a small
-       timer shows under Drop the Bass while it runs or recharges. -->
-  <div id="actionButtons">
-    <div id="boostButton" class="boostButton roundButton" data-state="ready" data-icon="artSpeaker" data-tip-name="Bass Boost!"
-      data-tip-text="A free 90-second party: bigger, faster tips, more drinks and dancing, and heavy bass">
-      <span id="boostLabel" class="roundTimer"></span>
-    </div>
-    <div id="rushButton" class="rushButton roundButton" data-state="ready" data-icon="bars" data-tip-name="Drink Rush!"
-      data-tip-text="More guests want a drink for a while and head for the bars and bar stools">
-      <span id="rushLabel" class="roundTimer"></span>
-    </div>
-    <div id="partyButton" class="partyButton roundButton" data-state="ready" data-icon="party" data-tip-name="Throw a Party"
-      data-tip-text="Pay for a themed party: more guests, bigger tips, more XP">
-      <span id="partyLabel" class="roundTimer"></span>
+    <div id="actionButtons">
+      <div id="boostButton" class="boostButton roundButton" data-state="ready" data-icon="artSpeaker" data-tip-name="Bass Boost!"
+        data-tip-text="A free 90-second party: bigger, faster tips, more drinks and dancing, and heavy bass">
+        <span id="boostLabel" class="roundTimer"></span>
+      </div>
+      <div id="rushButton" class="rushButton roundButton" data-state="ready" data-icon="bars" data-tip-name="Drink Rush!"
+        data-tip-text="More guests want a drink for a while and head for the bars and bar stools">
+        <span id="rushLabel" class="roundTimer"></span>
+      </div>
+      <div id="partyButton" class="partyButton roundButton" data-state="ready" data-icon="party" data-tip-name="Throw a Party"
+        data-tip-text="Pay for a themed party: more guests, bigger tips, more XP">
+        <span id="partyLabel" class="roundTimer"></span>
+      </div>
     </div>
   </div>
   <div id="partyPicker" class="overlay">
@@ -173,11 +165,17 @@
     <div id="actionTip" class="actionTip"></div>
   </div>
 
-  <!-- Right edge: zoom in, a slider, zoom out. -->
-  <div id="zoomBar">
-    <div id="zoomIn" class="zoomButton" data-icon="plus" data-tip-name="Zoom in"></div>
-    <input id="zoomSlider" type="range" min="0" max="100" value="50" aria-label="Zoom" data-tip-name="Zoom" data-tip-text="Slide up to zoom in, down to zoom out. The mouse wheel zooms too.">
-    <div id="zoomOut" class="zoomButton" data-icon="minus" data-tip-name="Zoom out"></div>
+  <!-- Right edge: the drink meter (see scene/meter.js), a glass cylinder
+       of purple liquid; when it's full, drinks cost double for a while. -->
+  <div id="drinkMeter" data-tip-name="Drink meter" data-tip-text="">
+    <div class="meterCap"></div>
+    <div class="meterGlass">
+      <div class="meterLiquid"><div class="meterBubbles"></div></div>
+      <div class="meterShine"></div>
+      <div class="meterTicks"></div>
+    </div>
+    <div class="meterBase" data-icon="bars"></div>
+    <div class="meterTimer"></div>
   </div>
 
   <!-- Clear Club: asked first (see clearClub() in scene/inventory.js). -->
@@ -196,28 +194,29 @@
   <!-- Big popups: "Bass Boost!", "Drink Rush!", celebrity arrivals. -->
   <div id="bigPopup"><div class="bpTitle"></div><div class="bpSub"></div></div>
 
-  <!-- Bottom: the DJ desk. Four light-up pads, like a DJ's drum pads:
-       Shop, Edit and Storage on the left, Celebrities and the green OK on
-       the right, and the open one's screen between them (see
-       scene/shop.js). What you're holding shows at the top of the screen. -->
+  <!-- Bottom: the navigation dock (see scene/shop.js). Build, Staff, Club,
+       Inventory and Goals in one bar, the open one glowing, and its panel
+       above the bar: Build and Club have a row of keys on the panel's top
+       edge. The green OK closes it. What you're holding shows at the top
+       of the screen. -->
   <div id="selectedChip"></div>
-  <div id="dock" data-tab="" data-mode="closed">
-    <div id="dockLeft" class="dockSide">
-      <div id="tabDecor" class="dockTab sideButton big" data-tab="decor" data-icon="artShop" data-tip-name="Shop" data-tip-text="Buy furniture, floors, wallpaper and decorations, hire staff and expand your club."></div>
-      <div id="tabEdit" class="dockTab sideButton" data-tab="edit" data-icon="artEdit" data-tip-name="Edit" data-tip-text="Move, turn, put away or sell the things in your club, or clear it out."></div>
-      <div id="tabInventory" class="dockTab sideButton" data-tab="inventory" data-icon="artStorage" data-tip-name="Storage" data-tip-text="Things you own but haven't placed. Place them again for free."><span id="inventoryBadge" class="countBadge"></span></div>
-    </div>
+  <div id="dock" data-tab="" data-nav="" data-mode="closed">
     <div id="dockCenter">
-      <!-- The shop: categories on the screen's top edge. -->
       <div id="storeTabs"></div>
       <div id="dockPanel">
         <div id="dockPrev" class="dockArrow" data-tip-name="Scroll left"></div>
         <div id="shopItems"></div>
         <div id="dockNext" class="dockArrow" data-tip-name="Scroll right"></div>
       </div>
+      <!-- Goals (see scene/goals.js): three at a time, in the Goals panel. -->
+      <div id="goals"><div id="goalList"></div></div>
     </div>
-    <div id="dockRight" class="dockSide">
-      <div id="tabVip" class="dockTab sideButton" data-tab="celebs" data-icon="artCeleb" data-tip-name="Celebrities" data-tip-text="Invite celebrities to your club. The more they enjoy it, the more often they come back on their own."></div>
+    <div id="navBar">
+      <div id="navBuild" class="dockTab navPad" data-nav="build" data-icon="artShop" data-tip-name="Build" data-tip-text="Buy bars, seating, floors, wallpaper, decorations and DJ booths."><span class="navLabel">Build</span></div>
+      <div id="navStaff" class="dockTab navPad" data-nav="staff" data-icon="catStaff" data-tip-name="Staff" data-tip-text="Hire bartenders for your bars. Your level sets how many you can have."><span class="navLabel">Staff</span></div>
+      <div id="navClub" class="dockTab navPad" data-nav="club" data-icon="artClub" data-tip-name="Club" data-tip-text="Edit your club (move, turn, put away, sell), expand it, and invite celebrities."><span class="navLabel">Club</span></div>
+      <div id="navInventory" class="dockTab navPad" data-nav="inventory" data-icon="artStorage" data-tip-name="Inventory" data-tip-text="Things you own but haven't placed. Place them again for free."><span class="navLabel">Inventory</span><span id="inventoryBadge" class="countBadge"></span></div>
+      <div id="navGoals" class="dockTab navPad" data-nav="goals" data-icon="artGoals" data-tip-name="Goals" data-tip-text="Finish goals for cash and XP."><span class="navLabel">Goals</span><span id="goalsBadge" class="countBadge"></span></div>
       <div id="storeOk" data-icon="check" data-tip-name="OK" data-tip-text="Finish and close the panel"></div>
     </div>
   </div>

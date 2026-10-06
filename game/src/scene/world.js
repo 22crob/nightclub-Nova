@@ -365,7 +365,6 @@ export class WorldMixin {
     this.world.setScale(next);
     this.world.x = sx - localX * next;
     this.world.y = sy - localY * next;
-    this.syncZoomSlider();
   }
 
   // Centres the whole room (floor plus back walls) in the space between the
@@ -383,6 +382,5 @@ export class WorldMixin {
     this.world.setScale(zoom);
     this.world.x = this.scale.width / 2 - ((left + right) / 2) * zoom;
     this.world.y = (areaTop + areaBottom) / 2 - ((top + bottom) / 2) * zoom;
-    this.syncZoomSlider?.();
   }
 }

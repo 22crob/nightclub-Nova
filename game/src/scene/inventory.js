@@ -182,7 +182,7 @@ export class InventoryMixin {
     this.shopCosts = {};
     const types = Object.keys(this.inventory || {}).filter((t) => PROP_TYPES[t] && this.inventoryCount(t) > 0);
     if (types.length === 0) {
-      const { slot, icon, cost } = this.makeCard('Your inventory is empty', 'Things you put away with the Edit tab wait here, to place again for free.', null);
+      const { slot, icon, cost } = this.makeCard('Your inventory is empty', 'Things you put away with Club, Edit wait here, to place again for free.', null);
       slot.classList.add('emptySlot');
       icon.dataset.icon = 'artStorage';
       fillIcons(slot);

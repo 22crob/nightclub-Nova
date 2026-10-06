@@ -222,6 +222,11 @@ export const BOOST = { durationMs: 60000, cooldownMs: 180000, speedUp: 1.5, tipM
 // Drink Rush (see scene/boost.js): for durationMs, guests are drinkWeight
 // times as keen on a drink, and about joinShare of them head for the bars
 // over the first few seconds (staggerMs). Then cooldownMs before it's ready.
+// The drink meter on the right edge: purple liquid that fills as drinks
+// are served (perDrink), tips come in (perTip) and bonuses are clicked
+// (perBonus). When it reaches `full`, drinks cost `priceMultiplier` times
+// as much for `doubleMs`, while it drains; then it starts again from empty.
+export const METER = { full: 100, perDrink: 2, perTip: 1, perBonus: 5, doubleMs: 30000, priceMultiplier: 2 };
 export const RUSH = { durationMs: 45000, cooldownMs: 180000, drinkWeight: 5, joinShare: 0.65, staggerMs: [250, 2500] };
 
 // Mood lighting (see lighting.js): how much the floor and walls are dimmed,

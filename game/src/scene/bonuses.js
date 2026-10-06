@@ -148,7 +148,7 @@ export class BonusesMixin {
       this.partyStats.bonusCash = (this.partyStats.bonusCash || 0) + b.amount;
     }
     SFX.tip();
-    this.floatMoney(b.holder.x, b.holder.y, `+$${b.amount}`, '#22b84a', false);
+    this.floatMoney(b.holder.x, b.holder.y, `+$${b.amount}`, false);
     b.patron.reactingUntil = 0;
     this.popReaction(b.patron, 'excited', 150);
     this.removeBonus(b, false);

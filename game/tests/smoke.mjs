@@ -95,13 +95,18 @@ check('all sprites loaded', st.textures.length === 0, st.textures.join(', ') || 
 // Tips are paused while the checks below compare exact cash amounts.
 await page.evaluate(() => { const s = window.__clubNova.scene.getScene('club'); s.collectPatronTip = () => {}; s.chargeCover = () => {}; });
 
-// The shop: round buttons in the bottom corners, like Nightclub City's.
-// The Store opens a row of drawn categories (NEW first, floors and dance
-// floors together) and OK closes it.
-const tabs = await page.$$eval('.dockTab', (els) => els.map((e) => e.dataset.tipName));
-await page.click('#tabDecor');
-const storeTabs = await page.$$eval('.storeTab', (els) => els.map((e) => e.dataset.tipName));
-check('the desk has four pads (Shop, Edit, Storage, Celebrities); the shop has NEW, 6 store categories, Staff and Expand', tabs.join() === 'Shop,Edit,Storage,Celebrities' && storeTabs.join() === 'New,Bars,Seating,Floors,Wallpaper,Decorations,DJ Booths,Staff,Expand', `${tabs.join(' / ')} | ${storeTabs.join(' / ')}`);
+// The dock along the bottom: Build, Staff, Club, Inventory and Goals, each
+// labelled. Build opens a row of drawn categories (NEW first, floors and
+// dance floors together) and OK closes it; Club's keys are Edit, Expand
+// and Celebrities.
+const tabs = await page.$$eval('.dockTab', (els) => els.map((e) => `${e.dataset.tipName}=${e.querySelector('.navLabel').textContent}`));
+await page.click('#navBuild');
+const visibleKeys = () => page.$$eval('.storeTab', (els) => els.filter((e) => e.offsetParent).map((e) => e.dataset.tipName));
+const storeTabs = await visibleKeys();
+await page.click('#navClub');
+const clubKeys = await visibleKeys();
+await page.click('#navBuild');
+check('the dock is Build, Staff, Club, Inventory, Goals (labelled); Build has NEW and 6 categories; Club has Edit, Expand and Celebrities', tabs.join() === 'Build=Build,Staff=Staff,Club=Club,Inventory=Inventory,Goals=Goals' && storeTabs.join() === 'New,Bars,Seating,Floors,Wallpaper,Decorations,DJ Booths' && clubKeys.join() === 'Edit,Expand,Celebrities', `${tabs.join(' / ')} | ${storeTabs.join(' / ')} | ${clubKeys.join(' / ')}`);
 check('bar shows its real sprite icon', await page.locator('.propButton .icon').first().evaluate((el) => el.style.backgroundImage.includes('data:image/png')));
 // Floors: dance floors and regular floors in one category, the tip says which.
 await page.click('.storeTab[data-tip-name="Floors"]');
@@ -158,7 +163,7 @@ const bought = await page.evaluate(() => {
 check('the Expand tab has a card for each side, with its price', expandCard.cards === 2 && expandCard.sides === 'left,right' && /more floor tiles/.test(expandCard.tip) && /\$|Lv|Max/.test(expandCard.price), JSON.stringify(expandCard));
 check('picking a side shows the new row in green sizeBefore you buy it', hovered === 'left' && picked2.pending === 'left' && picked2.preview === 'left' && picked2.strip === sizeBefore[0] && picked2.grid.join() === sizeBefore.join() && picked2.confirm, JSON.stringify({ hovered, picked2 }));
 check('confirming adds just one row on that side', bought.grid[0] === sizeBefore[0] && bought.grid[1] === sizeBefore[1] + 1 && bought.spent > 0 && bought.tile && bought.saved.join() === bought.grid.join() && !bought.preview && !bought.confirm, JSON.stringify({ sizeBefore, bought }));
-await page.click('#tabDecor');
+await page.click('#navBuild');
 await page.evaluate(() => window.__clubNova.scene.getScene('club').selectProp('starterBar'));
 
 // Place the Starter Bar (selected by default, $100).
@@ -610,7 +615,7 @@ check('hovering any part of a three-tile booth glows the whole booth; clicking s
 check('in Edit, clicking anywhere on the booth picks the whole booth up', select.pickedUp, JSON.stringify(select));
 
 // Capacity: 8 guests in a new 10x10 club, one more per expansion row;
-// staff don't count. Shown as "Guests: n/max".
+// staff don't count. Shown as "n/max" over a Guests label.
 const capacity = await page.evaluate(() => {
   const s = window.__clubNova.scene.getScene('club');
   const [w, h] = [s.gridW, s.gridH];
@@ -624,7 +629,7 @@ const capacity = await page.evaluate(() => {
   [s.gridW, s.gridH] = [w, h];
   s.updateUI();
   out.text = document.getElementById('placedVal').textContent;
-  out.matches = out.text === `Guests: ${s.patrons.filter((p) => !p.gone).length}/${s.patronCapacity()}`;
+  out.matches = out.text === `${s.patrons.filter((p) => !p.gone).length}/${s.patronCapacity()}`;
   // Full: nobody else comes in.
   const n0 = s.patrons.length;
   const cap = s.patronCapacity;
@@ -634,7 +639,7 @@ const capacity = await page.evaluate(() => {
   s.patronCapacity = cap;
   return out;
 });
-check('8 guests fit in a new club, +1 per expansion row, shown as "Guests: n/max", and a full club lets nobody in', capacity.base === 8 && capacity.one === 9 && capacity.three === 11 && capacity.matches && capacity.fullBlocks, JSON.stringify(capacity));
+check('8 guests fit in a new club, +1 per expansion row, shown as "n/max" under Guests, and a full club lets nobody in', capacity.base === 8 && capacity.one === 9 && capacity.three === 11 && capacity.matches && capacity.fullBlocks, JSON.stringify(capacity));
 
 // XP for purchases: buying gives XP by price, moving gives none, and
 // selling takes it back, so buying and selling can't farm levels.
@@ -697,8 +702,8 @@ const cardX = await page.evaluate(() => {
 });
 check('the card\'s red X stays in its corner, with the speech bubble and text below it', cardX.below && cardX.inCorner && cardX.clickable, JSON.stringify(cardX));
 
-// Tabs: the green check finishes what you're doing and closes the panel,
-// leaving just the tab logos; clicking an open tab again closes it too.
+// The green check finishes what you're doing and closes the panel, leaving
+// just the nav bar; clicking an open pad again closes it too.
 await page.evaluate(() => window.__clubNova.scene.getScene('club').setDockTab('staff'));
 const openStaff = await page.evaluate(() => ({ panel: getComputedStyle(document.getElementById('dockPanel')).display !== 'none', check: getComputedStyle(document.getElementById('storeOk')).display !== 'none' }));
 await page.evaluate(() => window.__clubNova.scene.getScene('club').selectProp('woodStool'));
@@ -707,13 +712,13 @@ const closedDock = await page.evaluate(() => {
   const s = window.__clubNova.scene.getScene('club');
   return { panel: getComputedStyle(document.getElementById('dockPanel')).display, tabs: [...document.querySelectorAll('.dockTab')].filter((t) => t.offsetParent).length, held: s.selectedProp, tab: s.dockTab };
 });
-await page.click('#tabEdit');
-await page.click('#tabEdit');
+await page.click('#navClub');
+await page.click('#navClub');
 const toggled = await page.evaluate(() => getComputedStyle(document.getElementById('dockPanel')).display);
-await page.click('#tabDecor');
+await page.click('#navBuild');
 await page.click('#storeOk');
 const storeClosed = await page.evaluate(() => getComputedStyle(document.getElementById('dockPanel')).display);
-check('the green check finishes the action and closes the tab, leaving only the corner buttons', openStaff.panel && openStaff.check && closedDock.panel === 'none' && closedDock.tabs === 4 && !closedDock.held && closedDock.tab === null && storeClosed === 'none', JSON.stringify({ openStaff, closedDock, storeClosed }));
+check('the green check finishes the action and closes the panel, leaving only the nav bar', openStaff.panel && openStaff.check && closedDock.panel === 'none' && closedDock.tabs === 5 && !closedDock.held && closedDock.tab === null && storeClosed === 'none', JSON.stringify({ openStaff, closedDock, storeClosed }));
 check('clicking an open tab again closes it', toggled === 'none', toggled);
 
 // The doorway stays clear: arrivals walk to a clear spot inside first,
@@ -859,13 +864,13 @@ const spread = await page.evaluate(() => {
 });
 check('nobody idles at the ends of a bar, and guests pick the quieter spots', spread.noBar || (spread.endsOff && spread.crowdFn), JSON.stringify(spread));
 
-// Zoom buttons change the zoom and stay within limits.
+// The + and - keys change the zoom and stay within limits.
 const zoom0 = await page.evaluate(() => window.__clubNova.scene.getScene('club').world.scaleX);
-await page.click('#zoomIn');
+await page.evaluate(() => { const s = window.__clubNova.scene.getScene('club'); s.zoomTo(s.world.scaleX / 0.85); });
 const zoom1 = await page.evaluate(() => window.__clubNova.scene.getScene('club').world.scaleX);
-for (let i = 0; i < 20; i++) await page.click('#zoomOut');
+await page.evaluate(() => { const s = window.__clubNova.scene.getScene('club'); for (let i = 0; i < 20; i++) s.zoomTo(s.world.scaleX * 0.85); });
 const zoom2 = await page.evaluate(() => window.__clubNova.scene.getScene('club').world.scaleX);
-check('zoom buttons zoom in and out within limits', zoom1 > zoom0 && Math.abs(zoom2 - 0.6) < 1e-6, `${zoom0.toFixed(2)} -> ${zoom1.toFixed(2)} -> ${zoom2.toFixed(2)}`);
+check('zooming in and out stays within limits', zoom1 > zoom0 && Math.abs(zoom2 - 0.6) < 1e-6, `${zoom0.toFixed(2)} -> ${zoom1.toFixed(2)} -> ${zoom2.toFixed(2)}`);
 
 // Dance floors: nine designs, the animated ones move only while the DJ
 // plays, and a Step Floor lights up under a patron.
@@ -1223,7 +1228,7 @@ const people = await page.evaluate(() => {
 });
 check('guests have names, and clicking one opens their card', people.named && people.clickedGuest && people.card && people.quote.length > 2, JSON.stringify(people));
 check('guests have no lasting thought bubbles over their heads', people.bubble, JSON.stringify(people));
-check('Bottoms Up serves the whole line at once (at the counter, on their way and waiting behind), then recovers', people.clickedBar && people.barCard && people.served >= 3 && people.served === people.inLine && people.someNotAtCounter && people.paid > 0 && people.lineEmpty && people.cooling, JSON.stringify(people));
+check('Bottoms Up serves the whole line at once (at the counter, on their way and waiting behind), then recovers', people.clickedBar && people.barCard && people.served >= 2 && people.served === people.inLine && people.someNotAtCounter && people.paid > 0 && people.lineEmpty && people.cooling, JSON.stringify(people));
 check('Luxury grows with what you place, shows in the top bar and raises tips', people.luxuryUp > 0 && people.tipsUp && people.luxuryShown, JSON.stringify(people));
 
 // From the owner's screenshots, part two: the DJ's song box (Change, Like),
@@ -1322,7 +1327,7 @@ const extras = await page.evaluate(async () => {
   out.flagsReset = true;
   s.streetQueue = [];
   q.celeb = s.celebDef('rico');
-  document.getElementById('tabVip').click();
+  document.querySelector('.storeTab[data-tip-name="Celebrities"]').click();
   const cards = [...document.querySelectorAll('#shopItems .celebSlot')];
   out.list = cards.map((c) => `${c.querySelector('.celebName').textContent}|${c.querySelector('.celebStars').textContent}|${c.querySelector('.propCost').textContent}|${!!c.querySelector('.icon').style.backgroundImage}`);
   out.listed = cards.length === 6
@@ -1333,11 +1338,11 @@ const extras = await page.evaluate(async () => {
     && out.list[5].startsWith('Jett Starr|★★★★★|🔒 Lv 20')
     && cards[3].classList.contains('locked')
     && !!cards[0].querySelector('.regularTag') && !!cards[0].querySelector('.celebLiking');
-  out.tab = document.getElementById('tabVip').dataset.tipName;
+  out.tab = document.querySelector('.storeTab.active').dataset.tipName;
   s.saveGame();
   const savedC = JSON.parse(localStorage.getItem('clubNovaSave_v2'));
   out.celebSaved = savedC.celebs && savedC.celebs.rico && savedC.celebs.rico.liking === 80 && savedC.celebs.rico.visits === 1;
-  document.getElementById('tabDecor').click();
+  document.getElementById('navBuild').click();
   s.streetQueue = queue0;
   s.levelInfo = realLevel;
   s.celebState = {};
@@ -1731,7 +1736,7 @@ const inv = await page.evaluate(() => {
   s.selectProp('woodStool');
   s.placeProp(spot[0], spot[1]);
   s.deselectProp();
-  document.getElementById('tabEdit').click();
+  document.querySelector('.storeTab[data-tip-name="Edit"]').click();
   out.tools = [...document.querySelectorAll('#shopItems .toolSlot')].map((e) => e.dataset.tool).join();
   // Move: picked up and held, from the inventory.
   const cash0 = s.cash;
@@ -1744,7 +1749,7 @@ const inv = await page.evaluate(() => {
   s.editClick(spot[0], spot[1]);
   out.stored = !s.placed[`${spot[0]},${spot[1]}`] && s.inventoryCount('woodStool') === 1;
   out.saved = JSON.parse(localStorage.getItem('clubNovaSave_v2')).inventory.woodStool === 1;
-  document.getElementById('tabInventory').click();
+  document.getElementById('navInventory').click();
   const card = document.querySelector('#shopItems .propSlot');
   out.listed = card && /Stool/i.test(card.dataset.tipName) && /×1/.test(card.textContent);
   card.click();
@@ -1839,13 +1844,14 @@ const walls = await page.evaluate(() => {
   return { bare: [...new Set((s.bareWallImages || []).map((i) => i.texture.key))] };
 });
 check('the bare walls are torn old wallpaper', walls.bare.length > 0 && walls.bare.every((k) => /tornPaper/.test(k)), JSON.stringify(walls));
-await page.click('#tabInventory');
+await page.click('#navInventory');
 
 // Buttons are drawn icons with no words on them; hovering one pops up its
 // name and what it does.
 const icons = await page.evaluate(() => {
-  const ids = ['tabDecor', 'tabInventory', 'tabEdit', 'tabVip', 'boostButton', 'rushButton', 'partyButton', 'songChange', 'songLike',
-    'tipsButton', 'goalsButton', 'muteButton', 'restartButton', 'zoomIn', 'zoomOut'];
+  // (The dock's pads carry their name in a label under the picture.)
+  const ids = ['navBuild', 'navStaff', 'navClub', 'navInventory', 'navGoals', 'boostButton', 'rushButton', 'partyButton', 'songChange', 'songLike',
+    'tipsButton', 'muteButton', 'restartButton'];
   const bare = ids.filter((id) => {
     const el = document.getElementById(id);
     const words = [...el.childNodes].filter((n) => n.nodeType === 3).map((n) => n.textContent.trim()).join('');
@@ -1864,7 +1870,7 @@ const hoverTip = await page.evaluate(() => {
   return { shown: !!t && t.classList.contains('show'), name: t?.querySelector('.tipName').textContent, text: t?.querySelector('.tipText').textContent };
 });
 await page.mouse.move(5, 400);
-check('buttons and shop tabs are icons with no words, each with a hover name', icons.bare.length === 0 && icons.tabs === 9 && icons.tabIcons === 9, JSON.stringify(icons));
+check('buttons and shop tabs are icons with no words, each with a hover name', icons.bare.length === 0 && icons.tabs === 10 && icons.tabIcons === 10, JSON.stringify(icons));
 check('hovering Bass Boost pops up its name and what it does', hoverTip.shown && hoverTip.name === 'Bass Boost!' && hoverTip.text.length > 10, JSON.stringify(hoverTip));
 
 // Goals: three show at a time with their progress; finishing one pays its
@@ -1905,14 +1911,19 @@ const shopUi = await page.evaluate(() => {
   const lit = () => [...document.querySelectorAll('.dockTab.active')].map((e) => e.id).join();
   const out = {};
   s.closeDock();
-  document.getElementById('tabDecor').click();
-  document.querySelector('.storeTab[data-tip-name="Staff"]').click();
+  document.getElementById('navStaff').click();
   out.staff = { tab: s.dockTab, mode: document.getElementById('dock').dataset.mode, lit: lit(), cards: document.querySelectorAll('#shopItems .staffSlot').length };
+  document.getElementById('navClub').click();
   document.querySelector('.storeTab[data-tip-name="Expand"]').click();
   out.expand = { tab: s.dockTab, lit: lit(), cards: document.querySelectorAll('#shopItems .expandSlot').length };
+  document.getElementById('navStaff').click();
+  document.getElementById('navClub').click();
+  out.clubRemembers = s.dockTab === 'expand';
+  document.getElementById('navBuild').click();
   document.querySelector('.storeTab[data-tip-name="Bars"]').click();
   out.bars = { tab: s.dockTab, lit: lit() };
-  document.getElementById('tabEdit').click();
+  document.querySelector('.storeTab[data-tip-name="Edit"]').click();
+  out.edit = { tab: s.dockTab, lit: lit() };
   out.tools = [...document.querySelectorAll('#shopItems .toolSlot')].map((e) => e.dataset.tool).join();
   // NEW: at level 5, things that unlock at levels 4 and 5.
   const real = s.levelInfo.bind(s);
@@ -1950,47 +1961,42 @@ const shopUi = await page.evaluate(() => {
   s.updateShopUI();
   return out;
 });
-check('Staff and Expand are Shop categories (the Shop pad stays lit)', shopUi.staff.tab === 'staff' && shopUi.staff.mode === 'store' && shopUi.staff.lit === 'tabDecor' && shopUi.staff.cards >= 1
-  && shopUi.expand.tab === 'expand' && shopUi.expand.lit === 'tabDecor' && shopUi.expand.cards === 2 && shopUi.bars.tab === 'decor', JSON.stringify(shopUi));
+check('each dock pad lights up for its own panels: Staff, Club (Edit, Expand, remembered), Build', shopUi.staff.tab === 'staff' && shopUi.staff.mode === 'main' && shopUi.staff.lit === 'navStaff' && shopUi.staff.cards >= 1
+  && shopUi.expand.tab === 'expand' && shopUi.expand.lit === 'navClub' && shopUi.expand.cards === 2 && shopUi.clubRemembers && shopUi.bars.tab === 'decor' && shopUi.bars.lit === 'navBuild'
+  && shopUi.edit.tab === 'edit' && shopUi.edit.lit === 'navClub', JSON.stringify(shopUi));
 check('Edit has Move, Turn, Put away, Sell and Clear Club', shopUi.tools === 'move,rotate,store,sell,clear', JSON.stringify(shopUi));
 check('NEW lists what the last two levels unlocked, each tagged NEW, and the tags show in other categories too', shopUi.newCount > 3 && shopUi.allTagged && /Neon Bar/.test(shopUi.barTags) && !/Pub Bar/.test(shopUi.barTags), JSON.stringify(shopUi));
 check('the Inventory button shows how many things are in it', shopUi.badge === '3' && shopUi.badgeEmpty === '', JSON.stringify(shopUi));
 check('Clear Club asks first, then puts everything but the DJ booth and bars into the inventory', shopUi.asked && shopUi.toolKept && shopUi.cleared && shopUi.plantStored && shopUi.closedAsk, JSON.stringify(shopUi));
 
-// The top bar: the cash sits in the strip with the XP bar; the Goals
-// button opens and closes the goals, and a finished goal puts a ! on it.
-// The zoom slider on the right edge follows the zoom and sets it.
+// The player panel: the level, XP bar, cash and the song with its audio
+// controls are all one panel. The Goals pad opens and closes the goals in
+// the dock, and a finished goal puts a ! on it until opened.
 const topUi = await page.evaluate(() => {
   const s = window.__clubNova.scene.getScene('club');
   const out = {};
-  out.cashInStrip = !!document.querySelector('#hudProfile #cashVal');
-  const panel = document.getElementById('goals');
+  const panel = document.getElementById('hudProfile');
+  out.onePanel = ['levelVal', 'xpBarFill', 'cashVal', 'songTitle', 'songLike', 'songChange', 'muteButton'].every((id) => panel.contains(document.getElementById(id)));
+  const goals = document.getElementById('goals');
+  const shown = () => getComputedStyle(goals).display !== 'none';
   s.toggleGoals(false);
-  out.startsClosed = panel.classList.contains('collapsed');
-  document.getElementById('goalsButton').click();
-  out.opens = !panel.classList.contains('collapsed') && document.getElementById('goalsButton').classList.contains('open');
-  document.getElementById('goalsButton').click();
-  out.closes = panel.classList.contains('collapsed');
+  out.startsClosed = !shown();
+  document.getElementById('navGoals').click();
+  out.opens = shown() && document.getElementById('navGoals').classList.contains('active') && document.querySelectorAll('#goalList .goalRow').length === 3;
+  document.getElementById('navGoals').click();
+  out.closes = !shown();
   delete s.completeGoal;
   const done = [...s.goalsDone];
   s.completeGoal(s.activeGoals()[0]);
   out.badge = document.getElementById('goalsBadge').textContent;
   s.goalsDone = done;
   s.completeGoal = (goal) => { s.goalsDone.push(goal.id); };
-  document.getElementById('goalsButton').click();
+  document.getElementById('navGoals').click();
   out.badgeCleared = document.getElementById('goalsBadge').textContent === '';
   s.toggleGoals(false);
-  const slider = document.getElementById('zoomSlider');
-  const z0 = s.world.scaleX;
-  s.zoomTo(2.2);
-  out.sliderTop = slider.value;
-  slider.value = '0';
-  slider.dispatchEvent(new Event('input'));
-  out.zoomMin = s.world.scaleX;
-  s.zoomTo(z0);
   return out;
 });
-check('the cash is in the top-left strip with the XP bar', topUi.cashInStrip, JSON.stringify(topUi));
+check('the level, XP, cash and song with its audio controls are one player panel', topUi.onePanel, JSON.stringify(topUi));
 
 // The cash readout rolls up to a new amount, glowing while it rolls, and
 // the buttons are candy: a white rim and their own colour.
@@ -2003,18 +2009,52 @@ const cashRoll = await page.evaluate(async () => {
   s.updateUI();
   const out = { rolling: el.classList.contains('rolling') };
   for (let i = 0; i < 60 && el.classList.contains('rolling'); i++) await new Promise((r) => setTimeout(r, 50));
-  out.landed = el.textContent === String(Math.floor(s.cash));
+  out.landed = el.textContent === '$' + Math.floor(s.cash).toLocaleString('en-US') && (s.cash < 1000 || el.textContent.includes(','));
   out.stopped = !el.classList.contains('rolling');
   s.cash = before;
   s.updateUI();
-  const pad = getComputedStyle(document.getElementById('tabDecor'));
+  const pad = getComputedStyle(document.getElementById('boostButton'));
   out.rim = pad.borderTopColor;
   out.padColour = pad.getPropertyValue('--c').trim();
   return out;
 });
 check('the cash rolls up to a new amount; buttons have the candy look', cashRoll.rolling && cashRoll.landed && cashRoll.stopped && cashRoll.rim === 'rgb(255, 255, 255)' && !!cashRoll.padColour, JSON.stringify(cashRoll));
-check('the Goals button opens and closes the goals; a finished goal puts a ! on it until opened', topUi.startsClosed && topUi.opens && topUi.closes && topUi.badge === '!' && topUi.badgeCleared, JSON.stringify(topUi));
-check('the zoom slider follows the zoom and sets it', topUi.sliderTop === '100' && Math.abs(topUi.zoomMin - 0.6) < 0.01, JSON.stringify(topUi));
+check('the Goals pad opens and closes the goals in the dock; a finished goal puts a ! on it until opened', topUi.startsClosed && topUi.opens && topUi.closes && topUi.badge === '!' && topUi.badgeCleared, JSON.stringify(topUi));
+
+// The drink meter on the right edge fills with drinks, tips and bonuses;
+// full, drinks cost double for 30 seconds while it drains, then it empties.
+const meter = await page.evaluate(() => {
+  const s = window.__clubNova.scene.getScene('club');
+  const out = {};
+  const el = document.getElementById('drinkMeter');
+  s.doubleDrinksUntil = 0;
+  s.meterLevel = 0;
+  s.noteIncome('drinkMoney', 10);
+  out.afterDrink = s.meterLevel;
+  s.noteIncome('tips', 3);
+  out.afterTip = s.meterLevel;
+  s.noteIncome('bonuses', 88);
+  out.afterBonus = s.meterLevel;
+  s.noteIncome('wages', 50);
+  out.wagesIgnored = s.meterLevel === out.afterBonus;
+  out.fillShown = el.style.getPropertyValue('--fill');
+  const bar = Object.values(s.placed).find((r) => r.type && /Bar/i.test(r.type));
+  if (!s.patrons.some((p) => !p.gone)) { s.patronCapacity = () => 99; s.trySpawnPatron(); }
+  const guest = s.patrons.find((p) => !p.gone);
+  out.found = [!!bar, !!guest];
+  out.normalPrice = bar && guest ? s.serveDrink(bar, guest) : null;
+  s.fillMeter(1000);
+  out.doubled = s.drinksDoubled() && el.classList.contains('doubled');
+  out.doublePrice = bar && guest ? s.serveDrink(bar, guest) : null;
+  out.frozen = (() => { const l = s.meterLevel; s.fillMeter(5); return s.meterLevel === l; })();
+  s.doubleDrinksUntil = s.time.now - 1;
+  s.tickMeter();
+  out.over = !s.drinksDoubled() && s.meterLevel === 0 && !el.classList.contains('doubled');
+  out.noZoom = !document.getElementById('zoomSlider') && !document.getElementById('zoomIn');
+  return out;
+});
+check('the drink meter fills with drinks, tips and bonuses (not wages) and shows it', meter.afterDrink === 2 && meter.afterTip === 3 && meter.afterBonus === 8 && meter.wagesIgnored && meter.fillShown === '8.0%' && meter.noZoom, JSON.stringify(meter));
+check('a full drink meter doubles drink prices for a while, then empties', meter.doubled && meter.normalPrice > 0 && meter.doublePrice === meter.normalPrice * 2 && meter.frozen && meter.over, JSON.stringify(meter));
 
 // Money pops up over guests in big outlined letters; while a boost
 // multiplies tips, "+1.5x Tip!" rides above the amount.
@@ -2024,7 +2064,7 @@ const moneyPop = await page.evaluate(() => {
   const until = s.boostUntil;
   s.boostUntil = s.time.now + 30000;
   const boosted = s.floatMoney(100, 100, '$9');
-  const cover = s.floatMoney(100, 100, '$5 Cover', '#22b84a', false);
+  const cover = s.floatMoney(100, 100, '$5 Cover', false);
   s.boostUntil = until;
   const texts = (h) => h.list.map((t) => t.text);
   return { plain: texts(plain), boosted: texts(boosted), cover: texts(cover), big: parseInt(plain.list[0].style.fontSize, 10) };

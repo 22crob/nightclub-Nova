@@ -627,7 +627,7 @@ export class PatronsMixin {
     this.noteIncome('cover', amount);
     patron.spent = (patron.spent || 0) + amount;
     this.updateUI();
-    this.floatMoney(patron.container.x, patron.container.y - PATRON_POPUP_Y, `$${amount} Cover`, '#22b84a', false);
+    this.floatMoney(patron.container.x, patron.container.y - PATRON_POPUP_Y, `$${amount} Cover`, false);
   }
 
   // Sends a patron walking back to the door tile, on foot, tile by tile,

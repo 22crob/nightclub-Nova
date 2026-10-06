@@ -7,11 +7,11 @@ import { SFX } from '../sfx.js';
 import { hideTip } from '../tooltips.js';
 import { fillIcons } from '../uiIcons.js';
 
-// The shop sits in the DJ desk along the bottom: four light-up pads (Shop,
-// Edit and Storage on the left; Celebrities and OK on the right) and the
-// open one's screen between them. The Shop shows a row of categories on
-// the screen's edge (NEW first, then the store, then Staff and Expand),
-// with the items standing on the screen and their prices under them.
+// The dock along the bottom is the game's navigation: Build, Staff, Club,
+// Inventory and Goals in one bar, the open one glowing, with its panel
+// above. Build shows a row of category keys on the panel's top edge (NEW
+// first, then the store), with the items standing on the screen and their
+// prices under them; Club's keys are Edit, Expand and Celebrities.
 // Everything is a picture; names and descriptions are in the hover tips.
 const CATEGORIES = {
   New: { icon: 'newGlyph', text: 'Everything you unlocked at your last two levels.', isNew: true },
@@ -21,9 +21,16 @@ const CATEGORIES = {
   Wallpaper: { icon: 'roller', text: 'Paper the walls, section by section.' },
   Decorations: { icon: 'lamp', text: 'Plants, lights and statues to make the club fancier.' },
   'DJ Booths': { icon: 'turntable', text: 'Upgrade your DJ booth. A better booth earns more XP.' },
-  Staff: { icon: 'staff', text: 'Hire bartenders for your bars. Your level sets how many you can have.', tab: 'staff' },
-  Expand: { icon: 'expand', text: 'Make the club bigger, a row of floor at a time.', tab: 'expand' },
 };
+// The Club panel's keys, each its own panel.
+const CLUB_KEYS = {
+  Edit: { icon: 'hammer', text: 'Move, turn, put away or sell the things in your club, or clear it out.', tab: 'edit' },
+  Expand: { icon: 'expand', text: 'Make the club bigger, a row of floor at a time.', tab: 'expand' },
+  Celebrities: { icon: 'starGlyph', text: 'Invite celebrities to your club. The more they enjoy it, the more often they come back on their own.', tab: 'celebs' },
+};
+// Which nav pad each panel belongs to, and the panel each pad opens.
+const NAV_OF = { decor: 'build', staff: 'staff', edit: 'club', expand: 'club', celebs: 'club', inventory: 'inventory', goals: 'goals' };
+const NAV_OPENS = { build: 'decor', staff: 'staff', club: 'edit', inventory: 'inventory', goals: 'goals' };
 const STORE_CATEGORIES = Object.keys(CATEGORIES);
 
 export class ShopMixin {
@@ -72,13 +79,14 @@ export class ShopMixin {
     if (!this.shopItemsEl || !this.dockEl) return; // older/debug HTML — skip silently
 
     this.dockTabs = {};
-    for (const tab of document.querySelectorAll('.dockTab')) {
-      this.dockTabs[tab.dataset.tab] = tab;
-      // Clicking the open one again closes it.
-      tab.addEventListener('click', () => {
+    for (const pad of document.querySelectorAll('.dockTab')) {
+      const nav = pad.dataset.nav;
+      this.dockTabs[nav] = pad;
+      // Clicking the open one again closes it; Club reopens where you were.
+      pad.addEventListener('click', () => {
         SFX.unlock();
-        if (this.dockTab && this.activeDockKey() === tab.dataset.tab) this.closeDock();
-        else this.setDockTab(tab.dataset.tab);
+        if (this.dockTab && this.activeDockKey() === nav) this.closeDock();
+        else this.setDockTab(nav === 'club' ? (this.lastClubTab || 'edit') : NAV_OPENS[nav]);
       });
     }
     fillIcons(this.dockEl);
@@ -86,16 +94,19 @@ export class ShopMixin {
     this.setupBeatUI();
     const row = document.getElementById('storeTabs');
     this.storeTabButtons = {};
-    for (const category of STORE_CATEGORIES) {
-      const sub = document.createElement('div');
-      sub.className = 'storeTab';
-      sub.dataset.icon = CATEGORIES[category].icon;
-      sub.dataset.tipName = category;
-      sub.dataset.tipText = CATEGORIES[category].text;
-      sub.addEventListener('click', () => (CATEGORIES[category].tab ? this.setDockTab(CATEGORIES[category].tab) : this.setShopCategory(category)));
-      row.appendChild(sub);
-      this.storeTabButtons[category] = sub;
-    }
+    const addKey = (name, def, nav, onClick) => {
+      const key = document.createElement('div');
+      key.className = 'storeTab';
+      key.dataset.nav = nav;
+      key.dataset.icon = def.icon;
+      key.dataset.tipName = name;
+      key.dataset.tipText = def.text;
+      key.addEventListener('click', onClick);
+      row.appendChild(key);
+      this.storeTabButtons[name] = key;
+    };
+    for (const category of STORE_CATEGORIES) addKey(category, CATEGORIES[category], 'build', () => this.setShopCategory(category));
+    for (const [name, def] of Object.entries(CLUB_KEYS)) addKey(name, def, 'club', () => this.setDockTab(def.tab));
     fillIcons(row);
     // The green check finishes what you're doing and closes the panel.
     document.getElementById('storeOk')?.addEventListener('click', () => { SFX.unlock(); this.closeDock(); });
@@ -110,13 +121,13 @@ export class ShopMixin {
     }, { passive: false });
 
     this.activeShopCategory = STORE_CATEGORIES[1]; // Bars (NEW is first)
-    this.closeDock(); // just the corner buttons until one is opened
+    this.closeDock(); // just the nav bar until one is opened
     this.updateSelectedChip();
   }
 
-  // Which pad is lit: the open tab, with Staff and Expand part of the Shop.
+  // Which nav pad is lit: the one the open panel belongs to.
   activeDockKey() {
-    return ['decor', 'staff', 'expand'].includes(this.dockTab) ? 'decor' : this.dockTab;
+    return NAV_OF[this.dockTab] || null;
   }
 
   refreshDockButtons() {
@@ -124,21 +135,23 @@ export class ShopMixin {
     for (const k in this.dockTabs || {}) this.dockTabs[k].classList.toggle('active', k === key);
   }
 
-  // Switches the dock to a tab: 'decor' (the store), 'inventory', 'edit',
-  // 'staff', 'expand' (both in the Shop) or 'celebs'.
+  // Switches the dock to a panel: 'decor' (Build), 'staff', 'edit',
+  // 'expand' or 'celebs' (all three in Club), 'inventory' or 'goals'.
   setDockTab(tab) {
-    if (tab !== 'decor') this.lastMainTab = tab;
+    if (NAV_OF[tab] === 'club') this.lastClubTab = tab;
     if (tab !== 'expand') { this.pendingExpand = null; this.clearExpandPreview?.(); }
     if (this.dockTab === 'edit' && tab !== 'edit' && this.selectedProp && this.holdingFromInventory) this.deselectProp();
     this.dockTab = tab;
     this.refreshDockButtons();
     if (this.dockEl) {
       this.dockEl.dataset.tab = tab;
-      this.dockEl.dataset.mode = ['decor', 'staff', 'expand'].includes(tab) ? 'store' : 'main';
+      this.dockEl.dataset.nav = NAV_OF[tab] || '';
+      this.dockEl.dataset.mode = ['build', 'club'].includes(NAV_OF[tab]) ? 'store' : 'main';
     }
-    // In the Shop, its category tab is lit (Staff and Expand are categories).
-    const lit = tab === 'staff' ? 'Staff' : tab === 'expand' ? 'Expand' : this.activeShopCategory;
+    // The open panel's key is lit: the store category in Build, the panel in Club.
+    const lit = NAV_OF[tab] === 'club' ? Object.keys(CLUB_KEYS).find((k) => CLUB_KEYS[k].tab === tab) : this.activeShopCategory;
     for (const cat in this.storeTabButtons || {}) this.storeTabButtons[cat].classList.toggle('active', cat === lit);
+    if (tab === 'goals') this.seenGoals();
     document.body.classList.toggle('editing', tab === 'edit');
     if (this.drawSelectionFootprint) this.drawSelectionFootprint();
     hideTip();
@@ -157,6 +170,7 @@ export class ShopMixin {
     this.refreshDockButtons();
     if (this.dockEl) {
       this.dockEl.dataset.tab = '';
+      this.dockEl.dataset.nav = '';
       this.dockEl.dataset.mode = 'closed';
     }
     document.body.classList.remove('editing');
@@ -173,6 +187,7 @@ export class ShopMixin {
     else if (tab === 'staff') { if (this.shopItemsEl) this.shopItemsEl.dataset.rendered = ''; this.renderStaffCard(); }
     else if (tab === 'expand') { if (this.shopItemsEl) this.shopItemsEl.dataset.rendered = ''; this.renderExpandCard(); }
     else if (tab === 'celebs') { if (this.shopItemsEl) this.shopItemsEl.dataset.rendered = ''; this.renderCelebCards(); }
+    else if (tab === 'goals') this.renderGoals(true);
   }
 
   // Opens the store on one category (also used to jump to one from code).

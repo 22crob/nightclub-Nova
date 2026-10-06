@@ -64,6 +64,10 @@ const ICONS = {
   minus: `<path d="M4.5 12h15" stroke="${W}" stroke-width="3.6" stroke-linecap="round"/>`,
   // The shop's category keys: one clean white style (the keys give the
   // colour).
+  hammer: `<g transform="rotate(-40 12 12)"><rect x="10.7" y="9" width="2.6" height="13.5" rx="1.2" fill="${W}"/>
+    <path d="M6 4.2h9.6a1.4 1.4 0 0 1 1.4 1.4v2.6a1.4 1.4 0 0 1-1.4 1.4H6c-1.4 0-2.4-1.2-2.4-2.7S4.6 4.2 6 4.2Z" fill="${W}"/></g>`,
+  starGlyph: `<path d="M11 3.4l2.5 5.3 5.8.8-4.2 4 1 5.8L11 16.5l-5.1 2.8 1-5.8-4.2-4 5.8-.8Z" fill="${W}"/>
+    <path d="M19.4 1.8l.7 1.7 1.7.7-1.7.7-.7 1.7-.7-1.7-1.7-.7 1.7-.7ZM19.6 15.5l.5 1.2 1.2.5-1.2.5-.5 1.2-.5-1.2-1.2-.5 1.2-.5Z" fill="${W}"/>`,
   newGlyph: `<rect x="1.4" y="6.4" width="21.2" height="11.2" rx="3" fill="${W}"/>
     <text x="12" y="15.4" text-anchor="middle" font-family="Arial Black, Arial, sans-serif" font-weight="900" font-size="7.6" fill="${INK}">NEW</text>`,
   lamp: `<path d="M9.2 2.8h5.6l2.6 13H6.6Z" fill="${W}"/><circle cx="11" cy="7.6" r="1.4" fill="${INK}"/><circle cx="13.2" cy="11.6" r="1.9" fill="${INK}"/>
@@ -205,6 +209,38 @@ const ART = {
     <path d="M15.4 33.6l3 1.4M15.4 35.8l3 1.4" stroke="#9a6524" stroke-width=".8"/>
     <path d="M24 26.5V44" stroke="#c48a3e" stroke-width="3.4" opacity=".55"/>
     <path d="M24 26.5V44" stroke="${O}" stroke-width="1.2"/>`,
+  // The Club pad: a mirror disco ball on its chain, throwing coloured light.
+  artClub: `<defs><radialGradient id="gBall" cx=".36" cy=".32" r=".8"><stop offset="0" stop-color="#ffffff"/><stop offset=".35" stop-color="#d6dbea"/><stop offset=".8" stop-color="#7c86a6"/><stop offset="1" stop-color="#4a5070"/></radialGradient>
+    <clipPath id="cBall"><circle cx="24" cy="27" r="15"/></clipPath></defs>
+    <path d="M24 2v9" stroke="${O}" stroke-width="3"/><path d="M24 2v9" stroke="#c9c2e6" stroke-width="1.4"/>
+    <rect x="20.5" y="9.5" width="7" height="4" rx="1.2" fill="#c9c2e6" stroke="${O}" stroke-width="1.4"/>
+    <circle cx="24" cy="27" r="15" fill="url(#gBall)"/>
+    <g clip-path="url(#cBall)" stroke="#5b6386" stroke-width=".9" fill="none" opacity=".9">
+      <path d="M9 17.5h30M9 22.2h30M9 27h30M9 31.8h30M9 36.5h30"/>
+      <path d="M24 12v30M17.5 12c-3 9-3 21 0 30M30.5 12c3 9 3 21 0 30M12.6 14c-5 8-5 18 0 26M35.4 14c5 8 5 18 0 26"/>
+    </g>
+    <g clip-path="url(#cBall)">
+      <rect x="18" y="17.8" width="5.6" height="4.2" fill="#ff7ae0"/><rect x="24.4" y="27.4" width="5.6" height="4.2" fill="#7ef0ff"/>
+      <rect x="12.4" y="27.4" width="5" height="4.2" fill="#ffe14a" opacity=".85"/><rect x="30.8" y="17.8" width="4.4" height="4.2" fill="#b98cff"/>
+      <rect x="18" y="32.2" width="5.6" height="4.2" fill="#ff9be6" opacity=".7"/>
+    </g>
+    <circle cx="24" cy="27" r="15" fill="none" stroke="${O}" stroke-width="1.9"/>
+    <path d="M14.5 21c1.4-3.4 4-5.8 7.4-6.8" stroke="#fff" stroke-width="2.2" stroke-linecap="round" fill="none" opacity=".9"/>
+    <path d="M42.5 9.5l1 2.6 2.6 1-2.6 1-1 2.6-1-2.6-2.6-1 2.6-1Z" fill="#fff" stroke="${O}" stroke-width=".9" stroke-linejoin="round"/>
+    <path d="M5 37.5l.8 2 2 .8-2 .8-.8 2-.8-2-2-.8 2-.8Z" fill="#fff" stroke="${O}" stroke-width=".9" stroke-linejoin="round"/>`,
+  // The Goals pad: a shiny gold trophy cup with a star on it.
+  artGoals: `<defs><linearGradient id="gCup" x1="0" x2="1"><stop offset="0" stop-color="#ffe680"/><stop offset=".45" stop-color="#ffc21f"/><stop offset="1" stop-color="#c47300"/></linearGradient>
+    <linearGradient id="gPlinth" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#6a3db0"/><stop offset="1" stop-color="#2d1650"/></linearGradient></defs>
+    <path d="M13 9.5H7.5c-1.2 0-2 1-1.8 2.2.8 5.4 4 9 9 10.2M35 9.5h5.5c1.2 0 2 1 1.8 2.2-.8 5.4-4 9-9 10.2" fill="none" stroke="${O}" stroke-width="4.4" stroke-linecap="round"/>
+    <path d="M13 9.5H7.5c-1.2 0-2 1-1.8 2.2.8 5.4 4 9 9 10.2M35 9.5h5.5c1.2 0 2 1 1.8 2.2-.8 5.4-4 9-9 10.2" fill="none" stroke="#ffc21f" stroke-width="2.2" stroke-linecap="round"/>
+    <path d="M12 5.5h24v8.5c0 8-5.2 13.5-12 13.5S12 22 12 14Z" fill="url(#gCup)" stroke="${O}" stroke-width="1.9" stroke-linejoin="round"/>
+    <path d="M21.5 27h5l1 6.5h-7Z" fill="url(#gCup)" stroke="${O}" stroke-width="1.6" stroke-linejoin="round"/>
+    <path d="M16 33.5h16c1 0 1.6.6 1.6 1.6v2.4H14.4v-2.4c0-1 .6-1.6 1.6-1.6Z" fill="url(#gCup)" stroke="${O}" stroke-width="1.6" stroke-linejoin="round"/>
+    <rect x="11.5" y="37.5" width="25" height="7" rx="1.6" fill="url(#gPlinth)" stroke="${O}" stroke-width="1.7"/>
+    <rect x="19" y="39.6" width="10" height="2.8" rx=".8" fill="#ffe14a" stroke="${O}" stroke-width=".8"/>
+    <path d="M24 9.2l1.6 3.3 3.6.5-2.6 2.5.6 3.6L24 17.4l-3.2 1.7.6-3.6-2.6-2.5 3.6-.5Z" fill="#fff6c4" stroke="#b86a00" stroke-width="1" stroke-linejoin="round"/>
+    <path d="M15 8.5v6c0 2.6.8 5 2.2 6.8" stroke="#fff" stroke-width="1.8" stroke-linecap="round" fill="none" opacity=".75"/>
+    <path d="M41.5 25l.9 2.2 2.2.9-2.2.9-.9 2.2-.9-2.2-2.2-.9 2.2-.9Z" fill="#fff" stroke="${O}" stroke-width=".9" stroke-linejoin="round"/>`,
   // The Bass Boost button: a big speaker cabinet, woofer and tweeter
   // glowing pink, sound waves coming off it.
   artSpeaker: `<defs><linearGradient id="gCab" x1="0" x2="1"><stop offset="0" stop-color="#4a3f66"/><stop offset=".5" stop-color="#2a2340"/><stop offset="1" stop-color="#16122a"/></linearGradient>
@@ -237,16 +273,22 @@ const ART = {
     <path d="M41.5 2.5l1.4 3.6 3.6 1.4-3.6 1.4-1.4 3.6-1.4-3.6-3.6-1.4 3.6-1.4Z" fill="#fff" stroke="${O}" stroke-width="1" stroke-linejoin="round"/>
     <path d="M6 31.5l1 2.6 2.6 1-2.6 1-1 2.6-1-2.6-2.6-1 2.6-1Z" fill="#fff" stroke="${O}" stroke-width="1" stroke-linejoin="round"/>
     <circle cx="7.5" cy="8" r="1.6" fill="#fff"/>`,
-  // Money: a stack of green bills with a paper band.
-  cash: `<defs><linearGradient id="gBill" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#d8ffb8"/><stop offset=".55" stop-color="#6fd64f"/><stop offset="1" stop-color="#2f9b2a"/></linearGradient></defs>
-    ${[12, 7, 2].map((dy, k) => `<g transform="translate(0 ${dy})">
-      <path d="M3 22 27 31v4L3 26Z" fill="#2b8a27" stroke="#0d3a10" stroke-width="1.1" stroke-linejoin="round"/>
-      <path d="M27 31 45 21v4L27 35Z" fill="#1d6a1d" stroke="#0d3a10" stroke-width="1.1" stroke-linejoin="round"/>
-      <path d="M3 22 21 12 45 21 27 31Z" fill="url(#gBill)" stroke="#0d3a10" stroke-width="1.1" stroke-linejoin="round"/>
-      <path d="M6.6 22.1 21 14.2 41.4 21.1 27 29.1Z" fill="none" stroke="#2f8f2f" stroke-width=".8" opacity=".7"/></g>`).join('')}
-    <path d="M14 18.6 31.4 9.4l4 1.5L18 20.3Z" fill="#f6ecc4" stroke="#0d3a10" stroke-width="1" stroke-linejoin="round"/>
-    <ellipse cx="29.5" cy="17.2" rx="4.2" ry="2.4" fill="#3aa336" stroke="#0d3a10" stroke-width=".8"/>
-    <text x="29.5" y="18.9" font-family="Arial Black,Arial" font-weight="900" font-size="5" text-anchor="middle" fill="#eaffdf">$</text>`,
+  // Money: two crisp green bills fanned out, the front one with a big $
+  // medallion, and a gold coin in front.
+  cash: `<defs><linearGradient id="gBill" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#b9f7a0"/><stop offset=".5" stop-color="#4fc94a"/><stop offset="1" stop-color="#23862c"/></linearGradient>
+    <linearGradient id="gBill2" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#8ee07a"/><stop offset="1" stop-color="#1f7a2a"/></linearGradient>
+    <radialGradient id="gCoin" cx=".38" cy=".32" r=".75"><stop offset="0" stop-color="#fff6b0"/><stop offset=".5" stop-color="#ffcf2a"/><stop offset="1" stop-color="#d47f00"/></radialGradient></defs>
+    <g transform="rotate(-14 24 24)"><rect x="5" y="12" width="36" height="20" rx="3" fill="url(#gBill2)" stroke="#0d3a10" stroke-width="1.8"/></g>
+    <g transform="rotate(6 24 24)">
+      <rect x="5" y="15" width="36" height="20" rx="3" fill="url(#gBill)" stroke="#0d3a10" stroke-width="1.8"/>
+      <rect x="8" y="18" width="30" height="14" rx="2" fill="none" stroke="#1d6a24" stroke-width="1" opacity=".75"/>
+      <circle cx="23" cy="25" r="6" fill="#dcffcf" stroke="#1d6a24" stroke-width="1.2"/>
+      <text x="23" y="29.2" text-anchor="middle" font-family="Arial, sans-serif" font-weight="700" font-size="11" fill="#1d6a24">$</text>
+      <path d="M8 17.5h12" stroke="#fff" stroke-width="1.4" stroke-linecap="round" opacity=".6"/>
+    </g>
+    <circle cx="37" cy="36" r="8" fill="url(#gCoin)" stroke="#6a3a00" stroke-width="1.7"/>
+    <circle cx="37" cy="36" r="5.4" fill="none" stroke="#b86a00" stroke-width="1"/>
+    <path d="M33.6 32.6a4.6 4.6 0 0 1 3-1.6" stroke="#fff" stroke-width="1.3" stroke-linecap="round" opacity=".85" fill="none"/>`,
 
   catStaff: `<defs><linearGradient id="gSteelS" x1="0" x2="1"><stop offset="0" stop-color="#7f8aa0"/><stop offset=".45" stop-color="#eef2f7"/><stop offset="1" stop-color="#8d98ad"/></linearGradient></defs>
     <path d="M16 19h16l-2 22c-.3 2.6-11.7 2.6-12 0Z" fill="url(#gSteelS)" stroke="${O}" stroke-width="1.6" stroke-linejoin="round"/>

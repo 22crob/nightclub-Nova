@@ -35,6 +35,7 @@ import { BonusesMixin } from './bonuses.js';
 import { SpeakersMixin } from './speakers.js';
 import { SelectionMixin } from './selection.js';
 import { GoalsMixin } from './goals.js';
+import { MeterMixin } from './meter.js';
 import { Music } from '../music.js';
 import { applyMixins } from './applyMixins.js';
 
@@ -233,19 +234,14 @@ export class ClubScene extends Phaser.Scene {
     // A second Esc (with nothing held) puts the shop away.
     this.input.keyboard.on('keydown-ESC', () => { if (this.selectedProp) this.deselectProp(); this.clearSelection(); });
 
-    // Zoom: mouse wheel zooms toward the cursor, +/- keys and the on-screen
-    // buttons zoom around the screen centre.
+    // Zoom: mouse wheel zooms toward the cursor, +/- keys zoom around the
+    // screen centre.
     this.input.on('wheel', (pointer, objects, dx, dy) => {
       this.zoomTo(this.world.scaleX * (dy > 0 ? 0.9 : 1 / 0.9), pointer.x, pointer.y);
       this.updateHoverFromPointer(pointer);
     });
     this.input.keyboard.on('keydown-PLUS', () => this.zoomTo(this.world.scaleX / 0.85));
     this.input.keyboard.on('keydown-MINUS', () => this.zoomTo(this.world.scaleX * 0.85));
-    const zoomIn = document.getElementById('zoomIn');
-    const zoomOut = document.getElementById('zoomOut');
-    if (zoomIn) zoomIn.addEventListener('click', () => this.zoomTo(this.world.scaleX / 0.85));
-    if (zoomOut) zoomOut.addEventListener('click', () => this.zoomTo(this.world.scaleX * 0.85));
-    this.setupZoomSlider();
 
     this.cashText = document.getElementById('cashVal');
     this.fansText = document.getElementById('fansVal');
@@ -325,6 +321,8 @@ export class ClubScene extends Phaser.Scene {
     this.setupBonuses(); // high fives worth $88 (bonuses.js)
     this.setupSpeakers(); // speaker cones bounce to the beat (speakers.js)
     this.setupGoals(); // the goals panel (goals.js)
+    this.setupMeter(); // the drink meter on the right edge (meter.js)
+    this.time.addEvent({ delay: 1000, loop: true, callback: () => this.tickMeter() });
     this.scheduleNextPatronSpawn();
 
     // Patron behavior tick — movement, tipping, and departure are all
@@ -386,4 +384,5 @@ applyMixins(ClubScene, [
   SpeakersMixin,
   SelectionMixin,
   GoalsMixin,
+  MeterMixin,
 ]);
