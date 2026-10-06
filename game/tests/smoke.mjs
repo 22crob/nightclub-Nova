@@ -1991,6 +1991,28 @@ const topUi = await page.evaluate(() => {
   return out;
 });
 check('the cash is in the top-left strip with the XP bar', topUi.cashInStrip, JSON.stringify(topUi));
+
+// The cash readout rolls up to a new amount, glowing while it rolls, and
+// the buttons are candy: a white rim and their own colour.
+const cashRoll = await page.evaluate(async () => {
+  const s = window.__clubNova.scene.getScene('club');
+  const el = document.getElementById('cashVal');
+  s.updateUI();
+  const before = s.cash;
+  s.cash = before + 400;
+  s.updateUI();
+  const out = { rolling: el.classList.contains('rolling') };
+  for (let i = 0; i < 60 && el.classList.contains('rolling'); i++) await new Promise((r) => setTimeout(r, 50));
+  out.landed = el.textContent === String(Math.floor(s.cash));
+  out.stopped = !el.classList.contains('rolling');
+  s.cash = before;
+  s.updateUI();
+  const pad = getComputedStyle(document.getElementById('tabDecor'));
+  out.rim = pad.borderTopColor;
+  out.padColour = pad.getPropertyValue('--c').trim();
+  return out;
+});
+check('the cash rolls up to a new amount; buttons have the candy look', cashRoll.rolling && cashRoll.landed && cashRoll.stopped && cashRoll.rim === 'rgb(255, 255, 255)' && !!cashRoll.padColour, JSON.stringify(cashRoll));
 check('the Goals button opens and closes the goals; a finished goal puts a ! on it until opened', topUi.startsClosed && topUi.opens && topUi.closes && topUi.badge === '!' && topUi.badgeCleared, JSON.stringify(topUi));
 check('the zoom slider follows the zoom and sets it', topUi.sliderTop === '100' && Math.abs(topUi.zoomMin - 0.6) < 0.01, JSON.stringify(topUi));
 

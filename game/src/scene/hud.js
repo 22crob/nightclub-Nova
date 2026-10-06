@@ -15,7 +15,7 @@ const KIND = {
 
 export class HudMixin {
   updateUI() {
-    this.cashText.textContent = Math.floor(this.cash);
+    this.rollCash(Math.floor(this.cash));
     if (this.fansText) this.fansText.textContent = Math.floor(this.fans);
     if (this.luxuryText) this.luxuryText.textContent = this.luxury();
     const rating = this.clubRating();
@@ -36,6 +36,28 @@ export class HudMixin {
     this.currentLevel = level;
 
     this.updateShopUI();
+  }
+
+  // The cash readout counts up (or down) to a new amount over a moment,
+  // glowing while it rolls (.rolling in style.css).
+  rollCash(target) {
+    const el = this.cashText;
+    if (this.cashShown == null) { this.cashShown = target; el.textContent = target; return; }
+    if (target === this.cashShownTarget) return;
+    this.cashShownTarget = target;
+    cancelAnimationFrame(this.cashRaf);
+    const from = this.cashShown;
+    const start = performance.now();
+    const ms = 450;
+    el.classList.add('rolling');
+    const step = (now) => {
+      const t = Math.min(1, (now - start) / ms);
+      this.cashShown = Math.round(from + (target - from) * (1 - (1 - t) ** 3));
+      el.textContent = this.cashShown;
+      if (t < 1) this.cashRaf = requestAnimationFrame(step);
+      else el.classList.remove('rolling');
+    };
+    this.cashRaf = requestAnimationFrame(step);
   }
 
   updateMuteButton() {
