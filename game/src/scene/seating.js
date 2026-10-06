@@ -144,7 +144,11 @@ export class SeatingMixin {
       ease: 'Sine.easeOut',
       onComplete: () => {
         patron.moving = false;
-        patron.nextMoveAt = this.time.now + randRange(...VISIT.sitMs);
+        // Sat down with a drink: stay for the drink; otherwise a while.
+        const a = patron.activity;
+        patron.nextMoveAt = a && a.kind === 'drink' && a.phase === 'drinking' && a.until > this.time.now
+          ? a.until
+          : this.time.now + randRange(...VISIT.sitMs);
       },
     });
   }

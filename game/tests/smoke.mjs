@@ -2021,6 +2021,46 @@ const cashRoll = await page.evaluate(async () => {
 check('the cash rolls up to a new amount; buttons have the candy look', cashRoll.rolling && cashRoll.landed && cashRoll.stopped && cashRoll.rim === 'rgb(255, 255, 255)' && !!cashRoll.padColour, JSON.stringify(cashRoll));
 check('the Goals pad opens and closes the goals in the dock; a finished goal puts a ! on it until opened', topUi.startsClosed && topUi.opens && topUi.closes && topUi.badge === '!' && topUi.badgeCleared, JSON.stringify(topUi));
 
+// With a drink in hand a guest goes and sits down with it when a seat is
+// free, or stands somewhere quiet, never on the dance floor.
+const drinkSpot = await page.evaluate(() => {
+  const s = window.__clubNova.scene.getScene('club');
+  const out = {};
+  let p = s.patrons.find((q) => !q.gone && !q.leaving && !q.sitting && !q.seat);
+  if (!p) {
+    const cap = s.patronCapacity;
+    s.patronCapacity = () => 99;
+    s.trySpawnPatron();
+    s.patronCapacity = cap;
+    p = s.patrons.find((q) => !q.gone && !q.leaving && !q.sitting && !q.seat);
+  }
+  if (!p) return { noGuest: true };
+  const bar = Object.values(s.placed).find((r) => s.isWorked && s.isWorked(r));
+  const realRandom = Math.random;
+  Math.random = () => 0.99;          // the standing branch
+  let onFloor = 0;
+  for (let i = 0; i < 40; i++) {
+    s.pickDrinkingSpot(p, bar);
+    if (p.targetGx !== undefined && s.isDanceFloorTile(p.targetGx, p.targetGy)) onFloor++;
+  }
+  Math.random = realRandom;
+  out.onFloor = onFloor;
+  // A free couch: they take a seat with the drink.
+  let spot = null;
+  for (let gy = 1; gy < s.gridH - 1 && !spot; gy++) for (let gx = 1; gx < s.gridW - 1 && !spot; gx++) {
+    if (s.footprintValid(s.getFootprint('couch', 0, gx, gy), 'couch')) spot = [gx, gy];
+  }
+  const couch = spot && s.restoreProp('couch', 0, spot);
+  Math.random = () => 0.01;
+  s.pickDrinkingSpot(p, bar);
+  Math.random = realRandom;
+  out.seated = !!p.seat && p.seat.rec === couch;
+  s.releaseSeat(p);
+  if (couch) s.removeProp(couch);
+  return out;
+});
+check('a guest with a drink sits down with it when a seat is free, and never drinks on the dance floor', !drinkSpot.noGuest && drinkSpot.onFloor === 0 && drinkSpot.seated, JSON.stringify(drinkSpot));
+
 // Guests from the owner's 3D model: their own sheet and frame grid, with
 // two more clips (drink, sittalk); the drawn guests stand or sit instead.
 const model3d = await page.evaluate(() => {

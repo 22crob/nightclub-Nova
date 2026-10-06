@@ -118,6 +118,7 @@ export const VISIT = {
   wanderMs: [10000, 25000],
   overstayMs: 120000,
   thirstGraceMs: 5000, // thirsty this long, they stop what they're doing for a drink
+  drinkSeatChance: 0.75, // with a drink, how often a guest goes and sits down with it (if a seat is free)
 };
 // Kinds of guest: how much each likes each activity (relative weights), so
 // they don't all follow the same routine.

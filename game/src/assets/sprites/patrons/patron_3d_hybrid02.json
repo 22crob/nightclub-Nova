@@ -1,9 +1,9 @@
 {
-  "frameWidth": 102,
-  "frameHeight": 143,
+  "frameWidth": 104,
+  "frameHeight": 142,
   "columns": 24,
-  "originX": 0.52778,
-  "originY": 0.89334,
+  "originX": 0.51818,
+  "originY": 0.89263,
   "standingHeight": 118.0,
   "starts": {
     "walk_front": 0,

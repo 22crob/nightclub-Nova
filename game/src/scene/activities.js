@@ -191,7 +191,11 @@ export class ActivitiesMixin {
 
   // A free tile a little way from the bar (not in anyone's line, not where
   // the crowd already is) to stand and drink at.
+  // With a drink in hand: most guests go and sit down with it (a free seat,
+  // booth or stool; see claimSeat()), the rest stand somewhere quiet near
+  // the bar, but never on the dance floor.
   pickDrinkingSpot(patron, bar) {
+    if (!patron.sitting && Math.random() < VISIT.drinkSeatChance && this.claimSeat(patron)) return;
     const lines = this.keepOffTiles();
     const near = bar ? this.barLayout(bar).counter : [patron.gx, patron.gy];
     const spots = [];
@@ -201,7 +205,7 @@ export class ActivitiesMixin {
         const y = near[1] + dy;
         if (!this.inGrid(x, y)) continue;
         const d = Math.abs(dx) + Math.abs(dy);
-        if (d < 2 || d > 6 || this.isBlockingProp(x, y) || lines.has(`${x},${y}`)) continue;
+        if (d < 2 || d > 6 || this.isBlockingProp(x, y) || lines.has(`${x},${y}`) || this.isDanceFloorTile(x, y)) continue;
         if (this.patronTileOccupied(x, y) && !(x === patron.gx && y === patron.gy)) continue;
         spots.push([x, y]);
       }
