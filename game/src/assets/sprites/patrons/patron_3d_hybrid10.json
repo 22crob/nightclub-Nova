@@ -1,0 +1,39 @@
+{
+  "frameWidth": 99,
+  "frameHeight": 142,
+  "columns": 24,
+  "originX": 0.52427,
+  "originY": 0.89046,
+  "standingHeight": 118.0,
+  "starts": {
+    "walk_front": 0,
+    "walk_back": 24,
+    "dance_front": 48,
+    "dance_back": 96,
+    "sit_front": 144,
+    "sit_back": 168,
+    "sittalk_front": 192,
+    "sittalk_back": 240,
+    "drink_front": 288,
+    "drink_back": 336,
+    "idle_front": 384,
+    "idle_back": 408
+  },
+  "frames": {
+    "walk": 16,
+    "dance": 48,
+    "sit": 24,
+    "sittalk": 48,
+    "drink": 48,
+    "idle": 8
+  },
+  "fps": {
+    "walk": 15.39,
+    "dance": 8.83,
+    "sit": 8.09,
+    "sittalk": 9.6,
+    "drink": 5.41,
+    "idle": 4
+  },
+  "drawnHead": 10
+}
