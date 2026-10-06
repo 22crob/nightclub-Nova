@@ -7,14 +7,15 @@ import { SFX } from '../sfx.js';
 import { hideTip } from '../tooltips.js';
 import { fillIcons } from '../uiIcons.js';
 
-// The shop is a glossy panel docked along the bottom of the screen, like
-// Nightclub City's. Normally drawn tabs stand on its top edge
-// (Decorations, Inventory, Edit, Staff, Expand, VIPs) and the panel shows that
-// tab's cards. Decorations opens the store: the tabs make way for a row of
-// drawn categories, the items sit on the panel with their prices, and OK
-// goes back. Everything is a picture; names and descriptions are in the
-// hover tips.
+// The shop, like Nightclub City's: round drawn buttons in the bottom
+// corners (Edit Furniture, Edit Floor, the big Store button, Inventory and
+// Clear Club on the left; Staff, Expand, Celebrities, Sell and OK on the
+// right), and the open one's glossy panel between them. The Store shows a
+// row of drawn categories on the panel's edge (NEW first) with the items
+// standing on the panel and their prices under them. Everything is a
+// picture; names and descriptions are in the hover tips.
 const CATEGORIES = {
+  New: { icon: 'catNew', text: 'Everything you unlocked at your last two levels.', isNew: true },
   Bars: { icon: 'catBars', text: 'Bars sell drinks. Each long bar needs one bartender.' },
   Seating: { icon: 'catSeating', text: 'Couches and booths where guests sit down and relax.' },
   Floors: { icon: 'catFloors', text: 'Dance floors, where guests dance, and regular floors, painted tile by tile.', includes: ['Dance Floors', 'Floors'] },
@@ -53,24 +54,34 @@ export class ShopMixin {
     this.updateShopUI();
   }
 
-  // Builds the dock once (see index.html): the main tabs, the store's
-  // category row and OK, and the scroll arrows.
+  // Something unlocked at the last level or two, marked NEW in the store.
+  isNewItem(type) {
+    const unlockLevel = PROP_TYPES[type].unlockLevel || 1;
+    const level = this.levelInfo().level;
+    return unlockLevel > 1 && unlockLevel <= level && unlockLevel >= level - 1;
+  }
+
+  // Builds the dock once (see index.html): the corner buttons, the store's
+  // category row, OK and the scroll arrows.
   buildShop() {
     this.shopItemsEl = document.getElementById('shopItems');
     this.dockEl = document.getElementById('dock');
     this.selectedChip = document.getElementById('selectedChip');
+    this.inventoryBadge = document.getElementById('inventoryBadge');
     if (!this.shopItemsEl || !this.dockEl) return; // older/debug HTML — skip silently
 
     this.dockTabs = {};
     for (const tab of document.querySelectorAll('.dockTab')) {
       this.dockTabs[tab.dataset.tab] = tab;
-      // Clicking the open tab again closes it.
+      // Clicking the open one again closes it.
       tab.addEventListener('click', () => {
         SFX.unlock();
-        if (this.dockTab === tab.dataset.tab) this.closeDock();
+        if (this.dockTab && this.activeDockKey() === tab.dataset.tab) this.closeDock();
         else this.setDockTab(tab.dataset.tab);
       });
     }
+    fillIcons(this.dockEl);
+    this.setupClearClub();
     const row = document.getElementById('storeTabs');
     this.storeTabButtons = {};
     for (const category of STORE_CATEGORIES) {
@@ -96,19 +107,37 @@ export class ShopMixin {
       this.shopItemsEl.scrollLeft += e.deltaY + e.deltaX;
     }, { passive: false });
 
-    this.activeShopCategory = STORE_CATEGORIES[0];
-    this.closeDock(); // just the tab logos until one is opened
+    this.activeShopCategory = STORE_CATEGORIES[1]; // Bars (NEW is first)
+    this.closeDock(); // just the corner buttons until one is opened
     this.updateSelectedChip();
   }
 
+  // Which corner button is lit: the open tab, except that the store on
+  // Floors is Edit Floor and Edit with the Sell tool is Sell.
+  activeDockKey() {
+    if (this.dockTab === 'decor') return this.activeShopCategory === 'Floors' ? 'floors' : 'decor';
+    if (this.dockTab === 'edit') return this.editTool === 'sell' ? 'sell' : 'edit';
+    return this.dockTab;
+  }
+
+  refreshDockButtons() {
+    const key = this.dockTab ? this.activeDockKey() : null;
+    for (const k in this.dockTabs || {}) this.dockTabs[k].classList.toggle('active', k === key);
+  }
+
   // Switches the dock to a tab: 'decor' (the store), 'inventory', 'edit',
-  // 'staff', 'expand' or 'celebs'.
+  // 'staff', 'expand' or 'celebs'; 'floors' opens the store on Floors and
+  // 'sell' opens Edit with the Sell tool.
   setDockTab(tab) {
+    if (tab === 'floors') { this.activeShopCategory = 'Floors'; tab = 'decor'; }
+    else if (tab === 'sell') { this.editTool = 'sell'; tab = 'edit'; }
+    else if (tab === 'edit' && this.editTool === 'sell') this.editTool = 'move';
+    else if (tab === 'decor' && this.activeShopCategory === 'Floors') this.activeShopCategory = this.lastStoreCategory || STORE_CATEGORIES[1];
     if (tab !== 'decor') this.lastMainTab = tab;
     if (tab !== 'expand') { this.pendingExpand = null; this.clearExpandPreview?.(); }
     if (this.dockTab === 'edit' && tab !== 'edit' && this.selectedProp && this.holdingFromInventory) this.deselectProp();
     this.dockTab = tab;
-    for (const key in this.dockTabs || {}) this.dockTabs[key].classList.toggle('active', key === tab);
+    this.refreshDockButtons();
     if (this.dockEl) {
       this.dockEl.dataset.tab = tab;
       this.dockEl.dataset.mode = tab === 'decor' ? 'store' : 'main';
@@ -128,7 +157,7 @@ export class ShopMixin {
     this.clearExpandPreview?.();
     this.clearSelection?.();
     this.dockTab = null;
-    for (const key in this.dockTabs || {}) this.dockTabs[key].classList.remove('active');
+    this.refreshDockButtons();
     if (this.dockEl) {
       this.dockEl.dataset.tab = '';
       this.dockEl.dataset.mode = 'closed';
@@ -141,7 +170,7 @@ export class ShopMixin {
   // Redraws the open tab's cards.
   refreshDock() {
     const tab = this.dockTab;
-    if (tab === 'decor') this.renderShopItems(this.activeShopCategory || STORE_CATEGORIES[0]);
+    if (tab === 'decor') this.renderShopItems(this.activeShopCategory || STORE_CATEGORIES[1]);
     else if (tab === 'inventory') this.renderInventoryCards();
     else if (tab === 'edit') this.renderEditTools();
     else if (tab === 'staff') { if (this.shopItemsEl) this.shopItemsEl.dataset.rendered = ''; this.renderStaffCard(); }
@@ -153,11 +182,13 @@ export class ShopMixin {
   setShopCategory(category) {
     if (category === 'Dance Floors') category = 'Floors';
     this.activeShopCategory = category;
+    if (category !== 'Floors') this.lastStoreCategory = category;
     for (const cat in this.storeTabButtons || {}) this.storeTabButtons[cat].classList.toggle('active', cat === category);
     if (this.dockTab !== 'decor') {
-      this.setDockTab('decor');
+      this.setDockTab(category === 'Floors' ? 'floors' : 'decor');
       return;
     }
+    this.refreshDockButtons();
     hideTip();
     if (this.shopItemsEl) this.shopItemsEl.scrollLeft = 0;
     this.renderShopItems(category);
@@ -195,8 +226,17 @@ export class ShopMixin {
 
     const kinds = CATEGORIES[category]?.includes || [category];
     // In unlock order, so mixed categories (Floors) interleave by level.
-    const keysInCategory = Object.keys(PROP_TYPES).filter((k) => kinds.includes(PROP_TYPES[k].category))
+    const keysInCategory = Object.keys(PROP_TYPES)
+      .filter((k) => (CATEGORIES[category]?.isNew ? this.isNewItem(k) : kinds.includes(PROP_TYPES[k].category)))
       .sort((a, b) => (PROP_TYPES[a].unlockLevel || 1) - (PROP_TYPES[b].unlockLevel || 1));
+    if (keysInCategory.length === 0) {
+      const { slot, icon, cost } = this.makeCard('Nothing new yet', 'Level up to unlock new things: they show up here, marked NEW.', null);
+      slot.classList.add('emptySlot');
+      icon.dataset.icon = 'catNew';
+      cost.textContent = 'New things show up here when you level up';
+      fillIcons(slot);
+      this.shopItemsEl.appendChild(slot);
+    }
     for (const key of keysInCategory) {
       const def = PROP_TYPES[key];
       const lines = [];
@@ -206,6 +246,12 @@ export class ShopMixin {
       const picture = realSpriteIconFor(key) || renderIsoIcon(def.color, FLOOR_DECAL_PROPS.has(key));
       const { slot, button, cost } = this.makeCard(def.label, lines.join(' '), picture);
       cost.textContent = this.isUnlocked(key) ? `$${this.currentCost(key)}` : `🔒 Lv ${def.unlockLevel || 1}`;
+      if (this.isNewItem(key)) {
+        const tag = document.createElement('div');
+        tag.className = 'newTag';
+        tag.textContent = 'NEW';
+        slot.appendChild(tag);
+      }
       slot.addEventListener('click', () => {
         // DJ booths aren't placed: buying one swaps the club's booth.
         if (def.category === 'DJ Booths') {
@@ -311,6 +357,13 @@ export class ShopMixin {
           this.shopCosts[key].textContent = text;
         }
       }
+    }
+    // NEW pulses while there's something new; Inventory shows how many
+    // things are in it.
+    this.storeTabButtons?.New?.classList.toggle('hasNew', Object.keys(PROP_TYPES).some((k) => this.isNewItem(k)));
+    if (this.inventoryBadge) {
+      const total = Object.keys(this.inventory || {}).reduce((n, t) => n + (PROP_TYPES[t] ? this.inventoryCount(t) : 0), 0);
+      this.inventoryBadge.textContent = total > 0 ? String(total) : '';
     }
     this.updateSelectedChip();
   }

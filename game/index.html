@@ -6,31 +6,37 @@
 <title>Club Nova</title>
 </head>
 <body>
-  <!-- Top-left: portrait, level star, experience bar, small utility buttons -->
+  <!-- Top-left, like Nightclub City: one glossy strip with the portrait and
+       its level badge, the XP bar, and the cash under it. -->
   <div id="hudProfile">
     <div class="portrait">
       <div class="portraitFace">🪩</div>
-      <div class="levelStar"><span id="levelVal">1</span></div>
+      <div class="levelStar" data-tip-name="Level" data-tip-text="Your club's level. Earn XP to level up and unlock new things."><span id="levelVal">1</span></div>
     </div>
     <div class="profileRight">
-      <div class="xpBar">
+      <div class="xpBar" data-tip-name="XP" data-tip-text="Experience. You earn XP serving drinks, from happy guests and parties, and by buying furniture, decorations and expansions (selling takes it back). XP raises your level, which unlocks new items.">
         <div class="xpFill" id="xpBarFill"></div>
         <div class="xpText" id="xpText">Level 1</div>
       </div>
-      <div class="utilityRow">
-        <div id="muteButton" class="squareButton" data-tip-name="Sound" data-tip-text="Turn the music and sounds on or off">🔊</div>
-        <div id="zoomIn" class="squareButton" data-tip-name="Zoom in">＋</div>
-        <div id="zoomOut" class="squareButton" data-tip-name="Zoom out">－</div>
-        <div id="restartButton" class="squareButton" data-tip-name="New club" data-tip-text="Start a brand-new club from scratch">↺</div>
-        <div id="tipsButton" class="squareButton iconOnly" data-icon="tips" data-tip-name="How to play"
-          data-tip-text="The club never closes. Happy guests tip and earn you XP; thirsty or bored ones leave. Click a guest or bartender for their card. Click to place, right-click to sell, R to rotate, Esc to put down, drag to move around, scroll to zoom."></div>
+      <div id="hudCash" data-tip-name="Cash" data-tip-text="Your money. Drinks, the cover charge, tips and bonuses bring it in; furniture, staff and parties spend it.">
+        <div class="cashStack" data-icon="cash"></div>
+        <span class="amount" id="cashVal">500</span>
       </div>
     </div>
   </div>
+  <!-- Under the strip: small round buttons, and Goals. -->
+  <div id="hudTools">
+    <div id="goalsButton" class="toolButton goalsButton" data-icon="goals" data-tip-name="Goals" data-tip-text="Finish goals for cash and XP. Click to show or hide them."><span id="goalsBadge" class="countBadge"></span></div>
+    <div id="muteButton" class="toolButton" data-icon="sound" data-tip-name="Sound" data-tip-text="Turn the music and sounds on or off"></div>
+    <div id="tipsButton" class="toolButton" data-icon="tips" data-tip-name="How to play"
+      data-tip-text="The club never closes. Happy guests tip and earn you XP; thirsty or bored ones leave. Click a guest or bartender for their card. Click to place, right-click to sell, R to rotate, Esc to put down, drag to move around, scroll to zoom."></div>
+    <div id="restartButton" class="toolButton" data-icon="restart" data-tip-name="New club" data-tip-text="Start a brand-new club from scratch"></div>
+  </div>
 
-  <!-- Goals (see scene/goals.js): three at a time, under the song box. -->
-  <div id="goals">
-    <div id="goalsHead" data-tip-name="Goals" data-tip-text="Finish goals for cash and XP. Click to hide or show them.">🎯 Goals</div>
+  <!-- Goals (see scene/goals.js): three at a time, in a panel the Goals
+       button opens. -->
+  <div id="goals" class="collapsed">
+    <div id="goalsHead">Goals</div>
     <div id="goalList"></div>
   </div>
 
@@ -46,12 +52,6 @@
       </div>
       <div class="songEnds" id="songEnds">Ends: 9:10 PM</div>
     </div>
-  </div>
-
-  <!-- Top-centre: cash -->
-  <div id="hudCash">
-    <div class="cashStack" data-icon="cash"></div>
-    <span class="amount" id="cashVal">500</span>
   </div>
 
   <!-- Asked before starting over (see restartClub()) -->
@@ -94,18 +94,17 @@
     </div>
   </div>
 
-  <!-- Top-right: stat buttons -->
+  <!-- Top-right: stat boxes, a number with a small label under it. -->
   <div id="hudStats">
-    <div class="statButton" data-tip-name="XP" data-tip-text="Experience. You earn XP serving drinks, from happy guests and parties, and by buying furniture, decorations and expansions (selling takes it back). XP raises your level, which unlocks new items.">
-      <div class="statValue"><span class="statIcon" data-icon="xp"></span><span id="fansVal">0</span></div>
+    <div class="statButton" data-tip-name="Club rating" data-tip-text="How happy your crowd has been lately: the club gets stars every minute, and this is the average of the last five. A better-rated club draws guests faster.">
+      <div class="statValue"><span class="statIcon" data-icon="rating"></span><span id="ratingVal">–</span></div>
+      <div class="statLabel">Rating</div>
     </div>
     <div class="statButton" data-tip-name="Luxury" data-tip-text="How fancy your club is. Everything you place, paint and paper adds to it, and a fancier club earns bigger tips.">
       <div class="statValue"><span class="statIcon" data-icon="luxury"></span><span id="luxuryVal">0</span></div>
+      <div class="statLabel">Luxury</div>
     </div>
-    <div class="statButton" data-tip-name="Club rating" data-tip-text="How happy your crowd has been lately: the club gets stars every minute, and this is the average of the last five. A better-rated club draws guests faster.">
-      <div class="statValue"><span class="statIcon" data-icon="rating"></span><span id="ratingVal">–</span></div>
-    </div>
-    <div class="statButton" data-tip-name="Guests" data-tip-text="Guests in the club now, out of how many fit. Every row you expand by fits one more; when it's full, new arrivals wait outside.">
+    <div class="statButton guestsStat" data-tip-name="Guests" data-tip-text="Guests in the club now, out of how many fit. Every row you expand by fits one more; when it's full, new arrivals wait outside.">
       <div class="statValue"><span class="statIcon" data-icon="patrons"></span><span id="placedVal">0/0</span></div>
     </div>
   </div>
@@ -174,30 +173,63 @@
     <div id="actionTip" class="actionTip"></div>
   </div>
 
+  <!-- Right edge: zoom in, a slider, zoom out. -->
+  <div id="zoomBar">
+    <div id="zoomIn" class="zoomButton" data-icon="plus" data-tip-name="Zoom in"></div>
+    <input id="zoomSlider" type="range" min="0" max="100" value="50" aria-label="Zoom" data-tip-name="Zoom" data-tip-text="Slide up to zoom in, down to zoom out. The mouse wheel zooms too.">
+    <div id="zoomOut" class="zoomButton" data-icon="minus" data-tip-name="Zoom out"></div>
+  </div>
+
+  <!-- Clear Club: asked first (see clearClub() in scene/inventory.js). -->
+  <div id="clearConfirm" class="overlay">
+    <div class="summaryCard">
+      <div class="summaryTitle">Clear the club?</div>
+      <div class="summaryVerdict">Everything except your DJ booth and bars goes into your inventory, to place again for free. Floors and wallpaper stay.</div>
+      <div class="summaryButtons">
+        <div id="clearYes" class="summaryButton">Clear it</div>
+        <div id="clearNo" class="summaryButton later">Keep it</div>
+      </div>
+    </div>
+  </div>
+
   <div id="toast"></div>
   <!-- Big popups: "Bass Boost!", "Drink Rush!", celebrity arrivals. -->
   <div id="bigPopup"><div class="bpTitle"></div><div class="bpSub"></div></div>
 
-  <!-- Bottom: the shop dock, like Nightclub City's glossy blue panel. Six
-       drawn tabs stand on its top edge; the panel shows the open tab's
-       cards (see scene/shop.js). What you're holding shows above it. -->
+  <!-- Bottom: the shop, like Nightclub City's. Round drawn buttons sit in
+       the bottom corners: Edit Furniture, Edit Floor, the big Store button,
+       Inventory (with how many things are in it) and Clear Club on the left;
+       Staff, Expand, Celebrities, Sell and the green OK on the right. The
+       open one's glossy blue panel sits between them (see scene/shop.js).
+       What you're holding shows above it. -->
   <div id="selectedChip"></div>
   <div id="dock" data-tab="" data-mode="closed">
-    <div id="dockTabs">
-      <div id="tabDecor" class="dockTab" data-tab="decor" data-icon="tabDecor" data-tip-name="Decorations" data-tip-text="The store: bars, seating, floors, wallpaper, decorations and DJ booths."></div>
-      <div id="tabInventory" class="dockTab" data-tab="inventory" data-icon="tabInventory" data-tip-name="Inventory" data-tip-text="Things you own but haven't placed. Place them again for free."></div>
-      <div id="tabEdit" class="dockTab" data-tab="edit" data-icon="tabEdit" data-tip-name="Edit" data-tip-text="Move, turn, put away or sell the things in your club."></div>
-      <div id="tabStaff" class="dockTab" data-tab="staff" data-icon="catStaff" data-tip-name="Staff" data-tip-text="Hire bartenders for your bars. Your level sets how many you can have."></div>
-      <div id="tabExpand" class="dockTab" data-tab="expand" data-icon="tabExpand" data-tip-name="Expand" data-tip-text="Make the club bigger"></div>
-      <div id="tabVip" class="dockTab" data-tab="celebs" data-icon="tabVip" data-tip-name="Celebrities" data-tip-text="Your Celebrity List: stars unlock as your club levels up, then drop in whenever they like"></div>
+    <div id="dockLeft" class="dockSide">
+      <div class="sideColumn">
+        <div id="tabEdit" class="dockTab sideButton small" data-tab="edit" data-icon="tabEdit" data-tip-name="Edit Furniture" data-tip-text="Move, turn, put away or sell the things in your club."></div>
+        <div id="tabFloors" class="dockTab sideButton small" data-tab="floors" data-icon="catFloors" data-tip-name="Edit Floor" data-tip-text="Dance floors and floor tiles, to lay tile by tile."></div>
+      </div>
+      <div id="tabDecor" class="dockTab sideButton big" data-tab="decor" data-icon="tabStore" data-tip-name="Store" data-tip-text="Buy bars, seating, floors, wallpaper, decorations and DJ booths."></div>
+      <div class="sideColumn">
+        <div id="tabInventory" class="dockTab sideButton small" data-tab="inventory" data-icon="tabInventory" data-tip-name="Inventory" data-tip-text="Things you own but haven't placed. Place them again for free."><span id="inventoryBadge" class="countBadge"></span></div>
+        <div id="clearClub" class="sideButton small" data-icon="clearClub" data-tip-name="Clear Club" data-tip-text="Put everything except your DJ booth and bars into your inventory, to start the layout over."></div>
+      </div>
     </div>
-    <!-- The store (Decorations): drawn categories in a row, and OK to go back. -->
-    <div id="storeTabs"></div>
-    <div id="storeOk" data-icon="check" data-tip-name="Done" data-tip-text="Finish and close this tab"></div>
-    <div id="dockPanel">
-      <div id="dockPrev" class="dockArrow" data-tip-name="Scroll left"></div>
-      <div id="shopItems"></div>
-      <div id="dockNext" class="dockArrow" data-tip-name="Scroll right"></div>
+    <div id="dockCenter">
+      <!-- The store: drawn categories on the panel's top edge. -->
+      <div id="storeTabs"></div>
+      <div id="dockPanel">
+        <div id="dockPrev" class="dockArrow" data-tip-name="Scroll left"></div>
+        <div id="shopItems"></div>
+        <div id="dockNext" class="dockArrow" data-tip-name="Scroll right"></div>
+      </div>
+    </div>
+    <div id="dockRight" class="dockSide">
+      <div id="tabStaff" class="dockTab sideButton small" data-tab="staff" data-icon="catStaff" data-tip-name="Staff" data-tip-text="Hire bartenders for your bars. Your level sets how many you can have."></div>
+      <div id="tabExpand" class="dockTab sideButton small" data-tab="expand" data-icon="tabExpand" data-tip-name="Expand" data-tip-text="Make the club bigger"></div>
+      <div id="tabVip" class="dockTab sideButton small" data-tab="celebs" data-icon="tabVip" data-tip-name="Celebrities" data-tip-text="Your Celebrity List: stars unlock as your club levels up, then drop in whenever they like"></div>
+      <div id="tabSell" class="dockTab sideButton small" data-tab="sell" data-icon="toolSell" data-tip-name="Sell" data-tip-text="Click things in your club to sell them back for half their price."></div>
+      <div id="storeOk" data-icon="check" data-tip-name="OK" data-tip-text="Finish and close the panel"></div>
     </div>
   </div>
 

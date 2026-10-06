@@ -2,7 +2,7 @@
 // Mixed into ClubScene (see ClubScene.js); `this` is the scene.
 import { PATRON_META, PATRON_SHEETS } from '../assets.js';
 import { PROP_TYPES, STAFF_TYPES } from '../catalog.js';
-import { BAR_QUEUE_LENGTH, BARTENDERS, XP, CHARACTER_DISPLAY_HEIGHT, MONEY, THIRST_INTERVAL, PATRON_POPUP_Y, PROP_SCALE, SELL_REFUND_RATIO } from '../config.js';
+import { BAR_QUEUE_LENGTH, BARTENDERS, BOOST, XP, CHARACTER_DISPLAY_HEIGHT, MONEY, THIRST_INTERVAL, PATRON_POPUP_Y, PROP_SCALE, SELL_REFUND_RATIO } from '../config.js';
 import { realSpriteIconFor } from '../icons.js';
 import { SFX } from '../sfx.js';
 import { randRange } from '../util.js';
@@ -304,7 +304,7 @@ export class StaffMixin {
     this.startDrinking(patron, rec); // they drink it for a while (see activities.js)
     this.popReaction(patron, 'happy', randRange(600, 1300)); // after the price pops up
     SFX.tip();
-    this.floatText(patron.container.x, patron.container.y - PATRON_POPUP_Y, `🍹 $${price} Drink + $${tip} Tip`, '#7dffc4');
+    this.floatMoney(patron.container.x, patron.container.y - PATRON_POPUP_Y, `$${price + tip}`);
     this.updateUI();
     return price;
   }
@@ -340,8 +340,8 @@ export class StaffMixin {
   // A short-lived label that floats up and fades, above everything.
   floatText(x, y, text, color) {
     const label = this.add.text(x, y, text, {
-      fontFamily: 'Arial, Helvetica, sans-serif', fontSize: '14px', fontStyle: 'bold', color,
-      stroke: '#000000', strokeThickness: 3,
+      fontFamily: 'Arial Black, Arial, sans-serif', fontSize: '14px', color,
+      stroke: '#0a1830', strokeThickness: 4,
     }).setOrigin(0.5, 1);
     this.patronLayer.add(label);
     this.tweens.add({
@@ -352,6 +352,32 @@ export class StaffMixin {
       ease: 'Cubic.easeOut',
       onComplete: () => label.destroy(),
     });
+  }
+
+  // Money over a guest's head, like Nightclub City's: a big red amount with
+  // a white outline that pops up and floats away. While a boost or a party
+  // multiplies tips, "+2x Tip!" rides above it (unless `tipped` is false:
+  // the cover charge and bonuses).
+  floatMoney(x, y, text, color = '#ff2a2a', tipped = true) {
+    const mult = tipped ? (this.isBoosted() ? BOOST.tipMultiplier : 1) * this.partyEffect('tips', 1) : 1;
+    const style = (size) => ({
+      fontFamily: 'Arial Black, Arial, sans-serif', fontSize: `${size}px`, color,
+      stroke: '#ffffff', strokeThickness: 5,
+      shadow: { offsetX: 0, offsetY: 2, color: '#0a1830', blur: 0, fill: true, stroke: true },
+    });
+    const parts = [this.add.text(0, 0, text, style(20)).setOrigin(0.5, 1)];
+    if (mult > 1.01) {
+      const times = Number.isInteger(mult) ? mult : mult.toFixed(1).replace(/\.0$/, '');
+      parts.push(this.add.text(0, -22, `+${times}x Tip!`, style(14)).setOrigin(0.5, 1));
+    }
+    const holder = this.add.container(x, y, parts).setScale(0.4);
+    this.patronLayer.add(holder);
+    this.tweens.add({ targets: holder, scale: 1, duration: 240, ease: 'Back.easeOut' });
+    this.tweens.add({
+      targets: holder, y: y - 34, alpha: 0, delay: 650, duration: 1000, ease: 'Quad.easeIn',
+      onComplete: () => holder.destroy(),
+    });
+    return holder;
   }
 
   // --- The club's DJ booth -------------------------------------------------

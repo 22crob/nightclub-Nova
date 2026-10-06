@@ -617,7 +617,7 @@ export class PatronsMixin {
     this.fans += 0.3;
     SFX.tip();
     this.updateUI();
-    this.floatText(patron.container.x, patron.container.y - PATRON_POPUP_Y, `$${amount} Tip`, '#ffe27a');
+    this.floatMoney(patron.container.x, patron.container.y - PATRON_POPUP_Y, `$${amount}`);
   }
 
   // The cover charge, once, as a guest comes in.
@@ -627,7 +627,7 @@ export class PatronsMixin {
     this.noteIncome('cover', amount);
     patron.spent = (patron.spent || 0) + amount;
     this.updateUI();
-    this.floatText(patron.container.x, patron.container.y - PATRON_POPUP_Y, `$${amount} Cover`, '#7dffc4');
+    this.floatMoney(patron.container.x, patron.container.y - PATRON_POPUP_Y, `$${amount} Cover`, '#22b84a', false);
   }
 
   // Sends a patron walking back to the door tile, on foot, tile by tile,

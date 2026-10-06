@@ -1,7 +1,7 @@
 // ClubScene methods: Top bar readouts, mute button, level-up celebration and toasts.
 // Mixed into ClubScene (see ClubScene.js); `this` is the scene.
 import { EXPANSION, FLOOR_DECAL_PROPS, PROP_TYPES } from '../catalog.js';
-import { BARTENDERS, CELEBRITIES, PARTIES } from '../config.js';
+import { BARTENDERS, CELEBRITIES, PARTIES, ZOOM_MAX, ZOOM_MIN } from '../config.js';
 import { realSpriteIconFor, renderIsoIcon } from '../icons.js';
 import { SFX } from '../sfx.js';
 import { hideTip } from '../tooltips.js';
@@ -16,7 +16,7 @@ const KIND = {
 export class HudMixin {
   updateUI() {
     this.cashText.textContent = Math.floor(this.cash);
-    this.fansText.textContent = Math.floor(this.fans);
+    if (this.fansText) this.fansText.textContent = Math.floor(this.fans);
     if (this.luxuryText) this.luxuryText.textContent = this.luxury();
     const rating = this.clubRating();
     const ratingEl = document.getElementById('ratingVal');
@@ -40,8 +40,25 @@ export class HudMixin {
 
   updateMuteButton() {
     if (!this.muteButton) return;
-    this.muteButton.textContent = SFX.muted ? '🔇' : '🔊';
+    this.muteButton.innerHTML = iconSvg(SFX.muted ? 'soundOff' : 'sound');
     this.muteButton.classList.toggle('muted', SFX.muted);
+  }
+
+  // The zoom slider on the right edge follows the zoom however it changes
+  // (wheel, keys, buttons). Up is closer; it moves on a log scale.
+  syncZoomSlider() {
+    const el = this.zoomSlider || (this.zoomSlider = document.getElementById('zoomSlider'));
+    if (!el || !this.world) return;
+    const t = Math.log(this.world.scaleX / ZOOM_MIN) / Math.log(ZOOM_MAX / ZOOM_MIN);
+    el.value = String(Math.round(Math.max(0, Math.min(1, t)) * 100));
+  }
+
+  setupZoomSlider() {
+    const el = document.getElementById('zoomSlider');
+    if (!el) return;
+    this.zoomSlider = el;
+    el.addEventListener('input', () => this.zoomTo(ZOOM_MIN * (ZOOM_MAX / ZOOM_MIN) ** (Number(el.value) / 100)));
+    this.syncZoomSlider();
   }
 
   // Celebrates hitting a new level: a fanfare plus a banner naming
@@ -125,7 +142,7 @@ export class HudMixin {
     if (!box || box.dataset.wired) return;
     box.dataset.wired = '1';
     document.getElementById('levelOk')?.addEventListener('click', () => this.hideLevelUp());
-    document.getElementById('levelShop')?.addEventListener('click', () => { this.hideLevelUp(); this.setDockTab('decor'); });
+    document.getElementById('levelShop')?.addEventListener('click', () => { this.hideLevelUp(); this.setShopCategory('New'); });
   }
 
   // Shows a brief DOM banner (see #toast in index.html) — plain HTML/CSS,

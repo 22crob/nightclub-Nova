@@ -53,6 +53,15 @@ const ICONS = {
   tips: `<circle cx="12" cy="12" r="9.5" fill="${CYAN}"/>
     <path d="M9.2 9.4a2.9 2.9 0 1 1 4.3 2.5c-1 .6-1.5 1.2-1.5 2.4" fill="none" stroke="${INK}" stroke-width="2.4" stroke-linecap="round"/>
     <circle cx="12" cy="17.6" r="1.4" fill="${INK}"/>`,
+  // Utility buttons: sound on and off, start over, zoom.
+  sound: `<path d="M3 9h4l5-4.5v15L7 15H3Z" fill="${W}"/>
+    <path d="M15.4 8.6a4.6 4.6 0 0 1 0 6.8M18.2 5.8a8.6 8.6 0 0 1 0 12.4" fill="none" stroke="${W}" stroke-width="2.1" stroke-linecap="round"/>`,
+  soundOff: `<path d="M3 9h4l5-4.5v15L7 15H3Z" fill="${W}"/>
+    <path d="M15.5 9.2l5.6 5.6M21.1 9.2l-5.6 5.6" stroke="#ff6f7f" stroke-width="2.4" stroke-linecap="round"/>`,
+  restart: `<path d="M18.4 8.2A7.6 7.6 0 1 0 19.6 13" fill="none" stroke="${W}" stroke-width="2.6" stroke-linecap="round"/>
+    <path d="M20.6 3.4 20.4 9.6 14.4 8.6Z" fill="${W}"/>`,
+  plus: `<path d="M12 4.5v15M4.5 12h15" stroke="${W}" stroke-width="3.6" stroke-linecap="round"/>`,
+  minus: `<path d="M4.5 12h15" stroke="${W}" stroke-width="3.6" stroke-linecap="round"/>`,
   check: `<path d="M4.5 12.5l5 5L20 7" fill="none" stroke="${W}" stroke-width="3.6" stroke-linecap="round" stroke-linejoin="round"/>`,
   // Shop categories.
   bars: `<path d="M3 4h18l-9 9.4Z" fill="${CYAN}"/><path d="M5.6 6.6h12.8" stroke="${W}" stroke-width="1.2"/>
@@ -153,6 +162,38 @@ const ART = {
     <g transform="rotate(-40 24 24)"><rect x="21.8" y="15" width="4.4" height="28" rx="2" fill="#c98b3e" stroke="${O}" stroke-width="1.5"/>
       <path d="M13 8.5h20.5a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2H13c-2.4 0-4-1.2-5-3.4l-.6-1.6c.8-2.6 2.8-4 5.6-4Z" fill="#5d6b80" stroke="${O}" stroke-width="1.5"/>
       <path d="M14 10.5h18" stroke="#a7b3c6" stroke-width="1.4" stroke-linecap="round"/></g>`,
+  // Store: a little shop front with a striped awning and a gold sign.
+  tabStore: `<defs><linearGradient id="gWin" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#d8f6ff"/><stop offset="1" stop-color="#3fa9e8"/></linearGradient>
+    <linearGradient id="gSign" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#fff2a0"/><stop offset="1" stop-color="#f0a800"/></linearGradient></defs>
+    <rect x="8" y="17" width="32" height="26" rx="2" fill="#eef5fc" stroke="${O}" stroke-width="1.6"/>
+    <rect x="11.5" y="25" width="14" height="12" rx="1.5" fill="url(#gWin)" stroke="${O}" stroke-width="1.3"/>
+    <path d="M14 34.5 22 27.5" stroke="#fff" stroke-width="1.6" stroke-linecap="round" opacity=".8"/>
+    <rect x="28.5" y="25" width="8.5" height="18" rx="1.2" fill="#c98b3e" stroke="${O}" stroke-width="1.3"/>
+    <circle cx="34.6" cy="34.4" r="1" fill="#ffd24d"/>
+    ${[0, 1, 2, 3, 4, 5].map((i) => `<path d="M${5 + i * 6.33} 12h6.33v6a3.17 2.4 0 0 1-6.33 0Z" fill="${i % 2 ? '#fff' : '#ef3b4f'}" stroke="${O}" stroke-width="1.2" stroke-linejoin="round"/>`).join('')}
+    <rect x="13" y="3" width="22" height="9" rx="2.5" fill="url(#gSign)" stroke="${O}" stroke-width="1.5"/>
+    <path d="M24 4.6l1.1 2.2 2.4.3-1.8 1.6.5 2.4-2.2-1.2-2.2 1.2.5-2.4-1.8-1.6 2.4-.3Z" fill="#ff4fa8" stroke="${O}" stroke-width=".7" stroke-linejoin="round"/>`,
+  // NEW: a red starburst with NEW across it.
+  catNew: `<defs><radialGradient id="gBurst" cx=".45" cy=".35" r=".75"><stop offset="0" stop-color="#ffb35c"/><stop offset=".6" stop-color="#ff3b3b"/><stop offset="1" stop-color="#b8101e"/></radialGradient></defs>
+    <path d="${Array.from({ length: 24 }, (_, k) => { const a = (k * Math.PI) / 12 - Math.PI / 2; const r = k % 2 ? 15.5 : 21.5; return `${k ? 'L' : 'M'}${(24 + r * Math.cos(a)).toFixed(1)} ${(24 + r * Math.sin(a)).toFixed(1)}`; }).join('')}Z" fill="url(#gBurst)" stroke="${O}" stroke-width="1.8" stroke-linejoin="round"/>
+    <text x="24" y="28.4" text-anchor="middle" font-family="Arial Black, Arial, sans-serif" font-weight="900" font-size="12" fill="#fff" stroke="${O}" stroke-width="2.4" paint-order="stroke">NEW</text>
+    <path d="M14 15.5c2-2.4 4.6-3.8 7.4-4.2" fill="none" stroke="#fff" stroke-width="1.8" stroke-linecap="round" opacity=".7"/>`,
+  // Clear Club: a broom sweeping, with sparkles.
+  clearClub: `<defs><linearGradient id="gStraw" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#ffe680"/><stop offset="1" stop-color="#e0a020"/></linearGradient></defs>
+    <path d="M36.5 4.5 21.5 26" stroke="${O}" stroke-width="5" stroke-linecap="round"/>
+    <path d="M36.5 4.5 21.5 26" stroke="#c98b3e" stroke-width="2.6" stroke-linecap="round"/>
+    <path d="M17 24.5 25.6 30.4 21 43.5c-4.6 1.4-11.8-3.6-12.6-8.4Z" fill="url(#gStraw)" stroke="${O}" stroke-width="1.6" stroke-linejoin="round"/>
+    <path d="M17.6 25 25 30" stroke="#e5483e" stroke-width="3" stroke-linecap="round"/>
+    <path d="M12.4 36.8l5-6.4M15.6 39.4l5-7.2M18.8 41.4l3.6-7.4" stroke="#b07a10" stroke-width="1" stroke-linecap="round"/>
+    <path d="M38 30l1.2 2.8 2.8 1.2-2.8 1.2-1.2 2.8-1.2-2.8-2.8-1.2 2.8-1.2ZM31 38.5l.8 1.8 1.8.8-1.8.8-.8 1.8-.8-1.8-1.8-.8 1.8-.8Z" fill="#5fe3ff" stroke="${O}" stroke-width=".8" stroke-linejoin="round"/>`,
+  // Goals: a target with a dart in the bullseye.
+  goals: `<circle cx="22" cy="26" r="17" fill="#ef3b4f" stroke="${O}" stroke-width="1.8"/>
+    <circle cx="22" cy="26" r="12" fill="#fff" stroke="${O}" stroke-width="1.2"/>
+    <circle cx="22" cy="26" r="7" fill="#ef3b4f" stroke="${O}" stroke-width="1.2"/>
+    <circle cx="22" cy="26" r="2.6" fill="#ffd24d" stroke="${O}" stroke-width="1"/>
+    <path d="M22.5 25.5 39 9" stroke="${O}" stroke-width="3.6" stroke-linecap="round"/><path d="M22.5 25.5 39 9" stroke="#eef2f7" stroke-width="1.8" stroke-linecap="round"/>
+    <path d="M37.5 10.5 37 4.2 41 7.4ZM37.5 10.5l6.3.5L40.6 7Z" fill="#5fe3ff" stroke="${O}" stroke-width="1.1" stroke-linejoin="round"/>
+    <path d="M10.5 17.5c2-3 5-4.8 8.4-5.4" fill="none" stroke="#fff" stroke-width="1.8" stroke-linecap="round" opacity=".6"/>`,
   // Store categories.
   catBars: `<defs><linearGradient id="gDrink" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#ff9ad0"/><stop offset="1" stop-color="#e0217f"/></linearGradient></defs>
     <path d="M27 5.5 37.5 17" stroke="#fff" stroke-width="1.4"/><circle cx="31.5" cy="10.8" r="3.2" fill="#7be36b" stroke="${O}" stroke-width="1.2"/>

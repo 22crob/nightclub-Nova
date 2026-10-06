@@ -365,6 +365,7 @@ export class WorldMixin {
     this.world.setScale(next);
     this.world.x = sx - localX * next;
     this.world.y = sy - localY * next;
+    this.syncZoomSlider();
   }
 
   // Centres the whole room (floor plus back walls) in the space between the
@@ -375,12 +376,13 @@ export class WorldMixin {
     const bottom = (this.gridW + this.gridH - 1) * TILE_H / 2 + FLOOR_SLAB_DEPTH;
     const left = -(this.gridH + WALL_THICKNESS) * TILE_W / 2;
     const right = (this.gridW + WALL_THICKNESS) * TILE_W / 2;
-    const areaTop = 110; // below the profile and cash
-    const areaBottom = this.scale.height - 200; // above the shop dock
+    const areaTop = 110; // below the profile strip
+    const areaBottom = this.scale.height - 150; // above the shop buttons
     const fit = Math.min((areaBottom - areaTop) / (bottom - top), (this.scale.width - 40) / (right - left));
     const zoom = Phaser.Math.Clamp(Math.min(ZOOM_DEFAULT, fit), ZOOM_MIN, ZOOM_MAX);
     this.world.setScale(zoom);
     this.world.x = this.scale.width / 2 - ((left + right) / 2) * zoom;
     this.world.y = (areaTop + areaBottom) / 2 - ((top + bottom) / 2) * zoom;
+    this.syncZoomSlider?.();
   }
 }

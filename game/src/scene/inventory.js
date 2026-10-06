@@ -217,9 +217,47 @@ export class InventoryMixin {
         this.editTool = key;
         if (this.selectedProp) this.deselectProp();
         this.renderEditTools();
+        this.refreshDockButtons(); // Sell lights the Sell button
       });
       el.appendChild(slot);
     }
     fillIcons(el);
+  }
+
+  // Clear Club, like Nightclub City's: puts everything except the DJ booth
+  // and the bars (which keep the club running) into the inventory, to lay
+  // the club out again for free. Floors and wallpaper stay. Returns how many
+  // things were put away.
+  clearClub() {
+    if (this.selectedProp || this.movingBooth) this.deselectProp();
+    const seen = new Set();
+    let count = 0;
+    for (const key of Object.keys(this.placed)) {
+      const rec = this.placed[key];
+      if (!rec || seen.has(rec)) continue;
+      seen.add(rec);
+      if (!PROP_TYPES[rec.type] || PROP_TYPES[rec.type].staff) continue; // the DJ booth and bars stay
+      if (this.pickUpProp(rec) !== false) count++;
+    }
+    if (count > 0) {
+      SFX.sell();
+      this.showToast(`📦 Put ${count} thing${count === 1 ? '' : 's'} away in your inventory.`);
+    } else {
+      this.showToast('Nothing to clear: only your DJ booth and bars are out.');
+    }
+    this.updateUI();
+    this.refreshDock();
+    this.saveGame();
+    return count;
+  }
+
+  // The Clear Club button asks first (see #clearConfirm in index.html).
+  setupClearClub() {
+    const box = document.getElementById('clearConfirm');
+    if (!box || box.dataset.wired) return;
+    box.dataset.wired = '1';
+    document.getElementById('clearClub')?.addEventListener('click', () => { SFX.unlock(); box.classList.add('open'); });
+    document.getElementById('clearNo')?.addEventListener('click', () => box.classList.remove('open'));
+    document.getElementById('clearYes')?.addEventListener('click', () => { box.classList.remove('open'); this.clearClub(); });
   }
 }

@@ -6,6 +6,8 @@
 // Progress comes from counters (this.goalStats, saved) bumped where things
 // happen (bumpGoal()), from bests seen while playing (noteGoalBest()), or
 // from live values (the level, how many guests fit, the club's rating).
+// The panel opens from the Goals button under the top-left strip; a goal
+// finishing makes the button cheer and puts a ! on it until it's opened.
 // Mixed into ClubScene (see ClubScene.js); `this` is the scene.
 import { GOALS } from '../config.js';
 import { SFX } from '../sfx.js';
@@ -65,6 +67,13 @@ export class GoalsMixin {
     SFX.levelUp();
     this.showToast(`🎯 Goal complete: ${goal.text}! +$${goal.cash}${goal.xp ? ` +${goal.xp} XP` : ''}`, 4500);
     this.justDone = goal.id;
+    const button = document.getElementById('goalsButton');
+    if (button && !button.classList.contains('open')) {
+      document.getElementById('goalsBadge').textContent = '!';
+      button.classList.remove('cheer');
+      void button.offsetWidth; // restart the animation
+      button.classList.add('cheer');
+    }
     this.updateUI();
     this.saveGame();
   }
@@ -108,9 +117,20 @@ export class GoalsMixin {
     this.checkGoals();
   }
 
+  // The Goals button opens and closes the panel.
+  toggleGoals(open) {
+    const panel = document.getElementById('goals');
+    const button = document.getElementById('goalsButton');
+    if (!panel) return;
+    const show = open ?? panel.classList.contains('collapsed');
+    panel.classList.toggle('collapsed', !show);
+    button?.classList.toggle('open', show);
+    if (show) document.getElementById('goalsBadge').textContent = '';
+  }
+
   setupGoals() {
-    const head = document.getElementById('goalsHead');
-    head?.addEventListener('click', () => document.getElementById('goals')?.classList.toggle('collapsed'));
+    document.getElementById('goalsButton')?.addEventListener('click', () => { SFX.unlock(); this.toggleGoals(); });
+    document.getElementById('goalsHead')?.addEventListener('click', () => this.toggleGoals(false));
     this.checkGoals();
   }
 }

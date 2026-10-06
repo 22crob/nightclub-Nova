@@ -1,704 +1,483 @@
-/* Club Nova HUD, styled after the reference game's interface: dark tinted
-   glass panels with thin chrome rims and electric-blue neon edges, plain
-   sharp bold lettering with small uppercase labels, and a money counter
-   that floats over the room with no box. Colour comes from the club and a
-   few neon accents, not from the buttons. */
+/* Club Nova's interface, in Nightclub City's style: glossy, bubbly blue
+   panels with a dark navy frame and a white shine across the top half,
+   round drawn buttons with a white rim, white speech-bubble hover tips,
+   and bold outlined lettering. Every panel and dialog uses the same few
+   pieces: --panel (glossy blue), --panel-deep (glossy navy), the light
+   card (.propSlot, .unlockTile) and the pill buttons. */
 :root {
   color-scheme: dark;
   --ink: #ffffff;
-  --muted: #a9b7cc;
-  --neon: #3fd4ff;              /* electric blue edges and highlights */
-  --neon-glow: rgba(63, 212, 255, 0.55);
-  --magenta: #ff3ddc;
-  --gold: #ffd24d;
+  --muted: #d8eeff;
+  --gold: #ffe45c;
   --cash: #9dff6a;
-  --glass: linear-gradient(180deg, rgba(40, 46, 60, 0.93) 0%, rgba(18, 21, 30, 0.95) 55%, rgba(10, 12, 18, 0.96) 100%);
-  --glass-flat: rgba(12, 14, 20, 0.82);
-  --chrome: #8a94a6;            /* thin metal rim */
-  --chrome-hi: rgba(255, 255, 255, 0.28);
-  --radius: 7px;
+  --magenta: #ff3ddc;
+  --radius: 8px;
   --ui-font: Arial, 'Helvetica Neue', Helvetica, sans-serif;
-  /* Dark text outline used on HUD text. */
-  --outline: 0 1px 0 #000, 1px 0 0 #000, 0 -1px 0 #000, -1px 0 0 #000, 0 2px 3px rgba(0, 0, 0, 0.6);
-  /* The standard panel: glass, a chrome rim with a glossy top line, a
-     drop shadow. */
-  --panel-shadow: inset 0 1px 0 var(--chrome-hi), 0 0 0 1px #000, 0 4px 12px rgba(0, 0, 0, 0.55);
+  --display-font: 'Arial Black', Arial, sans-serif;
+  /* A dark outline round white text. */
+  --outline: 0 1px 0 #0a1830, 1px 0 0 #0a1830, 0 -1px 0 #0a1830, -1px 0 0 #0a1830, 0 2px 3px rgba(0, 0, 0, 0.55);
+  --shine: linear-gradient(180deg, rgba(255, 255, 255, 0.55) 0%, rgba(255, 255, 255, 0.18) 46%, rgba(255, 255, 255, 0) 50%);
+  --nc-blue: linear-gradient(180deg, #8fd6ff 0%, #45a3ea 50%, #1f6cc2 100%);
+  --nc-deep: linear-gradient(180deg, #2a64b0 0%, #163f7a 55%, #0d2a55 100%);
+  --nc-green: linear-gradient(180deg, #8af27a 0%, #2fae2a 55%, #17701a 100%);
+  --nc-red: linear-gradient(180deg, #ff8a8a 0%, #e0303a 55%, #8e1420 100%);
+  --nc-gold: linear-gradient(180deg, #fff1a0 0%, #ffc72a 50%, #d08a00 100%);
+  --nc-frame: #0d2340;
+  --card: linear-gradient(180deg, #f4fbff 0%, #b9e3fb 55%, #86c6ee 100%);
+  --card-pic: radial-gradient(circle at 50% 40%, #3b78bf 0%, #1a3f73 70%, #10284c 100%);
+  /* The standard panels. */
+  --panel: var(--shine), var(--nc-blue);
+  --panel-deep: var(--shine), var(--nc-deep);
+  --panel-shadow: inset 0 0 0 2px rgba(205, 240, 255, 0.5), 0 5px 14px rgba(0, 0, 0, 0.55);
+  /* Round and pill buttons: a white rim inside a navy ring. */
+  --rim: 0 0 0 2px var(--nc-frame), 0 4px 8px rgba(0, 0, 0, 0.5);
 }
 
 html, body { margin: 0; padding: 0; background: #07080c; overflow: hidden; }
 body { font-family: var(--ui-font); color: var(--ink); }
 
-/* ---------- Top-left: profile ---------- */
-#hudProfile {
-  position: fixed; top: calc(10px + env(safe-area-inset-top, 0px)); left: 12px;
-  display: flex; gap: 10px; align-items: flex-start; z-index: 10;
+/* Drawn icons (uiIcons.js): small glyphs get a dark cartoon outline; the
+   bigger drawings bring their own. */
+.uiGlyph {
+  display: block; width: 100%; height: 100%; overflow: visible;
+  filter: drop-shadow(1px 0 0 #0a1830) drop-shadow(-1px 0 0 #0a1830) drop-shadow(0 1px 0 #0a1830) drop-shadow(0 -1px 0 #0a1830) drop-shadow(0 2px 2px rgba(0, 0, 0, 0.5));
 }
-/* A square portrait in a chrome frame. */
+.uiArt { display: block; width: 100%; height: 100%; overflow: visible; filter: drop-shadow(0 3px 2px rgba(0, 0, 0, 0.5)); }
+
+/* A red count bubble on a button's corner (inventory, goals). */
+.countBadge {
+  position: absolute; top: -5px; right: -5px; min-width: 20px; height: 20px; box-sizing: border-box; padding: 0 5px;
+  border-radius: 10px; display: flex; align-items: center; justify-content: center;
+  background: var(--nc-red); border: 2px solid #fff; box-shadow: 0 0 0 1px var(--nc-frame);
+  font-size: 11px; font-weight: 800; color: #fff; text-shadow: var(--outline); pointer-events: none;
+}
+.countBadge:empty { display: none; }
+
+/* ------------------------------------------------------------------ */
+/* Top-left: one strip with the portrait, its level badge, the XP bar  */
+/* and the cash, like Nightclub City's.                                 */
+/* ------------------------------------------------------------------ */
+#hudProfile {
+  position: fixed; top: calc(8px + env(safe-area-inset-top, 0px)); left: 10px; z-index: 10;
+  display: flex; gap: 12px; align-items: center; padding: 6px 14px 6px 6px; border-radius: 16px;
+  background: var(--panel-deep); border: 3px solid var(--nc-frame); box-shadow: var(--panel-shadow);
+}
 .portrait {
-  position: relative; width: 62px; height: 62px; flex: 0 0 auto;
-  border-radius: var(--radius); padding: 3px;
-  background: linear-gradient(180deg, #e9edf3 0%, #9aa3b2 45%, #5d6575 55%, #b7bfcc 100%);
-  box-shadow: 0 0 0 1px #000, 0 4px 10px rgba(0, 0, 0, 0.6);
+  position: relative; width: 58px; height: 58px; flex: 0 0 auto; box-sizing: border-box;
+  border-radius: 12px; padding: 3px;
+  background: linear-gradient(180deg, #ffffff 0%, #c9d8ea 45%, #8fa3bd 55%, #e3ebf5 100%);
+  box-shadow: 0 0 0 2px var(--nc-frame);
 }
 .portraitFace {
-  width: 100%; height: 100%; border-radius: 4px;
+  width: 100%; height: 100%; border-radius: 9px;
   display: flex; align-items: center; justify-content: center; font-size: 30px;
-  background: radial-gradient(circle at 50% 35%, #2c3346, #0b0d14 75%);
+  background: radial-gradient(circle at 50% 35%, #3b5d96, #0b1a33 75%);
 }
-/* The level: a small dark disc with a neon ring. */
+/* The level: a round badge on the portrait's corner. */
 .levelStar {
-  position: absolute; right: -12px; bottom: -10px; width: 30px; height: 30px; border-radius: 50%;
+  position: absolute; right: -12px; bottom: -10px; width: 32px; height: 32px; border-radius: 50%; box-sizing: border-box;
   display: flex; align-items: center; justify-content: center;
-  background: radial-gradient(circle at 50% 35%, #2a3142, #07090e 75%);
-  border: 2px solid var(--neon);
-  box-shadow: 0 0 0 1px #000, 0 0 8px var(--neon-glow);
+  background: var(--shine), var(--nc-blue); border: 3px solid #fff; box-shadow: 0 0 0 2px var(--nc-frame), 0 2px 4px rgba(0, 0, 0, 0.5);
 }
-.levelStar span { font-weight: 700; font-size: 14px; line-height: 1; color: #fff; text-shadow: var(--outline); }
-.profileRight { display: flex; flex-direction: column; gap: 8px; padding-top: 6px; }
-/* XP: a long thin dark glass tube with a glowing fill. */
+.levelStar span { font-family: var(--display-font); font-weight: 900; font-size: 14px; line-height: 1; color: #fff; text-shadow: var(--outline); }
+.profileRight { display: flex; flex-direction: column; gap: 4px; }
 .xpBar {
-  position: relative; width: min(280px, 38vw); height: 16px;
-  border-radius: 8px; background: linear-gradient(180deg, #05070b, #161a24);
-  border: 1px solid var(--chrome);
-  box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.8), 0 0 0 1px #000;
-  overflow: hidden;
+  position: relative; width: min(230px, 30vw); height: 18px; border-radius: 9px; overflow: hidden;
+  background: linear-gradient(180deg, #071226, #17294a); border: 2px solid #fff;
+  box-shadow: 0 0 0 2px var(--nc-frame), inset 0 2px 4px rgba(0, 0, 0, 0.7);
 }
 .xpFill {
   height: 100%; width: 0%;
-  background: linear-gradient(180deg, #c8f6ff 0%, #52c8ff 35%, #1a8be0 70%, #0c5aa8 100%);
-  box-shadow: 0 0 8px var(--neon-glow);
+  background: var(--shine), linear-gradient(180deg, #b6ff8a 0%, #45d63a 55%, #1f8f1d 100%);
   transition: width 0.4s ease;
 }
 .xpText {
   position: absolute; inset: 0; display: flex; align-items: center; justify-content: center;
-  font-size: 11px; font-weight: 700; text-shadow: var(--outline); white-space: nowrap;
+  font-size: 11px; font-weight: 800; text-shadow: var(--outline); white-space: nowrap;
 }
-.utilityRow { display: flex; gap: 5px; }
-.squareButton {
-  width: 30px; height: 30px; border-radius: var(--radius);
-  display: flex; align-items: center; justify-content: center;
-  font-size: 15px; font-weight: 700; cursor: pointer; user-select: none;
-  text-shadow: var(--outline);
-  background: var(--glass); border: 1px solid var(--chrome);
-  box-shadow: var(--panel-shadow);
-}
-.squareButton:hover { border-color: var(--neon); box-shadow: var(--panel-shadow), 0 0 8px var(--neon-glow); }
-.squareButton:active { transform: translateY(1px); }
-#muteButton.muted { filter: grayscale(0.7) brightness(0.8); }
-
-/* ---------- Top-centre: cash, floating with no box ---------- */
-#hudCash {
-  position: fixed; top: calc(10px + env(safe-area-inset-top, 0px)); left: 50%; transform: translateX(-50%);
-  display: flex; align-items: center; gap: 8px; z-index: 10;
-}
-/* A little stack of green bills. */
-.cashStack { width: 50px; height: 50px; margin: -8px -2px -6px 0; }
-.cashStack .uiArt { width: 100%; height: 100%; filter: drop-shadow(0 3px 3px rgba(0, 0, 0, 0.6)); }
+#hudCash { display: flex; align-items: center; gap: 4px; height: 32px; }
+.cashStack { width: 40px; height: 40px; margin: -6px 0 -4px -4px; }
 #hudCash .amount {
-  font-size: 30px; font-family: 'Arial Black', Arial, sans-serif; -webkit-text-stroke: 1.5px #0b1626; paint-order: stroke fill; font-weight: 700; letter-spacing: 0.01em; color: #fff;
-  font-variant-numeric: tabular-nums;
-  text-shadow: var(--outline), 0 0 12px rgba(157, 255, 106, 0.35);
+  font-family: var(--display-font); font-weight: 900; font-size: 24px; letter-spacing: 0.01em; color: #fff;
+  -webkit-text-stroke: 1.5px var(--nc-frame); paint-order: stroke fill; font-variant-numeric: tabular-nums;
+  text-shadow: 0 3px 0 var(--nc-frame), 0 0 12px rgba(157, 255, 106, 0.4);
 }
 
-/* ---------- Top-right: stats, like small digital displays ---------- */
-#hudStats {
-  position: fixed; top: calc(10px + env(safe-area-inset-top, 0px)); right: 12px;
-  display: flex; gap: 6px; z-index: 10;
+/* Under the strip: small round buttons (sound, help, new club) and Goals. */
+#hudTools {
+  position: fixed; top: calc(90px + env(safe-area-inset-top, 0px)); left: 12px; z-index: 10;
+  display: flex; align-items: center; gap: 7px;
 }
-.statButton {
-  min-width: 64px; padding: 6px 10px; cursor: default; border-radius: var(--radius); text-align: center;
-  background: linear-gradient(180deg, #0f2338 0%, #081321 60%, #050b14 100%);
-  border: 2px solid var(--neon);
-  box-shadow: 0 0 0 1px #000, 0 0 10px var(--neon-glow), inset 0 1px 0 rgba(255, 255, 255, 0.2), inset 0 0 12px rgba(63, 212, 255, 0.15);
+.toolButton {
+  position: relative; width: 34px; height: 34px; box-sizing: border-box; padding: 7px; border-radius: 50%;
+  cursor: pointer; user-select: none;
+  background: var(--shine), var(--nc-blue); border: 2px solid #fff; box-shadow: var(--rim);
+  transition: transform 0.12s ease, filter 0.12s ease;
 }
-.statValue {
-  display: flex; align-items: center; justify-content: center; gap: 5px;
-  font-size: 19px; font-weight: 700; text-shadow: var(--outline); font-variant-numeric: tabular-nums;
-}
-.statIcon { display: inline-flex; width: 19px; height: 19px; }
+.toolButton:hover { transform: scale(1.1); filter: brightness(1.1); }
+.toolButton:active { transform: scale(0.96); }
+#muteButton.muted { filter: grayscale(0.6) brightness(0.85); }
+.goalsButton { width: 46px; height: 46px; padding: 5px; background: var(--shine), var(--nc-gold); }
+.goalsButton.open { box-shadow: 0 0 0 2px var(--nc-frame), 0 0 0 5px var(--gold), 0 0 16px var(--gold); }
+.goalsButton.cheer { animation: cheer 0.9s ease-out 2; }
+@keyframes cheer { 0%, 100% { transform: scale(1); } 30% { transform: scale(1.25) rotate(-8deg); } 60% { transform: scale(1.1) rotate(6deg); } }
 
-#selectedChip:empty { display: none; }
-#selectedChip {
-  position: fixed; bottom: calc(200px + env(safe-area-inset-bottom, 0px)); left: 50%; transform: translateX(-50%);
-  display: flex; align-items: center; gap: 8px; z-index: 10;
-  padding: 4px 12px 4px 4px; border-radius: var(--radius);
-  background: var(--glass-flat); border: 1px solid var(--chrome);
-  box-shadow: var(--panel-shadow);
-  font-size: 12px; font-weight: 700; text-shadow: var(--outline);
-  pointer-events: none; white-space: nowrap;
+/* Goals (see goals.js): a panel the Goals button opens. */
+#goals {
+  position: fixed; left: 10px; top: calc(144px + env(safe-area-inset-top, 0px)); z-index: 12; width: 250px;
+  padding: 8px 10px 10px; border-radius: 16px; box-sizing: border-box;
+  background: var(--panel); border: 3px solid var(--nc-frame); box-shadow: var(--panel-shadow);
+  text-shadow: var(--outline); animation: summaryIn 0.2s ease-out;
 }
-#selectedChip .chipIcon {
-  width: 24px; height: 24px; border-radius: 4px; flex: 0 0 auto;
-  background-color: #000; background-size: cover; background-position: center;
+#goals.collapsed { display: none; }
+#goalsHead {
+  font-family: var(--display-font); font-weight: 900; font-size: 18px; color: var(--gold); text-align: center;
+  -webkit-text-stroke: 1.5px var(--nc-frame); paint-order: stroke fill; text-shadow: 0 2px 0 var(--nc-frame);
 }
-#selectedChip .chipCost { color: var(--gold); }
+.goalRow { padding: 6px 8px; margin-top: 6px; border-radius: 10px; background: var(--panel-deep); border: 2px solid var(--nc-frame); }
+.goalRow.done { font-size: 12px; font-weight: 700; text-align: center; }
+.goalText { font-size: 12px; font-weight: 700; color: #fff; }
+.goalBar { height: 8px; margin: 5px 0 3px; border-radius: 4px; background: #071226; border: 1px solid #5c8fd0; overflow: hidden; }
+.goalFill { height: 100%; background: linear-gradient(90deg, #5dff6a, var(--gold)); transition: width 0.4s ease; }
+.goalMeta { display: flex; justify-content: space-between; font-size: 10px; font-weight: 700; color: var(--muted); }
+.goalReward { color: var(--gold); }
 
-/* ---------- Toast (level up, expansions) ---------- */
-#toast {
-  position: fixed; top: 96px; left: 50%; transform: translateX(-50%) translateY(-8px) scale(0.95);
-  max-width: 80vw; text-align: center; z-index: 20; pointer-events: none;
-  padding: 9px 20px; border-radius: var(--radius);
-  background: var(--glass); border: 2px solid var(--neon);
-  box-shadow: 0 0 0 1px #000, 0 0 16px var(--neon-glow);
-  font-size: 15px; font-weight: 700; text-shadow: var(--outline);
-  opacity: 0; transition: opacity 0.3s ease, transform 0.3s ease;
-}
-#toast.show { opacity: 1; transform: translateX(-50%) translateY(0) scale(1); }
-
-/* ------------------------------------------------------------------ */
-/* Club nights: the clock under the cash, the open button, and the      */
-/* end-of-night summary card (see scene/nights.js).                     */
-/* ------------------------------------------------------------------ */
-#nightClock {
-  position: fixed; left: 50%; transform: translateX(-50%);
-  top: calc(52px + env(safe-area-inset-top, 0px));
-  z-index: 10; pointer-events: auto;
-  display: flex; flex-direction: column; align-items: center; gap: 3px;
-  padding: 4px 12px 6px; border-radius: var(--radius);
-  background: var(--glass-flat); border: 1px solid #8a94a699;
-  box-shadow: var(--panel-shadow);
-  font-size: 12px; font-weight: 700; text-shadow: var(--outline); white-space: nowrap;
-}
-#nightClock .nightBar {
-  width: 150px; height: 5px; border-radius: 3px; overflow: hidden;
-  background: #05070b; box-shadow: inset 0 1px 2px #000c;
-}
-#nightClockFill {
-  height: 100%; width: 0%;
-  background: linear-gradient(90deg, #6b3fd6, var(--magenta));
-  transition: width 1s linear;
-}
-#nightClock[data-phase="lastCall"] { border-color: var(--gold); color: var(--gold); }
-#nightClock[data-phase="lastCall"] #nightClockFill { background: var(--gold); }
-#nightClock[data-phase="closing"], #nightClock[data-phase="closed"] { color: var(--muted); }
-
-.openButton {
-  position: fixed; left: 50%; transform: translateX(-50%);
-  top: calc(98px + env(safe-area-inset-top, 0px));
-  z-index: 10; cursor: pointer; user-select: none;
-  padding: 9px 20px; border-radius: var(--radius);
-  font-size: 15px; font-weight: 700; letter-spacing: 0.04em; text-shadow: var(--outline);
-  background: linear-gradient(180deg, #2a6a2e 0%, #134a18 55%, #0a300d 100%);
-  border: 2px solid #5dff6a;
-  box-shadow: 0 0 0 1px #000, 0 0 14px #5dff6a8c, inset 0 1px 0 #ffffff59;
-}
-.openButton:hover { box-shadow: 0 0 0 1px #000, 0 0 20px #5dff6acc, inset 0 1px 0 #ffffff59; }
-.openButton:active { transform: translateX(-50%) translateY(1px); }
-
-#nightSummary, .overlay {
-  display: none; position: fixed; inset: 0; z-index: 50;
-  align-items: center; justify-content: center;
-  background: #05030ab3;
-}
-#nightSummary.open, .overlay.open { display: flex; }
-.summaryButton.danger { background: linear-gradient(180deg, #7a1f2a 0%, #4a0f18 60%, #2a070d 100%); border-color: #ff6f7f; box-shadow: 0 0 0 1px #000, 0 0 12px #ff6f7f8c; }
-.summaryCard {
-  width: min(360px, calc(100vw - 32px));
-  padding: 18px 20px 16px; border-radius: 12px;
-  background: var(--glass); border: 2px solid var(--neon);
-  box-shadow: 0 0 0 1px #000, 0 0 24px var(--neon-glow), inset 0 1px 0 #fff3;
-  text-align: center; text-shadow: var(--outline);
-  animation: summaryIn 0.35s ease-out;
-}
-@keyframes summaryIn { from { transform: scale(0.9); opacity: 0; } to { transform: scale(1); opacity: 1; } }
-.summaryTitle { font-size: 22px; font-weight: 700; }
-.summaryStars { font-size: 34px; color: var(--gold); letter-spacing: 4px; margin: 4px 0 0; text-shadow: 0 0 10px #ffd24d80, var(--outline); }
-.summaryVerdict { color: var(--muted); font-size: 14px; font-weight: 700; margin-bottom: 12px; }
-.summaryRows { display: flex; flex-direction: column; gap: 5px; font-size: 14px; text-align: left; }
-.summaryRows div { display: flex; justify-content: space-between; gap: 12px; padding: 2px 4px; }
-.summaryRows span { color: #cfd8e6; }
-.summaryRows .total { border-top: 1px solid #8a94a699; margin-top: 4px; padding-top: 7px; font-size: 17px; }
-.summaryRows .total b { color: var(--cash); }
-.summaryRows .total b.loss { color: #ff8a8a; }
-.summaryButtons { display: flex; flex-direction: column; gap: 8px; margin-top: 16px; }
-.summaryButton {
-  cursor: pointer; user-select: none; padding: 11px 14px; border-radius: var(--radius);
-  font-size: 16px; font-weight: 700;
-  background: linear-gradient(180deg, #2a6a2e 0%, #134a18 55%, #0a300d 100%);
-  border: 2px solid #5dff6a; box-shadow: 0 0 0 1px #000, 0 0 12px #5dff6a8c;
-}
-.summaryButton.later {
-  font-size: 13px; padding: 7px 12px; background: var(--glass-flat);
-  border: 1px solid var(--chrome); box-shadow: var(--panel-shadow);
-}
-.summaryButton:active { transform: translateY(1px); }
-
-/* ------------------------------------------------------------------ */
-/* Throw a Party: the button under Bass Boost, and the picker.       */
-/* ------------------------------------------------------------------ */
-.partyCard { width: min(440px, calc(100vw - 32px)); }
-#partyList { display: flex; flex-direction: column; gap: 8px; text-align: left; }
-.partyRow {
-  display: flex; align-items: center; gap: 12px; padding: 9px 12px; cursor: pointer;
-  border-radius: var(--radius); border: 1px solid #353c4a;
-  background: linear-gradient(180deg, #1c212c, #10131a);
-}
-.partyRow:hover { border-color: var(--gold); box-shadow: 0 0 10px #ffd24d66; }
-.partyRow.blocked { filter: grayscale(0.7) brightness(0.65); cursor: not-allowed; }
-.partyRow.blocked:hover { border-color: #353c4a; box-shadow: none; }
-.partyEmoji { font-size: 28px; flex: none; }
-.partyText { flex: 1; min-width: 0; }
-.partyName { font-size: 15px; font-weight: 700; }
-.partyBlurb { font-size: 12px; color: #cfd8e6; }
-.partyPerks { font-size: 11px; color: var(--cash); margin-top: 2px; }
-.partyWhy { color: #ff9aa6; }
-.partyCost { flex: none; font-size: 16px; font-weight: 700; color: var(--gold); }
-
-/* ------------------------------------------------------------------ */
-/* Guest and bartender cards (see scene/guests.js), and the party       */
-/* banner (see scene/parties.js).                                       */
-/* ------------------------------------------------------------------ */
-#infoCard {
-  display: none; position: fixed; left: 12px; top: calc(196px + env(safe-area-inset-top, 0px)); z-index: 20;
-  width: 270px; padding: 36px 12px 12px; border-radius: 12px; /* the top strip is the close button's */
-  background: var(--glass); border: 2px solid var(--neon);
-  box-shadow: 0 0 0 1px #000, 0 0 16px var(--neon-glow), inset 0 1px 0 #fff3;
-  text-shadow: var(--outline);
-}
-#infoCard.open { display: block; animation: summaryIn 0.2s ease-out; }
-.infoClose {
-  position: absolute; top: 7px; right: 8px; z-index: 5; width: 22px; height: 22px; border-radius: 5px; cursor: pointer;
-  display: flex; align-items: center; justify-content: center; font-size: 13px; font-weight: 700;
-  background: linear-gradient(180deg, #c0303c, #7a121c); border: 1px solid #000;
-}
-.statBubbles { display: flex; gap: 8px; justify-content: center; margin: -26px 30px 8px 0; } /* beside the close button */
-.statBubble { display: flex; flex-direction: column; align-items: center; min-width: 46px; }
-.bubbleIcon {
-  width: 34px; height: 34px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 19px;
-  background: radial-gradient(circle at 35% 30%, #ffffff 0%, #bfe8ff 35%, #3a8fd0 100%);
-  border: 2px solid #0b2a44; box-shadow: 0 2px 4px #000a, inset 0 -2px 3px #0004;
-}
-.bubbleNum { font-size: 12px; font-weight: 700; margin-top: 2px; }
-.infoTop { display: flex; gap: 10px; align-items: flex-start; }
-.infoPortrait {
-  flex: none; width: 86px; height: 104px; border-radius: 10px; background-repeat: no-repeat;
-  background-color: #10131a; border: 2px solid #3a8fd0; box-shadow: inset 0 0 14px #000, 0 0 8px #3a8fd066;
-}
-.infoText { flex: 1; min-width: 0; }
-.infoName { font-size: 16px; font-weight: 700; margin-top: 6px; }
-.infoRole { font-size: 11px; color: var(--muted); font-weight: 700; }
-.infoQuote {
-  position: relative; font-size: 12px; color: #1a1024; text-shadow: none; font-weight: 700;
-  background: #fff; border-radius: 12px; padding: 7px 9px; box-shadow: 0 2px 6px #0008;
-  overflow-wrap: anywhere; /* long lines wrap inside the bubble */
-}
-.infoQuote:after { content: ""; position: absolute; left: -7px; top: 14px; border: 7px solid transparent; border-right-color: #fff; border-left: 0; }
-.infoActions { display: flex; gap: 10px; justify-content: center; margin-top: 10px; }
-.actionButton {
-  position: relative; width: 46px; height: 46px; border-radius: 50%; cursor: pointer; user-select: none;
-  display: flex; align-items: center; justify-content: center; font-size: 24px;
-  background: radial-gradient(circle at 35% 28%, #ffffff 0%, #d8c4ff 30%, #7a44d8 75%, #3a1a7a 100%);
-  border: 2px solid #1a0b3a; box-shadow: 0 3px 6px #000b, inset 0 -3px 4px #0005;
-  transition: transform 0.1s;
-}
-.actionButton:hover { transform: translateY(-2px) scale(1.06); box-shadow: 0 3px 6px #000b, 0 0 12px #ff3ddcaa, inset 0 -3px 4px #0005; }
-.actionButton.disabled { filter: grayscale(1) brightness(0.55); cursor: default; }
-.actionButton.disabled:hover { transform: none; box-shadow: 0 3px 6px #000b, inset 0 -3px 4px #0005; }
-.actionTimer { position: absolute; bottom: -14px; font-size: 10px; font-weight: 700; white-space: nowrap; color: #ffd24d; }
-.actionTip {
-  display: none; position: absolute; z-index: 2; max-width: 190px; padding: 6px 9px; border-radius: 10px;
-  background: #fff; color: #1a1024; text-shadow: none; font-size: 12px; font-weight: 700; text-align: center;
-  box-shadow: 0 2px 8px #000a; pointer-events: none;
-}
-.actionTip.show { display: block; }
-.actionTip:after { content: ""; position: absolute; left: 50%; bottom: -7px; margin-left: -7px; border: 7px solid transparent; border-top-color: #fff; border-bottom: 0; }
-
-.partyBanner {
-  display: none; position: fixed; top: calc(138px + env(safe-area-inset-top, 0px)); right: 12px; z-index: 10;
-  width: 210px; padding: 6px 12px 8px; border-radius: var(--radius); text-align: right;
-  background: linear-gradient(180deg, #2a0b30 0%, #160418 100%);
-  border: 2px solid var(--magenta); box-shadow: 0 0 0 1px #000, 0 0 14px #ff3ddc99;
-  text-shadow: var(--outline);
-}
-.partyBanner.open { display: block; }
-.bannerSmall { font-size: 11px; font-weight: 700; color: #e9d2ff; }
-.bannerName { font-size: 17px; font-weight: 700; margin: 1px 0 4px; }
-.bannerBar { height: 6px; border-radius: 3px; background: #05070b; overflow: hidden; margin-bottom: 3px; }
-#bannerFill { height: 100%; width: 0%; background: linear-gradient(90deg, var(--neon), var(--magenta)); transition: width 0.5s linear; }
-
-/* ------------------------------------------------------------------ */
-/* Now playing (scene/songs.js) and the VIP list (scene/vips.js).       */
-/* ------------------------------------------------------------------ */
+/* Now playing (scene/songs.js), under the round buttons. */
 #songBox {
-  position: fixed; left: 12px; top: calc(96px + env(safe-area-inset-top, 0px)); z-index: 10;
-  display: flex; gap: 8px; align-items: center; padding: 6px 10px 6px 6px; border-radius: var(--radius);
-  background: var(--glass-flat); border: 1px solid #8a94a699; box-shadow: var(--panel-shadow); text-shadow: var(--outline);
+  position: fixed; left: 10px; top: calc(144px + env(safe-area-inset-top, 0px)); z-index: 10;
+  display: flex; gap: 8px; align-items: center; padding: 6px 12px 6px 6px; border-radius: 14px;
+  background: var(--panel-deep); border: 3px solid var(--nc-frame); box-shadow: var(--panel-shadow); text-shadow: var(--outline);
 }
 #songBox.off { filter: grayscale(0.8) brightness(0.7); }
 .songDisc {
-  width: 46px; height: 46px; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 26px;
-  background: radial-gradient(circle at 40% 35%, #3a2a5e, #0b0816 75%); border: 2px solid var(--neon); box-shadow: 0 0 8px var(--neon-glow);
+  width: 44px; height: 44px; border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 24px;
+  background: radial-gradient(circle at 40% 35%, #3b5d96, #0b1a33 75%); border: 2px solid #fff; box-shadow: 0 0 0 2px var(--nc-frame);
 }
-.songTitle { font-size: 13px; font-weight: 700; }
+.songTitle { font-size: 13px; font-weight: 800; }
 .songArtist { font-size: 11px; color: var(--muted); font-weight: 700; }
 .songButtons { display: flex; gap: 5px; margin-top: 4px; }
 .songButton {
-  cursor: pointer; user-select: none; font-size: 11px; font-weight: 700; padding: 2px 8px; border-radius: 5px;
-  background: linear-gradient(180deg, #3a4150, #12151d); border: 1px solid var(--chrome);
+  cursor: pointer; user-select: none; width: 28px; height: 22px; box-sizing: border-box; padding: 3px 6px; border-radius: 11px;
+  background: var(--shine), var(--nc-blue); border: 2px solid #fff; box-shadow: 0 0 0 1px var(--nc-frame);
 }
-.songButton:hover { border-color: var(--neon); }
-.songButton.like.liked { background: linear-gradient(180deg, #2a6a2e, #0a300d); border-color: #5dff6a; }
-.songEnds { font-size: 10px; color: #cfd8e6; margin-top: 3px; font-weight: 700; }
+.songButton:hover { filter: brightness(1.15); }
+.songButton.like.liked { background: var(--shine), var(--nc-green); }
+.songEnds { font-size: 10px; color: var(--muted); margin-top: 3px; font-weight: 700; }
 @media (width <= 900px) { #songBox { display: none; } }
 
-.seatGuest { margin-top: 4px; font-size: 14px; padding: 7px 10px; background: linear-gradient(180deg, #1f5f6b 0%, #0f3a44 60%, #072228 100%); border-color: var(--neon); box-shadow: 0 0 0 1px #000, 0 0 10px var(--neon-glow); }
-
 /* ------------------------------------------------------------------ */
-/* Drawn icons (uiIcons.js) and the hover tip (tooltips.js): buttons    */
-/* show an icon, and hovering one names it and says what it does.       */
+/* Top-right: stat boxes (a number with a small label under it, like    */
+/* Nightclub City's Popularity and Luxury), and the round action        */
+/* buttons under them.                                                  */
 /* ------------------------------------------------------------------ */
-.uiGlyph {
-  display: block; width: 100%; height: 100%; overflow: visible;
-  /* A dark outline all round, like drawn cartoon art, and a soft drop. */
-  filter: drop-shadow(1px 0 0 #000) drop-shadow(-1px 0 0 #000) drop-shadow(0 1px 0 #000) drop-shadow(0 -1px 0 #000) drop-shadow(0 2px 2px rgba(0, 0, 0, 0.6));
+#hudStats {
+  position: fixed; top: calc(8px + env(safe-area-inset-top, 0px)); right: 10px; z-index: 10;
+  display: flex; gap: 6px;
 }
-.squareButton.iconOnly { padding: 5px; box-sizing: border-box; }
-.songButton.iconOnly { width: 26px; height: 22px; padding: 3px 5px; box-sizing: border-box; }
+.statButton {
+  display: flex; flex-direction: column; justify-content: center;
+  min-width: 74px; padding: 4px 10px 3px; cursor: default; border-radius: 12px; text-align: center; box-sizing: border-box;
+  background: var(--panel-deep); border: 3px solid var(--nc-frame); box-shadow: var(--panel-shadow);
+}
+.statValue {
+  display: flex; align-items: center; justify-content: center; gap: 5px;
+  font-family: var(--display-font); font-weight: 900; font-size: 18px; text-shadow: var(--outline); font-variant-numeric: tabular-nums; white-space: nowrap;
+}
+.guestsStat .statValue { font-family: var(--ui-font); font-weight: 800; font-size: 17px; }
+.statLabel { font-size: 9px; font-weight: 800; letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); text-shadow: var(--outline); }
+.statIcon { display: inline-flex; width: 19px; height: 19px; }
 
-#hoverTip {
-  position: fixed; z-index: 100; pointer-events: none; max-width: 260px;
-  padding: 7px 12px 8px; border-radius: var(--radius);
-  background: var(--glass); border: 1px solid var(--neon);
-  box-shadow: 0 0 0 1px #000, 0 0 12px var(--neon-glow);
-  text-shadow: var(--outline); opacity: 0; transition: opacity 0.12s ease;
-}
-#hoverTip.show { opacity: 1; }
-#hoverTip .tipName { font-size: 14px; font-weight: 700; color: #fff; white-space: nowrap; }
-#hoverTip .tipText { margin-top: 3px; font-size: 12px; line-height: 1.4; color: #cfd8e6; }
-#hoverTip::after {
-  content: ''; position: absolute; left: var(--arrow-x, 50%); margin-left: -6px;
-  border: 6px solid transparent;
-}
-#hoverTip[data-side="above"]::after { bottom: -12px; border-top-color: var(--neon); }
-#hoverTip[data-side="below"]::after { top: -12px; border-bottom-color: var(--neon); }
-
-/* Round icon buttons (Bass Boost, Throw a Party, Open the doors): a
-   glossy disc with a coloured neon ring. */
 #actionButtons {
-  position: fixed; top: calc(66px + env(safe-area-inset-top, 0px)); right: 12px; z-index: 10;
+  position: fixed; top: calc(76px + env(safe-area-inset-top, 0px)); right: 10px; z-index: 10;
   display: flex; gap: 12px;
 }
 .roundButton {
-  position: relative; width: 58px; height: 58px; box-sizing: border-box; padding: 12px;
-  border-radius: 50%; cursor: pointer; user-select: none;
-  background: radial-gradient(circle at 50% 30%, #4a2650 0%, #1a0820 60%, #0a030c 100%);
-  border: 3px solid var(--magenta);
-  box-shadow: 0 0 0 1px #000, 0 0 14px rgba(255, 61, 220, 0.65), inset 0 2px 0 rgba(255, 255, 255, 0.25), inset 0 -6px 10px rgba(0, 0, 0, 0.5);
-  transition: transform 0.12s ease, box-shadow 0.12s ease, filter 0.2s ease;
+  position: relative; width: 58px; height: 58px; box-sizing: border-box; padding: 11px;
+  border-radius: 16px; cursor: pointer; user-select: none;
+  background: var(--panel-deep); border: 3px solid #fff;
+  box-shadow: 0 0 0 2px var(--nc-frame), 0 0 14px rgba(255, 61, 220, 0.6), 0 4px 8px rgba(0, 0, 0, 0.5);
+  transition: transform 0.12s ease, filter 0.2s ease;
 }
 .roundButton:hover { transform: scale(1.07); }
 .roundButton:active { transform: scale(0.97); }
-/* A small timer pill under the button (Bass Boost running or recharging). */
 .roundTimer {
-  position: absolute; left: 50%; bottom: -9px; transform: translateX(-50%);
-  padding: 1px 6px; border-radius: 8px; background: #000; border: 1px solid #4a5263;
-  font-size: 11px; font-weight: 700; color: #fff; white-space: nowrap; font-variant-numeric: tabular-nums;
+  position: absolute; left: 50%; bottom: -10px; transform: translateX(-50%);
+  padding: 1px 7px; border-radius: 9px; background: var(--nc-frame); border: 2px solid #fff;
+  font-size: 11px; font-weight: 800; color: #fff; white-space: nowrap; font-variant-numeric: tabular-nums;
 }
 .roundTimer:empty { display: none; }
-
-.boostButton[data-state="ready"] { animation: readyPulse 1.6s ease-in-out infinite; }
-.boostButton[data-state="active"] {
-  background: radial-gradient(circle at 50% 30%, #6a3a10 0%, #2a1404 60%, #100702 100%);
-  border-color: #ffa040; box-shadow: 0 0 0 1px #000, 0 0 18px rgba(255, 160, 64, 0.9), inset 0 2px 0 rgba(255, 255, 255, 0.25);
-  cursor: default;
-}
-.boostButton[data-state="cooldown"], .partyButton[data-state="off"] {
-  background: radial-gradient(circle at 50% 30%, #2c3240 0%, #12151d 70%);
-  border-color: #4a5263; box-shadow: var(--panel-shadow);
-  filter: grayscale(0.85) brightness(0.75); cursor: default;
-}
-.partyButton {
-  background: radial-gradient(circle at 50% 30%, #5a4410 0%, #261a04 60%, #0e0a02 100%);
-  border-color: var(--gold); box-shadow: 0 0 0 1px #000, 0 0 14px #ffd24d99, inset 0 2px 0 rgba(255, 255, 255, 0.25), inset 0 -6px 10px rgba(0, 0, 0, 0.5);
-}
-.partyButton[data-state="active"] {
-  border-color: var(--magenta); box-shadow: 0 0 0 1px #000, 0 0 18px #ff3ddcb3, inset 0 2px 0 rgba(255, 255, 255, 0.25);
-  animation: readyPulse 1.2s ease-in-out infinite; cursor: default;
-}
 @keyframes readyPulse {
   0%, 100% { filter: brightness(1); }
   50% { filter: brightness(1.25) drop-shadow(0 0 6px rgba(255, 255, 255, 0.35)); }
 }
-.openButton.roundButton {
-  position: fixed; width: 54px; height: 54px; padding: 11px;
-  background: radial-gradient(circle at 50% 30%, #2f7a34 0%, #104014 60%, #062008 100%);
-  border-color: #5dff6a; box-shadow: 0 0 0 1px #000, 0 0 16px #5dff6aa6, inset 0 2px 0 rgba(255, 255, 255, 0.3);
-  animation: readyPulse 1.4s ease-in-out infinite;
-}
-.openButton.roundButton:hover { transform: translateX(-50%) scale(1.07); }
-.openButton.roundButton:active { transform: translateX(-50%) scale(0.97); }
-
-/* ------------------------------------------------------------------ */
-/* Nightclub City's look: glossy, bubbly sky-blue panels with a dark    */
-/* navy frame and a white shine across the top half.                    */
-/* ------------------------------------------------------------------ */
-:root {
-  --shine: linear-gradient(180deg, rgba(255, 255, 255, 0.55) 0%, rgba(255, 255, 255, 0.18) 46%, rgba(255, 255, 255, 0) 50%);
-  --nc-blue: linear-gradient(180deg, #8fd6ff 0%, #45a3ea 50%, #1f6cc2 100%);
-  --nc-deep: linear-gradient(180deg, #2a64b0 0%, #163f7a 55%, #0d2a55 100%);
-  --nc-frame: #0d2340;
+.boostButton[data-state="ready"] { animation: readyPulse 1.6s ease-in-out infinite; }
+.boostButton[data-state="active"] { background: var(--shine), linear-gradient(180deg, #ffb35c 0%, #f06a10 55%, #a8400a 100%); cursor: default; }
+.rushButton { background: var(--shine), linear-gradient(180deg, #6ff0e0 0%, #19a99a 55%, #0b6a61 100%); box-shadow: 0 0 0 2px var(--nc-frame), 0 0 14px #3fe0d099, 0 4px 8px rgba(0, 0, 0, 0.5); }
+.rushButton[data-state="active"] { background: var(--shine), var(--nc-green); animation: readyPulse 1.2s ease-in-out infinite; cursor: default; }
+.partyButton { background: var(--shine), linear-gradient(180deg, #ffd65a 0%, #f39c12 55%, #b8650a 100%); box-shadow: 0 0 0 2px var(--nc-frame), 0 0 14px #ffd24d99, 0 4px 8px rgba(0, 0, 0, 0.5); }
+.partyButton[data-state="active"] { background: var(--shine), linear-gradient(180deg, #ff8ae6 0%, #d726b8 55%, #7d0f6a 100%); animation: readyPulse 1.2s ease-in-out infinite; cursor: default; }
+.boostButton[data-state="cooldown"], .rushButton[data-state="cooldown"], .partyButton[data-state="off"] {
+  background: var(--shine), linear-gradient(180deg, #8a96a8, #4a5466); border-color: #c9d2de;
+  box-shadow: var(--rim); filter: grayscale(0.85) brightness(0.8); cursor: default; animation: none;
 }
 
-/* The shop dock along the bottom. */
+/* The party banner, while a party is on (see parties.js). */
+.partyBanner {
+  display: none; position: fixed; top: calc(152px + env(safe-area-inset-top, 0px)); right: 10px; z-index: 10;
+  width: 214px; padding: 6px 12px 8px; border-radius: 14px; text-align: right; box-sizing: border-box;
+  background: var(--shine), linear-gradient(180deg, #ff8ae6 0%, #b81f9c 55%, #5e0b50 100%);
+  border: 3px solid var(--nc-frame); box-shadow: var(--panel-shadow); text-shadow: var(--outline);
+}
+.partyBanner.open { display: block; }
+.bannerSmall { font-size: 11px; font-weight: 800; color: #ffe6fb; }
+.bannerName { font-family: var(--display-font); font-weight: 900; font-size: 17px; margin: 1px 0 4px; }
+.bannerBar { height: 8px; border-radius: 4px; background: #2a0626; border: 1px solid #fff8; overflow: hidden; margin-bottom: 3px; }
+#bannerFill { height: 100%; width: 0%; background: linear-gradient(90deg, #8fe8ff, var(--gold)); transition: width 0.5s linear; }
+
+/* ------------------------------------------------------------------ */
+/* Right edge: zoom in, a slider, zoom out.                             */
+/* ------------------------------------------------------------------ */
+#zoomBar {
+  position: fixed; right: 12px; top: 50%; transform: translateY(-40%); z-index: 10;
+  display: flex; flex-direction: column; align-items: center; gap: 8px; padding: 7px 6px; border-radius: 26px;
+  background: var(--panel-deep); border: 3px solid var(--nc-frame); box-shadow: var(--panel-shadow);
+}
+.zoomButton {
+  width: 34px; height: 34px; box-sizing: border-box; padding: 7px; border-radius: 50%; cursor: pointer; user-select: none;
+  background: var(--shine), var(--nc-blue); border: 2px solid #fff; box-shadow: 0 0 0 2px var(--nc-frame);
+}
+.zoomButton:hover { filter: brightness(1.15); }
+.zoomButton:active { transform: scale(0.94); }
+/* The slider is drawn sideways and turned upright: up zooms in. */
+#zoomSlider {
+  -webkit-appearance: none; appearance: none; width: 120px; height: 18px; margin: 51px -51px; transform: rotate(-90deg);
+  background: transparent; cursor: pointer;
+}
+#zoomSlider::-webkit-slider-runnable-track { height: 8px; border-radius: 4px; background: #071226; border: 2px solid #5c8fd0; }
+#zoomSlider::-moz-range-track { height: 8px; border-radius: 4px; background: #071226; border: 2px solid #5c8fd0; }
+#zoomSlider::-webkit-slider-thumb {
+  -webkit-appearance: none; width: 20px; height: 20px; margin-top: -8px; border-radius: 50%;
+  background: var(--shine), var(--nc-gold); border: 2px solid #fff; box-shadow: 0 0 0 2px var(--nc-frame);
+}
+#zoomSlider::-moz-range-thumb { width: 18px; height: 18px; border-radius: 50%; background: var(--nc-gold); border: 2px solid #fff; }
+@media (height <= 560px) { #zoomBar { display: none; } }
+
+/* ------------------------------------------------------------------ */
+/* Bottom: the shop. Round drawn buttons in the bottom corners, and the */
+/* open one's glossy blue panel between them (see scene/shop.js).       */
+/* ------------------------------------------------------------------ */
 #dock {
-  position: fixed; left: 50%; transform: translateX(-50%); z-index: 30;
-  bottom: calc(4px + env(safe-area-inset-bottom, 0px));
-  width: min(680px, calc(100vw - 16px));
+  position: fixed; left: 0; right: 0; z-index: 30; pointer-events: none;
+  bottom: calc(6px + env(safe-area-inset-bottom, 0px));
+  display: flex; align-items: flex-end; justify-content: space-between; gap: 10px; padding: 0 10px;
 }
-#dockTabs {
-  position: relative; z-index: 2; display: flex; align-items: flex-end; gap: 14px;
-  height: 62px; padding-left: 22px; margin-bottom: -14px; pointer-events: none;
+.dockSide { display: flex; align-items: flex-end; gap: 7px; flex: none; pointer-events: auto; }
+.sideColumn { display: flex; flex-direction: column; gap: 7px; }
+.sideButton {
+  position: relative; width: 54px; height: 54px; box-sizing: border-box; padding: 7px; border-radius: 50%;
+  cursor: pointer; user-select: none;
+  background: var(--panel-deep); border: 3px solid #fff; box-shadow: var(--rim);
+  transition: transform 0.12s ease, box-shadow 0.12s ease, filter 0.12s ease;
 }
-.dockTab {
-  width: 66px; height: 66px; cursor: pointer; pointer-events: auto;
-  transition: transform 0.12s ease, filter 0.12s ease;
+.sideButton.big { width: 84px; height: 84px; padding: 10px; background: var(--panel); }
+.sideButton:hover { transform: translateY(-3px) scale(1.06); filter: brightness(1.08); }
+.sideButton:active { transform: scale(0.96); }
+.sideButton.active { box-shadow: 0 0 0 2px var(--nc-frame), 0 0 0 5px var(--gold), 0 0 18px var(--gold); transform: translateY(-3px); }
+#dockCenter {
+  flex: 1 1 auto; max-width: 780px; min-width: 0; display: flex; flex-direction: column; align-self: flex-end;
+  pointer-events: none;
 }
-.dockTab .uiArt { width: 100%; height: 100%; filter: drop-shadow(0 4px 3px rgba(0, 0, 0, 0.55)); }
-.dockTab:hover { transform: translateY(-5px) scale(1.06); }
-.dockTab.active { transform: translateY(-3px) scale(1.1); }
-.dockTab.active .uiArt { filter: drop-shadow(0 0 5px #fff) drop-shadow(0 0 12px #ffe45c) drop-shadow(0 4px 3px rgba(0, 0, 0, 0.55)); }
+#dockCenter > * { pointer-events: auto; }
+/* The store's drawn categories stand on the panel's top edge. */
+#storeTabs {
+  display: none; position: relative; z-index: 2; align-items: flex-end; gap: 4px;
+  height: 58px; padding-left: 16px; margin-bottom: -8px;
+}
+#dock[data-mode="store"] #storeTabs { display: flex; }
+.storeTab {
+  position: relative; width: 56px; height: 56px; box-sizing: border-box; padding: 4px; cursor: pointer;
+  border-radius: 14px 14px 6px 6px; transition: transform 0.12s ease;
+}
+.storeTab:hover { transform: translateY(-4px); }
+.storeTab.active {
+  background: var(--panel-deep); border: 3px solid var(--nc-frame); border-bottom: none;
+  box-shadow: inset 0 0 0 2px rgba(205, 240, 255, 0.45);
+}
+.storeTab.hasNew { animation: readyPulse 1.4s ease-in-out infinite; }
 #dockPanel {
   position: relative; display: flex; align-items: center; gap: 8px;
-  height: 128px; padding: 10px 10px 8px; box-sizing: border-box; border-radius: 18px;
-  background: var(--shine), var(--nc-blue);
-  border: 3px solid var(--nc-frame);
+  height: 150px; padding: 10px; box-sizing: border-box; border-radius: 20px;
+  background: var(--panel); border: 3px solid var(--nc-frame);
   box-shadow: inset 0 0 0 2px rgba(205, 240, 255, 0.55), inset 0 -8px 14px rgba(8, 30, 70, 0.35), 0 6px 18px rgba(0, 0, 0, 0.6);
 }
+#dock[data-mode="closed"] #dockPanel { display: none; }
 .dockArrow {
-  flex: 0 0 38px; height: 38px; border-radius: 50%; cursor: pointer; position: relative;
-  background: var(--shine), var(--nc-deep); border: 2px solid #fff;
-  box-shadow: 0 0 0 2px var(--nc-frame), 0 2px 4px rgba(0, 0, 0, 0.5);
+  flex: 0 0 42px; height: 42px; border-radius: 50%; cursor: pointer; position: relative; box-sizing: border-box;
+  background: var(--panel-deep); border: 3px solid #fff; box-shadow: var(--rim);
 }
 .dockArrow::before {
-  content: ''; position: absolute; top: 50%; left: 50%; margin: -8px 0 0 -5px;
-  border: 8px solid transparent; border-left: 11px solid #fff; border-right: 0;
-  filter: drop-shadow(0 1px 0 var(--nc-frame));
+  content: ''; position: absolute; top: 50%; left: 50%; margin: -9px 0 0 -4px;
+  border: 9px solid transparent; border-left: 12px solid #fff; border-right: 0;
 }
-#dockPrev::before { transform: scaleX(-1); margin-left: -6px; }
+#dockPrev::before { transform: scaleX(-1); margin-left: -8px; }
 .dockArrow:hover { filter: brightness(1.2); }
 #shopItems {
   flex: 1 1 auto; display: flex; align-items: center; gap: 10px; height: 100%; padding: 0 2px;
   overflow-x: auto; overflow-y: hidden; scrollbar-width: none;
 }
 #shopItems::-webkit-scrollbar { display: none; }
+/* The green OK, shown while a panel is open. */
+#storeOk {
+  display: none; width: 76px; height: 54px; box-sizing: border-box; padding: 8px 20px; border-radius: 18px; cursor: pointer;
+  background: var(--shine), var(--nc-green); border: 3px solid #fff; box-shadow: var(--rim);
+}
+#dock[data-mode="store"] #storeOk, #dock[data-mode="main"] #storeOk { display: block; }
+#storeOk:hover { filter: brightness(1.12); transform: scale(1.04); }
+@media (width <= 1150px) {
+  .sideButton { width: 46px; height: 46px; padding: 6px; }
+  .sideButton.big { width: 70px; height: 70px; }
+  #storeOk { width: 62px; height: 46px; padding: 6px 15px; }
+}
+@media (width <= 860px) {
+  /* Narrow screens: the panel goes above the corner buttons. */
+  #dockCenter { position: fixed; left: 8px; right: 8px; bottom: calc(112px + env(safe-area-inset-bottom, 0px)); max-width: none; }
+}
+
+/* What you're holding, above the panel. */
+#selectedChip:empty { display: none; }
+#selectedChip {
+  position: fixed; bottom: calc(222px + env(safe-area-inset-bottom, 0px)); left: 50%; transform: translateX(-50%);
+  display: flex; align-items: center; gap: 8px; z-index: 31;
+  padding: 4px 14px 4px 4px; border-radius: 16px;
+  background: var(--panel-deep); border: 3px solid var(--nc-frame); box-shadow: var(--panel-shadow);
+  font-size: 13px; font-weight: 800; text-shadow: var(--outline);
+  pointer-events: none; white-space: nowrap;
+}
+#selectedChip .chipIcon {
+  width: 28px; height: 28px; border-radius: 8px; flex: 0 0 auto;
+  background-color: #10284c; background-size: contain; background-repeat: no-repeat; background-position: center;
+}
+#selectedChip .chipCost { color: var(--gold); }
 
 /* A card: a light glossy frame, the picture on a dark panel, and a navy
    strip with the price. */
 .propSlot {
-  position: relative; flex: 0 0 auto; width: 84px; height: 100px; box-sizing: border-box;
-  display: flex; flex-direction: column; padding: 4px 4px 0; border-radius: 12px; cursor: pointer;
-  background: linear-gradient(180deg, #f4fbff 0%, #b9e3fb 55%, #86c6ee 100%);
-  border: 2px solid var(--nc-frame);
-  box-shadow: 0 3px 5px rgba(0, 0, 0, 0.45);
+  position: relative; flex: 0 0 auto; width: 96px; height: 120px; box-sizing: border-box;
+  display: flex; flex-direction: column; padding: 4px 4px 0; border-radius: 14px; cursor: pointer;
+  background: var(--card); border: 2px solid var(--nc-frame); box-shadow: 0 3px 5px rgba(0, 0, 0, 0.45);
   transition: transform 0.12s ease, box-shadow 0.12s ease;
 }
 .propSlot:hover { transform: translateY(-3px); }
 .propButton {
-  flex: 1 1 auto; position: relative; border-radius: 8px; overflow: hidden;
-  background: radial-gradient(circle at 50% 40%, #3b78bf 0%, #1a3f73 70%, #10284c 100%);
-  box-shadow: inset 0 2px 5px rgba(0, 0, 0, 0.5);
+  flex: 1 1 auto; position: relative; border-radius: 10px; overflow: hidden;
+  background: var(--card-pic); box-shadow: inset 0 2px 5px rgba(0, 0, 0, 0.5);
 }
 .propButton .icon {
-  position: absolute; inset: 3px; background-size: contain; background-repeat: no-repeat; background-position: center;
+  position: absolute; inset: 4px; background-size: contain; background-repeat: no-repeat; background-position: center;
   filter: drop-shadow(0 2px 2px rgba(0, 0, 0, 0.6));
 }
-.propButton .icon .uiArt { width: 100%; height: 100%; }
 .propCost {
-  margin: 4px -4px 0; height: 22px; border-radius: 0 0 10px 10px;
+  margin: 4px -4px 0; height: 24px; border-radius: 0 0 12px 12px;
   display: flex; align-items: center; justify-content: center;
   background: var(--nc-deep); border-top: 1px solid #6fb6ff;
-  font-size: 13px; font-weight: 700; color: #fff; white-space: nowrap; text-shadow: var(--outline);
+  font-size: 13px; font-weight: 800; color: #fff; white-space: nowrap; text-shadow: var(--outline);
 }
 .propSlot:has(.propButton.selected) {
   transform: translateY(-4px);
-  box-shadow: 0 0 0 3px #ffe45c, 0 0 16px #ffe45c, 0 3px 5px rgba(0, 0, 0, 0.45);
+  box-shadow: 0 0 0 3px var(--gold), 0 0 16px var(--gold), 0 3px 5px rgba(0, 0, 0, 0.45);
 }
-.propSlot:has(.propButton.unaffordable) .propCost { color: #ff9aa6; }
+.propSlot:has(.propButton.unaffordable) .propCost { color: #ffb0b8; }
 .propSlot:has(.propButton.unaffordable) .icon { filter: grayscale(0.5) brightness(0.75); }
 .propSlot:has(.propButton.locked) { cursor: not-allowed; }
 .propSlot:has(.propButton.locked):hover { transform: none; }
 .propButton.locked .icon { filter: grayscale(1) brightness(0.5); }
-.propSlot.emptySlot { cursor: default; opacity: 0.75; }
+/* "NEW" on things unlocked at the last level or two. */
+.newTag {
+  position: absolute; top: 2px; left: 0; z-index: 2; padding: 2px 7px; border-radius: 9px; transform: rotate(-10deg);
+  background: var(--nc-red); border: 2px solid #fff; box-shadow: 0 0 0 1px var(--nc-frame), 0 2px 3px rgba(0, 0, 0, 0.5);
+  font-family: var(--display-font); font-weight: 900; font-size: 10px; letter-spacing: 0.04em; color: #fff; text-shadow: var(--outline); pointer-events: none;
+}
+.propSlot.emptySlot { cursor: default; opacity: 0.8; width: 150px; }
+.propSlot.emptySlot:hover { transform: none; }
+.propSlot.emptySlot .propCost { font-size: 11px; padding: 0 6px; white-space: normal; text-align: center; line-height: 1.1; }
 /* Expand: the green "Build it!" card that confirms the row shown in green. */
 .propSlot.confirmSlot { box-shadow: 0 0 0 3px #7dff6a, 0 0 16px #5dff6aa6, 0 3px 5px rgba(0, 0, 0, 0.45); }
-.propSlot.confirmSlot .propButton { background: var(--shine), linear-gradient(180deg, #8af27a 0%, #2fae2a 55%, #17701a 100%); }
-.propSlot.confirmSlot .icon { inset: 18px; }
-.propSlot.emptySlot:hover { transform: none; }
-.propSlot.emptySlot .propButton::after {
-  content: '?'; position: absolute; inset: 0; display: flex; align-items: center; justify-content: center;
-  font-size: 28px; font-weight: 700; color: rgba(255, 255, 255, 0.35);
-}
-.propSlot.staffed .propCost { color: #9dff6a; }
+.propSlot.confirmSlot .propButton { background: var(--shine), var(--nc-green); }
+.propSlot.confirmSlot .icon { inset: 20px; }
+.propSlot.staffed .propCost { color: var(--cash); }
 .staffFire {
-  position: absolute; top: -7px; right: -7px; width: 20px; height: 20px; border-radius: 50%;
+  position: absolute; top: -7px; right: -7px; width: 22px; height: 22px; border-radius: 50%;
   display: flex; align-items: center; justify-content: center; cursor: pointer;
-  font-size: 11px; font-weight: 700; color: #fff;
-  background: linear-gradient(180deg, #ff7a7a, #c62828); border: 2px solid var(--nc-frame);
+  font-size: 11px; font-weight: 800; color: #fff;
+  background: var(--nc-red); border: 2px solid #fff; box-shadow: 0 0 0 1px var(--nc-frame);
 }
+/* Edit tools are cards too; the picked tool glows gold. */
+.toolSlot .propCost { display: none; }
+.toolSlot .propButton { margin-bottom: 4px; }
+.toolSlot .icon { inset: 14px; }
 /* The Celebrity List: a portrait with the name across the top and the fame
-   stars along the bottom; the status (or the level that unlocks them) in
-   the strip under it. Locked ones are dark silhouettes. */
-.propSlot.celebSlot { width: 108px; height: 104px; }
+   stars along the bottom; the status in the strip under it. Locked ones are
+   dark silhouettes. */
+.propSlot.celebSlot { width: 112px; }
 .propSlot.celebSlot .icon { inset: 0; filter: none; }
 .celebName, .celebStars {
   position: absolute; left: 0; right: 0; text-align: center; pointer-events: none;
   white-space: nowrap; overflow: hidden; text-overflow: ellipsis; color: #fff; text-shadow: var(--outline);
 }
-.celebName { top: 0; padding: 2px 3px; font-size: 11px; font-weight: 700; background: linear-gradient(180deg, rgba(8, 20, 45, 0.85), rgba(8, 20, 45, 0)); }
+.celebName { top: 0; padding: 2px 3px; font-size: 11px; font-weight: 800; background: linear-gradient(180deg, rgba(8, 20, 45, 0.85), rgba(8, 20, 45, 0)); }
 .celebStars { bottom: 1px; font-size: 14px; letter-spacing: 1px; color: #ffd84a; -webkit-text-stroke: 1px #6b3a00; paint-order: stroke fill; }
 .propSlot.celebSlot.locked .icon { filter: brightness(0) opacity(0.55); }
 .propSlot.celebSlot.locked .celebStars { color: #8d98ad; -webkit-text-stroke: 1px #2a3346; }
-.propSlot.celebSlot.available .propCost { color: #9dff6a; }
+.propSlot.celebSlot.available .propCost { color: var(--cash); }
 .propSlot.celebSlot.coming .propCost { color: #8fe0ff; }
 .propSlot.celebSlot.inside .propCost { color: #ffd84a; }
 .propSlot.celebSlot.inside { box-shadow: 0 0 0 3px #ffd24d, 0 0 14px #ffd24d, 0 3px 5px rgba(0, 0, 0, 0.45); }
 .propButton.locked .celebName { color: #c4ccd9; }
 
-/* The rest of the HUD in the same glossy blue. */
-.statButton {
-  background: var(--shine), var(--nc-deep); border: 2px solid var(--nc-frame);
-  box-shadow: inset 0 0 0 2px rgba(150, 210, 255, 0.55), 0 3px 6px rgba(0, 0, 0, 0.5);
-  border-radius: 10px;
-}
-.squareButton {
-  background: var(--shine), var(--nc-blue); border: 2px solid var(--nc-frame);
-  box-shadow: inset 0 0 0 1px rgba(205, 240, 255, 0.55), 0 2px 4px rgba(0, 0, 0, 0.5);
-  border-radius: 8px;
-}
-.squareButton:hover { filter: brightness(1.15); border-color: var(--nc-frame); }
-.roundButton {
-  border-radius: 14px; border: 3px solid #fff;
-  background: var(--shine), var(--nc-deep);
-  box-shadow: 0 0 0 2px var(--nc-frame), 0 0 14px rgba(255, 61, 220, 0.6), 0 4px 8px rgba(0, 0, 0, 0.5);
-}
-.partyButton {
-  background: var(--shine), linear-gradient(180deg, #ffd65a 0%, #f39c12 55%, #b8650a 100%);
-  border-color: #fff; box-shadow: 0 0 0 2px var(--nc-frame), 0 0 14px #ffd24d99, 0 4px 8px rgba(0, 0, 0, 0.5);
-}
-.boostButton[data-state="active"] { background: var(--shine), linear-gradient(180deg, #ffb35c 0%, #f06a10 55%, #a8400a 100%); border-color: #fff; }
-.partyButton[data-state="active"] { background: var(--shine), linear-gradient(180deg, #ff8ae6 0%, #d726b8 55%, #7d0f6a 100%); border-color: #fff; }
-.boostButton[data-state="cooldown"], .partyButton[data-state="off"] { background: var(--shine), linear-gradient(180deg, #8a96a8, #4a5466); border-color: #c9d2de; }
-.openButton.roundButton { border-radius: 14px; border-color: #fff; background: var(--shine), linear-gradient(180deg, #8af27a 0%, #2fae2a 55%, #17701a 100%); box-shadow: 0 0 0 2px var(--nc-frame), 0 0 16px #5dff6aa6, 0 4px 8px rgba(0, 0, 0, 0.5); }
-#hoverTip { background: var(--shine), var(--nc-deep); border: 2px solid var(--nc-frame); box-shadow: inset 0 0 0 1px rgba(150, 210, 255, 0.6), 0 4px 10px rgba(0, 0, 0, 0.6); border-radius: 10px; }
-#hoverTip[data-side="above"]::after { border-top-color: var(--nc-frame); }
-#hoverTip[data-side="below"]::after { border-bottom-color: var(--nc-frame); }
-
-/* The store (Decorations): the main tabs make way for a row of drawn
-   categories, the open one in a dark rounded tab; items stand straight on
-   the panel with their price under them; a green OK goes back. */
-#storeTabs, #storeOk { display: none; }
-#dock[data-mode="store"] #dockTabs { display: none; }
-#dock[data-mode="store"] #storeTabs {
-  position: relative; z-index: 2; display: flex; align-items: flex-end; gap: 6px;
-  height: 64px; padding-left: 14px; margin-bottom: -10px;
-}
-.storeTab {
-  width: 62px; height: 62px; box-sizing: border-box; padding: 4px; cursor: pointer;
-  border-radius: 14px 14px 6px 6px; transition: transform 0.12s ease;
-}
-.storeTab .uiArt { width: 100%; height: 100%; filter: drop-shadow(0 3px 2px rgba(0, 0, 0, 0.55)); }
-.storeTab:hover { transform: translateY(-4px); }
-.storeTab.active {
-  background: linear-gradient(180deg, #2c3546 0%, #141a26 100%);
-  border: 2px solid var(--nc-frame); border-bottom: none;
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.25), 0 0 12px rgba(95, 227, 255, 0.55);
-}
-.storeTab.active .uiArt { filter: drop-shadow(0 0 6px rgba(140, 235, 255, 0.9)) drop-shadow(0 3px 2px rgba(0, 0, 0, 0.55)); }
-#dock[data-mode="closed"] #dockPanel, #dock[data-mode="closed"] #storeTabs { display: none; }
-#dock[data-mode="closed"] #dockTabs { margin-bottom: 0; }
-#dock[data-mode="store"] #storeOk, #dock[data-mode="main"] #storeOk {
-  display: block; position: absolute; right: 14px; top: 4px; z-index: 3;
-  width: 62px; height: 40px; box-sizing: border-box; padding: 6px 17px; border-radius: 12px; cursor: pointer;
-  background: var(--shine), linear-gradient(180deg, #8af27a 0%, #2fae2a 55%, #17701a 100%);
-  border: 3px solid #fff; box-shadow: 0 0 0 2px var(--nc-frame), 0 4px 8px rgba(0, 0, 0, 0.5);
-}
-#storeOk:hover { filter: brightness(1.12); }
-#dock[data-mode="store"] .propSlot {
-  width: 88px; padding: 0; background: none; border: none; box-shadow: none; border-radius: 8px;
-}
-#dock[data-mode="store"] .propButton { background: none; box-shadow: none; }
-#dock[data-mode="store"] .propButton .icon { inset: 0 4px; filter: drop-shadow(0 3px 2px rgba(0, 0, 0, 0.5)); }
+/* In the store, items stand straight on the panel with their price under
+   them, bigger than the other tabs' cards. */
+#dock[data-mode="store"] .propSlot { width: 104px; height: 126px; padding: 0; background: none; border: none; box-shadow: none; border-radius: 10px; }
+#dock[data-mode="store"] .propButton { background: none; box-shadow: none; overflow: visible; }
+#dock[data-mode="store"] .propButton .icon { inset: 0 2px; filter: drop-shadow(0 3px 2px rgba(0, 0, 0, 0.5)); }
 #dock[data-mode="store"] .propCost {
-  margin: 2px 0 0; height: 20px; background: none; border: none;
-  font-size: 15px; -webkit-text-stroke: 3px #0b1f3d; paint-order: stroke fill; text-shadow: none;
+  margin: 2px auto 0; height: 22px; padding: 0 10px; border-radius: 11px; border: 2px solid #fff;
+  background: var(--panel-deep); box-shadow: 0 0 0 1px var(--nc-frame);
+  font-size: 14px; -webkit-text-stroke: 0; text-shadow: var(--outline);
 }
-#dock[data-mode="store"] .propSlot:has(.propButton.selected) { background: rgba(255, 255, 255, 0.22); box-shadow: 0 0 0 2px #ffe45c, 0 0 14px #ffe45c; }
-#dock[data-mode="store"] .propSlot:has(.propButton.selected) .propCost { color: #ffe45c; }
-/* The store's staff cards keep their frames (they have a let-go button). */
-#dock[data-mode="store"] .propSlot.staffSlot { background: linear-gradient(180deg, #f4fbff 0%, #b9e3fb 55%, #86c6ee 100%); border: 2px solid var(--nc-frame); padding: 4px 4px 0; }
-#dock[data-mode="store"] .staffSlot .propButton { background: radial-gradient(circle at 50% 40%, #3b78bf 0%, #1a3f73 70%, #10284c 100%); }
-#dock[data-mode="store"] .staffSlot .propCost { margin: 3px -4px 0; background: var(--nc-deep); -webkit-text-stroke: 0; font-size: 11px; text-shadow: var(--outline); }
+#dock[data-mode="store"] .propSlot:has(.propButton.locked) .propCost { background: linear-gradient(180deg, #7a8698, #3c4658); font-size: 12px; }
+#dock[data-mode="store"] .propSlot:has(.propButton.selected) { background: rgba(255, 255, 255, 0.25); box-shadow: 0 0 0 3px var(--gold), 0 0 14px var(--gold); }
+#dock[data-mode="store"] .propSlot:has(.propButton.selected) .propCost { color: var(--gold); }
+#dock[data-mode="store"] .propSlot.emptySlot { width: 220px; }
+#dock[data-mode="store"] .propSlot.emptySlot .propCost { height: auto; padding: 4px 10px; }
 
-/* Edit tools are cards too; Edit mode tints the picked tool gold. */
-.toolSlot .propCost { display: none; }
-.toolSlot .propButton { margin-bottom: 4px; }
-.toolSlot:has(.propButton.selected) { box-shadow: 0 0 0 3px #ffe45c, 0 0 16px #ffe45c, 0 3px 5px rgba(0, 0, 0, 0.45); }
+/* ------------------------------------------------------------------ */
+/* Messages and popups.                                                 */
+/* ------------------------------------------------------------------ */
+#toast {
+  position: fixed; top: calc(12px + env(safe-area-inset-top, 0px)); left: 50%; transform: translateX(-50%) translateY(-8px) scale(0.95);
+  max-width: min(520px, calc(100vw - 680px)); min-width: 200px; text-align: center; z-index: 40; pointer-events: none;
+  padding: 9px 20px; border-radius: 18px;
+  background: var(--panel-deep); border: 3px solid #fff; box-shadow: var(--rim);
+  font-size: 15px; font-weight: 800; text-shadow: var(--outline);
+  opacity: 0; transition: opacity 0.3s ease, transform 0.3s ease;
+}
+#toast.show { opacity: 1; transform: translateX(-50%) translateY(0) scale(1); }
+@media (width <= 1100px) { #toast { top: calc(130px + env(safe-area-inset-top, 0px)); max-width: 80vw; } }
 
 /* Hover tips: a white speech bubble with dark text, like Nightclub City's. */
 #hoverTip {
+  position: fixed; z-index: 100; pointer-events: none; max-width: 260px;
+  padding: 7px 12px 8px; border-radius: 12px; text-align: center;
   background: linear-gradient(180deg, #ffffff 0%, #eef1f5 100%); color: #111;
-  border: 2px solid #3a3f4a; border-radius: 12px; text-shadow: none; text-align: center;
-  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.5);
+  border: 2px solid #3a3f4a; box-shadow: 0 4px 10px rgba(0, 0, 0, 0.5);
+  opacity: 0; transition: opacity 0.12s ease;
 }
-#hoverTip .tipName { color: #111; font-size: 15px; white-space: normal; }
-#hoverTip .tipText { color: #333; font-weight: 700; font-size: 12px; }
-#hoverTip[data-side="above"]::after { border-top-color: #3a3f4a; }
-#hoverTip[data-side="below"]::after { border-bottom-color: #3a3f4a; }
-
-/* The level-up menu: a glossy blue card with a gold star, the new level,
-   and a card for each thing it unlocked (see showLevelUp() in hud.js). */
-#levelUp { z-index: 60; }
-.levelCard {
-  position: relative; width: min(520px, calc(100vw - 32px)); padding: 46px 18px 16px; margin-top: 30px;
-  border-radius: 20px; text-align: center;
-  background: var(--shine), var(--nc-blue); border: 3px solid var(--nc-frame);
-  box-shadow: inset 0 0 0 2px rgba(205, 240, 255, 0.55), 0 10px 30px rgba(0, 0, 0, 0.7);
-  animation: summaryIn 0.35s ease-out;
-}
-.levelBurst {
-  position: absolute; left: 50%; top: -58px; width: 108px; height: 108px; margin-left: -54px;
-  animation: levelSpin 0.7s ease-out;
-}
-.levelBurst .uiArt { width: 100%; height: 100%; filter: drop-shadow(0 0 14px #ffe45c) drop-shadow(0 4px 4px rgba(0, 0, 0, 0.5)); }
-@keyframes levelSpin { from { transform: scale(0.2) rotate(-200deg); } to { transform: scale(1) rotate(0); } }
-.levelTitle {
-  font-family: 'Arial Black', Arial, sans-serif; font-size: 34px; color: #ffe45c;
-  -webkit-text-stroke: 2px var(--nc-frame); paint-order: stroke fill; text-shadow: 0 3px 0 var(--nc-frame);
-}
-.levelSub { margin: 2px 0 10px; font-size: 15px; font-weight: 700; color: #fff; text-shadow: var(--outline); }
-#levelUnlocks { display: flex; flex-wrap: wrap; justify-content: center; gap: 10px; max-height: 46vh; overflow-y: auto; padding: 4px; }
-.unlockTile {
-  width: 96px; box-sizing: border-box; padding: 5px 5px 0; border-radius: 12px;
-  background: linear-gradient(180deg, #f4fbff 0%, #b9e3fb 55%, #86c6ee 100%);
-  border: 2px solid var(--nc-frame); box-shadow: 0 3px 5px rgba(0, 0, 0, 0.45);
-  animation: summaryIn 0.4s ease-out backwards;
-}
-.unlockPic {
-  height: 70px; border-radius: 8px; display: flex; align-items: center; justify-content: center;
-  font-size: 40px; background: radial-gradient(circle at 50% 40%, #3b78bf 0%, #1a3f73 70%, #10284c 100%) center / cover;
-  background-size: contain; background-repeat: no-repeat; background-position: center;
-  box-shadow: inset 0 2px 5px rgba(0, 0, 0, 0.5);
-}
-.unlockPic[style*="background-image"] { background-color: #1a3f73; }
-.unlockPic .uiArt { width: 58px; height: 58px; }
-.unlockFace { width: 100%; height: 100%; border-radius: 8px; }
-.unlockName {
-  margin: 4px -5px 0; padding: 3px 4px; min-height: 30px; box-sizing: border-box; border-radius: 0 0 10px 10px;
-  display: flex; align-items: center; justify-content: center;
-  background: var(--nc-deep); font-size: 11px; font-weight: 700; line-height: 1.15; color: #fff; text-shadow: var(--outline);
-}
-.levelButtons { display: flex; justify-content: center; gap: 14px; margin-top: 14px; }
-.levelButton {
-  width: 64px; height: 46px; box-sizing: border-box; padding: 5px; border-radius: 12px; cursor: pointer;
-  border: 3px solid #fff; box-shadow: 0 0 0 2px var(--nc-frame), 0 4px 8px rgba(0, 0, 0, 0.5);
-}
-.levelButton.ok { padding: 8px 18px; background: var(--shine), linear-gradient(180deg, #8af27a 0%, #2fae2a 55%, #17701a 100%); }
-.levelButton.shop { background: var(--shine), var(--nc-deep); }
-.levelButton:hover { filter: brightness(1.12); }
-/* Drink Rush: a teal round button beside Bass Boost (see boost.js). */
-.rushButton { background: var(--shine), linear-gradient(180deg, #6ff0e0 0%, #19a99a 55%, #0b6a61 100%); border-color: #fff; box-shadow: 0 0 0 2px var(--nc-frame), 0 0 14px #3fe0d099, 0 4px 8px rgba(0, 0, 0, 0.5); }
-.rushButton[data-state="active"] { background: var(--shine), linear-gradient(180deg, #b6ff8a 0%, #2fae2a 55%, #17701a 100%); animation: readyPulse 1.2s ease-in-out infinite; cursor: default; }
-.rushButton[data-state="cooldown"] { background: var(--shine), linear-gradient(180deg, #8a96a8, #4a5466); border-color: #c9d2de; filter: grayscale(0.85) brightness(0.75); cursor: default; }
+#hoverTip.show { opacity: 1; }
+#hoverTip .tipName { font-size: 15px; font-weight: 800; color: #111; }
+#hoverTip .tipText { margin-top: 3px; font-size: 12px; font-weight: 700; line-height: 1.4; color: #333; }
+#hoverTip::after { content: ''; position: absolute; left: var(--arrow-x, 50%); margin-left: -6px; border: 6px solid transparent; }
+#hoverTip[data-side="above"]::after { bottom: -12px; border-top-color: #3a3f4a; }
+#hoverTip[data-side="below"]::after { top: -12px; border-bottom-color: #3a3f4a; }
 
 /* Big popups in the middle of the screen ("Bass Boost!", "Drink Rush!",
    a celebrity arriving): pops in, holds a moment, floats up and fades. */
@@ -707,8 +486,7 @@ body { font-family: var(--ui-font); color: var(--ink); }
   transform: translate(-50%, 0); opacity: 0;
 }
 #bigPopup .bpTitle {
-  font-family: 'Arial Black', Arial, sans-serif; font-size: 46px; font-weight: 900; line-height: 1.05; letter-spacing: 0.01em;
-  color: #fff;
+  font-family: var(--display-font); font-weight: 900; font-size: 46px; font-weight: 900; line-height: 1.05; letter-spacing: 0.01em; color: #fff;
   text-shadow: 3px 0 0 #10233d, -3px 0 0 #10233d, 0 3px 0 #10233d, 0 -3px 0 #10233d,
     2px 2px 0 #10233d, -2px 2px 0 #10233d, 2px -2px 0 #10233d, -2px -2px 0 #10233d,
     0 6px 0 #10233d, 0 0 22px var(--bp-glow, #b06bff), 0 0 40px var(--bp-glow, #b06bff);
@@ -734,35 +512,163 @@ body { font-family: var(--ui-font); color: var(--ink); }
   100% { opacity: 0; transform: translate(-50%, -30px) scale(1); }
 }
 
-/* The party wrap-up (see showPartySummary()): the level-up card's look,
-   with a row per stat. */
+/* ------------------------------------------------------------------ */
+/* Dialogs: every one is the same glossy blue card with a gold title    */
+/* and pill buttons (level up, party wrap-up, party picker, new club,   */
+/* clear club).                                                         */
+/* ------------------------------------------------------------------ */
+.overlay {
+  display: none; position: fixed; inset: 0; z-index: 50;
+  align-items: center; justify-content: center;
+  background: rgba(4, 10, 26, 0.62);
+}
+.overlay.open { display: flex; }
+@keyframes summaryIn { from { transform: scale(0.9); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+.summaryCard, .levelCard {
+  position: relative; box-sizing: border-box; border-radius: 22px; text-align: center; text-shadow: var(--outline);
+  background: var(--panel); border: 3px solid var(--nc-frame);
+  box-shadow: inset 0 0 0 2px rgba(205, 240, 255, 0.55), 0 10px 30px rgba(0, 0, 0, 0.7);
+  animation: summaryIn 0.35s ease-out;
+}
+.summaryCard { width: min(380px, calc(100vw - 32px)); padding: 20px 20px 18px; }
+.summaryTitle, .levelTitle {
+  font-family: var(--display-font); font-weight: 900; font-size: 26px; color: var(--gold); line-height: 1.1;
+  -webkit-text-stroke: 2px var(--nc-frame); paint-order: stroke fill; text-shadow: 0 3px 0 var(--nc-frame);
+}
+.summaryVerdict, .levelSub { margin: 6px 0 12px; font-size: 14px; font-weight: 800; color: #fff; text-shadow: var(--outline); }
+.summaryButtons, .levelButtons { display: flex; justify-content: center; gap: 12px; margin-top: 16px; flex-wrap: wrap; }
+/* Pill buttons: green to go ahead, red for danger, navy to back out. */
+.summaryButton {
+  cursor: pointer; user-select: none; padding: 10px 22px; border-radius: 22px;
+  font-family: var(--display-font); font-weight: 900; font-size: 15px; color: #fff; text-shadow: var(--outline);
+  background: var(--shine), var(--nc-green); border: 3px solid #fff; box-shadow: var(--rim);
+}
+.summaryButton.danger { background: var(--shine), var(--nc-red); }
+.summaryButton.later { background: var(--panel-deep); }
+.summaryButton:hover { filter: brightness(1.1); }
+.summaryButton:active { transform: translateY(1px); }
+
+/* The level-up menu: the new level and a card for everything it unlocked
+   (see showLevelUp() in hud.js). */
+#levelUp { z-index: 60; }
+.levelCard { width: min(520px, calc(100vw - 32px)); padding: 46px 18px 16px; margin-top: 30px; }
+.levelTitle { font-size: 34px; }
+.levelBurst { position: absolute; left: 50%; top: -58px; width: 108px; height: 108px; margin-left: -54px; animation: levelSpin 0.7s ease-out; }
+.levelBurst .uiArt { width: 100%; height: 100%; filter: drop-shadow(0 0 14px #ffe45c) drop-shadow(0 4px 4px rgba(0, 0, 0, 0.5)); }
+@keyframes levelSpin { from { transform: scale(0.2) rotate(-200deg); } to { transform: scale(1) rotate(0); } }
+#levelUnlocks { display: flex; flex-wrap: wrap; justify-content: center; gap: 10px; max-height: 56vh; overflow-y: auto; padding: 4px; }
+.unlockTile {
+  width: 96px; box-sizing: border-box; padding: 5px 5px 0; border-radius: 12px;
+  background: var(--card); border: 2px solid var(--nc-frame); box-shadow: 0 3px 5px rgba(0, 0, 0, 0.45);
+  animation: summaryIn 0.4s ease-out backwards;
+}
+.unlockPic {
+  height: 70px; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 40px;
+  background: var(--card-pic); background-size: contain; background-repeat: no-repeat; background-position: center;
+  box-shadow: inset 0 2px 5px rgba(0, 0, 0, 0.5);
+}
+.unlockPic[style*="background-image"] { background-color: #1a3f73; }
+.unlockPic .uiArt { width: 58px; height: 58px; }
+.unlockFace { width: 100%; height: 100%; border-radius: 8px; }
+.unlockName {
+  margin: 4px -5px 0; padding: 3px 4px; min-height: 30px; box-sizing: border-box; border-radius: 0 0 10px 10px;
+  display: flex; align-items: center; justify-content: center;
+  background: var(--nc-deep); font-size: 11px; font-weight: 800; line-height: 1.15; color: #fff; text-shadow: var(--outline);
+}
+.levelButton {
+  width: 64px; height: 46px; box-sizing: border-box; padding: 5px; border-radius: 16px; cursor: pointer;
+  border: 3px solid #fff; box-shadow: var(--rim);
+}
+.levelButton.ok { padding: 8px 18px; background: var(--shine), var(--nc-green); }
+.levelButton.shop { background: var(--panel-deep); }
+.levelButton:hover { filter: brightness(1.12); }
+
+/* The party wrap-up: a row per stat. */
 #partySummary { z-index: 59; }
 #partySummaryRows { display: flex; flex-direction: column; gap: 5px; min-width: 320px; max-width: 420px; margin: 0 auto; }
 .summaryRow {
-  display: grid; grid-template-columns: 30px 1fr auto; align-items: center; gap: 8px;
-  padding: 6px 12px; border-radius: 10px; background: var(--shine), var(--nc-deep); border: 2px solid var(--nc-frame);
+  display: grid; grid-template-columns: 30px 1fr auto; align-items: center; gap: 8px; text-align: left;
+  padding: 6px 12px; border-radius: 12px; background: var(--panel-deep); border: 2px solid var(--nc-frame);
   color: #fff; font-size: 15px; font-weight: 700; text-shadow: var(--outline);
 }
 .summaryRow .sIcon { font-size: 18px; text-align: center; }
-.summaryRow .sValue { color: #ffe45c; text-align: right; max-width: 210px; }
+.summaryRow .sValue { color: var(--gold); text-align: right; max-width: 210px; }
 
-/* Goals (see goals.js): under the song box on the left. The guest card
-   opens over it. */
-#goals {
-  position: fixed; left: 12px; top: calc(192px + env(safe-area-inset-top, 0px)); z-index: 9; width: 236px;
-  padding: 6px 8px 8px; border-radius: var(--radius);
-  background: var(--glass-flat); border: 1px solid #8a94a699; box-shadow: var(--panel-shadow); text-shadow: var(--outline);
+/* Throw a Party: the picker. */
+.partyCard { width: min(460px, calc(100vw - 32px)); }
+#partyList { display: flex; flex-direction: column; gap: 8px; text-align: left; margin-top: 4px; }
+.partyRow {
+  display: flex; align-items: center; gap: 12px; padding: 9px 12px; cursor: pointer;
+  border-radius: 14px; background: var(--panel-deep); border: 2px solid var(--nc-frame);
+  box-shadow: inset 0 0 0 1px rgba(150, 210, 255, 0.4);
 }
-#goalsHead { cursor: pointer; user-select: none; font-size: 13px; font-weight: 800; color: #ffe45c; margin-bottom: 4px; }
-#goalsHead::after { content: ' ▾'; color: #cfd8e6; font-size: 11px; }
-#goals.collapsed #goalsHead::after { content: ' ▸'; }
-#goals.collapsed #goalList { display: none; }
-#goals.collapsed #goalsHead { margin-bottom: 0; }
-.goalRow { padding: 5px 6px; margin-top: 4px; border-radius: 8px; background: var(--shine), var(--nc-deep); border: 1px solid var(--nc-frame); }
-.goalRow.done { font-size: 12px; font-weight: 700; text-align: center; }
-.goalText { font-size: 12px; font-weight: 700; color: #fff; }
-.goalBar { height: 6px; margin: 4px 0 3px; border-radius: 3px; background: #05070b; overflow: hidden; }
-.goalFill { height: 100%; background: linear-gradient(90deg, #5dff6a, #ffe45c); transition: width 0.4s ease; }
-.goalMeta { display: flex; justify-content: space-between; font-size: 10px; font-weight: 700; color: #cfd8e6; }
-.goalReward { color: #ffe45c; }
-@media (width <= 900px) { #goals { display: none; } }
+.partyRow:hover { box-shadow: 0 0 0 3px var(--gold), 0 0 12px var(--gold); }
+.partyRow.blocked { filter: grayscale(0.7) brightness(0.7); cursor: not-allowed; }
+.partyRow.blocked:hover { box-shadow: inset 0 0 0 1px rgba(150, 210, 255, 0.4); }
+.partyEmoji { font-size: 28px; flex: none; }
+.partyText { flex: 1; min-width: 0; }
+.partyName { font-size: 15px; font-weight: 800; }
+.partyBlurb { font-size: 12px; color: var(--muted); font-weight: 700; }
+.partyPerks { font-size: 11px; color: var(--cash); margin-top: 2px; font-weight: 700; }
+.partyWhy { color: #ffb0b8; }
+.partyCost { flex: none; font-family: var(--display-font); font-weight: 900; font-size: 16px; color: var(--gold); }
+
+/* ------------------------------------------------------------------ */
+/* A guest's or bartender's card (see scene/guests.js), like Nightclub  */
+/* City's: stat bubbles on top, portrait and speech bubble, round       */
+/* action buttons underneath.                                           */
+/* ------------------------------------------------------------------ */
+#infoCard {
+  display: none; position: fixed; left: 10px; top: calc(210px + env(safe-area-inset-top, 0px)); z-index: 20;
+  width: 272px; padding: 38px 12px 14px; border-radius: 18px; box-sizing: border-box; /* the top strip is the close button's */
+  background: var(--panel); border: 3px solid var(--nc-frame);
+  box-shadow: inset 0 0 0 2px rgba(205, 240, 255, 0.55), 0 8px 20px rgba(0, 0, 0, 0.6);
+  text-shadow: var(--outline);
+}
+#infoCard.open { display: block; animation: summaryIn 0.2s ease-out; }
+.infoClose {
+  position: absolute; top: 7px; right: 8px; z-index: 5; width: 24px; height: 24px; box-sizing: border-box; border-radius: 50%; cursor: pointer;
+  display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 800;
+  background: var(--nc-red); border: 2px solid #fff; box-shadow: 0 0 0 1px var(--nc-frame);
+}
+.statBubbles { display: flex; gap: 8px; justify-content: center; margin: -28px 30px 8px 0; } /* beside the close button */
+.statBubble { display: flex; flex-direction: column; align-items: center; min-width: 46px; }
+.bubbleIcon {
+  width: 34px; height: 34px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 19px;
+  background: radial-gradient(circle at 35% 30%, #ffffff 0%, #d8f1ff 40%, #6fb8ee 100%);
+  border: 2px solid var(--nc-frame); box-shadow: 0 2px 4px #0008, inset 0 -2px 3px #0003;
+}
+.bubbleNum { font-size: 12px; font-weight: 800; margin-top: 2px; }
+.infoTop { display: flex; gap: 10px; align-items: flex-start; }
+.infoPortrait {
+  flex: none; width: 86px; height: 104px; border-radius: 12px; background-repeat: no-repeat;
+  background-color: #10284c; border: 3px solid #fff; box-shadow: 0 0 0 2px var(--nc-frame), inset 0 0 14px #000;
+}
+.infoText { flex: 1; min-width: 0; }
+.infoName { font-size: 16px; font-weight: 800; margin-top: 6px; }
+.infoRole { font-size: 11px; color: var(--muted); font-weight: 800; }
+.infoQuote {
+  position: relative; font-size: 12px; color: #1a1024; text-shadow: none; font-weight: 700;
+  background: #fff; border-radius: 12px; padding: 7px 9px; border: 2px solid #3a3f4a; box-shadow: 0 2px 6px #0006;
+  overflow-wrap: anywhere; /* long lines wrap inside the bubble */
+}
+.infoQuote:after { content: ""; position: absolute; left: -8px; top: 14px; border: 7px solid transparent; border-right-color: #3a3f4a; border-left: 0; }
+.infoActions { display: flex; gap: 10px; justify-content: center; margin-top: 12px; }
+.actionButton {
+  position: relative; width: 48px; height: 48px; box-sizing: border-box; border-radius: 50%; cursor: pointer; user-select: none;
+  display: flex; align-items: center; justify-content: center; font-size: 23px;
+  background: var(--shine), linear-gradient(180deg, #d4a8ff 0%, #8a4ee0 55%, #4a1f8e 100%);
+  border: 3px solid #fff; box-shadow: var(--rim);
+  transition: transform 0.1s;
+}
+.actionButton:hover { transform: translateY(-2px) scale(1.06); box-shadow: var(--rim), 0 0 12px #ff3ddcaa; }
+.actionButton.disabled { filter: grayscale(1) brightness(0.7); cursor: default; }
+.actionButton.disabled:hover { transform: none; box-shadow: var(--rim); }
+.actionTimer { position: absolute; bottom: -15px; font-size: 10px; font-weight: 800; white-space: nowrap; color: var(--gold); }
+.actionTip {
+  display: none; position: absolute; z-index: 2; max-width: 190px; padding: 6px 9px; border-radius: 10px;
+  background: #fff; color: #1a1024; text-shadow: none; font-size: 12px; font-weight: 700; text-align: center;
+  border: 2px solid #3a3f4a; box-shadow: 0 2px 8px #000a; pointer-events: none;
+}
+.actionTip.show { display: block; }
+.actionTip:after { content: ""; position: absolute; left: 50%; bottom: -8px; margin-left: -7px; border: 7px solid transparent; border-top-color: #3a3f4a; border-bottom: 0; }

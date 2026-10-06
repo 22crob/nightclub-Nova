@@ -148,13 +148,7 @@ export class BonusesMixin {
       this.partyStats.bonusCash = (this.partyStats.bonusCash || 0) + b.amount;
     }
     SFX.tip();
-    const { x, y } = b.holder;
-    const label = this.add.text(x, y, `+$${b.amount}`, {
-      fontFamily: 'Arial Black, Arial, sans-serif', fontSize: '20px', color: '#7dff6a', stroke: '#0b2a0b', strokeThickness: 5,
-    }).setOrigin(0.5, 1).setScale(0.5);
-    this.patronLayer.add(label);
-    this.tweens.add({ targets: label, scale: 1.15, duration: 180, ease: 'Back.easeOut' });
-    this.tweens.add({ targets: label, y: y - 40, alpha: 0, delay: 500, duration: 700, ease: 'Quad.easeIn', onComplete: () => label.destroy() });
+    this.floatMoney(b.holder.x, b.holder.y, `+$${b.amount}`, '#22b84a', false);
     b.patron.reactingUntil = 0;
     this.popReaction(b.patron, 'excited', 150);
     this.removeBonus(b, false);

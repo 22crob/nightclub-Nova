@@ -246,6 +246,7 @@ export class ClubScene extends Phaser.Scene {
     const zoomOut = document.getElementById('zoomOut');
     if (zoomIn) zoomIn.addEventListener('click', () => this.zoomTo(this.world.scaleX / 0.85));
     if (zoomOut) zoomOut.addEventListener('click', () => this.zoomTo(this.world.scaleX * 0.85));
+    this.setupZoomSlider();
 
     this.cashText = document.getElementById('cashVal');
     this.fansText = document.getElementById('fansVal');
