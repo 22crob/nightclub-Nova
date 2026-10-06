@@ -62,17 +62,8 @@ const ICONS = {
     <path d="M20.6 3.4 20.4 9.6 14.4 8.6Z" fill="${W}"/>`,
   plus: `<path d="M12 4.5v15M4.5 12h15" stroke="${W}" stroke-width="3.6" stroke-linecap="round"/>`,
   minus: `<path d="M4.5 12h15" stroke="${W}" stroke-width="3.6" stroke-linecap="round"/>`,
-  // The DJ desk's pads and the shop: one clean white style (the pads give
-  // the colour).
-  padShop: `<path d="M4.6 8h14.8l-1.2 12.4a1.6 1.6 0 0 1-1.6 1.4H7.4a1.6 1.6 0 0 1-1.6-1.4Z" fill="${W}"/>
-    <path d="M8.8 10.2V6.8a3.2 3.2 0 0 1 6.4 0v3.4" fill="none" stroke="${W}" stroke-width="2" stroke-linecap="round"/>
-    <path d="M12 11.6l1.1 2.2 2.4.35-1.75 1.7.42 2.4L12 17.1l-2.17 1.15.42-2.4-1.75-1.7 2.4-.35Z" fill="${INK}"/>`,
-  padEdit: `<g transform="rotate(-40 12 12)"><rect x="10.7" y="9" width="2.6" height="13.5" rx="1.2" fill="${W}"/>
-    <path d="M6 4.2h9.6a1.4 1.4 0 0 1 1.4 1.4v2.6a1.4 1.4 0 0 1-1.4 1.4H6c-1.4 0-2.4-1.2-2.4-2.7S4.6 4.2 6 4.2Z" fill="${W}"/></g>`,
-  padStorage: `<path d="M3 8.2 12 3.8l9 4.4v9.6l-9 4.4-9-4.4Z" fill="${W}"/>
-    <path d="M3 8.2l9 4.4 9-4.4M12 12.6v9.6M7.5 6l9 4.4" fill="none" stroke="${INK}" stroke-width="1.5" stroke-linejoin="round"/>`,
-  padCelebs: `<path d="M11 3.4l2.5 5.3 5.8.8-4.2 4 1 5.8L11 16.5l-5.1 2.8 1-5.8-4.2-4 5.8-.8Z" fill="${W}"/>
-    <path d="M19.4 1.8l.7 1.7 1.7.7-1.7.7-.7 1.7-.7-1.7-1.7-.7 1.7-.7ZM19.6 15.5l.5 1.2 1.2.5-1.2.5-.5 1.2-.5-1.2-1.2-.5 1.2-.5Z" fill="${W}"/>`,
+  // The shop's category keys: one clean white style (the keys give the
+  // colour).
   newGlyph: `<rect x="1.4" y="6.4" width="21.2" height="11.2" rx="3" fill="${W}"/>
     <text x="12" y="15.4" text-anchor="middle" font-family="Arial Black, Arial, sans-serif" font-weight="900" font-size="7.6" fill="${INK}">NEW</text>`,
   lamp: `<path d="M9.2 2.8h5.6l2.6 13H6.6Z" fill="${W}"/><circle cx="11" cy="7.6" r="1.4" fill="${INK}"/><circle cx="13.2" cy="11.6" r="1.9" fill="${INK}"/>
@@ -233,6 +224,19 @@ const ART = {
     <path d="M10.6 6.6v20" stroke="#fff" stroke-width="1.3" stroke-linecap="round" opacity=".35"/>
     <path d="M42.6 22.6a8.6 8.6 0 0 1 0 15.2M45.4 18.6a14 14 0 0 1 0 23.2" fill="none" stroke="#7ef0ff" stroke-width="2.4" stroke-linecap="round"/>
     <path d="M2.6 22.6a8.6 8.6 0 0 0 0 15.2" fill="none" stroke="#7ef0ff" stroke-width="2.4" stroke-linecap="round"/>`,
+  // The Celebrities pad: a pink superstar in sunglasses with a big grin,
+  // camera flashes going off around it.
+  artCeleb: `<defs><radialGradient id="gCStar" cx=".38" cy=".3" r=".85"><stop offset="0" stop-color="#ffd6f6"/><stop offset=".45" stop-color="#ff4fc8"/><stop offset="1" stop-color="#b0127f"/></radialGradient>
+    <linearGradient id="gShade" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#3a3a5a"/><stop offset="1" stop-color="#0c0c18"/></linearGradient></defs>
+    <path d="M24 3.6 30 17.6l15.2 1.4-11.5 10 3.4 14.8L24 36l-13.1 7.8 3.4-14.8-11.5-10L18 17.6Z" fill="url(#gCStar)" stroke="${O}" stroke-width="2" stroke-linejoin="round"/>
+    <path d="M13.6 21.4h9.2l-.8 4.6c-.4 2-7 2-7.6 0ZM25.2 21.4h9.2l-.8 4.6c-.4 2-7 2-7.6 0Z" fill="url(#gShade)" stroke="${O}" stroke-width="1.4" stroke-linejoin="round"/>
+    <path d="M22.8 22.2h2.4M11.8 21.6h1.8M34.4 21.6h1.8" stroke="${O}" stroke-width="1.6" stroke-linecap="round"/>
+    <path d="M15.6 22.8l2.6 0M27.2 22.8l2.6 0" stroke="#8fd8ff" stroke-width="1.3" stroke-linecap="round"/>
+    <path d="M18.6 30c2.8 3.6 8 3.6 10.8 0Z" fill="#fff" stroke="${O}" stroke-width="1.5" stroke-linejoin="round"/>
+    <path d="M17.6 13.6c1.2-2.6 2.6-4.4 4.2-5.4" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" opacity=".8"/>
+    <path d="M41.5 2.5l1.4 3.6 3.6 1.4-3.6 1.4-1.4 3.6-1.4-3.6-3.6-1.4 3.6-1.4Z" fill="#fff" stroke="${O}" stroke-width="1" stroke-linejoin="round"/>
+    <path d="M6 31.5l1 2.6 2.6 1-2.6 1-1 2.6-1-2.6-2.6-1 2.6-1Z" fill="#fff" stroke="${O}" stroke-width="1" stroke-linejoin="round"/>
+    <circle cx="7.5" cy="8" r="1.6" fill="#fff"/>`,
   // Money: a stack of green bills with a paper band.
   cash: `<defs><linearGradient id="gBill" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#d8ffb8"/><stop offset=".55" stop-color="#6fd64f"/><stop offset="1" stop-color="#2f9b2a"/></linearGradient></defs>
     ${[12, 7, 2].map((dy, k) => `<g transform="translate(0 ${dy})">
