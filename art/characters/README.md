@@ -17,7 +17,9 @@ shorts, flat shoes; no rig or UV maps yet). `art/blender/paint_girl.py`
 paints it in a look (skin, hair, shirt with a front print, denim or
 cotton shorts, shoes, blush, gold hoops, outlines) and renders the front;
 `art/previews/girl_looks.png` shows the three looks so far (Pink Pop,
-Neon Night, Sunny). The drawing itself can go here as `girl_base.png`
+Neon Night, Sunny). `girl_for_mixamo.fbx` is the same model made ready
+for Mixamo by `art/blender/export_girl_mixamo.py`: one mesh, about 60k
+triangles (from 2.1 million), material slots kept by name. The drawing itself can go here as `girl_base.png`
 (pasting it in chat doesn't reach the repo).
 
 What the drawing shows (front view, clean black line art on white, with
