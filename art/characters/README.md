@@ -41,3 +41,15 @@ a light centre line and ground line as construction guides):
 When she's animated: match the guy's sheet layout, frame counts and fps
 (`patrons.json`), so the game can use her sheets without code changes,
 and make extra girls with `art/recolor_patron.py`.
+
+## Character Model 1 (base body)
+
+`character_model_1.blend` is the owner's chibi base body (one all-quad
+mesh, `Retopology_hp`, about 13,500 faces, T-pose), shared 2026-10-06.
+`character_model_1_smooth.blend` is it smoothed by
+`art/blender/smooth_model.py`: a Laplacian Smooth modifier ("Relax
+ridges", 10 passes, volume kept, hands left out through the `Hands`
+vertex group) and a Subdivision modifier ("Soft finish", 1 level in the
+viewport, 2 when rendering). Nothing is applied, so both can be tuned or
+switched off in Blender's modifier panel; an FBX export applies them.
+Before and after: `art/previews/character_model_1_smooth.png`.
