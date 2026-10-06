@@ -62,3 +62,11 @@ smoothed everything lost the eye sockets; the owner asked for them back.)
 Before and after: `art/previews/character_model_1_clean.png`, and the
 neck up close: `art/previews/character_model_1_neck.png` (original,
 too high, now), the head: `art/previews/character_model_1_head.png`.
+
+`character_model_1_for_mixamo.fbx` / `.obj` are the clean body made by
+`art/blender/export_mixamo.py` for Mixamo's Auto-Rigger: one mesh
+("Body", about 27k triangles, the neck and ear smoothing applied, no
+subdivision), with no camera, light, vertex groups or bones. A default
+Blender FBX export of the .blend carries the camera, light and vertex
+groups, and Mixamo refused it with "unable to map your existing
+skeleton".
