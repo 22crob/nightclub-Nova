@@ -368,7 +368,8 @@ export class ShopMixin {
     this.updateSelectedChip();
   }
 
-  // The small pill above the dock showing what you're about to place.
+  // The small pill at the top of the screen showing what you're about to
+  // place (kept clear of the floor, so it never hides where it goes).
   updateSelectedChip() {
     if (!this.selectedChip) return;
     const key = this.selectedProp;

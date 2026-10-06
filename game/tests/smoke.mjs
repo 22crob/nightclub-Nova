@@ -1957,6 +1957,34 @@ const moneyPop = await page.evaluate(() => {
 });
 check('money pops up big over guests, with "+1.5x Tip!" while tips are boosted (not on the cover charge)', moneyPop.plain.join() === '$5' && moneyPop.boosted.join() === '$9,+1.5x Tip!' && moneyPop.cover.join() === '$5 Cover' && moneyPop.big >= 20, JSON.stringify(moneyPop));
 
+// Holding something to place always shows it where the pointer is, with the
+// tiles it takes: green where it fits, red (and the picture tinted red)
+// where it doesn't.
+const held = await page.evaluate(() => {
+  const s = window.__clubNova.scene.getScene('club');
+  const real = s.levelInfo.bind(s);
+  s.levelInfo = () => ({ ...real(), level: 8 });
+  s.deselectProp();
+  s.selectProp('vipLounge');
+  const at = (gx, gy) => {
+    s.hoverTile = { gx, gy };
+    s.updateGhost();
+    return { ghost: !!(s.ghost && s.ghost.visible), tinted: !!(s.ghost && s.ghost.isTinted), filled: s.footprintFill.commandBuffer.length > 0, outlined: s.footprintOutline.commandBuffer.length > 0 };
+  };
+  const bar = Object.values(s.placed).find((r) => /Bar$|^bar$/.test(r.type));
+  let free = null;
+  for (let x = 0; x < s.gridW && !free; x++) for (let y = 0; y < s.gridH && !free; y++) {
+    if (s.footprintValid(s.getFootprint('vipLounge', s.currentFacing, x, y))) free = [x, y];
+  }
+  const out = { free: free ? at(...free) : null, blocked: at(bar.anchor[0], bar.anchor[1]) };
+  s.deselectProp();
+  s.levelInfo = real;
+  out.clearedAfter = !s.ghost && s.footprintFill.commandBuffer.length === 0;
+  return out;
+});
+check('a held item always shows with its tiles: green where it fits, red and tinted where it does not', held.free && held.free.ghost && !held.free.tinted && held.free.filled && held.free.outlined
+  && held.blocked.ghost && held.blocked.tinted && held.blocked.filled && held.blocked.outlined && held.clearedAfter, JSON.stringify(held));
+
 check('no errors in the page', errors.length === 0, errors.join(' | '));
 
 await browser.close();

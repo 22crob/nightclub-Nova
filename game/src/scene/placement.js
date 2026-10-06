@@ -1,9 +1,13 @@
 // ClubScene methods: Footprints, the placement ghost, and placing / rotating / selling / restoring props.
 // Mixed into ClubScene (see ClubScene.js); `this` is the scene.
 import { PROP_TYPES, STAFF_TYPES } from '../catalog.js';
-import { FACINGS, FALLBACK_PROP_HEIGHT, FLOOR_COLOR, SELL_REFUND_RATIO, TILE_H, TILE_W } from '../config.js';
+import { FACINGS, FALLBACK_PROP_HEIGHT, SELL_REFUND_RATIO, TILE_H, TILE_W } from '../config.js';
 import { floorTextureKey } from '../floors.js';
 import { SFX } from '../sfx.js';
+
+// Where a held item would go: green if it fits, red if it doesn't.
+const PLACE_OK = 0x3dff6a;
+const PLACE_BLOCKED = 0xff3b3b;
 
 export class PlacementMixin {
   // Grid tiles a prop occupies, given the tile that was clicked/hovered
@@ -128,17 +132,25 @@ export class PlacementMixin {
   drawFootprintOutline(tiles, color) {
     this.footprintOutline.clear();
     this.footprintOutline.lineStyle(3, color, 1);
-    for (const [tx, ty] of tiles) {
-      const { sx, sy } = this.gridToScreen(tx, ty);
-      this.footprintOutline.strokePoints([
-        { x: sx, y: sy - TILE_H / 2 },
-        { x: sx + TILE_W / 2, y: sy },
-        { x: sx, y: sy + TILE_H / 2 },
-        { x: sx - TILE_W / 2, y: sy },
-      ], true);
-    }
+    for (const [tx, ty] of tiles) this.footprintOutline.strokePoints(this.tileCorners(tx, ty), true);
   }
 
+  // The four corners of a floor tile on screen (in world coordinates).
+  tileCorners(tx, ty) {
+    const { sx, sy } = this.gridToScreen(tx, ty);
+    return [
+      { x: sx, y: sy - TILE_H / 2 },
+      { x: sx + TILE_W / 2, y: sy },
+      { x: sx, y: sy + TILE_H / 2 },
+      { x: sx - TILE_W / 2, y: sy },
+    ];
+  }
+
+  // While holding something to place, it always shows where the pointer
+  // is: a see-through picture of the item, and the tiles it would take,
+  // filled and outlined in green where it fits and in red where it doesn't
+  // (with the picture tinted red too), so you can see the item and its
+  // space before finding a free spot.
   updateGhost() {
     this.updateWallGhost();
     this.updateFloorPaintGhost();
@@ -147,11 +159,14 @@ export class PlacementMixin {
       this.ghost = null;
     }
     this.footprintOutline.clear();
-    // Un-tint whatever tiles were highlighted for the LAST hover/facing/
-    // prop combo before computing the new set — the highlight always
-    // tracks the current footprint exactly, nothing else touches tile fills.
-    for (const t of this.highlightedTiles) t.setFillStyle(FLOOR_COLOR, 0); // back to invisible
-    this.highlightedTiles = [];
+    if (!this.footprintFill) {
+      // On the floor: over dance floors and painted tiles, under furniture
+      // and people (like the selection outline, see selection.js).
+      this.footprintFill = this.add.graphics().setDepth(-499);
+      this.propLayer.add(this.footprintFill);
+      this.propLayer.sort('depth');
+    }
+    this.footprintFill.clear();
 
     // With nothing to place, show the normal system cursor so the player
     // can still see where they're pointing.
@@ -165,48 +180,35 @@ export class PlacementMixin {
     const facing = def.rotatable ? this.currentFacing : 0;
     // This is THE ONLY place footprint tiles get computed for hover
     // feedback, and it's the exact same call placeProp() makes. The tile
-    // highlight below, the ghost sprite, and the green outline all draw
-    // from this one array — they cannot disagree about which tiles are
-    // involved because there's only one array now.
+    // fill, the ghost sprite and the outline all draw from this one array,
+    // so they can't disagree about which tiles are involved.
     const tiles = this.getFootprint(this.selectedProp, facing, gx, gy);
     const valid = this.footprintValid(tiles);
+    const color = valid ? PLACE_OK : PLACE_BLOCKED;
 
-    // Tint exactly the tiles this click would occupy — purple if it's a
-    // legal placement, dim red if it's blocked (occupied or off-grid).
-    const fillColor = valid ? 0x3a2060 : 0x5a1030;
-    for (const [tx, ty] of tiles) {
-      const t = this.tiles[`${tx},${ty}`];
-      if (t) {
-        t.setFillStyle(fillColor, 1);
-        this.highlightedTiles.push(t);
-      }
-    }
-    if (!valid) return; // occupied or off-grid — no ghost sprite, just the red tint
+    this.footprintFill.fillStyle(color, 0.4);
+    for (const [tx, ty] of tiles) this.footprintFill.fillPoints(this.tileCorners(tx, ty), true);
+
     if (def.floorStyle) {
       const { sx, sy } = this.gridToScreen(tiles[0][0], tiles[0][1]);
-      this.ghost = this.add.image(sx, sy, floorTextureKey(def.floorStyle, 0)).setDisplaySize(TILE_W, TILE_H).setAlpha(0.7);
-      this.ghostLayer.add(this.ghost);
-      return;
+      this.ghost = this.add.image(sx, sy, floorTextureKey(def.floorStyle, 0)).setDisplaySize(TILE_W, TILE_H).setAlpha(0.75);
+    } else if (this.hasAnySprite(this.selectedProp)) {
+      const { sx, sy } = this.footprintCenter(tiles);
+      const img = this.add.image(sx, sy, this.spriteKeyFor(this.selectedProp, facing));
+      img.setOrigin(def.originX, def.originY);
+      img.setDisplaySize(def.displayWidth, def.displayWidth * (img.height / img.width));
+      img.setAlpha(0.65);
+      this.ghost = img;
     }
-    if (!def.rotatable || !this.hasAnySprite(this.selectedProp)) return; // placeholder-box props have no sprite ghost
-
-    const { sx, sy } = this.footprintCenter(tiles);
-    const texKey = this.spriteKeyFor(this.selectedProp, facing);
-    const img = this.add.image(sx, sy, texKey);
-    img.setOrigin(def.originX, def.originY);
-    img.setDisplaySize(def.displayWidth, def.displayWidth * (img.height / img.width));
-    img.setAlpha(0.5);
-    this.ghostLayer.add(img);
-    this.ghost = img;
-    // Green outline reinforces the same tiles, drawn on the highest-depth
-    // graphics layer so it always shows through the booth's artwork
-    // instead of being hidden behind it.
-    this.drawFootprintOutline(tiles, 0x00ff88);
-    // The normal system cursor stays visible here (see the 'default' set
-    // at the top of this method) even with the translucent ghost booth
-    // showing — hiding it used to make the pointer vanish for as long as
-    // a rotatable prop (currently just the DJ Booth) stayed selected,
-    // which read as the mouse being stuck/broken rather than intentional.
+    if (this.ghost) {
+      if (!valid) this.ghost.setTint(0xff7a7a);
+      this.ghostLayer.add(this.ghost);
+    }
+    // The outline goes on the highest-depth layer, so it always shows
+    // through the item's artwork (and any furniture in the way).
+    this.drawFootprintOutline(tiles, color);
+    // The normal system cursor stays visible (see the 'default' above) so
+    // the pointer never seems to vanish while something is held.
   }
 
   placeProp(gx, gy) {

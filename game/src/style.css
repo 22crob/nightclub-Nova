@@ -343,10 +343,10 @@ body { font-family: var(--ui-font); color: var(--ink); }
   #dockCenter { position: fixed; left: 8px; right: 8px; bottom: calc(112px + env(safe-area-inset-bottom, 0px)); max-width: none; }
 }
 
-/* What you're holding, above the panel. */
+/* What you're holding: at the top, clear of the floor you're placing on. */
 #selectedChip:empty { display: none; }
 #selectedChip {
-  position: fixed; bottom: calc(222px + env(safe-area-inset-bottom, 0px)); left: 50%; transform: translateX(-50%);
+  position: fixed; top: calc(64px + env(safe-area-inset-top, 0px)); left: 50%; transform: translateX(-50%);
   display: flex; align-items: center; gap: 8px; z-index: 31;
   padding: 4px 14px 4px 4px; border-radius: 16px;
   background: var(--panel-deep); border: 3px solid var(--nc-frame); box-shadow: var(--panel-shadow);
@@ -358,6 +358,7 @@ body { font-family: var(--ui-font); color: var(--ink); }
   background-color: #10284c; background-size: contain; background-repeat: no-repeat; background-position: center;
 }
 #selectedChip .chipCost { color: var(--gold); }
+@media (width <= 900px) { #selectedChip { top: calc(136px + env(safe-area-inset-top, 0px)); } }
 
 /* A card: a light glossy frame, the picture on a dark panel, and a navy
    strip with the price. */

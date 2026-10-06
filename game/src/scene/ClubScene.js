@@ -56,7 +56,6 @@ export class ClubScene extends Phaser.Scene {
     this.gridH = BASE_GRID_SIZE; // tiles along gy (the left wall)
     this.hoverTile = null; // { gx, gy } currently under the mouse, or null
     this.ghost = null; // preview sprite shown while hovering an empty tile with a rotatable prop selected
-    this.highlightedTiles = []; // tile polygons currently tinted as "this is what will be placed on"
     this.hoveredPropLabel = null; // the one placed-prop name label currently shown, if any — see updateHoveredPropLabel()
     this.patrons = []; // active visitor NPCs — see patrons.js and the patron constants in config.js
   }
