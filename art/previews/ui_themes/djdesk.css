@@ -1,0 +1,108 @@
+/* "DJ booth" mockup: the HUD is the DJ's gear. */
+:root {
+  --metal: linear-gradient(180deg, #5b616b 0%, #3a3f47 8%, #2b2f36 50%, #22262c 92%, #15171b 100%);
+  --brushed: repeating-linear-gradient(90deg, rgba(255,255,255,.035) 0 1px, rgba(0,0,0,.04) 1px 3px);
+  --screws: radial-gradient(circle at 9px 9px, #c9ced6 0 2.5px, #3a3f47 3px, transparent 4px),
+            radial-gradient(circle at calc(100% - 9px) 9px, #c9ced6 0 2.5px, #3a3f47 3px, transparent 4px),
+            radial-gradient(circle at 9px calc(100% - 9px), #c9ced6 0 2.5px, #3a3f47 3px, transparent 4px),
+            radial-gradient(circle at calc(100% - 9px) calc(100% - 9px), #c9ced6 0 2.5px, #3a3f47 3px, transparent 4px);
+  --screen: repeating-linear-gradient(180deg, rgba(95,227,255,.05) 0 1px, transparent 1px 3px), radial-gradient(ellipse at 50% 0%, #0d1a26 0%, #04070b 70%);
+  --led: 'Courier New', 'Lucida Console', monospace;
+  --cyan: #3fe6ff;
+}
+@keyframes beat { 0%, 100% { filter: brightness(.85); } 12% { filter: brightness(1.45); } }
+@keyframes spin { to { transform: rotate(360deg); } }
+@keyframes meter { 0% { width: 38%; } 20% { width: 82%; } 40% { width: 55%; } 60% { width: 92%; } 80% { width: 47%; } 100% { width: 70%; } }
+
+/* The desk along the bottom. */
+#dock::before { content: ''; position: fixed; left: 0; right: 0; bottom: 0; height: 74px; z-index: -1;
+  background: var(--brushed), var(--metal); border-top: 2px solid #8a9099; box-shadow: 0 -6px 18px rgba(0,0,0,.7); }
+/* Pads: square rubber pads that light up in their colour and flash to the beat. */
+.sideButton { border-radius: 8px !important; border: 2px solid #000 !important; padding: 8px !important;
+  background: radial-gradient(circle at 50% 45%, color-mix(in srgb, var(--pad) 70%, white) 0%, var(--pad) 35%, color-mix(in srgb, var(--pad) 35%, black) 100%) !important;
+  box-shadow: inset 0 0 0 2px rgba(255,255,255,.18), inset 0 -4px 0 rgba(0,0,0,.45), 0 0 14px var(--pad), 0 3px 0 #000 !important;
+  animation: beat .5s infinite; }
+.sideButton.big { border-radius: 10px !important; }
+.sideButton.active { box-shadow: inset 0 0 0 3px #fff, 0 0 26px var(--pad), 0 0 6px #fff !important; filter: brightness(1.4); animation: none; transform: none !important; }
+#tabEdit { --pad: #1fb8ff; animation-delay: .05s; } #tabFloors { --pad: #ff2fc0; animation-delay: .3s; }
+#tabDecor { --pad: #ff8a1f; } #tabInventory { --pad: #2fe06a; animation-delay: .15s; } #clearClub { --pad: #ffd21f; animation-delay: .4s; }
+#tabStaff { --pad: #9b5bff; animation-delay: .1s; } #tabExpand { --pad: #2fe06a; animation-delay: .35s; }
+#tabVip { --pad: #ffd21f; animation-delay: .2s; } #tabSell { --pad: #ff3b4a; animation-delay: .45s; }
+#storeOk { border-radius: 8px !important; border: 2px solid #000 !important; background: radial-gradient(circle, #b6ff9a 0%, #2fd14a 40%, #0f6a1f 100%) !important;
+  box-shadow: inset 0 0 0 2px rgba(255,255,255,.3), 0 0 16px #2fd14a, 0 3px 0 #000 !important; }
+/* The panel: a screen set into the desk, in a screwed-down metal frame. */
+#dockPanel { border-radius: 6px !important; border: 2px solid #000 !important; padding: 12px 14px !important;
+  background: var(--screws), var(--brushed), var(--metal) !important;
+  box-shadow: inset 0 1px 0 rgba(255,255,255,.3), 0 8px 20px rgba(0,0,0,.8) !important; }
+#shopItems { background: var(--screen); border-radius: 3px; border: 1px solid #000; box-shadow: inset 0 0 0 1px rgba(63,230,255,.35), inset 0 0 24px rgba(63,230,255,.18); padding: 0 8px !important; }
+.dockArrow { border-radius: 6px !important; border: 2px solid #000 !important; background: var(--metal) !important; box-shadow: inset 0 1px 0 rgba(255,255,255,.3), 0 2px 0 #000 !important; }
+#dock[data-mode="store"] .propCost { background: #020403 !important; border: 1px solid #1a3a22 !important; border-radius: 2px !important; box-shadow: none !important;
+  font-family: var(--led) !important; font-weight: 900; color: #6dff8a !important; text-shadow: 0 0 6px #3dff6a !important; letter-spacing: .05em; }
+.storeTab { border-radius: 5px !important; }
+.storeTab.active { background: var(--screen) !important; border: 1px solid var(--cyan) !important; border-bottom: none !important; box-shadow: 0 0 10px rgba(63,230,255,.5) !important; }
+.newTag { border-radius: 2px !important; background: #ff2f4a !important; font-family: var(--led) !important; transform: none !important; }
+
+/* Top left: a metal plate with a spinning record (your level), LED EQ for XP, and an LED cash readout. */
+#hudProfile { border-radius: 6px !important; border: 2px solid #000 !important; background: var(--screws), var(--brushed), var(--metal) !important; padding: 8px 16px 8px 10px !important;
+  box-shadow: inset 0 1px 0 rgba(255,255,255,.3), 0 6px 16px rgba(0,0,0,.7) !important; }
+.portrait { border-radius: 50% !important; padding: 0 !important; box-shadow: 0 0 0 2px #000, 0 3px 8px rgba(0,0,0,.7) !important;
+  background: radial-gradient(circle, transparent 0 13px, #0b0b0d 13px), repeating-radial-gradient(circle, #19191c 0 1px, #0a0a0c 1px 3px) !important; }
+.portraitFace { width: 26px !important; height: 26px !important; margin: 16px; border-radius: 50% !important; font-size: 15px !important;
+  background: radial-gradient(circle, #111 0 2px, transparent 3px), conic-gradient(#ff3ddc 0 25%, #ff8a1f 0 50%, #ff3ddc 0 75%, #ff8a1f 0) !important; animation: spin 1.8s linear infinite; }
+.levelStar { right: -8px !important; bottom: -8px !important; border-radius: 4px !important; border: 2px solid #000 !important; background: #020403 !important; box-shadow: 0 0 8px #3fe6ff !important; animation: none; }
+.levelStar span { font-family: var(--led) !important; color: var(--cyan) !important; text-shadow: 0 0 6px var(--cyan) !important; }
+.xpBar { border-radius: 2px !important; border: 1px solid #000 !important; background: #020403 !important; box-shadow: inset 0 0 0 1px #2a2f36 !important; height: 20px !important; }
+.xpFill { background: linear-gradient(90deg, #3dff6a 0%, #3dff6a 60%, #ffe14a 80%, #ff3b3b 100%) !important; background-size: 230px 100% !important; box-shadow: 0 0 10px #3dff6a !important; }
+.xpBar::after { content: ''; position: absolute; inset: 0; background: repeating-linear-gradient(90deg, transparent 0 6px, #020403 6px 8px); }
+.xpText { z-index: 1; font-family: var(--led) !important; font-weight: 900 !important; letter-spacing: .04em; }
+#hudCash { background: #020403; border: 1px solid #000; box-shadow: inset 0 0 0 1px #2a2f36; border-radius: 2px; padding: 0 10px 0 4px; margin-top: 3px; }
+#hudCash .amount { font-family: var(--led) !important; font-weight: 900 !important; font-size: 24px !important; color: #6dff8a !important; -webkit-text-stroke: 0 !important; text-shadow: 0 0 8px #3dff6a, 0 0 2px #3dff6a !important; letter-spacing: .08em; }
+
+/* Small knobs under it. */
+.toolButton { border-radius: 50% !important; border: 2px solid #000 !important; background: radial-gradient(circle at 40% 35%, #6a707a, #2a2e35 60%, #15171b) !important;
+  box-shadow: 0 0 0 2px #4a4f57, 0 0 0 3px #000, 0 3px 6px rgba(0,0,0,.6) !important; }
+.goalsButton { box-shadow: 0 0 0 2px #ffd21f, 0 0 12px #ffd21f, 0 3px 6px rgba(0,0,0,.6) !important; }
+
+/* Top right: level meters that bounce with the music. */
+.statButton { border-radius: 4px !important; border: 2px solid #000 !important; background: var(--brushed), var(--metal) !important; padding: 4px 10px 6px !important;
+  box-shadow: inset 0 1px 0 rgba(255,255,255,.3), 0 4px 10px rgba(0,0,0,.7) !important; }
+.statValue { font-family: var(--led) !important; font-weight: 900 !important; color: #fff; }
+.statLabel { color: var(--cyan) !important; font-family: var(--led) !important; }
+.statButton::after { content: ''; display: block; height: 5px; margin-top: 3px; background: repeating-linear-gradient(90deg, #3dff6a 0 4px, transparent 4px 6px), linear-gradient(90deg, #3dff6a, #ffe14a 75%, #ff3b3b);
+  background-blend-mode: multiply; -webkit-mask: repeating-linear-gradient(90deg, #000 0 4px, transparent 4px 6px); animation: meter 1s steps(5) infinite; }
+.statButton:nth-child(2)::after { animation-delay: -.35s; } .statButton:nth-child(3)::after { animation-delay: -.7s; }
+/* Arcade buttons. */
+.roundButton { border-radius: 50% !important; border: 4px solid var(--ring) !important; width: 62px !important; height: 62px !important;
+  background: radial-gradient(circle at 42% 35%, color-mix(in srgb, var(--ring) 60%, white) 0%, var(--ring) 40%, color-mix(in srgb, var(--ring) 40%, black) 100%) !important;
+  box-shadow: 0 0 0 3px #000, 0 0 0 7px #2a2e35, 0 0 0 8px #000, 0 0 16px var(--ring), 0 6px 0 #000 !important; }
+.boostButton { --ring: #a24bff; } .rushButton { --ring: #19c9b4; } .partyButton { --ring: #ff8a1f; }
+#actionButtons { gap: 20px !important; top: 82px !important; right: 18px !important; }
+
+/* Right edge: a mixer fader. */
+#zoomBar { border-radius: 4px !important; border: 2px solid #000 !important; background: var(--brushed), var(--metal) !important; box-shadow: inset 0 1px 0 rgba(255,255,255,.3), 0 4px 10px rgba(0,0,0,.7) !important; }
+.zoomButton { border-radius: 5px !important; border: 2px solid #000 !important; background: radial-gradient(circle, #8adfff, #1f8fc9 60%, #0b3a5a) !important; box-shadow: 0 0 8px #3fe6ff, 0 2px 0 #000 !important; }
+#zoomSlider::-webkit-slider-runnable-track { height: 6px !important; border-radius: 1px !important; background: #000 !important; border: 1px solid #555 !important; }
+#zoomSlider::-webkit-slider-thumb { width: 14px !important; height: 30px !important; margin-top: -13px !important; border-radius: 2px !important;
+  background: linear-gradient(90deg, #d9dde3, #8a9099 45%, #fff 50%, #8a9099 55%, #5b616b) !important; border: 1px solid #000 !important; box-shadow: 0 2px 3px #000 !important; }
+
+/* The song box: a CDJ screen. */
+#songBox { border-radius: 4px !important; border: 2px solid #000 !important; background: var(--screws), var(--brushed), var(--metal) !important; padding: 8px 14px 8px 8px !important; }
+.songDisc { border-radius: 50% !important; border: 2px solid #000 !important; background: radial-gradient(circle, #3fe6ff 0 4px, #111 5px 12px, transparent 13px), repeating-radial-gradient(circle, #19191c 0 1px, #0a0a0c 1px 3px) !important;
+  font-size: 0 !important; animation: spin 2.2s linear infinite; box-shadow: 0 0 10px rgba(63,230,255,.5) !important; }
+.songTitle { font-family: var(--led); color: var(--cyan); text-shadow: 0 0 6px var(--cyan) !important; }
+.songButton { border-radius: 3px !important; background: var(--metal) !important; border: 1px solid #000 !important; }
+
+/* Screens: the goals, the guest card, dialogs and messages. */
+#goals, #infoCard, .summaryCard, .levelCard { border-radius: 6px !important; border: 2px solid #000 !important;
+  background: var(--screen) !important; box-shadow: 0 0 0 4px #3a3f47, 0 0 0 6px #000, inset 0 0 0 1px rgba(63,230,255,.4), 0 10px 30px rgba(0,0,0,.8) !important; }
+#goalsHead, .summaryTitle, .levelTitle { font-family: var(--led) !important; font-weight: 900 !important; color: var(--cyan) !important; -webkit-text-stroke: 0 !important;
+  text-shadow: 0 0 8px var(--cyan) !important; text-transform: uppercase; letter-spacing: .12em; }
+.goalRow, .partyRow, .summaryRow { border-radius: 3px !important; background: rgba(63,230,255,.06) !important; border: 1px solid rgba(63,230,255,.35) !important; box-shadow: none !important; }
+.goalBar { border-radius: 1px !important; border-color: #2a2f36 !important; background: #000 !important; }
+.goalFill { background: repeating-linear-gradient(90deg, #3dff6a 0 5px, transparent 5px 7px) !important; }
+.goalReward, .partyCost { font-family: var(--led); color: #6dff8a !important; }
+.summaryButton { border-radius: 6px !important; border: 2px solid #000 !important; box-shadow: inset 0 0 0 2px rgba(255,255,255,.25), 0 0 12px currentColor, 0 3px 0 #000 !important; text-transform: uppercase; font-family: var(--led) !important; font-weight: 900 !important; }
+#toast { border-radius: 3px !important; border: 2px solid #000 !important; background: #050302 !important; box-shadow: 0 0 0 3px #3a3f47, 0 0 0 4px #000, 0 0 14px rgba(255,170,40,.4) !important;
+  font-family: var(--led) !important; color: #ffb43a !important; text-shadow: 0 0 6px #ff9a1f !important; letter-spacing: .04em; }
+.actionButton { border-radius: 50% !important; border: 3px solid #a24bff !important; box-shadow: 0 0 0 2px #000, 0 0 10px #a24bff, 0 3px 0 #000 !important; }
+.infoPortrait { border-radius: 4px !important; border: 2px solid var(--cyan) !important; box-shadow: 0 0 10px rgba(63,230,255,.4) !important; }
