@@ -46,10 +46,14 @@ and make extra girls with `art/recolor_patron.py`.
 
 `character_model_1.blend` is the owner's chibi base body (one all-quad
 mesh, `Retopology_hp`, about 13,500 faces, T-pose), shared 2026-10-06.
-`character_model_1_smooth.blend` is it smoothed by
-`art/blender/smooth_model.py`: a Laplacian Smooth modifier ("Relax
-ridges", 10 passes, volume kept, hands left out through the `Hands`
-vertex group) and a Subdivision modifier ("Soft finish", 1 level in the
-viewport, 2 when rendering). Nothing is applied, so both can be tuned or
-switched off in Blender's modifier panel; an FBX export applies them.
-Before and after: `art/previews/character_model_1_smooth.png`.
+`character_model_1_clean.blend` is it cleaned up by
+`art/blender/clean_character.py`, keeping its definition (eye sockets,
+outline): the 6 stray vertices deleted, the "sharp" marks cleared from
+its edges (nearly all were marked, which shaded it in flat steps), the
+-X side mirrored onto +X so the ears match, and smoothing only where
+asked, through vertex groups: "Smooth neck" (strong, so the neck runs
+into the shoulders) and "Smooth ears" (gentle, tidying their torn tops),
+plus a 1-level "Soft finish" subdivision. The smoothing and subdivision
+are modifiers, so they can be tuned in Blender. (A first pass that
+smoothed everything lost the eye sockets; the owner asked for them back.)
+Before and after: `art/previews/character_model_1_clean.png`.
