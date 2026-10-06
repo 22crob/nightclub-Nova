@@ -1,0 +1,9 @@
+/* C: Sharp NC Blue - Nightclub City's blue kept, but tighter: small corners, darker navy, thin rims. */
+:root { --r: 5px; --rb: 50%;
+  --panel: linear-gradient(180deg, #3d7fc9 0%, #1f5aa0 48%, #143f78 52%, #1a4d8c 100%);
+  --panel-deep: linear-gradient(180deg, #23426e 0%, #142a4c 48%, #0b1a33 52%, #10223f 100%);
+  --nc-frame: #050c18;
+  --rim: 0 0 0 1px #050c18, 0 2px 5px rgba(0,0,0,.6);
+  --panel-shadow: inset 0 1px 0 rgba(255,255,255,.3), 0 0 0 1px #050c18, 0 4px 10px rgba(0,0,0,.6); }
+.sideButton, .toolButton, .zoomButton, .dockArrow, .roundButton, #storeOk, .summaryButton, .levelStar { border-width: 2px !important; }
+#hudProfile, #dockPanel, .summaryCard, .levelCard, #infoCard, #goals, #songBox, .statButton, #zoomBar { border: 1px solid #6fb2ff !important; }

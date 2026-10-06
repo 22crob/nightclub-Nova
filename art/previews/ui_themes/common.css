@@ -1,0 +1,9 @@
+/* Shared: sharper shapes for every edgy theme. */
+#hudProfile, #songBox, #goals, .statButton, #zoomBar, #dockPanel, .summaryCard, .levelCard, #infoCard, #toast, #selectedChip, .partyBanner { border-radius: var(--r) !important; }
+.sideButton, .toolButton, .zoomButton, .dockArrow, .levelStar { border-radius: var(--rb) !important; }
+.roundButton, #storeOk, .summaryButton, .levelButton, .songButton { border-radius: var(--r) !important; }
+.storeTab.active { border-radius: var(--r) var(--r) 0 0 !important; }
+.portrait, .portraitFace, .songDisc, .infoPortrait { border-radius: var(--r) !important; }
+.xpBar { border-radius: 2px !important; }
+#dock[data-mode="store"] .propCost { border-radius: 3px !important; }
+.summaryTitle, .levelTitle, #goalsHead { letter-spacing: 0.02em; }

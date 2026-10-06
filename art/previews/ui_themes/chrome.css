@@ -1,0 +1,14 @@
+/* A: Chrome & Black - gunmetal panels, chrome bevel rims, cyan accents. */
+:root { --r: 6px; --rb: 10px;
+  --panel: linear-gradient(180deg, #3a3f48 0%, #1d2026 48%, #121418 52%, #1a1d22 100%);
+  --panel-deep: linear-gradient(180deg, #2c3038 0%, #16181d 48%, #0c0d10 52%, #14161a 100%);
+  --nc-frame: #000; --gold: #5fe3ff;
+  --rim: 0 0 0 1px #000, inset 0 1px 0 rgba(255,255,255,.35), 0 3px 6px rgba(0,0,0,.6);
+  --panel-shadow: inset 0 1px 0 rgba(255,255,255,.25), inset 0 0 0 1px rgba(160,170,185,.35), 0 4px 12px rgba(0,0,0,.7);
+  --nc-green: linear-gradient(180deg, #4ad6ff 0%, #138ccc 50%, #0a5a8a 100%); }
+.sideButton, .toolButton, .zoomButton, .dockArrow, .roundButton, #storeOk, .summaryButton, .levelStar { border: 2px solid #9aa4b4 !important; }
+.sideButton.big { background: var(--panel) !important; border-color: #5fe3ff !important; box-shadow: 0 0 12px #5fe3ff88, var(--rim) !important; }
+.sideButton.active { box-shadow: 0 0 0 2px #5fe3ff, 0 0 16px #5fe3ff !important; }
+#dockPanel { border: 2px solid #9aa4b4 !important; box-shadow: inset 0 1px 0 rgba(255,255,255,.2), 0 0 0 1px #000, 0 6px 18px #000 !important; }
+.summaryTitle, .levelTitle, #goalsHead { color: #fff !important; -webkit-text-stroke: 1px #000 !important; text-shadow: 0 0 10px #5fe3ff !important; }
+.xpFill { background: linear-gradient(180deg, #a8f2ff, #1fa8e0) !important; }

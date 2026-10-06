@@ -1,0 +1,18 @@
+/* B: Neon Edge - near-black glass, clipped corners, glowing magenta/cyan lines. */
+:root { --r: 0px; --rb: 4px;
+  --panel: linear-gradient(180deg, rgba(20,10,30,.94), rgba(8,4,14,.96));
+  --panel-deep: linear-gradient(180deg, rgba(16,8,26,.95), rgba(6,3,10,.97));
+  --nc-frame: #ff3ddc; --gold: #ff6fe8;
+  --rim: 0 0 0 1px #ff3ddc, 0 0 10px rgba(255,61,220,.55);
+  --panel-shadow: 0 0 0 1px #ff3ddc, 0 0 16px rgba(255,61,220,.45);
+  --nc-green: linear-gradient(180deg, #29e0ff, #0a7aa8); }
+#hudProfile, #dockPanel, .summaryCard, .levelCard, #infoCard, #goals, #songBox, .statButton, #zoomBar, #toast {
+  border: 1px solid #ff3ddc !important; clip-path: polygon(14px 0, 100% 0, 100% calc(100% - 14px), calc(100% - 14px) 100%, 0 100%, 0 14px); }
+.sideButton, .toolButton, .zoomButton, .dockArrow, .roundButton, #storeOk, .summaryButton { border: 1px solid #29e0ff !important; box-shadow: 0 0 10px rgba(41,224,255,.6) !important; background: rgba(6,10,20,.92) !important;
+  clip-path: polygon(8px 0, 100% 0, 100% calc(100% - 8px), calc(100% - 8px) 100%, 0 100%, 0 8px); }
+.sideButton.active { border-color: #ff3ddc !important; box-shadow: 0 0 16px #ff3ddc !important; }
+.storeTab.active { background: rgba(255,61,220,.18) !important; border: 1px solid #ff3ddc !important; }
+.summaryTitle, .levelTitle, #goalsHead { color: #fff !important; -webkit-text-stroke: 0 !important; text-shadow: 0 0 8px #ff3ddc, 0 0 18px #ff3ddc !important; text-transform: uppercase; }
+#hudCash .amount { color: #9dff6a !important; -webkit-text-stroke: 0 !important; text-shadow: 0 0 10px #9dff6a !important; }
+.xpFill { background: linear-gradient(90deg, #29e0ff, #ff3ddc) !important; }
+.statLabel, .xpText { letter-spacing: .14em !important; }

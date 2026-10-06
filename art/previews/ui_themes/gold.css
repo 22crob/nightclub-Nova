@@ -1,0 +1,18 @@
+/* D: Black & Gold VIP - matte black, gold trim, angled corners, luxe. */
+:root { --r: 3px; --rb: 6px;
+  --panel: linear-gradient(180deg, #1c1a17 0%, #0d0c0b 100%);
+  --panel-deep: linear-gradient(180deg, #16140f 0%, #070605 100%);
+  --nc-frame: #000; --gold: #ffd36a;
+  --rim: 0 0 0 1px #000, 0 0 0 2px #b8892e, 0 3px 6px rgba(0,0,0,.7);
+  --panel-shadow: inset 0 0 0 1px rgba(255,211,106,.25), 0 4px 12px rgba(0,0,0,.7);
+  --nc-green: linear-gradient(180deg, #ffe48a 0%, #d9a530 50%, #8a6214 100%); }
+#hudProfile, #dockPanel, .summaryCard, .levelCard, #infoCard, #goals, #songBox, .statButton, #zoomBar, #toast { border: 2px solid #c99a3a !important;
+  clip-path: polygon(10px 0, calc(100% - 10px) 0, 100% 10px, 100% calc(100% - 10px), calc(100% - 10px) 100%, 10px 100%, 0 calc(100% - 10px), 0 10px); }
+.sideButton, .toolButton, .zoomButton, .dockArrow, .roundButton, .summaryButton, .levelStar { border: 2px solid #e2b54e !important; background: var(--panel) !important; }
+.sideButton.big { transform: rotate(45deg); } .sideButton.big > * { transform: rotate(-45deg); }
+.sideButton.active { box-shadow: 0 0 0 2px #ffd36a, 0 0 14px #ffd36a !important; }
+#storeOk { border: 2px solid #fff3c4 !important; }
+.summaryTitle, .levelTitle, #goalsHead { color: #ffd36a !important; -webkit-text-stroke: 0 !important; text-shadow: 0 2px 0 #000 !important; text-transform: uppercase; letter-spacing: .08em !important; }
+#hudCash .amount { color: #ffd36a !important; }
+.xpFill { background: linear-gradient(180deg, #ffe9a0, #c99a3a) !important; }
+.storeTab.active { background: #1c1a17 !important; border: 2px solid #c99a3a !important; border-bottom: 0 !important; }
