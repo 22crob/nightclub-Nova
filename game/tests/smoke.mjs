@@ -249,7 +249,7 @@ const looks = await page.evaluate(() => {
   const s = window.__clubNova.scene.getScene('club');
   return s.patrons.map((p) => ({ tex: p.container.patronSprite && p.container.patronSprite.texture.key, anim: p.container.patronSprite && p.container.patronSprite.anims.currentAnim && p.container.patronSprite.anims.currentAnim.key }));
 });
-check('patrons use chibi characters and play an animation', looks.length > 0 && looks.every((l) => /^patron_\d+$/.test(l.tex) && /^patron_\d+_(idle|walk|dance)_(front|back)$/.test(l.anim)), JSON.stringify(looks[0]));
+check('patrons use chibi characters and play an animation', looks.length > 0 && looks.every((l) => /^patron_\d+$/.test(l.tex) && /^patron_\d+_(idle|walk|dance|drink|sit|sittalk)_(front|back)$/.test(l.anim)), JSON.stringify(looks[0]));
 
 // Facing: moving down-screen shows the front, up-screen the back, and the
 // sprite is mirrored for the right-hand diagonals.
@@ -1098,7 +1098,7 @@ const seating = await page.evaluate(() => {
   // Facing the camera: on top of the whole piece; facing away: between its layers.
   const between = p.container.patronDir === 'back' ? d > lo && d < hi : d > hi;
   const taken = couch.seatTaken.includes(p);
-  const sitAnim = !p.container.patronSprite || String(p.container.patronAnimState).startsWith('sit_');
+  const sitAnim = !p.container.patronSprite || /^sit(talk)?_/.test(String(p.container.patronAnimState));
   const fun0 = p.fun;
   s.updatePatronMood(p, 2);
   const funUp = p.fun > fun0;
@@ -2020,6 +2020,33 @@ const cashRoll = await page.evaluate(async () => {
 });
 check('the cash rolls up to a new amount; buttons have the candy look', cashRoll.rolling && cashRoll.landed && cashRoll.stopped && cashRoll.rim === 'rgb(255, 255, 255)' && !!cashRoll.padColour, JSON.stringify(cashRoll));
 check('the Goals pad opens and closes the goals in the dock; a finished goal puts a ! on it until opened', topUi.startsClosed && topUi.opens && topUi.closes && topUi.badge === '!' && topUi.badgeCleared, JSON.stringify(topUi));
+
+// Guests from the owner's 3D model: their own sheet and frame grid, with
+// two more clips (drink, sittalk); the drawn guests stand or sit instead.
+const model3d = await page.evaluate(() => {
+  const s = window.__clubNova.scene.getScene('club');
+  const out = {};
+  let idx = 0;
+  while (s.textures.exists(`patron_${idx}`) && !s.anims.exists(`patron_${idx}_drink_front`)) idx++;
+  out.found = s.anims.exists(`patron_${idx}_drink_front`) && s.anims.exists(`patron_${idx}_sittalk_back`);
+  out.drawnFallback = s.patronAnimKey({ patronCharacter: 0, patronDir: 'front' }, 'drink') === 'patron_0_idle_front'
+    && s.patronAnimKey({ patronCharacter: 0, patronDir: 'back' }, 'sittalk') === 'patron_0_sit_back';
+  if (!out.found) return out;
+  const c = s.drawPatronCharacterSprite(100, 100, 1, idx);
+  const guest = { container: c };
+  s.setPatronAnimation(guest, 'drink');
+  out.drinking = c.patronSprite.anims.currentAnim.key;
+  s.setPatronAnimation(guest, 'sittalk');
+  out.talking = c.patronSprite.anims.currentAnim.key;
+  // Drawn at the same standing height as the drawn guests.
+  const drawn = s.drawPatronCharacterSprite(100, 100, 1, 0);
+  out.sameScale = Math.abs(c.patronSprite.scaleY - drawn.patronSprite.scaleY * 121.1 / 118) < 0.02;
+  out.idx = idx;
+  c.destroy();
+  drawn.destroy();
+  return out;
+});
+check('guests made from the owner\'s 3D model load with drink and sit-and-talk clips; drawn guests fall back to standing and sitting', model3d.found && model3d.drawnFallback && ( model3d.drinking === `patron_${model3d.idx}_drink_front` && model3d.talking === `patron_${model3d.idx}_sittalk_front` && model3d.sameScale), JSON.stringify(model3d));
 
 // The drink meter on the right edge fills with drinks, tips and bonuses;
 // full, drinks cost double for 30 seconds while it drains, then it empties.

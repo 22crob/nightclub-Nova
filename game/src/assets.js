@@ -12,9 +12,31 @@ export const SPRITE_URLS = Object.fromEntries(
   Object.entries(spriteFiles).map(([path, url]) => [path.split('/').pop().replace(/\.png$/, ''), url]),
 );
 
-// Chibi patrons (art/blender/build_patrons.py): one spritesheet per
-// character, each holding idle / walk / dance rows facing front and back.
-// PATRON_META describes the frame grid and the anchor point between the feet.
+// Patrons: one spritesheet per character. The drawn ones
+// (patron_00..11.png, art/sprites_from_art.py) share one frame grid,
+// patrons.json: idle / walk / dance / sit rows facing front and back. The
+// 3D ones from the owner's own model (patron_3d_<look>.png,
+// art/blender/build_patron_model1.py) come after them, each with its own
+// grid in a JSON beside it and two more clips: drink and sittalk.
+// patronMetaOf(i) gives any character's grid in one shape: frame size,
+// anchor between the feet, standing height, and for each clip_facing its
+// first frame (`starts`), with frame counts and speeds per clip.
 const patronSheets = import.meta.glob('./assets/sprites/patrons/patron_*.png', { eager: true, import: 'default' });
-export const PATRON_SHEETS = Object.keys(patronSheets).sort().map((k) => patronSheets[k]);
+const patronSheetMetas = import.meta.glob('./assets/sprites/patrons/patron_3d_*.json', { eager: true, import: 'default' });
+const drawnKeys = Object.keys(patronSheets).filter((k) => /patron_\d+\.png$/.test(k)).sort();
+const modelKeys = Object.keys(patronSheets).filter((k) => /patron_3d_\w+\.png$/.test(k)).sort();
+export const PATRON_SHEETS = [...drawnKeys, ...modelKeys].map((k) => patronSheets[k]);
 export const PATRON_META = patronMeta;
+const drawnMeta = {
+  ...patronMeta,
+  starts: Object.fromEntries(Object.entries(patronMeta.rows).map(([row, r]) => [row, r * patronMeta.columns])),
+};
+const PATRON_METAS = [
+  ...drawnKeys.map(() => drawnMeta),
+  ...modelKeys.map((k) => patronSheetMetas[k.replace(/\.png$/, '.json')]),
+];
+// The characters made from the owner's 3D model.
+export const MODEL_PATRONS = modelKeys.map((_, i) => drawnKeys.length + i);
+export function patronMetaOf(character) {
+  return PATRON_METAS[character] || drawnMeta;
+}

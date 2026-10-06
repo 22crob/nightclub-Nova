@@ -14,6 +14,8 @@ import { TILE_W, VISIT } from '../config.js';
 // Screen pixels per Blender unit of height, for sitLift.
 const UNIT_HEIGHT_PX = (TILE_W / Math.SQRT2) * Math.cos(Math.PI / 6);
 const randRange = (min, max) => min + Math.random() * (max - min);
+// How often a seated guest chats rather than just sits.
+const SIT_TALK_CHANCE = 0.5;
 
 export class SeatingMixin {
   // Where seat i of a placed piece is, in (fractional) grid coordinates,
@@ -132,7 +134,8 @@ export class SeatingMixin {
     if (mixed) c.setDepth(rec.gameObject.baseDepth + 0.0015 + (spot.gx + spot.gy - rec.anchor[0] - rec.anchor[1]) * 0.0001);
     else c.setDepth(rec.gameObject.baseDepth + (facingCamera ? 0.003 : 0.001));
     this.propLayer.sort('depth');
-    this.setPatronAnimation(patron, 'sit');
+    // Some sit and chat (the 3D guests' sittalk; drawn guests just sit).
+    this.setPatronAnimation(patron, Math.random() < SIT_TALK_CHANCE ? 'sittalk' : 'sit');
     this.tweens.add({
       targets: c,
       x: sx,

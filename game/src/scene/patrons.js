@@ -1,12 +1,15 @@
 // ClubScene methods: Patrons: spawning, wandering, animation, tipping and leaving.
 // Mixed into ClubScene (see ClubScene.js); `this` is the scene.
 import Phaser from 'phaser';
-import { PATRON_META, PATRON_SHEETS } from '../assets.js';
+import { MODEL_PATRONS, PATRON_SHEETS, patronMetaOf } from '../assets.js';
 import { FLOOR_DECAL_PROPS, PROP_TYPES, STAFF_TYPES } from '../catalog.js';
-import { BOOST, CHARACTER_DISPLAY_HEIGHT, HAIR_STYLES, PATRON_HAIR_COLORS, PATRON_MOVE_INTERVAL, PATRON_OUTFIT_COLORS, PATRON_POPUP_Y, PATRON_SKIN_TONES, PATRON_SPAWN_INTERVAL, MONEY, PATRON_TIP_INTERVAL, PATRON_Y_OFFSET, PROP_SCALE, VISIT } from '../config.js';
+import { BOOST, CHARACTER_DISPLAY_HEIGHT, MODEL_PATRON_SHARE, HAIR_STYLES, PATRON_HAIR_COLORS, PATRON_MOVE_INTERVAL, PATRON_OUTFIT_COLORS, PATRON_POPUP_Y, PATRON_SKIN_TONES, PATRON_SPAWN_INTERVAL, MONEY, PATRON_TIP_INTERVAL, PATRON_Y_OFFSET, PROP_SCALE, VISIT } from '../config.js';
 import { SFX } from '../sfx.js';
 import { MOOD } from './mood.js';
 import { randRange } from '../util.js';
+
+// What a character without a clip does instead (see patronAnimKey()).
+const CLIP_FALLBACK = { drink: 'idle', sittalk: 'sit' };
 
 export class PatronsMixin {
   // True once the chibi patron spritesheets have loaded; otherwise patrons
@@ -15,9 +18,12 @@ export class PatronsMixin {
     return PATRON_SHEETS.length > 0 && this.textures.exists('patron_0');
   }
 
-  // Animation key for a patron's character, clip and facing.
+  // Animation key for a patron's character, clip and facing. Only the 3D
+  // characters have drink and sittalk; the drawn ones stand or sit instead.
   patronAnimKey(container, clip) {
-    return `patron_${container.patronCharacter}_${clip}_${container.patronDir}`;
+    const key = `patron_${container.patronCharacter}_${clip}_${container.patronDir}`;
+    if (this.anims.exists(key) || !CLIP_FALLBACK[clip]) return key;
+    return `patron_${container.patronCharacter}_${CLIP_FALLBACK[clip]}_${container.patronDir}`;
   }
 
   // ---------------------------------------------------------------------
@@ -130,12 +136,15 @@ export class PatronsMixin {
     const shadow = this.add.ellipse(0, 2 * PROP_SCALE, 30 * PROP_SCALE, 12 * PROP_SCALE, 0x000000, 0.3);
     // Patrons never wear a staff member's character, so staff stand out.
     const staffLooks = new Set(Object.values(STAFF_TYPES).map((t) => t.character % PATRON_SHEETS.length));
-    const choices = PATRON_SHEETS.map((_, i) => i).filter((i) => !staffLooks.has(i));
-    container.patronCharacter = character ?? Phaser.Utils.Array.GetRandom(choices.length ? choices : [0]);
+    const choices = PATRON_SHEETS.map((_, i) => i).filter((i) => !staffLooks.has(i) && !MODEL_PATRONS.includes(i));
+    // Some guests are the owner's 3D model (MODEL_PATRON_SHARE), the rest drawn.
+    const pool = MODEL_PATRONS.length && Math.random() < MODEL_PATRON_SHARE ? MODEL_PATRONS : choices;
+    container.patronCharacter = character ?? Phaser.Utils.Array.GetRandom(pool.length ? pool : [0]);
     container.patronDir = 'front';
+    const meta = patronMetaOf(container.patronCharacter);
     const sprite = this.add.sprite(0, 0, `patron_${container.patronCharacter}`);
-    sprite.setOrigin(PATRON_META.originX, PATRON_META.originY);
-    sprite.setScale((CHARACTER_DISPLAY_HEIGHT * 0.9) / PATRON_META.standingHeight);
+    sprite.setOrigin(meta.originX, meta.originY);
+    sprite.setScale((CHARACTER_DISPLAY_HEIGHT * 0.9) / meta.standingHeight);
     container.add([shadow, sprite]);
     container.setScale(scaleVariance);
     container.patronSprite = sprite;

@@ -1,7 +1,7 @@
 // The main game scene. Its methods are split across the files in this
 // folder by topic and mixed in below, so each file stays small.
 import Phaser from 'phaser';
-import { PATRON_META, PATRON_SHEETS, SPRITE_URLS } from '../assets.js';
+import { PATRON_SHEETS, SPRITE_URLS, patronMetaOf } from '../assets.js';
 import { PROP_TYPES } from '../catalog.js';
 import { BASE_GRID_SIZE, FACINGS, PASSIVE_FAN_SHARE, FLOOR_TICK_MS, STARTING_CASH, WAGE_INTERVAL_MS, ZOOM_DEFAULT } from '../config.js';
 import { SFX } from '../sfx.js';
@@ -77,12 +77,10 @@ export class ClubScene extends Phaser.Scene {
       }
     }
 
-    // Chibi patrons: one spritesheet per character.
+    // Patrons: one spritesheet per character, each with its own frame grid.
     PATRON_SHEETS.forEach((url, i) => {
-      this.load.spritesheet(`patron_${i}`, url, {
-        frameWidth: PATRON_META.frameWidth,
-        frameHeight: PATRON_META.frameHeight,
-      });
+      const meta = patronMetaOf(i);
+      this.load.spritesheet(`patron_${i}`, url, { frameWidth: meta.frameWidth, frameHeight: meta.frameHeight });
     });
   }
 
@@ -296,15 +294,14 @@ export class ClubScene extends Phaser.Scene {
     // Patron animations: one per character, per clip, per facing, named
     // patron_<i>_<clip>_<front|back> (see patronAnimKey()).
     if (this.hasCharacterSprites()) {
-      const rates = PATRON_META.fps;
       PATRON_SHEETS.forEach((_, i) => {
-        for (const [row, start] of Object.entries(PATRON_META.rows)) {
+        const meta = patronMetaOf(i);
+        for (const [row, first] of Object.entries(meta.starts)) {
           const clip = row.split('_')[0];
-          const first = start * PATRON_META.columns;
           this.anims.create({
             key: `patron_${i}_${row}`,
-            frames: this.anims.generateFrameNumbers(`patron_${i}`, { start: first, end: first + PATRON_META.frames[clip] - 1 }),
-            frameRate: rates[clip],
+            frames: this.anims.generateFrameNumbers(`patron_${i}`, { start: first, end: first + meta.frames[clip] - 1 }),
+            frameRate: meta.fps[clip],
             repeat: -1,
           });
         }

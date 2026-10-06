@@ -169,6 +169,9 @@ export const PATRON_Y_OFFSET = 6 * PROP_SCALE;
 // as a bar counter, so props and decorations read at the right size around
 // them. (It was 3.25 at first, which made characters about 2.4 counters
 // tall.)
+// Share of guests who are the owner's 3D model (when its sheets exist; see
+// MODEL_PATRONS in assets.js), the rest being the drawn characters.
+export const MODEL_PATRON_SHARE = 0.35;
 export const CHARACTER_DISPLAY_HEIGHT = 87.4; // px: big next to the furniture, like Nightclub City
 // How far above a patron's feet their tip / drink popups start.
 export const PATRON_POPUP_Y = CHARACTER_DISPLAY_HEIGHT * 0.8;

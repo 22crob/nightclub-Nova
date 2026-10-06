@@ -4,7 +4,7 @@
 // bartender for their card and the Bottoms Up! move, which serves their
 // whole line at once; the game suggests it when a bar is slammed.
 // Mixed into ClubScene (see ClubScene.js); `this` is the scene.
-import { PATRON_META, PATRON_SHEETS } from '../assets.js';
+import { PATRON_META, PATRON_SHEETS, patronMetaOf } from '../assets.js';
 import { PROP_TYPES, VIP_BOOTHS } from '../catalog.js';
 import { BOTTOMS_UP, CHARACTER_DISPLAY_HEIGHT, THIRST_INTERVAL } from '../config.js';
 import { MOOD } from './mood.js';
@@ -82,10 +82,19 @@ export class GuestsMixin {
   setPortrait(el, character) {
     const url = PATRON_SHEETS[character];
     if (!el || !url) return;
-    const k = 0.8;
+    // Framed like a drawn character at 0.8x: the head 10 px below the top
+    // and the body centred where theirs is (sheets differ in grid and size).
+    const meta = patronMetaOf(character);
+    const drawn = PATRON_META;
+    const k = 0.8 * drawn.standingHeight / meta.standingHeight;
+    const first = meta.starts.idle_front;
+    const cellX = (first % meta.columns) * meta.frameWidth;
+    const cellY = Math.floor(first / meta.columns) * meta.frameHeight;
+    const headTop = meta.originY * meta.frameHeight - meta.standingHeight;
+    const centreX = (drawn.originX - 0.12) * drawn.frameWidth * 0.8;
     el.style.backgroundImage = `url(${url})`;
-    el.style.backgroundSize = `${PATRON_META.frameWidth * PATRON_META.columns * k}px auto`;
-    el.style.backgroundPosition = `${-PATRON_META.frameWidth * k * 0.12}px ${-24 * k}px`;
+    el.style.backgroundSize = `${meta.frameWidth * meta.columns * k}px auto`;
+    el.style.backgroundPosition = `${centreX - (cellX + meta.originX * meta.frameWidth) * k}px ${-(cellY + headTop - 10) * k}px`;
   }
 
   refreshInfoCard() {

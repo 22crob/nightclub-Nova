@@ -132,7 +132,7 @@ export class ActivitiesMixin {
     }
     if (kind === 'drink' && a.phase === 'drinking') {
       this.faceFront(patron);
-      this.setPatronAnimation(patron, 'idle');
+      this.setPatronAnimation(patron, 'drink'); // sipping (drawn guests just stand)
       patron.nextMoveAt = a.until;
       return;
     }
