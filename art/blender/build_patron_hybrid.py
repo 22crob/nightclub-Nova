@@ -31,13 +31,16 @@ import sys
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 REPO = os.path.dirname(os.path.dirname(HERE))
-WORK = os.path.join(REPO, 'art', 'build', 'hybrid')
+WORK = os.environ.get('HYBRID_WORK') or os.path.join(REPO, 'art', 'build', 'hybrid')
 SPRITES = os.path.join(REPO, 'game', 'src', 'assets', 'sprites', 'patrons')
 
 # Region keys for the id pass (sRGB, exact).
 KEYS = {
     'skin': (255, 0, 0), 'shirt': (0, 255, 0), 'trousers': (0, 0, 255),
     'shoes': (255, 255, 0), 'soles': (0, 255, 255), 'glass': (255, 0, 255),
+    # Clothing details, coloured from the outfit in compose (see PALETTE).
+    'trim': (128, 0, 0), 'pocket': (0, 128, 0), 'belt': (0, 0, 128),
+    'turnup': (128, 128, 0), 'stripe': (0, 128, 128),
 }
 SHADE_DARK = 0.74           # the shadow tone, as a share of the lit colour
 NECK_DROP = 0.045           # chin below the head bone's root, rest units
@@ -46,6 +49,63 @@ NECK_DROP = 0.045           # chin below the head bone's root, rest units
 # ==========================================================================
 # Render (Blender)
 # ==========================================================================
+
+# The drawn guys are chunky: thicker arms and legs and a broader chest than
+# the model's. Bone scale across the bone (its X and Z; Y runs along it).
+BUILD = {'Spine1': (1.12, 1.0, 1.08), 'LeftArm': (1.28, 1.0, 1.28), 'RightArm': (1.28, 1.0, 1.28),
+         'LeftUpLeg': (1.18, 1.0, 1.18), 'RightUpLeg': (1.18, 1.0, 1.18)}
+
+
+def chunkier(arm, actions):
+    """Scales the bones in BUILD (and so everything below them), after
+    taking any scale keys out of the clips so the scale holds."""
+    for act in actions.values():
+        for fc in [fc for fc in act.fcurves if fc.data_path.endswith('.scale')]:
+            act.fcurves.remove(fc)
+    for name, sc in BUILD.items():
+        pb = arm.pose.bones.get(f'mixamorig:{name}')
+        if pb:
+            pb.scale = sc
+
+
+def add_details(body):
+    """Splits the clothes into details, by where each face sits in the rest
+    (T) pose: sleeve cuffs, collar and hem (trim), a front pocket, a
+    waistband (belt), trouser turn-ups and a stripe along the shoes."""
+    import bpy
+    mats = body.data.materials
+    names = [m.name.split('.')[0].lower() for m in mats]
+    extra = {}
+    for key in ('trim', 'pocket', 'belt', 'turnup', 'stripe'):
+        m = bpy.data.materials.new(key.capitalize())
+        mats.append(m)
+        extra[key] = len(mats) - 1
+    mw = body.matrix_world
+    for p in body.data.polygons:
+        region = names[p.material_index] if p.material_index < len(names) else ''
+        c = mw @ p.center
+        ax = abs(c.x)
+        detail = None
+        if region == 'shirt':
+            if 0.215 < ax:                          # sleeve ends
+                detail = 'trim'
+            elif c.z > 0.80 and ax < 0.16:           # collar
+                detail = 'trim'
+            elif c.z < 0.60:                         # hem
+                detail = 'trim'
+            elif c.y < -0.08 and 0.62 < c.z < 0.72 and ax < 0.10:
+                detail = 'pocket'
+        elif region == 'trousers':
+            if c.z > 0.535:
+                detail = 'belt'
+            elif c.z < 0.14:
+                detail = 'turnup'
+        elif region == 'shoes':
+            if 0.035 < c.z < 0.06:
+                detail = 'stripe'
+        if detail:
+            p.material_index = extra[detail]
+
 
 def render_main():
     import bpy
@@ -84,6 +144,7 @@ def render_main():
     face = os.path.join(WORK, 'unused_face.png')
     bp.paint_face(face)
     bp.colour_body(body, face)
+    add_details(body)
     region_names = [m.name.split('.')[0].lower() for m in body.data.materials]
     import bmesh
     names = [g.name for g in body.vertex_groups]
@@ -154,6 +215,8 @@ def render_main():
     iso_rig.apply_model_scale(root)
     unit = root.scale.x
 
+    chunkier(arm, actions)
+
     # The same plan as build_patron_model1 (frames, speeds, sit lift).
     plan = {}
     for clip, n, rng, speed in m1.CLIPS:
@@ -179,6 +242,8 @@ def render_main():
                 o.data.materials[0] = shade_mat
             scene.render.use_freestyle = True
             scene.cycles.filter_width = 1.5
+            scene.cycles.samples = 16
+            scene.cycles.use_denoising = True
         else:
             body.data.materials.clear()
             for m in id_mats:
@@ -187,6 +252,10 @@ def render_main():
                 o.data.materials[0] = glass_id
             scene.render.use_freestyle = False
             scene.cycles.filter_width = 0.01
+            # Exact key colours: flat emission needs one sample, and the
+            # denoiser would smear the keys into each other.
+            scene.cycles.samples = 1
+            scene.cycles.use_denoising = False
 
     # Remember each polygon's region (material index) for the id pass.
     regions = [p.material_index for p in body.data.polygons]
@@ -296,11 +365,35 @@ def sample_colours(cell, chin_y, feet_y):
 
     body_h = feet_y - chin_y
     w = cell.width
+    skin = common(chin_y - body_h * 0.35, chin_y - body_h * 0.1, w * 0.3, w * 0.7)
+
+    def common_not_skin(y0, y1, x0, x1):
+        """Like common(), but skips skin (bare legs under shorts)."""
+        c = Counter()
+        for y in range(int(y0), int(y1)):
+            for x in range(int(x0), int(x1)):
+                r, g, b, a = cell.getpixel((x, y))
+                if a < 250 or r + g + b < 60 or sum((u - v) ** 2 for u, v in zip((r, g, b), skin)) < 50 ** 2:
+                    continue
+                c[(r // 12 * 12, g // 12 * 12, b // 12 * 12)] += 1
+        return c.most_common(1)[0][0] if c else (40, 40, 60)
+    shoes = second = None
+    c = Counter()
+    for y in range(int(chin_y + body_h * 0.9), int(feet_y + 1)):
+        for x in range(w):
+            r, g, b, a = cell.getpixel((x, y))
+            if a >= 250 and r + g + b >= 90:
+                c[(r // 12 * 12, g // 12 * 12, b // 12 * 12)] += 1
+    top = [col for col, _ in c.most_common(6)]
+    shoes = top[0] if top else (240, 240, 240)
+    # A shoe accent: the commonest shoe colour clearly different from the main one.
+    second = next((col for col in top[1:] if sum((a - b) ** 2 for a, b in zip(col, shoes)) > 80 ** 2), None)
     return {
+        'shoeAccent': second or tuple(max(0, v - 90) for v in shoes),
         'shirt': common(chin_y + body_h * 0.12, chin_y + body_h * 0.4, w * 0.35, w * 0.65),
-        'trousers': common(chin_y + body_h * 0.62, chin_y + body_h * 0.85, w * 0.3, w * 0.7),
+        'trousers': common_not_skin(chin_y + body_h * 0.5, chin_y + body_h * 0.85, w * 0.3, w * 0.7),
         'shoes': common(chin_y + body_h * 0.9, feet_y + 1, 0, w),
-        'skin': common(chin_y - body_h * 0.35, chin_y - body_h * 0.1, w * 0.3, w * 0.7),
+        'skin': skin,
     }
 
 
@@ -322,10 +415,27 @@ def colour_frame(shade, ids, colours):
     w, h = shade.size
     out = Image.new('RGBA', (w, h))
     sp, ip, op = shade.load(), ids.load(), out.load()
-    keys = {v: k for k, v in KEYS.items()}
+    # The id pass writes each key as a linear emission, shown through the
+    # sRGB transform, so a channel of 128 comes out brighter: compare with
+    # the colours as they come out.
+    def shown(v):
+        x = v / 255
+        x = x * 12.92 if x <= 0.0031308 else 1.055 * x ** (1 / 2.4) - 0.055
+        return round(x * 255)
+    out_keys = {k: tuple(shown(c) for c in v) for k, v in KEYS.items()}
+    keys = {v: k for k, v in out_keys.items()}
     pal = dict(colours)
     pal.setdefault('soles', tuple(min(255, c + 20) for c in pal['shoes']))
     pal['glass'] = (255, 95, 184)
+    shade = lambda col, k: tuple(max(0, min(255, round(v * k))) for v in col)
+    # Cuffs, collar and hem a shade darker; on a dark top that reads as a
+    # beard under the chin, so dark tops get a lighter trim instead.
+    pal['trim'] = shade(pal['shirt'], 0.72) if sum(pal['shirt']) > 200 else tuple(min(255, v + 70) for v in pal['shirt'])
+    pal['pocket'] = pal['shirt']        # a pocket band read as a stripe at this size
+    pal['belt'] = shade(pal['trousers'], 0.6)
+    pal['turnup'] = shade(pal['trousers'], 0.8)
+    pal['stripe'] = pal['shoeAccent']
+    pal['soles'] = (245, 245, 245) if sum(pal['shoes']) < 450 else shade(pal['shoes'], 0.82)
     for y in range(h):
         for x in range(w):
             s = sp[x, y]
@@ -333,8 +443,8 @@ def colour_frame(shade, ids, colours):
                 continue
             i = ip[x, y]
             region = keys.get(i[:3])
-            if region is None and i[3] > 0:      # an edge pixel: the nearest key
-                region = min(KEYS, key=lambda k: sum((a - b) ** 2 for a, b in zip(KEYS[k], i[:3])))
+            if region is None and i[3] > 0:      # an edge or noisy pixel: the nearest key
+                region = min(out_keys, key=lambda k: sum((a - b) ** 2 for a, b in zip(out_keys[k], i[:3])))
             if region is None:
                 region = 'shirt'
             c = pal[region]
