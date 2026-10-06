@@ -59,9 +59,30 @@ def shell(counter_mat, top_mat, back_mat, top_edge=None, floor_mat=None):
     box('AisleFloor', -0.46, 0.46, -0.82, 0.86, 0, 0.015, floor_mat or plain('#2a2430', rough=0.6), bevel=0.003)
 
 
-# The back piece sits flush on the cabinet: the same front (y 0.86), the
-# same sides (x +-0.48) and the same back (y 1.4), one piece of furniture.
+# The back piece is designed on the whole cabinet top (front y 0.86, sides
+# x +-0.48, back y 1.4), then push_back() squeezes it against the wall so
+# the front of the cabinet top stays free as a little bar top.
 HY0, HY1, HZ0, HZ1 = 0.86, 1.4, 0.94, 2.3
+WALL_FRONT = 1.1                  # front of the back piece after push_back()
+LEDGE = ('BackBottle', 'Lamp', 'Ledge')   # things standing on the bar top
+
+
+def push_back():
+    """Squeeze everything above the cabinet top (but the bar-top things)
+    toward the wall, the back staying at y 1.42."""
+    back = HY1 + 0.02
+    k = (back - WALL_FRONT) / (back - (HY0 - 0.02))
+    for o in bb.ROOT.children_recursive:
+        if o.type != 'MESH' or o.name.startswith(LEDGE):
+            continue
+        mw = o.matrix_world
+        pts = [mw @ v.co for v in o.data.vertices]
+        if min(p.z for p in pts) < HZ0 - 0.005 or max(p.y for p in pts) < HY0 - 0.25:
+            continue
+        inv = mw.inverted()
+        for v, p in zip(o.data.vertices, pts):
+            p.y = back - (back - p.y) * k
+            v.co = inv @ p
 
 
 def hutch(frame, inner, crown=None, depth=0.06):
@@ -71,6 +92,13 @@ def hutch(frame, inner, crown=None, depth=0.06):
         box(f'HutchSide{x}', x - 0.03, x + 0.03, HY0, HY1, HZ0, HZ1, frame, bevel=0.006)
     box('HutchBack', -0.46, 0.46, HY1 - depth, HY1, HZ0, HZ1, inner, bevel=0.004)
     box('HutchCrown', -0.5, 0.5, HY0 - 0.02, HY1 + 0.02, HZ1, HZ1 + 0.08, crown or frame, bevel=0.01)
+
+
+def ledge_glasses():
+    """A few upturned glasses at the end of the bar top."""
+    g = clear_glass('LedgeGlass')
+    for i, x in enumerate((0.3, 0.38)):
+        cylinder(f'LedgeGlass{i}', x, 0.97, 0.94, 1.04, 0.03, g, verts=14)
 
 
 def shelves(mat, bottles, zs=(1.36, 1.76), seed=0, edge=None, y=(0.92, 1.34)):
@@ -198,6 +226,7 @@ def build_speakeasy():
     for x in (-0.3, 0.3):         # green banker lamps
         cylinder(f'LampStem{x}', x, 0.98, 0.94, 1.1, 0.008, gold, verts=8)
         bpy.ops.mesh.primitive_cylinder_add(vertices=16, radius=0.05, depth=0.16, location=(x, 0.98, 1.13), rotation=(0, math.radians(90), 0))
+        bpy.context.active_object.name = 'LampShade'
         bb._finish(bpy.context.active_object, principled('BankerGreen', srgb('#1f8a4a'), rough=0.2, emission=srgb('#3aff7a'), emission_strength=0.8), 0)
     for x in (-0.28, -0.14):
         cylinder(f'Rocks{x}', x, -1.1, 1.05, 1.13, 0.035, plain('#c08030', rough=0.05, transmission=0.6), verts=16)
@@ -472,6 +501,9 @@ def build(name):
     scene.collection.objects.link(root)
     bb.ROOT = root
     DESIGNS[name][1]()
+    bpy.context.view_layer.update()
+    push_back()
+    ledge_glasses()
     iso_rig.make_bar_piece(root)
     return scene, cam, root
 
