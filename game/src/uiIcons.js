@@ -158,6 +158,81 @@ const ART = {
     <path d="M16.4 23.6l2.2 0M27 23.6l2.2 0" stroke="#8fd8ff" stroke-width="1.2" stroke-linecap="round"/>
     <path d="M19.6 31.2c2.6 2.4 6.2 2.4 8.8 0" fill="none" stroke="${O}" stroke-width="1.8" stroke-linecap="round"/>
     <path d="M17 14.6c1.6-2.6 3.4-4 5.4-4.4" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" opacity=".8"/>`,
+  // The Shop pad: a glossy pink shopping bag, seen a little from the side,
+  // with rope handles, a gold star tag and tissue paper peeking out.
+  artShop: `<defs><linearGradient id="gBagF" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#ff9be6"/><stop offset=".5" stop-color="#ff3fb4"/><stop offset="1" stop-color="#c4127e"/></linearGradient>
+    <linearGradient id="gBagS" x1="0" x2="1"><stop offset="0" stop-color="#a80c69"/><stop offset="1" stop-color="#7a0650"/></linearGradient>
+    <radialGradient id="gTag" cx=".35" cy=".3" r=".8"><stop offset="0" stop-color="#fff6b0"/><stop offset=".5" stop-color="#ffcf2a"/><stop offset="1" stop-color="#e38a00"/></radialGradient></defs>
+    <path d="M15.5 17.5c0-9 3.4-12.6 7-12.6s7 3.6 7 12.6" fill="none" stroke="${O}" stroke-width="4.6" stroke-linecap="round"/>
+    <path d="M15.5 17.5c0-9 3.4-12.6 7-12.6s7 3.6 7 12.6" fill="none" stroke="#e7b36a" stroke-width="2.4" stroke-linecap="round"/>
+    <path d="M17 16.5 21 8.8l5 1.4 5.6-2.6 2 9.4Z" fill="#7ef0ff" stroke="${O}" stroke-width="1.4" stroke-linejoin="round"/>
+    <path d="M21 8.8l2.4 7.6M26 10.2l-1 6.2" stroke="#2ab8d6" stroke-width="1" fill="none"/>
+    <path d="M34 15.5l8-3.4 1.4 27.6-8 4.3Z" fill="url(#gBagS)" stroke="${O}" stroke-width="1.8" stroke-linejoin="round"/>
+    <path d="M7 15.5h27l1.4 28.5H5.6Z" fill="url(#gBagF)" stroke="${O}" stroke-width="1.8" stroke-linejoin="round"/>
+    <path d="M7 15.5h27l.2 3.6H6.8Z" fill="#ffd0f2" stroke="${O}" stroke-width="1.2" stroke-linejoin="round"/>
+    <path d="M10 22.5l-.8 18" stroke="#fff" stroke-width="2.4" stroke-linecap="round" opacity=".55"/>
+    <path d="M28.5 17.3c0 0 .4 2 .4 3.8" fill="none" stroke="${O}" stroke-width="1.2"/>
+    <circle cx="13" cy="17.3" r="1.3" fill="${O}"/><circle cx="28.5" cy="17.3" r="1.3" fill="${O}"/>
+    <path d="M20.5 22.6l2.4 5 5.4.8-3.9 3.8.9 5.4-4.8-2.6-4.8 2.6.9-5.4-3.9-3.8 5.4-.8Z" fill="url(#gTag)" stroke="${O}" stroke-width="1.5" stroke-linejoin="round"/>
+    <path d="M18.6 28.2c.5-1.4 1.2-2.4 2-3" stroke="#fff" stroke-width="1.2" stroke-linecap="round" opacity=".8"/>
+    <path d="M41 4.5l1 2.4 2.4 1-2.4 1-1 2.4-1-2.4-2.4-1 2.4-1Z" fill="#fff"/>`,
+  // The Edit pad: a hammer crossed over a wrench, wood and shiny steel.
+  artEdit: `<defs><linearGradient id="gWood" x1="0" x2="1"><stop offset="0" stop-color="#f2b25c"/><stop offset=".5" stop-color="#c9772c"/><stop offset="1" stop-color="#8a4b17"/></linearGradient>
+    <linearGradient id="gSteel" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#ffffff"/><stop offset=".45" stop-color="#c7d0de"/><stop offset="1" stop-color="#6d7a90"/></linearGradient>
+    <linearGradient id="gSteel2" x1="0" x2="1"><stop offset="0" stop-color="#eef2f7"/><stop offset=".5" stop-color="#b6c0cf"/><stop offset="1" stop-color="#6d7a90"/></linearGradient></defs>
+    <g transform="rotate(45 24 24)">
+      <path d="M18.4 3.5v5.4a5.6 5.6 0 0 0 3.4 5.1V38h4.4V14a5.6 5.6 0 0 0 3.4-5.1V3.5l-3 3v3.2h-5.2V6.5Z" fill="url(#gSteel2)" stroke="${O}" stroke-width="1.8" stroke-linejoin="round"/>
+      <circle cx="24" cy="41.2" r="5" fill="url(#gSteel2)" stroke="${O}" stroke-width="1.8"/>
+      <circle cx="24" cy="41.2" r="2.2" fill="#2a6fb0" stroke="${O}" stroke-width="1.2"/>
+      <path d="M22.9 15.5v20" stroke="#fff" stroke-width="1.2" stroke-linecap="round" opacity=".85"/>
+    </g>
+    <g transform="rotate(-45 24 24)">
+      <rect x="21.4" y="13" width="5.2" height="31" rx="2.4" fill="url(#gWood)" stroke="${O}" stroke-width="1.8"/>
+      <path d="M21.4 36h5.2M21.4 39h5.2" stroke="#5c2f0c" stroke-width="1.1"/>
+      <path d="M22.9 16v16" stroke="#ffe0a8" stroke-width="1.2" stroke-linecap="round" opacity=".85"/>
+      <path d="M14.5 5.5h15.5v8.5H14.5c-1.4 0-2.5-1.1-2.5-2.5v-3.5c0-1.4 1.1-2.5 2.5-2.5Z" fill="url(#gSteel)" stroke="${O}" stroke-width="1.8" stroke-linejoin="round"/>
+      <path d="M30 6.2c3 0 5.6-1.6 7.2-3.6.4 3.4-.6 7.2-3 9.2-1.2 1-2.6 1.6-4.2 1.6Z" fill="url(#gSteel)" stroke="${O}" stroke-width="1.6" stroke-linejoin="round"/>
+      <path d="M14 7.8h14.5" stroke="#fff" stroke-width="1.4" stroke-linecap="round" opacity=".9"/>
+    </g>`,
+  // The Storage pad: an open cardboard box with tape, a lamp and a
+  // record peeking out of it.
+  artStorage: `<defs><linearGradient id="gBoxL" x1="0" x2="1"><stop offset="0" stop-color="#f3c47e"/><stop offset="1" stop-color="#d79a4c"/></linearGradient>
+    <linearGradient id="gBoxR" x1="0" x2="1"><stop offset="0" stop-color="#b8792f"/><stop offset="1" stop-color="#94591d"/></linearGradient>
+    <radialGradient id="gRec" cx=".4" cy=".35" r=".7"><stop offset="0" stop-color="#5a5a72"/><stop offset="1" stop-color="#121220"/></radialGradient></defs>
+    <path d="M6 18 24 26.5 42 18 24 9.5Z" fill="#5a3412" stroke="${O}" stroke-width="1.6" stroke-linejoin="round"/>
+    <circle cx="27" cy="13" r="7.5" fill="url(#gRec)" stroke="${O}" stroke-width="1.6"/>
+    <circle cx="27" cy="13" r="2.6" fill="#ff4fa8" stroke="${O}" stroke-width="1"/>
+    <path d="M22.4 9.6a6 6 0 0 1 3.4-2" stroke="#fff" stroke-width="1.2" stroke-linecap="round" opacity=".6" fill="none"/>
+    <path d="M14 18.4 16.8 7l5 1.8-1.4 11.6Z" fill="#7ef0ff" stroke="${O}" stroke-width="1.5" stroke-linejoin="round"/>
+    <path d="M16.4 9.4l.6.2" stroke="#fff" stroke-width="1.4" stroke-linecap="round"/>
+    <path d="M6 18v17.5L24 44V26.5Z" fill="url(#gBoxL)" stroke="${O}" stroke-width="1.8" stroke-linejoin="round"/>
+    <path d="M42 18v17.5L24 44V26.5Z" fill="url(#gBoxR)" stroke="${O}" stroke-width="1.8" stroke-linejoin="round"/>
+    <path d="M6 18 1.5 24.5l18 8.6L24 26.5Z" fill="#f7d39a" stroke="${O}" stroke-width="1.6" stroke-linejoin="round"/>
+    <path d="M42 18l4.5 6.5-18 8.6L24 26.5Z" fill="#c98a3c" stroke="${O}" stroke-width="1.6" stroke-linejoin="round"/>
+    <path d="M6 18 9.5 11 27.5 19.5 24 26.5Z" fill="#e6b06a" stroke="${O}" stroke-width="1.6" stroke-linejoin="round"/>
+    <path d="M14.2 30.3v8.2l5.4 2.6v-8.2Z" fill="#fff3d6" stroke="#9a6524" stroke-width=".9" stroke-linejoin="round"/>
+    <path d="M15.4 33.6l3 1.4M15.4 35.8l3 1.4" stroke="#9a6524" stroke-width=".8"/>
+    <path d="M24 26.5V44" stroke="#c48a3e" stroke-width="3.4" opacity=".55"/>
+    <path d="M24 26.5V44" stroke="${O}" stroke-width="1.2"/>`,
+  // The Bass Boost button: a big speaker cabinet, woofer and tweeter
+  // glowing pink, sound waves coming off it.
+  artSpeaker: `<defs><linearGradient id="gCab" x1="0" x2="1"><stop offset="0" stop-color="#4a3f66"/><stop offset=".5" stop-color="#2a2340"/><stop offset="1" stop-color="#16122a"/></linearGradient>
+    <radialGradient id="gCone" cx=".42" cy=".38" r=".7"><stop offset="0" stop-color="#7a7a96"/><stop offset=".55" stop-color="#2c2c40"/><stop offset="1" stop-color="#0c0c18"/></radialGradient>
+    <radialGradient id="gCap" cx=".38" cy=".35" r=".7"><stop offset="0" stop-color="#ffd1f4"/><stop offset=".5" stop-color="#ff4fd8"/><stop offset="1" stop-color="#a0128a"/></radialGradient></defs>
+    <path d="M35.5 7.5l4.8-2.2v35l-4.8 3.4Z" fill="#120e22" stroke="${O}" stroke-width="1.6" stroke-linejoin="round"/>
+    <rect x="8" y="5" width="28" height="39" rx="3.4" fill="url(#gCab)" stroke="${O}" stroke-width="1.9"/>
+    <rect x="10.4" y="7.4" width="23.2" height="34.2" rx="2.2" fill="none" stroke="#7d6bb0" stroke-width="1" opacity=".7"/>
+    <circle cx="22" cy="14.2" r="5" fill="#0c0c18" stroke="#c9c2e6" stroke-width="1.6"/>
+    <circle cx="22" cy="14.2" r="2.6" fill="url(#gCap)"/>
+    <circle cx="22" cy="30.2" r="10.4" fill="#0c0c18" stroke="#c9c2e6" stroke-width="1.9"/>
+    <circle cx="22" cy="30.2" r="8.6" fill="url(#gCone)"/>
+    <circle cx="22" cy="30.2" r="6" fill="none" stroke="#5c5c78" stroke-width=".8"/>
+    <circle cx="22" cy="30.2" r="3.6" fill="url(#gCap)" stroke="${O}" stroke-width=".8"/>
+    <path d="M17 25.6a6.6 6.6 0 0 1 4-2.2" stroke="#fff" stroke-width="1.2" stroke-linecap="round" opacity=".55" fill="none"/>
+    <circle cx="11.4" cy="8.4" r=".9" fill="#c9c2e6"/><circle cx="32.6" cy="8.4" r=".9" fill="#c9c2e6"/><circle cx="11.4" cy="40.6" r=".9" fill="#c9c2e6"/><circle cx="32.6" cy="40.6" r=".9" fill="#c9c2e6"/>
+    <path d="M10.6 6.6v20" stroke="#fff" stroke-width="1.3" stroke-linecap="round" opacity=".35"/>
+    <path d="M42.6 22.6a8.6 8.6 0 0 1 0 15.2M45.4 18.6a14 14 0 0 1 0 23.2" fill="none" stroke="#7ef0ff" stroke-width="2.4" stroke-linecap="round"/>
+    <path d="M2.6 22.6a8.6 8.6 0 0 0 0 15.2" fill="none" stroke="#7ef0ff" stroke-width="2.4" stroke-linecap="round"/>`,
   // Money: a stack of green bills with a paper band.
   cash: `<defs><linearGradient id="gBill" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#d8ffb8"/><stop offset=".55" stop-color="#6fd64f"/><stop offset="1" stop-color="#2f9b2a"/></linearGradient></defs>
     ${[12, 7, 2].map((dy, k) => `<g transform="translate(0 ${dy})">

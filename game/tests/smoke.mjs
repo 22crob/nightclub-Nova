@@ -1196,19 +1196,19 @@ const people = await page.evaluate(() => {
   const line = s.patrons.filter((q) => !q.leaving && !q.gone).slice(0, 3);
   for (const q of s.patrons) if (q.queue) s.leaveBarQueue(q);
   for (const q of line) s.joinBarQueue(q);
-  // Bottoms Up! serves those at the counter; anyone still on their way, or
-  // waiting behind, isn't served.
-  for (const q of line) { if (q.atSpot) { [q.gx, q.gy] = [q.targetGx, q.targetGy]; q.moving = false; } }
-  const atCounter = line.filter((q) => s.atServiceSpot(q)).length;
-  const behind = line.filter((q) => !s.atServiceSpot(q));
+  // Bottoms Up! serves the whole line: those at the counter, anyone still
+  // on their way, and those waiting behind. The bar is left empty.
+  const first = line[0];
+  if (first.atSpot) { [first.gx, first.gy] = [first.targetGx, first.targetGy]; first.moving = false; }
+  const inLine = s.barGroupQueue(bar).length;
+  out.someNotAtCounter = line.some((q) => !s.atServiceSpot(q));
   const drinks0 = s.drinksSold || 0;
   const cash0 = s.cash;
   document.getElementById('bottomsUp').click();
   out.served = (s.drinksSold || 0) - drinks0;
-  out.atCounter = atCounter;
-  out.behindWait = behind.every((q) => !!q.queue && (q.drinks || 0) === 0);
+  out.inLine = inLine;
   out.paid = s.cash - cash0;
-  out.lineEmpty = line.filter((q) => !behind.includes(q)).every((q) => !q.queue);
+  out.lineEmpty = line.every((q) => !q.queue) && s.barGroupQueue(bar).length === 0;
   out.cooling = !s.bottomsUpReady(bar) && s.bottomsUp(bar) === 0;
   s.closeInfoCard();
   const lux0 = s.luxury();
@@ -1223,7 +1223,7 @@ const people = await page.evaluate(() => {
 });
 check('guests have names, and clicking one opens their card', people.named && people.clickedGuest && people.card && people.quote.length > 2, JSON.stringify(people));
 check('guests have no lasting thought bubbles over their heads', people.bubble, JSON.stringify(people));
-check('Bottoms Up serves everyone at the counter at once (not those still on their way), then recovers', people.clickedBar && people.barCard && people.served >= 1 && people.served === people.atCounter && people.behindWait && people.paid > 0 && people.lineEmpty && people.cooling, JSON.stringify(people));
+check('Bottoms Up serves the whole line at once (at the counter, on their way and waiting behind), then recovers', people.clickedBar && people.barCard && people.served >= 3 && people.served === people.inLine && people.someNotAtCounter && people.paid > 0 && people.lineEmpty && people.cooling, JSON.stringify(people));
 check('Luxury grows with what you place, shows in the top bar and raises tips', people.luxuryUp > 0 && people.tipsUp && people.luxuryShown, JSON.stringify(people));
 
 // From the owner's screenshots, part two: the DJ's song box (Change, Like),

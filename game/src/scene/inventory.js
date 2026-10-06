@@ -184,7 +184,7 @@ export class InventoryMixin {
     if (types.length === 0) {
       const { slot, icon, cost } = this.makeCard('Your inventory is empty', 'Things you put away with the Edit tab wait here, to place again for free.', null);
       slot.classList.add('emptySlot');
-      icon.dataset.icon = 'padStorage';
+      icon.dataset.icon = 'artStorage';
       fillIcons(slot);
       cost.textContent = '';
       el.appendChild(slot);
