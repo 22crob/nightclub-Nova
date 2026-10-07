@@ -139,6 +139,7 @@ export class ClubNameMixin {
     document.getElementById('namePrompt')?.classList.remove('open');
     SFX.levelUp();
     this.showBigPopup?.(this.clubName, 'Now open!', 'celeb');
+    this.time.delayedCall(2000, () => this.showDaily?.()); // a new club's first gift, once the name has had its moment
   }
 
   setClubName(name) {

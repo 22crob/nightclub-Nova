@@ -279,6 +279,15 @@ const ART = {
     <circle cx="7.5" cy="8" r="1.6" fill="#fff"/>`,
   // Money: two crisp green bills fanned out, the front one with a big $
   // medallion, and a gold coin in front.
+  // The daily gift: a wrapped box with a bow.
+  artGift: `<defs><linearGradient id="gGiftBox" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#ff8ad8"/><stop offset=".55" stop-color="#e2368f"/><stop offset="1" stop-color="#a3125f"/></linearGradient>
+    <linearGradient id="gGiftLid" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#ffb3e8"/><stop offset="1" stop-color="#ff4fb8"/></linearGradient>
+    <linearGradient id="gGiftRib" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#fff4b0"/><stop offset=".5" stop-color="#ffc83a"/><stop offset="1" stop-color="#d99410"/></linearGradient></defs>
+    <rect x="9" y="21" width="30" height="21" rx="2.5" fill="url(#gGiftBox)" stroke="#3a0a26" stroke-width="2"/>
+    <rect x="6.5" y="15" width="35" height="8" rx="2" fill="url(#gGiftLid)" stroke="#3a0a26" stroke-width="2"/>
+    <rect x="21" y="15" width="6" height="27" fill="url(#gGiftRib)" stroke="#3a0a26" stroke-width="1.5"/>
+    <path d="M24 15c-3-7-12-9-12-3 0 4 7 4 12 3Zm0 0c3-7 12-9 12-3 0 4-7 4-12 3Z" fill="url(#gGiftRib)" stroke="#3a0a26" stroke-width="2" stroke-linejoin="round"/>
+    <path d="M12 25h4M12 29h2" stroke="#fff" stroke-opacity=".55" stroke-width="2" stroke-linecap="round"/>`,
   cash: `<defs><linearGradient id="gBill" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#b9f7a0"/><stop offset=".5" stop-color="#4fc94a"/><stop offset="1" stop-color="#23862c"/></linearGradient>
     <linearGradient id="gBill2" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#8ee07a"/><stop offset="1" stop-color="#1f7a2a"/></linearGradient>
     <radialGradient id="gCoin" cx=".38" cy=".32" r=".75"><stop offset="0" stop-color="#fff6b0"/><stop offset=".5" stop-color="#ffcf2a"/><stop offset="1" stop-color="#d47f00"/></radialGradient></defs>

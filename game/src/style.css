@@ -632,6 +632,26 @@ body.kick .navPad > .uiArt { transform: scale(1.06); transition: none; }
 #namePrompt.first #clubNameCancel { display: none; }
 .summaryButton.later { --c: #a24bff; }
 
+/* The daily gift (daily.js): a box bouncing over the card, and a row of
+   seven days, today's lit pink, the ones already collected ticked. */
+.dailyCard { width: min(560px, calc(100vw - 32px)); padding-top: 44px; margin-top: 30px; }
+.dailyGift { position: absolute; left: 50%; top: -46px; width: 86px; height: 86px; margin-left: -43px; animation: giftBounce 1s ease-in-out infinite; }
+.dailyGift .uiArt { width: 100%; height: 100%; filter: drop-shadow(0 0 12px #ff8ad8) drop-shadow(0 4px 4px rgba(0, 0, 0, 0.5)); }
+@keyframes giftBounce { 0%, 100% { transform: translateY(0) rotate(-4deg); } 50% { transform: translateY(-8px) rotate(4deg); } }
+#dailyDays { display: flex; gap: 6px; justify-content: center; flex-wrap: wrap; }
+.dayTile {
+  position: relative; width: 66px; padding: 5px 2px 6px; box-sizing: border-box; border-radius: 12px;
+  background: var(--key); border: 2px solid var(--edge); box-shadow: 0 3px 0 var(--edge); opacity: 0.75;
+}
+.dayTile.today { opacity: 1; background: var(--shine), linear-gradient(180deg, #ff6fe0, #b81f9c); box-shadow: 0 0 16px var(--pink), 0 3px 0 var(--edge); transform: translateY(-4px) scale(1.06); }
+.dayTile.done { opacity: 0.5; }
+.dayTile.done::after { content: '✓'; position: absolute; top: 18px; right: 4px; font-size: 16px; font-weight: 900; color: #8dff7a; text-shadow: var(--outline); }
+.dayName { font-family: var(--display-font); font-weight: 900; font-size: 11px; color: #fff; }
+.dayPic { height: 34px; display: flex; align-items: center; justify-content: center; }
+.dayPic .uiArt { width: 32px; height: 32px; }
+.dayCash { font-family: var(--money-font); font-weight: 800; font-size: 12px; color: #ffe45c; }
+.dayXp { min-height: 13px; font-size: 10px; font-weight: 800; color: #d9cdf0; }
+
 /* The level-up menu: the new level and a card for everything it unlocked
    (see showLevelUp() in hud.js). */
 #levelUp { z-index: 60; }

@@ -191,6 +191,16 @@ export const ZOOM_MAX = 2.2;
 // localStorage key for the save file. Bumping this (v1 -> v2) is the
 // escape hatch if the save shape ever changes incompatibly — old saves
 // under the old key are just ignored rather than crashing on load.
+// The daily gift (src/scene/daily.js): one a day, a 7-day streak. Cash grows
+// by cashPerLevel of itself for every level past 1.
+export const DAILY = {
+  cashPerLevel: 0.15,
+  rewards: [
+    { cash: 100 }, { cash: 150, xp: 10 }, { cash: 200 }, { cash: 250, xp: 25 },
+    { cash: 300 }, { cash: 400, xp: 50 }, { cash: 600, xp: 100, decor: true },
+  ],
+};
+
 // The club's name on its neon sign outside (src/scene/clubName.js).
 export const CLUB_SIGN = { defaultName: 'Club Nova', maxLength: 22, fontSize: 30, resolution: 2, chaseMs: 450 };
 

@@ -59,6 +59,9 @@ const waitForScene = async () => {
     // A club without a name asks for one first (checked on its own below).
     if (!s.clubName) s.setClubName('Test Club');
     document.getElementById('namePrompt')?.classList.remove('open');
+    // The daily gift would pay cash and cover the buttons (checked on its own below).
+    s.showDaily = () => false;
+    document.getElementById('dailyBox')?.classList.remove('open');
   });
 };
 
@@ -412,7 +415,7 @@ const boost = await page.evaluate(() => {
   s.time.delayedCall = later;
   return { started, during, again, afterEnd, rush };
 });
-check('Bass Boost runs for a minute, more guests want to dance, and some head for the floor', boost.started && boost.during.boosted && boost.during.factor > 1 && boost.during.danceWeight > 1 && boost.during.rallied && boost.during.button === 'active' && /1:00|0:59/.test(boost.during.label), JSON.stringify(boost.during));
+check('Bass Boost runs for a minute, more guests want to dance, and some head for the floor', boost.started && boost.during.boosted && boost.during.factor > 1 && boost.during.danceWeight > 1 && boost.during.rallied && boost.during.button === 'active' && /^(1:0[01]|0:5[89])$/.test(boost.during.label), JSON.stringify(boost.during));
 check('the boost can\'t be stacked, and has a cooldown after', !boost.again && !boost.afterEnd.boosted && boost.afterEnd.button === 'cooldown' && !boost.afterEnd.canBoost, JSON.stringify(boost.afterEnd));
 check('Drink Rush makes guests want a drink, then recharges', boost.rush.started && boost.rush.rushing && boost.rush.drinkWeight > 1 && boost.rush.thirsty && boost.rush.button === 'active' && !boost.rush.again && boost.rush.cooldown, JSON.stringify(boost.rush));
 
@@ -1181,6 +1184,9 @@ check('the pool table takes three tiles', decor.poolTiles === 3 && decor.poolTex
 const street = await page.evaluate(() => {
   const s = window.__clubNova.scene.getScene('club');
   const before = s.patrons.length;
+  // Timers crawl in headless Chromium, so the line may still be empty: put
+  // a few people in it straight away.
+  while (s.streetQueue.length < 3) s.streetArrival(true);
   const inLine = s.streetQueue.length;
   s.streetQueue.forEach((p) => { p.arrived = true; s.walkStreetQueue(p, true); }); // everyone in their place
   const standing = s.streetQueue.filter((p) => p.arrived && !p.walking);
@@ -2218,6 +2224,34 @@ const neon = await page.evaluate(() => {
   return out;
 });
 check('the Neon Cartoon guy is a guest with idle, walk, dance and sit, front and back', neon.anims && neon.height > 0, JSON.stringify(neon));
+
+// The daily gift: once a day; the streak moves on day by day (day 7 adds a
+// decoration), starts over after a missed day, and only pays once a day.
+const daily = await page.evaluate(() => {
+  const s = window.__clubNova.scene.getScene('club');
+  const show = Object.getPrototypeOf(s).showDaily;
+  const saved = { cash: s.cash, fans: s.fans, daily: s.daily, inv: JSON.stringify(s.inventory) };
+  s.daily = null;
+  const out = {};
+  out.shown = show.call(s, '2026-03-01') && document.getElementById('dailyBox').classList.contains('open');
+  out.tiles = document.querySelectorAll('#dailyDays .dayTile').length;
+  out.todayFirst = document.querySelector('#dailyDays .dayTile.today .dayName').textContent;
+  const c0 = s.cash;
+  document.getElementById('dailyCollect').click();
+  out.paid = s.cash - c0;
+  out.closed = !document.getElementById('dailyBox').classList.contains('open');
+  out.again = show.call(s, '2026-03-01') === false && s.collectDaily('2026-03-01') === null;
+  const days = [];
+  for (const d of ['2026-03-02', '2026-03-03', '2026-03-04', '2026-03-05', '2026-03-06', '2026-03-07']) days.push(s.collectDaily(d));
+  out.streak = days.map((g) => g.day).join();
+  out.day7decor = !!days[5].decor && s.inventoryCount(days[5].decor) > 0;
+  out.wraps = s.collectDaily('2026-03-08').day === 1 || false;
+  out.missed = s.collectDaily('2026-03-10').day;
+  Object.assign(s, { cash: saved.cash, fans: saved.fans, daily: saved.daily, inventory: JSON.parse(saved.inv || '{}') });
+  return out;
+});
+check('the daily gift comes once a day with a 7-day streak (day 7 adds a decoration) that starts over after a missed day', daily.shown && daily.tiles === 7 && daily.todayFirst === 'Day 1' && daily.paid === 100 && daily.closed && daily.again
+  && daily.streak === '2,3,4,5,6,7' && daily.day7decor && daily.wraps && daily.missed === 1, JSON.stringify(daily));
 
 // Save backup: the club as a code to copy, which reads back to the same
 // club; anything else pasted is refused.

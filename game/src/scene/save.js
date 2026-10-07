@@ -56,7 +56,7 @@ export class SaveMixin {
       inventory[this.movingBooth.type] -= 1;
       if (inventory[this.movingBooth.type] <= 0) delete inventory[this.movingBooth.type];
     }
-    return { cash: this.cash, fans: this.fans, gridW: this.gridW, gridH: this.gridH, placed: placedList, wallpaper: { ...this.wallpaper }, floorPaint: { ...this.floorPaint }, nightStars: this.nightStars || [], inventory, inventoryXp, goalsDone: this.goalsDone || [], goalStats: this.goalStats || {}, clubName: this.clubName || '', celebs: this.celebState || {}, celebInvited: Object.keys(this.celebInvites || {}) };
+    return { cash: this.cash, fans: this.fans, gridW: this.gridW, gridH: this.gridH, placed: placedList, wallpaper: { ...this.wallpaper }, floorPaint: { ...this.floorPaint }, nightStars: this.nightStars || [], inventory, inventoryXp, goalsDone: this.goalsDone || [], goalStats: this.goalStats || {}, clubName: this.clubName || '', daily: this.daily || null, celebs: this.celebState || {}, celebInvited: Object.keys(this.celebInvites || {}) };
   }
 
   saveGame() {
@@ -169,6 +169,7 @@ export class SaveMixin {
 
     if (typeof data.cash === 'number') this.cash = data.cash;
     if (typeof data.clubName === 'string') this.clubName = cleanClubName(data.clubName);
+    if (data.daily && typeof data.daily.last === 'string') this.daily = { last: data.daily.last, streak: Number(data.daily.streak) || 1 };
     if (typeof data.fans === 'number') this.fans = data.fans;
     // Already set once, before the tile grid was built, by
     // peekSavedGridSize() in create() — re-applying it here is just
