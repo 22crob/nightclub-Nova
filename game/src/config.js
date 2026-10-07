@@ -173,6 +173,10 @@ export const PATRON_Y_OFFSET = 6 * PROP_SCALE;
 // Share of guests who are the owner's 3D model (when its sheets exist; see
 // MODEL_PATRONS in assets.js), the rest being the drawn characters.
 export const MODEL_PATRON_SHARE = 0.35;
+// Share of guests who are the Neon Cartoon characters (NEON_PATRONS in
+// assets.js); more on the test link, so they're easy to look at.
+export const NEON_PATRON_SHARE = 0.3;
+export const NEON_PATRON_SHARE_TEST = 0.6;
 export const CHARACTER_DISPLAY_HEIGHT = 87.4; // px: big next to the furniture, like Nightclub City
 // How far above a patron's feet their tip / drink popups start.
 export const PATRON_POPUP_Y = CHARACTER_DISPLAY_HEIGHT * 0.8;

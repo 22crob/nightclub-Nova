@@ -1,0 +1,30 @@
+{
+  "frameWidth": 120,
+  "frameHeight": 204,
+  "columns": 32,
+  "originX": 0.5,
+  "originY": 0.87059,
+  "standingHeight": 155.4,
+  "starts": {
+    "idle_front": 0,
+    "idle_back": 32,
+    "walk_front": 64,
+    "walk_back": 96,
+    "dance_front": 128,
+    "dance_back": 160,
+    "sit_front": 192,
+    "sit_back": 224
+  },
+  "frames": {
+    "idle": 8,
+    "walk": 16,
+    "dance": 32,
+    "sit": 8
+  },
+  "fps": {
+    "idle": 6,
+    "walk": 18,
+    "dance": 14,
+    "sit": 5
+  }
+}

@@ -2172,6 +2172,21 @@ const held = await page.evaluate(() => {
 check('a held item always shows with its tiles: green where it fits, red and tinted where it does not', held.free && held.free.ghost && !held.free.tinted && held.free.filled && held.free.outlined
   && held.blocked.ghost && held.blocked.tinted && held.blocked.filled && held.blocked.outlined && held.clearedAfter, JSON.stringify(held));
 
+// The Neon Cartoon guy (art/characters/neon) is a guest too, with every
+// clip in both views, standing the same height as the drawn guests.
+const neon = await page.evaluate(() => {
+  const s = window.__clubNova.scene.getScene('club');
+  const i = s.textures.getTextureKeys().filter((k) => /^patron_\d+$/.test(k)).length - 1;
+  const clips = ['idle', 'walk', 'dance', 'sit'].flatMap((c) => ['front', 'back'].map((d) => `patron_${i}_${c}_${d}`));
+  const c = s.drawPatronCharacterSprite(0, 0, 1, i);
+  const h = c.patronSprite.displayHeight;
+  const d = s.drawPatronCharacterSprite(0, 0, 1, 0);
+  const out = { i, anims: clips.every((k) => s.anims.exists(k)), height: Math.round(h), drawnHeight: Math.round(d.patronSprite.displayHeight) };
+  c.destroy(); d.destroy();
+  return out;
+});
+check('the Neon Cartoon guy is a guest with idle, walk, dance and sit, front and back', neon.anims && neon.height > 0, JSON.stringify(neon));
+
 // Regular floors go under furniture: holding one makes the furniture (and
 // its staff) see-through and outlines the tile; laying it under a bar
 // works, and putting the floor down makes everything solid again.

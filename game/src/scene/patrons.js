@@ -1,9 +1,9 @@
 // ClubScene methods: Patrons: spawning, wandering, animation, tipping and leaving.
 // Mixed into ClubScene (see ClubScene.js); `this` is the scene.
 import Phaser from 'phaser';
-import { MODEL_PATRONS, PATRON_SHEETS, patronMetaOf } from '../assets.js';
+import { MODEL_PATRONS, NEON_PATRONS, PATRON_SHEETS, patronMetaOf } from '../assets.js';
 import { FLOOR_DECAL_PROPS, PROP_TYPES, STAFF_TYPES } from '../catalog.js';
-import { BOOST, CHARACTER_DISPLAY_HEIGHT, MODEL_PATRON_SHARE, HAIR_STYLES, PATRON_HAIR_COLORS, PATRON_MOVE_INTERVAL, PATRON_OUTFIT_COLORS, PATRON_POPUP_Y, PATRON_SKIN_TONES, PATRON_SPAWN_INTERVAL, MONEY, PATRON_TIP_INTERVAL, PATRON_Y_OFFSET, PROP_SCALE, VISIT } from '../config.js';
+import { BOOST, CHARACTER_DISPLAY_HEIGHT, MODEL_PATRON_SHARE, NEON_PATRON_SHARE, NEON_PATRON_SHARE_TEST, TEST_MODE, HAIR_STYLES, PATRON_HAIR_COLORS, PATRON_MOVE_INTERVAL, PATRON_OUTFIT_COLORS, PATRON_POPUP_Y, PATRON_SKIN_TONES, PATRON_SPAWN_INTERVAL, MONEY, PATRON_TIP_INTERVAL, PATRON_Y_OFFSET, PROP_SCALE, VISIT } from '../config.js';
 import { SFX } from '../sfx.js';
 import { MOOD } from './mood.js';
 import { randRange } from '../util.js';
@@ -136,9 +136,13 @@ export class PatronsMixin {
     const shadow = this.add.ellipse(0, 2 * PROP_SCALE, 30 * PROP_SCALE, 12 * PROP_SCALE, 0x000000, 0.3);
     // Patrons never wear a staff member's character, so staff stand out.
     const staffLooks = new Set(Object.values(STAFF_TYPES).map((t) => t.character % PATRON_SHEETS.length));
-    const choices = PATRON_SHEETS.map((_, i) => i).filter((i) => !staffLooks.has(i) && !MODEL_PATRONS.includes(i));
-    // Some guests are the owner's 3D model (MODEL_PATRON_SHARE), the rest drawn.
-    const pool = MODEL_PATRONS.length && Math.random() < MODEL_PATRON_SHARE ? MODEL_PATRONS : choices;
+    const choices = PATRON_SHEETS.map((_, i) => i).filter((i) => !staffLooks.has(i) && !MODEL_PATRONS.includes(i) && !NEON_PATRONS.includes(i));
+    // Some guests are the Neon Cartoon characters (NEON_PATRON_SHARE), some
+    // the owner's 3D model (MODEL_PATRON_SHARE), the rest drawn.
+    const neonShare = TEST_MODE ? NEON_PATRON_SHARE_TEST : NEON_PATRON_SHARE;
+    let pool = choices;
+    if (NEON_PATRONS.length && Math.random() < neonShare) pool = NEON_PATRONS;
+    else if (MODEL_PATRONS.length && Math.random() < MODEL_PATRON_SHARE) pool = MODEL_PATRONS;
     container.patronCharacter = character ?? Phaser.Utils.Array.GetRandom(pool.length ? pool : [0]);
     container.patronDir = 'front';
     const meta = patronMetaOf(container.patronCharacter);

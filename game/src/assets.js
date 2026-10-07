@@ -17,15 +17,18 @@ export const SPRITE_URLS = Object.fromEntries(
 // patrons.json: idle / walk / dance / sit rows facing front and back. The
 // 3D ones from the owner's own model (patron_3d_<look>.png,
 // art/blender/build_patron_model1.py) come after them, each with its own
-// grid in a JSON beside it and two more clips: drink and sittalk.
+// grid in a JSON beside it and two more clips: drink and sittalk. The
+// Neon Cartoon guys (patron_neon<NN>.png, drawn in code as a cut-out puppet
+// by art/characters/neon/neon_rig.py) come last, also with a JSON grid.
 // patronMetaOf(i) gives any character's grid in one shape: frame size,
 // anchor between the feet, standing height, and for each clip_facing its
 // first frame (`starts`), with frame counts and speeds per clip.
 const patronSheets = import.meta.glob('./assets/sprites/patrons/patron_*.png', { eager: true, import: 'default' });
-const patronSheetMetas = import.meta.glob('./assets/sprites/patrons/patron_3d_*.json', { eager: true, import: 'default' });
+const patronSheetMetas = import.meta.glob(['./assets/sprites/patrons/patron_3d_*.json', './assets/sprites/patrons/patron_neon*.json'], { eager: true, import: 'default' });
 const drawnKeys = Object.keys(patronSheets).filter((k) => /patron_\d+\.png$/.test(k)).sort();
 const modelKeys = Object.keys(patronSheets).filter((k) => /patron_3d_\w+\.png$/.test(k)).sort();
-export const PATRON_SHEETS = [...drawnKeys, ...modelKeys].map((k) => patronSheets[k]);
+const neonKeys = Object.keys(patronSheets).filter((k) => /patron_neon\w+\.png$/.test(k)).sort();
+export const PATRON_SHEETS = [...drawnKeys, ...modelKeys, ...neonKeys].map((k) => patronSheets[k]);
 export const PATRON_META = patronMeta;
 const drawnMeta = {
   ...patronMeta,
@@ -34,9 +37,12 @@ const drawnMeta = {
 const PATRON_METAS = [
   ...drawnKeys.map(() => drawnMeta),
   ...modelKeys.map((k) => patronSheetMetas[k.replace(/\.png$/, '.json')]),
+  ...neonKeys.map((k) => patronSheetMetas[k.replace(/\.png$/, '.json')]),
 ];
 // The characters made from the owner's 3D model.
 export const MODEL_PATRONS = modelKeys.map((_, i) => drawnKeys.length + i);
+// The Neon Cartoon characters (art/characters/neon).
+export const NEON_PATRONS = neonKeys.map((_, i) => drawnKeys.length + modelKeys.length + i);
 export function patronMetaOf(character) {
   return PATRON_METAS[character] || drawnMeta;
 }
