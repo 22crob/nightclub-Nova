@@ -459,6 +459,278 @@ def build_lucky_cat():
     disc_y('Coin', -0.05, -0.36, 0.62, 0.17, 0.03, gold)
 
 
+# --------------------------------------------------------------------------
+# The October 2026 batch, from the owner's main reference screenshots
+# (art/references/main/): simple pieces for early levels, glowing and
+# showpiece ones for later, several in two colours.
+# --------------------------------------------------------------------------
+
+def build_barrel():
+    """An old oak barrel with iron hoops and a candle on top."""
+    oak = principled('BarrelOak', srgb('#9a5f30'), rough=0.7)
+    oak2 = principled('BarrelOak2', srgb('#86512a'), rough=0.7)
+    iron = plain('#3a3a40', rough=0.4)
+    wax = plain('#f4ead2', rough=0.6)
+    flame = neon('BarrelFlame', (1.0, 0.7, 0.2), 8)
+    # Staves: a bulging barrel made of a few stacked cones.
+    cone('StaveLow', 0, 0, 0, 0.42, 0.3, 0.36, oak, verts=20)
+    cone('StaveHigh', 0, 0, 0.42, 0.84, 0.36, 0.3, oak2, verts=20)
+    cylinder('Lid', 0, 0, 0.84, 0.86, 0.29, plain('#7a4824', rough=0.75), verts=20)
+    for i, (z, r) in enumerate([(0.08, 0.31), (0.32, 0.355), (0.52, 0.355), (0.76, 0.31)]):
+        cylinder(f'Hoop{i}', 0, 0, z, z + 0.04, r + 0.008, iron, verts=20)
+    cylinder('Candle', 0.05, -0.05, 0.86, 1.02, 0.045, wax, verts=12)
+    cone('Flame', 0.05, -0.05, 1.02, 1.1, 0.025, 0.0, flame, verts=8)
+
+
+def build_street_lamp():
+    """An old black lamp post with a warm glass lantern."""
+    black = principled('LampBlack', srgb('#1e1e24'), rough=0.35)
+    glass = principled('LampGlass', (1.0, 0.85, 0.5), rough=0.1, emission=(1.0, 0.72, 0.3), emission_strength=2.5)
+    cylinder('Foot', 0, 0, 0, 0.1, 0.24, black, verts=24)
+    cone('Plinth', 0, 0, 0.1, 0.5, 0.16, 0.07, black, verts=16)
+    cylinder('Post', 0, 0, 0.5, 2.15, 0.045, black, verts=12)
+    cylinder('Collar', 0, 0, 2.1, 2.18, 0.09, black, verts=16)
+    cone('LanternLow', 0, 0, 2.18, 2.28, 0.08, 0.14, black, verts=8)
+    cone('Glass', 0, 0, 2.28, 2.62, 0.13, 0.17, glass, verts=8)
+    cone('Roof', 0, 0, 2.62, 2.78, 0.21, 0.04, black, verts=8)
+    sphere('Finial', 0, 0, 2.82, 0.04, black, segments=10)
+
+
+def globe_lamp(glow_hex):
+    """A tall standing lamp with a glowing round top (as in the art deco and
+    ice clubs)."""
+    def build():
+        chrome = plain('#c8ccd8', rough=0.2)
+        dark = plain('#26242c', rough=0.4)
+        g = srgb(glow_hex)
+        globe = principled(f'Globe{glow_hex}', g, rough=0.15, emission=g, emission_strength=2.2)
+        cylinder('Base', 0, 0, 0, 0.06, 0.26, dark, verts=32)
+        cone('BaseTop', 0, 0, 0.06, 0.12, 0.24, 0.08, chrome, verts=32)
+        cylinder('Pole', 0, 0, 0.12, 1.95, 0.03, chrome, verts=12)
+        cylinder('Cup', 0, 0, 1.92, 2.0, 0.09, chrome, verts=24)
+        sphere('Globe', 0, 0, 2.22, 0.25, globe, segments=32)
+    return build
+
+
+def crystal_column(glass_hex, glow_hex):
+    """A tall six-sided crystal column lit from inside, on a chrome base."""
+    def build():
+        chrome = plain('#cfd2dc', rough=0.2)
+        g = srgb(glow_hex)
+        glass = principled(f'Crystal{glass_hex}', srgb(glass_hex), rough=0.05, emission=g, emission_strength=0.9, alpha=0.8)
+        core = neon(f'CrystalCore{glow_hex}', g, 3)
+        cylinder('Base', 0, 0, 0, 0.16, 0.3, chrome, verts=6)
+        cylinder('Core', 0, 0, 0.16, 1.9, 0.07, core, verts=6)
+        cylinder('Crystal', 0, 0, 0.16, 1.9, 0.22, glass, verts=6)
+        cone('Point', 0, 0, 1.9, 2.3, 0.22, 0.02, glass, verts=6)
+        cylinder('Band', 0, 0, 0.9, 0.95, 0.23, chrome, verts=6)
+    return build
+
+
+def build_glow_plinth():
+    """A purple glowing plinth with a white orb sitting on it."""
+    white = principled('PlinthWhite', srgb('#f2eef8'), rough=0.3)
+    purple = principled('PlinthGlow', srgb('#a040ff'), rough=0.2, emission=srgb('#9a2cff'), emission_strength=2.0)
+    orb = principled('PlinthOrb', srgb('#ffffff'), rough=0.1, emission=srgb('#f0e0ff'), emission_strength=1.2)
+    box('Foot', -0.36, 0.36, -0.36, 0.36, 0, 0.08, white, bevel=0.02)
+    box('Glow', -0.3, 0.3, -0.3, 0.3, 0.08, 0.86, purple, bevel=0.03)
+    box('Top', -0.36, 0.36, -0.36, 0.36, 0.86, 0.94, white, bevel=0.02)
+    sphere('Orb', 0, 0, 1.16, 0.22, orb, segments=32)
+
+
+def speaker_stack(ring_rgb):
+    """Two speaker cabinets stacked, each with two woofers ringed in light."""
+    def build():
+        cab = principled('StackCab', srgb('#212228'), rough=0.35)
+        trim = plain('#55575f', rough=0.3)
+        cone_mat = principled('StackCone', srgb('#111114'), rough=0.6)
+        ring = neon(f'StackRing{ring_rgb}', ring_rgb, 9)
+        front = -0.36
+        box('Feet', -0.4, 0.4, -0.34, 0.34, 0, 0.05, trim, bevel=0.01)
+        for c, (z0, z1) in enumerate([(0.05, 1.2), (1.22, 2.37)]):
+            box(f'Cab{c}', -0.42, 0.42, front, 0.36, z0, z1, cab, bevel=0.03)
+            for w, z in enumerate((z0 + 0.32, z0 + 0.82)):
+                disc_y(f'Cone{c}{w}', 0, front - 0.005, z, 0.22, 0.02, cone_mat)
+                ring_y(f'Ring{c}{w}', 0, front - 0.02, z, 0.232, 0.02, ring)
+                sphere(f'Dust{c}{w}', 0, front - 0.02, z, 0.07, trim, scale=(1, 0.45, 1))
+        box('Cap', -0.43, 0.43, front - 0.01, 0.37, 2.37, 2.42, trim, bevel=0.015)
+    return build
+
+
+def build_glass_partition():
+    """A glass screen in a chrome frame, etched with diamonds and lit along
+    its foot (the art deco club's glass partitions)."""
+    chrome = plain('#d0d4de', rough=0.2)
+    glass = principled('PartGlass', srgb('#9fd8ff'), rough=0.05, emission=srgb('#4aa8ff'), emission_strength=0.6, alpha=0.55)
+    etch = principled('PartEtch', srgb('#ffffff'), rough=0.2, emission=srgb('#cfe8ff'), emission_strength=0.8)
+    light = neon('PartLight', (0.4, 0.8, 1.0), 6)
+    box('Foot', -0.48, 0.48, -0.12, 0.12, 0, 0.1, chrome, bevel=0.02)
+    box('LightStrip', -0.44, 0.44, -0.125, -0.115, 0.03, 0.07, light, bevel=0)
+    box('Glass', -0.42, 0.42, -0.03, 0.03, 0.1, 2.0, glass, bevel=0)
+    for x0, x1 in ((-0.48, -0.42), (0.42, 0.48)):
+        box(f'Post{x0}', x0, x1, -0.05, 0.05, 0.1, 2.06, chrome, bevel=0.01)
+    box('TopRail', -0.48, 0.48, -0.05, 0.05, 2.0, 2.06, chrome, bevel=0.01)
+    # Etched diamonds down the middle.
+    for i, z in enumerate((0.45, 0.85, 1.25, 1.65)):
+        bpy.ops.mesh.primitive_cylinder_add(vertices=4, radius=0.13, depth=0.004, location=(0, -0.034, z),
+                                            rotation=(math.radians(90), 0, 0))
+        d = bpy.context.active_object
+        d.name = f'Etch{i}'
+        bb._finish(d, etch, 0)
+
+
+def liquid_tank(liquid_hex):
+    """A glass tank of glowing liquid with bubbles, in a steel frame with a
+    pipe on top (the ice club's row of tanks)."""
+    def build():
+        steel = plain('#9aa0ae', rough=0.3)
+        dark = plain('#2a2a32', rough=0.4)
+        g = srgb(liquid_hex)
+        liquid = principled(f'Liquid{liquid_hex}', g, rough=0.05, emission=g, emission_strength=1.4, alpha=0.75)
+        bubble = principled('TankBubble', (0.95, 0.95, 1.0), rough=0.0, emission=(0.9, 0.9, 1.0), emission_strength=2.0)
+        box('Base', -0.4, 0.4, -0.4, 0.4, 0, 0.22, dark, bevel=0.02)
+        box('Liquid', -0.34, 0.34, -0.34, 0.34, 0.22, 1.72, liquid, bevel=0.02)
+        for x in (-0.37, 0.37):
+            for y in (-0.37, 0.37):
+                box(f'Post{x}{y}', x - 0.04, x + 0.04, y - 0.04, y + 0.04, 0.22, 1.78, steel, bevel=0.01)
+        box('Lid', -0.4, 0.4, -0.4, 0.4, 1.78, 1.86, steel, bevel=0.015)
+        cylinder('Pipe', 0, 0, 1.86, 2.08, 0.06, steel, verts=16)
+        cylinder('Valve', 0, 0, 2.02, 2.06, 0.11, dark, verts=16)
+        for i, (x, y, z) in enumerate([(0.1, -0.2, 0.45), (-0.12, -0.25, 0.7), (0.15, -0.28, 0.98), (-0.05, -0.3, 1.2),
+                                        (0.08, -0.22, 1.45), (-0.16, -0.18, 1.58)]):
+            sphere(f'Bubble{i}', x, y, z, 0.035 + (i % 3) * 0.012, bubble, segments=10)
+    return build
+
+
+def build_gargoyle():
+    """A stone gargoyle crouched on a pedestal, wings folded."""
+    stone = principled('GargStone', srgb('#8a8a90'), rough=0.85)
+    dark = principled('GargDark', srgb('#6a6a72'), rough=0.85)
+    eye = neon('GargEye', (1.0, 0.25, 0.2), 5)
+    box('Pedestal', -0.34, 0.34, -0.34, 0.34, 0, 0.62, dark, bevel=0.03)
+    box('PedTop', -0.38, 0.38, -0.38, 0.38, 0.62, 0.7, stone, bevel=0.02)
+    sphere('Body', 0, 0.02, 1.0, 0.24, stone, scale=(1, 0.9, 1.25))
+    sphere('Haunch', 0, 0.06, 0.82, 0.25, stone, scale=(1.15, 1.0, 0.6))
+    for x in (-0.13, 0.13):
+        sphere(f'Foot{x}', x, -0.2, 0.74, 0.08, dark, scale=(1, 1.4, 0.6), segments=12)
+        sphere(f'Arm{x}', x * 1.1, -0.17, 0.92, 0.06, stone, scale=(1, 1, 2.2), segments=12)
+    sphere('Head', 0, -0.1, 1.38, 0.17, stone, scale=(1.05, 1.0, 0.95))
+    sphere('Snout', 0, -0.24, 1.33, 0.08, dark, scale=(1.2, 1, 0.8), segments=12)
+    for x in (-0.07, 0.07):
+        sphere(f'Eye{x}', x, -0.25, 1.42, 0.025, eye, segments=8)
+        c = cone(f'Horn{x}', x * 1.4, -0.06, 1.48, 1.66, 0.045, 0.0, dark, verts=10)
+        tilted(c, ry=-25 if x < 0 else 25)
+    # Bat wings spread behind the shoulders: three long fingers each, with a
+    # thin membrane between them.
+    for x in (-1, 1):
+        for k, (ang, length) in enumerate([(25, 0.5), (55, 0.58), (85, 0.5)]):
+            a = math.radians(ang)
+            cx = 0.12 * x + math.cos(a) * length * 0.5 * x
+            cz = 1.15 + math.sin(a) * length * 0.5
+            f = sphere(f'WingFinger{x}{k}', cx, 0.2, cz, 1.0, stone, scale=(length * 0.5, 0.03, 0.035), segments=12)
+            f.rotation_euler = (0, -a * x, 0)
+        m = sphere(f'WingSkin{x}', 0.12 * x + 0.2 * x, 0.21, 1.33, 1.0, dark, scale=(0.24, 0.015, 0.2), segments=16)
+        m.rotation_euler = (0, math.radians(-50 * x), 0)
+    # A heavy brow and fangs, so he scowls rather than smiles.
+    sphere('Brow', 0, -0.2, 1.45, 0.12, dark, scale=(1.3, 0.5, 0.35), segments=12)
+    for x in (-0.04, 0.04):
+        cone(f'Fang{x}', x, -0.3, 1.25, 1.3, 0.0, 0.018, plain('#f2efe6', rough=0.4), verts=6)
+
+
+def build_robot():
+    """A friendly green retro robot with an antenna and glowing eyes."""
+    green = principled('RobotGreen', srgb('#58c26a'), rough=0.35)
+    dark = plain('#2c3a30', rough=0.4)
+    chrome = plain('#c8ccd6', rough=0.25)
+    eye = neon('RobotEye', (1.0, 0.85, 0.2), 6)
+    light = neon('RobotLight', (1.0, 0.2, 0.3), 6)
+    for x in (-0.15, 0.15):
+        box(f'Foot{x}', x - 0.1, x + 0.1, -0.18, 0.12, 0, 0.1, dark, bevel=0.03)
+        cylinder(f'Leg{x}', x, 0, 0.1, 0.5, 0.07, chrome, verts=16)
+    box('Body', -0.3, 0.3, -0.22, 0.22, 0.5, 1.15, green, bevel=0.06)
+    box('Panel', -0.18, 0.18, -0.225, -0.215, 0.62, 0.98, dark, bevel=0.01)
+    for i, (x, z, m) in enumerate([(-0.09, 0.9, light), (0.0, 0.9, eye), (0.09, 0.9, light)]):
+        sphere(f'Btn{i}', x, -0.23, z, 0.03, m, segments=10)
+    for i, z in enumerate((0.7, 0.76)):
+        box(f'Grille{i}', -0.12, 0.12, -0.226, -0.22, z, z + 0.025, chrome, bevel=0)
+    for x in (-1, 1):
+        cylinder(f'Shoulder{x}', 0.33 * x, 0, 1.0, 1.08, 0.07, chrome, verts=16)
+        arm = cylinder(f'Arm{x}', 0.36 * x, -0.04, 0.68, 1.04, 0.05, chrome, verts=12)
+        tilted(arm, rx=-12)
+        sphere(f'Hand{x}', 0.36 * x, -0.1, 0.64, 0.08, green, segments=14)
+    cylinder('Neck', 0, 0, 1.15, 1.22, 0.08, chrome, verts=16)
+    box('Head', -0.22, 0.22, -0.18, 0.18, 1.22, 1.56, green, bevel=0.05)
+    for x in (-0.09, 0.09):
+        cylinder(f'EyeRim{x}', x, -0.17, 1.36, 1.44, 0.075, chrome, verts=20).rotation_euler = (math.radians(90), 0, 0)
+        sphere(f'Eye{x}', x, -0.19, 1.4, 0.05, eye, scale=(1, 0.5, 1), segments=14)
+    box('Mouth', -0.08, 0.08, -0.185, -0.175, 1.27, 1.3, dark, bevel=0)
+    cylinder('Antenna', 0, 0, 1.56, 1.76, 0.015, chrome, verts=8)
+    sphere('AntennaBall', 0, 0, 1.78, 0.045, light, segments=12)
+
+
+def build_cat_statue():
+    """A white cat statue lounging on a long plinth (the art deco club)."""
+    white = principled('CatStone', srgb('#f4f2ee'), rough=0.3)
+    plinth = principled('CatPlinth', srgb('#2a2630'), rough=0.25)
+    gold = principled('CatTrim', srgb('#e8b84a'), rough=0.25, emission=srgb('#a87a10'), emission_strength=0.25)
+    box('Plinth', -0.4, 0.4, -0.3, 0.3, 0, 0.5, plinth, bevel=0.03)
+    box('Trim', -0.41, 0.41, -0.31, 0.31, 0.46, 0.5, gold, bevel=0.008)
+    # Lying along X, head up at +x end facing the viewer.
+    sphere('Body', -0.05, 0.02, 0.66, 0.2, white, scale=(1.6, 0.85, 0.75))
+    sphere('Hip', -0.24, 0.04, 0.64, 0.16, white, scale=(1.1, 1.0, 0.9))
+    sphere('Chest', 0.18, -0.02, 0.68, 0.15, white, scale=(1.0, 0.95, 1.1))
+    for x in (0.24, 0.32):
+        sphere(f'Paw{x}', x, -0.16, 0.54, 0.05, white, scale=(1.6, 1, 0.7), segments=12)
+    sphere('Head', 0.26, -0.06, 0.92, 0.14, white, scale=(1.0, 0.95, 0.92))
+    for dx in (-0.08, 0.08):
+        c = cone(f'Ear{dx}', 0.26 + dx, -0.06, 1.0, 1.12, 0.05, 0.0, white, verts=12)
+    for dx in (-0.05, 0.05):
+        sphere(f'Eye{dx}', 0.26 + dx, -0.19, 0.94, 0.018, gold, segments=8)
+    tail = sphere('Tail', -0.42, -0.12, 0.6, 0.05, white, scale=(1, 3.2, 0.8), segments=12)
+    tilted(tail, rz=-30)
+
+
+def build_waterfall():
+    """A tall glass column with water running down inside, over a lit
+    basin."""
+    chrome = plain('#cfd3dc', rough=0.2)
+    basin = principled('FallBasin', srgb('#1c2a40'), rough=0.3)
+    water = principled('FallWater', srgb('#7ad0ff'), rough=0.05, emission=srgb('#3aa8ff'), emission_strength=1.0, alpha=0.55)
+    stream = principled('FallStream', srgb('#e8f8ff'), rough=0.05, emission=srgb('#bfe8ff'), emission_strength=2.0)
+    glass = principled('FallGlass', srgb('#dff2ff'), rough=0.02, alpha=0.25)
+    cylinder('Basin', 0, 0, 0, 0.3, 0.42, basin, verts=40)
+    cylinder('BasinRim', 0, 0, 0.28, 0.34, 0.43, chrome, verts=40)
+    cylinder('Pool', 0, 0, 0.2, 0.31, 0.38, water, verts=40)
+    cylinder('Water', 0, 0, 0.31, 2.2, 0.18, water, verts=32)
+    for i, (x, w) in enumerate([(-0.1, 0.012), (-0.03, 0.02), (0.05, 0.014), (0.11, 0.01)]):
+        box(f'Stream{i}', x - w, x + w, -0.19, -0.17, 0.32, 2.18, stream, bevel=0)
+    cylinder('Glass', 0, 0, 0.31, 2.2, 0.22, glass, verts=32)
+    cylinder('Crown', 0, 0, 2.2, 2.3, 0.25, chrome, verts=32)
+
+
+def build_pagoda():
+    """A tall orange pagoda statue, five roofs high (the theatre club)."""
+    red = principled('PagodaRed', srgb('#e2502a'), rough=0.45)
+    orange = principled('PagodaRoof', srgb('#f29a2e'), rough=0.4)
+    gold = principled('PagodaGold', srgb('#f2c24a'), rough=0.25, emission=srgb('#a87a10'), emission_strength=0.3)
+    lamp = neon('PagodaLamp', (1.0, 0.75, 0.3), 5)
+    box('Plinth', -0.4, 0.4, -0.4, 0.4, 0, 0.18, plain('#3a2a26', rough=0.6), bevel=0.02)
+    z = 0.18
+    size = 0.3
+    for k in range(5):
+        h = 0.36 - k * 0.03
+        box(f'Storey{k}', -size, size, -size, size, z, z + h, red, bevel=0.015)
+        box(f'Window{k}', -size * 0.4, size * 0.4, -size - 0.005, -size + 0.01, z + h * 0.25, z + h * 0.75, lamp, bevel=0)
+        z += h
+        r = size + 0.14
+        cone(f'Roof{k}', 0, 0, z, z + 0.12, r * 1.41, size * 0.5, orange, verts=4).rotation_euler = (0, 0, math.radians(45))
+        z += 0.1
+        size *= 0.84
+    cylinder('Spire', 0, 0, z, z + 0.3, 0.025, gold, verts=10)
+    for i in range(3):
+        sphere(f'SpireBall{i}', 0, 0, z + 0.08 + i * 0.08, 0.05 - i * 0.01, gold, segments=10)
+
+
 # Some models are built small and scaled up as a whole.
 SCALE = {'lava': (1.15, 1.15, 1.2), 'aquarium': (1.0, 1.0, 1.25)}
 
@@ -479,6 +751,23 @@ DECOR = {
     'aquarium': build_aquarium,
     'trophy': build_trophy,
     'luckyCat': build_lucky_cat,
+    'barrel': build_barrel,
+    'streetLamp': build_street_lamp,
+    'globeLamp': globe_lamp('#fff4dc'),
+    'globeLampPink': globe_lamp('#ff7ad8'),
+    'crystal': crystal_column('#8ff0ea', '#20d8d0'),
+    'crystalPink': crystal_column('#ffb0e8', '#ff40c0'),
+    'glowPlinth': build_glow_plinth,
+    'stack': speaker_stack((0.1, 0.85, 1.0)),
+    'stackPurple': speaker_stack((0.7, 0.2, 1.0)),
+    'partition': build_glass_partition,
+    'tank': liquid_tank('#a040ff'),
+    'tankBlue': liquid_tank('#3a9cff'),
+    'gargoyle': build_gargoyle,
+    'robot': build_robot,
+    'catStatue': build_cat_statue,
+    'waterfall': build_waterfall,
+    'pagoda': build_pagoda,
 }
 
 
