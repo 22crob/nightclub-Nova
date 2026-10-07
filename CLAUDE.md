@@ -55,7 +55,7 @@ See ROADMAP.md for the plan. The reference for all art, UI and gameplay is Night
 
 ## Playable link
 
-The game is published as a private claude.ai Artifact at https://claude.ai/artifact/QfPRRyNXi3X4tXz83RVvNV. To update it, run `npm run build:artifact` and publish `game/dist/artifact.html` to that URL.
+The game is published as a claude.ai Artifact at https://claude.ai/artifact/QfPRRyNXi3X4tXz83RVvNV. To update it, run `npm run build:artifact` (`ARTIFACT=1` in vite.config.js) and publish `game/dist-artifact/artifact.html` to that URL with `root: "game/dist-artifact"` (relative to where you run from) and every `.png` in that folder as `files` (the list is in `dist-artifact/files.json`). That build inlines only sprites under 5 KB and keeps the bigger ones (about 210) as separate files beside the page, so the page stays about 3 MB: the 12 MB all-in-one page was too large for public sharing. `npm run build` / `npm test` still make the all-in-one `dist/index.html` that works from `file://`.
 
 ## The owner
 
