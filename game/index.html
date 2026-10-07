@@ -47,6 +47,20 @@
   </div>
 
   <!-- Asked before starting over (see restartClub()) -->
+  <!-- The club's name, for its neon sign outside (see scene/clubName.js).
+       Asked on a new club; clicking the sign renames it. -->
+  <div id="namePrompt" class="overlay">
+    <div class="summaryCard">
+      <div id="namePromptTitle" class="summaryTitle">Name your club!</div>
+      <div class="summaryVerdict">It goes up in lights on a big neon sign outside. Click the sign any time to change it.</div>
+      <input id="clubNameInput" type="text" maxlength="22" placeholder="Club Nova" autocomplete="off" spellcheck="false">
+      <div class="summaryButtons">
+        <div id="clubNameOk" class="summaryButton">Light it up!</div>
+        <div id="clubNameCancel" class="summaryButton later">Cancel</div>
+      </div>
+    </div>
+  </div>
+
   <div id="restartConfirm" class="overlay">
     <div class="summaryCard">
       <div class="summaryTitle">Start a new club?</div>

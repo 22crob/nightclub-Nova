@@ -609,6 +609,16 @@ body.kick .navPad > .uiArt { transform: scale(1.06); transition: none; }
   font-family: var(--display-font); font-weight: 900; font-size: 15px; color: #fff; text-shadow: var(--outline);
 }
 .summaryButton.danger { --c: #ff4f6a; }
+/* The club name box (clubName.js): the name typed in neon pink. A new
+   club can't skip it, so Cancel only shows when renaming. */
+#clubNameInput {
+  display: block; width: 100%; box-sizing: border-box; margin: 4px 0 2px; padding: 10px 14px; border-radius: 14px;
+  border: 2px solid var(--pink); background: #120820; color: #ffd6f6; outline: none; text-align: center;
+  font-family: var(--display-font); font-weight: 900; font-size: 22px; text-shadow: 0 0 8px #ff2fc8, 0 0 2px #fff;
+  box-shadow: 0 0 14px rgba(255, 79, 216, 0.45), inset 0 2px 6px rgba(0, 0, 0, 0.6);
+}
+#clubNameInput::placeholder { color: rgba(255, 214, 246, 0.35); text-shadow: none; }
+#namePrompt.first #clubNameCancel { display: none; }
 .summaryButton.later { --c: #a24bff; }
 
 /* The level-up menu: the new level and a card for everything it unlocked

@@ -56,11 +56,43 @@ const waitForScene = async () => {
     const s = window.__clubNova.scene.getScene('club');
     s.showLevelUp = () => {};
     s.completeGoal = (goal) => { s.goalsDone.push(goal.id); };
+    // A club without a name asks for one first (checked on its own below).
+    if (!s.clubName) s.setClubName('Test Club');
+    document.getElementById('namePrompt')?.classList.remove('open');
   });
 };
 
-// Fresh start.
+// Fresh start. A new club is asked for its name first; it goes up on the
+// neon sign outside and is saved.
 await page.goto(gameUrl);
+await page.evaluate(() => localStorage.clear());
+await page.reload();
+await page.waitForFunction(() => { const s = window.__clubNova && window.__clubNova.scene.getScene('club'); return s && s.world && s.sys.settings.status >= 5; });
+const naming = await page.evaluate(() => {
+  const s = window.__clubNova.scene.getScene('club');
+  const out = { asked: document.getElementById('namePrompt').classList.contains('open'), noSignYet: !s.clubSign };
+  document.getElementById('clubNameInput').value = '  The   Velvet Room  ';
+  document.getElementById('clubNameOk').click();
+  out.name = s.clubName;
+  out.closed = !document.getElementById('namePrompt').classList.contains('open');
+  out.sign = !!(s.clubSign && s.clubSign.visible && s.textures.exists('clubSign_on'));
+  out.saved = JSON.parse(localStorage.getItem('clubNovaSave_v2')).clubName;
+  return out;
+});
+check('a new club asks for its name and puts it up on a neon sign outside', naming.asked && naming.noSignYet && naming.name === 'The Velvet Room' && naming.closed && naming.sign && naming.saved === 'The Velvet Room', JSON.stringify(naming));
+await page.reload();
+await page.waitForFunction(() => { const s = window.__clubNova && window.__clubNova.scene.getScene('club'); return s && s.world && s.sys.settings.status >= 5; });
+const renamed = await page.evaluate(() => {
+  const s = window.__clubNova.scene.getScene('club');
+  const out = { kept: s.clubName === 'The Velvet Room', notAsked: !document.getElementById('namePrompt').classList.contains('open') };
+  s.promptClubName(false);
+  out.cancelShown = getComputedStyle(document.getElementById('clubNameCancel')).display !== 'none';
+  document.getElementById('clubNameInput').value = 'Club Nova';
+  document.getElementById('clubNameOk').click();
+  out.name = s.clubName;
+  return out;
+});
+check('the name is kept on reload and the sign can rename the club', renamed.kept && renamed.notAsked && renamed.cancelShown && renamed.name === 'Club Nova', JSON.stringify(renamed));
 await page.evaluate(() => localStorage.clear());
 await page.reload();
 await waitForScene();

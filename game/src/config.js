@@ -191,6 +191,9 @@ export const ZOOM_MAX = 2.2;
 // localStorage key for the save file. Bumping this (v1 -> v2) is the
 // escape hatch if the save shape ever changes incompatibly — old saves
 // under the old key are just ignored rather than crashing on load.
+// The club's name on its neon sign outside (src/scene/clubName.js).
+export const CLUB_SIGN = { defaultName: 'Club Nova', maxLength: 22, fontSize: 30, resolution: 2, chaseMs: 450 };
+
 export const SAVE_KEY = 'clubNovaSave_v2'; // v2: the finer grid (v1 saves don't fit it)
 
 // Test mode (src/scene/testMode.js): the same game opened at .../test/ (or

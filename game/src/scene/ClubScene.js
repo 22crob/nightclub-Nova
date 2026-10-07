@@ -36,6 +36,7 @@ import { SpeakersMixin } from './speakers.js';
 import { SelectionMixin } from './selection.js';
 import { GoalsMixin } from './goals.js';
 import { MeterMixin } from './meter.js';
+import { ClubNameMixin } from './clubName.js';
 import { TestModeMixin } from './testMode.js';
 import { Music } from '../music.js';
 import { applyMixins } from './applyMixins.js';
@@ -320,6 +321,7 @@ export class ClubScene extends Phaser.Scene {
     this.setupBonuses(); // high fives worth $88 (bonuses.js)
     this.setupSpeakers(); // speaker cones bounce to the beat (speakers.js)
     this.setupGoals(); // the goals panel (goals.js)
+    this.setupClubName(); // the name and its sign outside; asks for one if there isn't (clubName.js)
     this.setupMeter(); // the drink meter on the right edge (meter.js)
     this.time.addEvent({ delay: 1000, loop: true, callback: () => this.tickMeter() });
     this.scheduleNextPatronSpawn();
@@ -384,5 +386,6 @@ applyMixins(ClubScene, [
   SelectionMixin,
   GoalsMixin,
   MeterMixin,
+  ClubNameMixin,
   TestModeMixin,
 ]);

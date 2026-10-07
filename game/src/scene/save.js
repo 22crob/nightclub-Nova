@@ -1,6 +1,7 @@
 // ClubScene methods: Saving and loading the club to localStorage.
 // Mixed into ClubScene (see ClubScene.js); `this` is the scene.
 import { PROP_TYPES } from '../catalog.js';
+import { cleanClubName } from './clubName.js';
 import { BASE_GRID_SIZE, SAVE_KEY as REAL_SAVE_KEY, TEST, TEST_MODE } from '../config.js';
 
 const SAVE_KEY = TEST_MODE ? TEST.saveKey : REAL_SAVE_KEY;
@@ -53,7 +54,7 @@ export class SaveMixin {
       inventory[this.movingBooth.type] -= 1;
       if (inventory[this.movingBooth.type] <= 0) delete inventory[this.movingBooth.type];
     }
-    return { cash: this.cash, fans: this.fans, gridW: this.gridW, gridH: this.gridH, placed: placedList, wallpaper: { ...this.wallpaper }, floorPaint: { ...this.floorPaint }, nightStars: this.nightStars || [], inventory, inventoryXp, goalsDone: this.goalsDone || [], goalStats: this.goalStats || {}, celebs: this.celebState || {}, celebInvited: Object.keys(this.celebInvites || {}) };
+    return { cash: this.cash, fans: this.fans, gridW: this.gridW, gridH: this.gridH, placed: placedList, wallpaper: { ...this.wallpaper }, floorPaint: { ...this.floorPaint }, nightStars: this.nightStars || [], inventory, inventoryXp, goalsDone: this.goalsDone || [], goalStats: this.goalStats || {}, clubName: this.clubName || '', celebs: this.celebState || {}, celebInvited: Object.keys(this.celebInvites || {}) };
   }
 
   saveGame() {
@@ -107,6 +108,7 @@ export class SaveMixin {
     }
 
     if (typeof data.cash === 'number') this.cash = data.cash;
+    if (typeof data.clubName === 'string') this.clubName = cleanClubName(data.clubName);
     if (typeof data.fans === 'number') this.fans = data.fans;
     // Already set once, before the tile grid was built, by
     // peekSavedGridSize() in create() — re-applying it here is just
