@@ -158,6 +158,7 @@ export class WorldMixin {
     this.drawMoodShade();
     this.drawDoor();
     this.drawStreetProps(P, t, nx, ny, FLOOR_SLAB_DEPTH);
+    if (this.clubSign) this.drawClubSign(); // the sign moves with the corner (clubName.js)
   }
 
   // The tile inside the club's front door, near the back of the left wall,
