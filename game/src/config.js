@@ -218,10 +218,9 @@ export const DAILY = {
 };
 
 // The club's name on its neon sign outside (src/scene/clubName.js).
-// The sign stands on the sidewalk at the club's front-left corner: `spot`
-// is how far out from the left wall's outer face (gx) and in front of the
-// room's front edge (gy), in tiles; maxWidth caps it on screen (px).
-export const CLUB_SIGN = { defaultName: 'Club Nova', maxLength: 22, fontSize: 30, resolution: 2, chaseMs: 450, postsTall: 46, spot: [-2.6, 0.6], maxWidth: 190 };
+// The sign stands on top of the right wall: fromBack is where its back end
+// starts along the wall (gx, from the back corner), postsTall its posts (px).
+export const CLUB_SIGN = { defaultName: 'Club Nova', maxLength: 22, fontSize: 30, resolution: 2, chaseMs: 450, postsTall: 12, fromBack: 0.6 };
 
 export const SAVE_KEY = 'clubNovaSave_v2'; // v2: the finer grid (v1 saves don't fit it)
 

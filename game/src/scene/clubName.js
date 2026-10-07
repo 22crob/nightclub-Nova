@@ -1,11 +1,10 @@
 // ClubScene methods: the club's name and its big neon sign outside.
 // A new club (or an old save without a name) is asked for one first
-// (#namePrompt); the name goes up in lights on a big sign on two tall posts,
-// standing on the sidewalk at the club's front-left corner by the red
-// carpet, facing the street. Clicking the sign renames the club. Saved as
-// `clubName`.
+// (#namePrompt); the name goes up in lights on a sign standing on top of the
+// right wall, at the wall's angle (the left wall is kept clear for the line
+// outside). Clicking the sign renames the club. Saved as `clubName`.
 // Mixed into ClubScene (see ClubScene.js); `this` is the scene.
-import { CLUB_SIGN, FLOOR_SLAB_DEPTH, WALL_THICKNESS } from '../config.js';
+import { CLUB_SIGN, TILE_H, TILE_W, WALL_HEIGHT, WALL_THICKNESS } from '../config.js';
 import { SFX } from '../sfx.js';
 
 // Tidies what the player typed: single spaces, at most CLUB_SIGN.maxLength.
@@ -30,7 +29,7 @@ function flatSign(name, lit, postsTall) {
   c.width = w;
   c.height = h;
   const g = c.getContext('2d');
-  // Two posts down to the sidewalk, with a little shine and a foot each.
+  // Two short posts down to the wall top, with a little shine and a foot each.
   for (const x of [w * 0.2, w * 0.8]) {
     g.fillStyle = '#1b1324';
     g.fillRect(x - 4 * R, boardH - 2, 8 * R, legs + 2);
@@ -99,6 +98,21 @@ function flatSign(name, lit, postsTall) {
   return { canvas: c, w, h };
 }
 
+// The flat sign slanted onto the right wall's plane: going right along the
+// sign goes along the wall toward the front, which drops half as fast on
+// screen.
+function slantedSign(name, lit) {
+  const { canvas, w, h } = flatSign(name, lit, CLUB_SIGN.postsTall);
+  const drop = w * (TILE_H / TILE_W);
+  const c = document.createElement('canvas');
+  c.width = w;
+  c.height = Math.ceil(h + drop);
+  const g = c.getContext('2d');
+  g.setTransform(1, TILE_H / TILE_W, 0, 1, 0, 0);
+  g.drawImage(canvas, 0, 0);
+  return { canvas: c, footY: h };
+}
+
 export class ClubNameMixin {
   setupClubName() {
     const box = document.getElementById('namePrompt');
@@ -142,27 +156,33 @@ export class ClubNameMixin {
     this.saveGame();
   }
 
-  // Puts the sign up (again): on the sidewalk at the club's front-left
-  // corner, beside the red carpet, facing the street. Redrawn when the club
-  // grows (see buildWalls()).
+  // Puts the sign up (again): standing on the right wall's top, from near
+  // the back corner toward the front, sized to fit the wall. Redrawn when
+  // the club grows (see buildWalls()).
   drawClubSign() {
     if (this.clubSign) { this.clubSign.destroy(); this.clubSign = null; }
     if (this.signFlicker) { this.signFlicker.remove(); this.signFlicker = null; }
-    if (!this.clubName || !this.streetLayer) return;
+    if (!this.clubName || !this.wallLayer) return;
+    let footY = 0;
     for (const lit of [true, false]) {
       const key = `clubSign_${lit ? 'on' : 'off'}`;
       if (this.textures.exists(key)) this.textures.remove(key);
-      this.textures.addCanvas(key, flatSign(this.clubName, lit, CLUB_SIGN.postsTall).canvas);
+      const made = slantedSign(this.clubName, lit);
+      footY = made.footY;
+      this.textures.addCanvas(key, made.canvas);
     }
     const R = CLUB_SIGN.resolution;
     const tex = this.textures.get('clubSign_on').getSourceImage();
-    const scale = Math.min(1 / R, CLUB_SIGN.maxWidth / tex.width);
-    const t = -0.5 - WALL_THICKNESS; // the walls' outer face
-    const [sx, sy] = this.gridPoint(t + CLUB_SIGN.spot[0], this.gridH - 0.5 + CLUB_SIGN.spot[1], -FLOOR_SLAB_DEPTH);
-    const img = this.add.image(sx, sy, 'clubSign_on').setOrigin(0.5, 1).setScale(scale);
+    const start = CLUB_SIGN.fromBack;                        // the sign's back end, along the wall (gx)
+    const room = (this.gridW - 0.5 - start) * (TILE_W / 2) * 0.92; // how wide it may be on screen
+    const scale = Math.min(1 / R, room / tex.width);
+    const gy = -0.5 - WALL_THICKNESS / 2;                     // the middle of the wall's top
+    const [sx, sy] = this.gridPoint(start, gy, WALL_HEIGHT);
+    // Its bottom-left corner (the back end, at the foot of the posts) sits on the wall top.
+    const img = this.add.image(sx, sy + 2, 'clubSign_on').setOrigin(0, footY / tex.height).setScale(scale);
     img.setInteractive({ pixelPerfect: true, useHandCursor: true });
     img.on('pointerup', (p) => { if (!this.selectedProp && !p.event.defaultPrevented) this.promptClubName(false); });
-    this.streetLayer.addAt(img, 0); // behind people walking past along the front
+    this.wallLayer.add(img);
     this.clubSign = img;
     // The bulbs chase.
     this.signFlicker = this.time.addEvent({
