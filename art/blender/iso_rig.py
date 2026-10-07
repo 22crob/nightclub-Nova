@@ -100,11 +100,32 @@ def add_lighting(scene):
     area('Rim', (1.0, 5.0, 4.0), (-50, 0, 170), 350, (1.0, 0.35, 0.8), 3)
 
 
-# Dark drawn outlines around every prop, like Nightclub City's cartoon art
-# (Blender's Freestyle line renderer). Glowing parts get no outline so neon
-# stays bright.
-OUTLINE_THICKNESS = 3.0               # render pixels (1.5 game pixels)
+# Edge lines around every prop, the way Nightclub City draws its furniture:
+# thin, and in a darker shade of each part's own colour (dark gold on gold,
+# grey on white) rather than black, so the shapes stay crisp but read as
+# glossy and soft; only the characters get dark outlines. Glowing parts get
+# no line so neon stays bright. (OUTLINE_STYLE 'black' is the old look: thick
+# near-black lines on everything.)
+OUTLINE_STYLE = 'nc'
+OUTLINE_THICKNESS = {'nc': 1.6, 'black': 3.0}   # render pixels (half that in game pixels)
 OUTLINE_COLOR = (0.015, 0.008, 0.02)
+EDGE_DARKEN = 0.42                               # an edge line is its part's colour times this
+
+
+def _base_color(mat):
+    """A material's main colour: its Principled Base Color, or the middle of
+    the colour ramp feeding it (wood grain and the like)."""
+    if mat and mat.use_nodes:
+        bsdf = next((n for n in mat.node_tree.nodes if n.type == 'BSDF_PRINCIPLED'), None)
+        if bsdf:
+            inp = bsdf.inputs['Base Color']
+            if not inp.is_linked:
+                return tuple(inp.default_value[:3])
+            ramp = next((n for n in mat.node_tree.nodes if n.type == 'VALTORGB'), None)
+            if ramp:
+                cs = [e.color[:3] for e in ramp.color_ramp.elements]
+                return tuple(sum(c[i] for c in cs) / len(cs) for i in range(3))
+    return tuple(mat.diffuse_color[:3]) if mat else (0.3, 0.3, 0.3)
 
 
 def _glows(obj):
@@ -134,7 +155,21 @@ def add_outlines(scene, root):
     if ls.linestyle is None:
         ls.linestyle = bpy.data.linestyles.new('Outline')
     ls.linestyle.color = OUTLINE_COLOR
-    ls.linestyle.thickness = OUTLINE_THICKNESS
+    ls.linestyle.thickness = OUTLINE_THICKNESS[OUTLINE_STYLE]
+    for m in list(ls.linestyle.color_modifiers):
+        ls.linestyle.color_modifiers.remove(m)
+    if OUTLINE_STYLE == 'nc':
+        # Each part's line takes its material's line colour: its own colour, darker.
+        for o in root.children_recursive:
+            for slot in getattr(o, 'material_slots', []):
+                mat = slot.material
+                if mat:
+                    r, g, b = _base_color(mat)
+                    mat.line_color = (r * EDGE_DARKEN, g * EDGE_DARKEN, b * EDGE_DARKEN, 1)
+        mod = ls.linestyle.color_modifiers.new('PartColour', 'MATERIAL')
+        mod.material_attribute = 'LINE'
+        mod.blend = 'MIX'
+        mod.influence = 1.0
     no_lines = bpy.data.collections.get('NoOutline') or bpy.data.collections.new('NoOutline')
     if no_lines.name not in scene.collection.children:
         scene.collection.children.link(no_lines)

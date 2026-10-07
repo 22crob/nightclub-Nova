@@ -192,19 +192,21 @@ def booth(seat_mat, back_mat, trim, table_top, seat_angles, extras=None):
     """A curved booth around a round table, open toward -Y."""
     a0, a1 = -25, 205
     arc_block('Plinth', 0, 0.05, 0.5, 0.92, a0, a1, 0, 0.1, plain('#1e161a', rough=0.6), bevel=0.01)
-    arc_block('Seat', 0, 0.05, 0.5, 0.88, a0, a1, 0.1, 0.42, seat_mat, bevel=0.04)
+    # Seat, backrest and base share one outside edge (0.92) so the back sits
+    # flush instead of overhanging (the owner noticed it sticking out).
+    arc_block('Seat', 0, 0.05, 0.5, 0.92, a0, a1, 0.1, 0.42, seat_mat, bevel=0.04)
     # The backrest is made of a few pieces so each can go in front of or
     # behind the patrons on its own (see layers_at()); the joins read as
     # upholstery panels.
     n = 5
     for k in range(n):
         b0, b1 = a0 + (a1 - a0) * k / n, a0 + (a1 - a0) * (k + 1) / n
-        arc_block(f'BackRest{k}', 0, 0.05, 0.78, 0.94, b0, b1, 0.42, 1.0, back_mat, bevel=0.0)
-        arc_block(f'BackPiping{k}', 0, 0.05, 0.77, 0.95, b0, b1, 0.98, 1.02, trim, bevel=0.0)
+        arc_block(f'BackRest{k}', 0, 0.05, 0.76, 0.92, b0, b1, 0.42, 1.0, back_mat, bevel=0.0)
+        arc_block(f'BackPiping{k}', 0, 0.05, 0.755, 0.925, b0, b1, 0.98, 1.02, trim, bevel=0.0)
     for k in range(9):
         a = math.radians(a0 + 10 + k * (a1 - a0 - 20) / 8)
         for z in (0.6, 0.82):
-            sphere(f'BackButton{k}{z}', 0.77 * math.cos(a), 0.05 + 0.77 * math.sin(a), z, 0.018, trim, segments=8)
+            sphere(f'BackButton{k}{z}', 0.755 * math.cos(a), 0.05 + 0.755 * math.sin(a), z, 0.018, trim, segments=8)
     cylinder('TableFoot', 0, -0.1, 0, 0.04, 0.2, trim, verts=24)
     cylinder('TableStem', 0, -0.1, 0.04, 0.52, 0.035, trim, verts=12)
     cylinder('Table', 0, -0.1, 0.52, 0.56, 0.32, table_top, verts=40)

@@ -217,7 +217,7 @@ def birdcage_booth():
     cylinder('Platform', 0, 0, 0, 0.12, 1.0, mat('#2a1a22'), verts=48)
     torus('PlatformRim', 0, 0, 0.12, 0.98, 0.025, gold)
     arc_block('Seat', 0, 0, 0.25, 0.72, 25, 155, 0.12, 0.44, pink, bevel=0.04)
-    arc_block('BackRest', 0, 0, 0.62, 0.76, 15, 165, 0.44, 0.95, principled('CagePinkBack', srgb('#b83a70'), rough=0.85), bevel=0.03)
+    arc_block('BackRest', 0, 0, 0.6, 0.72, 25, 155, 0.44, 0.95, principled('CagePinkBack', srgb('#b83a70'), rough=0.85), bevel=0.03)  # flush with the seat
     n = 22
     for i in range(n):
         a = math.radians(i * 360 / n + 8)
