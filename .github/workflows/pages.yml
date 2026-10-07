@@ -36,6 +36,8 @@ jobs:
           cache-dependency-path: game/package-lock.json
       - run: npm ci
       - run: npm run build
+      # The same page at /test/ plays in test mode (src/scene/testMode.js).
+      - run: mkdir -p dist/test && cp dist/index.html dist/test/index.html
       - uses: actions/configure-pages@v5
       - uses: actions/upload-pages-artifact@v3
         with:

@@ -189,6 +189,13 @@ export const ZOOM_MAX = 2.2;
 // under the old key are just ignored rather than crashing on load.
 export const SAVE_KEY = 'clubNovaSave_v2'; // v2: the finer grid (v1 saves don't fit it)
 
+// Test mode (src/scene/testMode.js): the same game opened at .../test/ (or
+// with ?test in the address) starts at the top level with lots of cash, on
+// its own save so the real club is never touched.
+export const TEST_MODE = typeof location !== 'undefined'
+  && (/\/test\/(index\.html)?$/.test(location.pathname) || new URLSearchParams(location.search).has('test'));
+export const TEST = { saveKey: 'clubNovaSave_v2_test', cash: 10000000 };
+
 // Fraction of a prop's fixed cost refunded when you right-click to sell it
 // back (see sellProp()).
 export const SELL_REFUND_RATIO = 0.5;

@@ -2167,6 +2167,20 @@ const held = await page.evaluate(() => {
 check('a held item always shows with its tiles: green where it fits, red and tinted where it does not', held.free && held.free.ghost && !held.free.tinted && held.free.filled && held.free.outlined
   && held.blocked.ghost && held.blocked.tinted && held.blocked.filled && held.blocked.outlined && held.clearedAfter, JSON.stringify(held));
 
+// Test mode (?test, or the site's /test/ copy): top level, lots of cash, on
+// its own save, and the real save is left alone.
+const realSave = await page.evaluate(() => { window.__clubNova.scene.getScene('club').saveGame(); return localStorage.getItem('clubNovaSave_v2'); });
+await page.goto(gameUrl + '?test');
+await waitForScene();
+const testMode = await page.evaluate(() => {
+  const s = window.__clubNova.scene.getScene('club');
+  s.saveGame();
+  return { level: s.levelInfo().level, top: s.topUnlockLevel(), cash: s.cash, tag: !!document.getElementById('testModeTag'),
+    real: localStorage.getItem('clubNovaSave_v2'), test: !!localStorage.getItem('clubNovaSave_v2_test') };
+});
+check('test mode starts at the top level with lots of cash, on its own save', testMode.level >= testMode.top && testMode.cash >= 10000000 && testMode.tag && testMode.test && testMode.real === realSave,
+  JSON.stringify({ level: testMode.level, top: testMode.top, cash: testMode.cash, tag: testMode.tag, test: testMode.test, realKept: testMode.real === realSave }));
+
 check('no errors in the page', errors.length === 0, errors.join(' | '));
 
 await browser.close();

@@ -375,6 +375,15 @@ body.kick .navPad > .uiArt { transform: scale(1.06); transition: none; }
   #goalList { flex-direction: column; } #goals { height: auto; }
 }
 
+/* Test mode (testMode.js): a sticker at the bottom left, so the test club
+   is never mistaken for the real one. */
+#testModeTag {
+  position: fixed; left: 12px; bottom: 12px; z-index: 50; pointer-events: none;
+  padding: 4px 10px; border-radius: 8px; transform: rotate(-4deg);
+  background: #ff3d7f; color: #fff; font: 800 13px var(--display-font); letter-spacing: 1px;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, .5);
+}
+
 /* What you're holding: a tag at the top, clear of the floor. */
 #selectedChip:empty { display: none; }
 #selectedChip {

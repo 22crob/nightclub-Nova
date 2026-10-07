@@ -1,7 +1,9 @@
 // ClubScene methods: Saving and loading the club to localStorage.
 // Mixed into ClubScene (see ClubScene.js); `this` is the scene.
 import { PROP_TYPES } from '../catalog.js';
-import { BASE_GRID_SIZE, SAVE_KEY } from '../config.js';
+import { BASE_GRID_SIZE, SAVE_KEY as REAL_SAVE_KEY, TEST, TEST_MODE } from '../config.js';
+
+const SAVE_KEY = TEST_MODE ? TEST.saveKey : REAL_SAVE_KEY;
 
 export class SaveMixin {
   // A lightweight peek at the save file for just the room's size [gridW,

@@ -36,6 +36,7 @@ import { SpeakersMixin } from './speakers.js';
 import { SelectionMixin } from './selection.js';
 import { GoalsMixin } from './goals.js';
 import { MeterMixin } from './meter.js';
+import { TestModeMixin } from './testMode.js';
 import { Music } from '../music.js';
 import { applyMixins } from './applyMixins.js';
 
@@ -133,6 +134,7 @@ export class ClubScene extends Phaser.Scene {
     // the restored cash/fans instead of flashing the fresh-game defaults.
     this.loadGame();
     if (this.freshClub) this.placeStarterLayout();
+    this.applyTestMode(); // only on the test link (see testMode.js)
     this.ensureClubBooth(); // every club has its DJ booth, with the DJ playing
 
     // Baseline for level-up detection (see updateUI()) — set from whatever
@@ -382,4 +384,5 @@ applyMixins(ClubScene, [
   SelectionMixin,
   GoalsMixin,
   MeterMixin,
+  TestModeMixin,
 ]);
