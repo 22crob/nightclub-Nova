@@ -34,6 +34,18 @@ PAINTED = os.path.join(REPO, 'art', 'characters', 'painted')
 TEX = 1024          # the clay renders' size, and the textures'
 MARGIN = 1.08       # the clay renders frame the model this much bigger
 NECK_PX = 360       # in the 1024 textures: the hair is all above this row
+
+# The cartoon look (--toon), like Nightclub City's drawn guests: flat colour
+# with one shadow step instead of 3D lighting, a bold dark outline round the
+# whole figure, and a bigger head.
+TOON = {
+    'light': (-0.45, -0.55, 0.7),   # where the one shadow step comes from
+    'shadow': 0.8,                  # how dark the shadow side is
+    'outline_px': 6,                # in the render (before the sheet shrinks it)
+    'outline': (12, 8, 16, 255),
+    'head': 1.35,                   # head size
+}
+toon = False
 EDGE_PX = 7         # the drawing's outer outline, stripped before wrapping
 
 
@@ -241,7 +253,71 @@ def painted_material(name, front_png, back_png, cutout=False, hair_rgb=None):
         links.new(hole.outputs['BSDF'], both.inputs[1])
         links.new(bsdf.outputs['BSDF'], both.inputs[2])
         links.new(both.outputs['Shader'], out.inputs['Surface'])
+    if toon:
+        cartoon(nt, top if cutout else mix, both if cutout else None)
     return mat
+
+
+def cartoon(nt, colour, cutout_mix):
+    """Swaps the lit surface for flat colour: the picture's own colour, a
+    little darker on the side away from TOON['light'] (one hard step)."""
+    nodes, links = nt.nodes, nt.links
+    geo = nodes.new('ShaderNodeNewGeometry')
+    dot = nodes.new('ShaderNodeVectorMath')
+    dot.operation = 'DOT_PRODUCT'
+    dot.inputs[1].default_value = Vector(TOON['light']).normalized()
+    links.new(geo.outputs['Normal'], dot.inputs[0])
+    step = nodes.new('ShaderNodeValToRGB')
+    step.color_ramp.interpolation = 'CONSTANT'
+    s = TOON['shadow']
+    step.color_ramp.elements[0].color = (s, s, s, 1)
+    step.color_ramp.elements[1].position = 0.15
+    step.color_ramp.elements[1].color = (1, 1, 1, 1)
+    links.new(dot.outputs['Value'], step.inputs['Fac'])
+    shade = nodes.new('ShaderNodeMix')
+    shade.data_type = 'RGBA'
+    shade.blend_type = 'MULTIPLY'
+    shade.inputs['Factor'].default_value = 1.0
+    links.new(colour.outputs['Result'], shade.inputs['A'])
+    links.new(step.outputs['Color'], shade.inputs['B'])
+    flat = nodes.new('ShaderNodeEmission')
+    links.new(shade.outputs['Result'], flat.inputs['Color'])
+    if cutout_mix:
+        links.new(flat.outputs['Emission'], cutout_mix.inputs[2])
+    else:
+        links.new(flat.outputs['Emission'], nodes['Material Output'].inputs['Surface'])
+
+
+def bold_outline(im):
+    """A dark outline round the whole figure (hair cut-out included)."""
+    from PIL import Image, ImageChops, ImageFilter
+    a = im.getchannel('A').point(lambda v: 255 if v > 100 else 0)
+    w = TOON['outline_px']
+    ring = ImageChops.subtract(a.filter(ImageFilter.MaxFilter(2 * w + 1)), a).filter(ImageFilter.GaussianBlur(0.6))
+    out = Image.new('RGBA', im.size, TOON['outline'])
+    out.putalpha(ring)
+    out.alpha_composite(im)
+    return out
+
+
+def big_head(arm, scale):
+    """Makes the head bigger in every clip (from the neck, so it grows up
+    and out): drops any head-scale keys and scales the head bone."""
+    path = 'pose.bones["mixamorig:Head"].scale'
+    for act in bpy.data.actions:
+        curves = []
+        try:
+            curves = [fc for fc in act.fcurves if fc.data_path == path]
+            for fc in curves:
+                act.fcurves.remove(fc)
+        except AttributeError:
+            pass
+        for layer in getattr(act, 'layers', []):
+            for strip in layer.strips:
+                for bag in getattr(strip, 'channelbags', []):
+                    for fc in [fc for fc in bag.fcurves if fc.data_path == path]:
+                        bag.fcurves.remove(fc)
+    arm.pose.bones['mixamorig:Head'].scale = (scale, scale, scale)
 
 
 def make_painter(name, work):
@@ -350,6 +426,8 @@ def make_painter(name, work):
         hair.data.materials.append(painted_material('PaintedHair', paths['front'][1], paths['back'][1], cutout=True, hair_rgb=state_rgb))
         for p in hair.data.polygons:
             p.material_index = 0
+        if toon:
+            big_head(body.find_armature(), TOON['head'])
         return hair
 
     return colour_body, add_hair
@@ -416,8 +494,23 @@ def main():
     if args[:1] == ['--clay']:
         clay(args[1])
         return
+    global toon
+    toon = '--toon' in args
+    args = [a for a in args if a != '--toon']
     name = args[0]
     preview = args[2] if args[1:2] == ['--preview'] else None
+    if toon:
+        import iso_rig
+        reset = iso_rig.reset_scene
+
+        def reset_flat():
+            # Flat colours show as painted (no filmic tone curve).
+            scene = reset()
+            scene.view_settings.view_transform = 'Standard'
+            scene.view_settings.look = 'None'
+            return scene
+        iso_rig.reset_scene = reset_flat
+        m1.POSTPROCESS = bold_outline
     work = os.path.join(REPO, 'art', 'build', 'painted', name)     # not committed
     os.makedirs(work, exist_ok=True)
     colour_body, add_hair = make_painter(name, work)

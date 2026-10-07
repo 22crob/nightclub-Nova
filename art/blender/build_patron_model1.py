@@ -58,6 +58,9 @@ CLIPS = (
     ('idle', 8, None, 1.0),
 )
 COLUMNS = 24
+# Set by build_patron_painted.py: a function applied to every rendered frame
+# (e.g. a bold outline round the whole figure).
+POSTPROCESS = None
 STANDING_HEIGHT = 118.0     # px, head to feet, in the sheet (drawn: 121)
 SOURCE_FPS = 30
 
@@ -314,7 +317,8 @@ def main():
         scene.frame_set(int(frame), subframe=frame % 1)
         scene.render.filepath = path
         bpy.ops.render.render(write_still=True)
-        return Image.open(path).convert('RGBA')
+        im = Image.open(path).convert('RGBA')
+        return POSTPROCESS(im) if POSTPROCESS else im
 
     if preview:
         shots = []
