@@ -4,6 +4,16 @@ import barStarterSprite from './assets/sprites/bar_starter.json';
 import barWoodSprite from './assets/sprites/bar_wood.json';
 import barNeonSprite from './assets/sprites/bar_neon.json';
 import barIceSprite from './assets/sprites/bar_ice.json';
+import bar_tikiSprite from './assets/sprites/bar_tiki.json';
+import bar_surfSprite from './assets/sprites/bar_surf.json';
+import bar_dinerSprite from './assets/sprites/bar_diner.json';
+import bar_gardenSprite from './assets/sprites/bar_garden.json';
+import bar_warehouseSprite from './assets/sprites/bar_warehouse.json';
+import bar_speakeasySprite from './assets/sprites/bar_speakeasy.json';
+import bar_discoSprite from './assets/sprites/bar_disco.json';
+import bar_candySprite from './assets/sprites/bar_candy.json';
+import bar_marbleSprite from './assets/sprites/bar_marble.json';
+import bar_cyberSprite from './assets/sprites/bar_cyber.json';
 import boothWoodSprite from './assets/sprites/dj_wood.json';
 import boothProSprite from './assets/sprites/dj_pro.json';
 import boothClubSprite from './assets/sprites/dj_club.json';
@@ -233,6 +243,17 @@ export const PROP_TYPES = {
   bar: barTier('bar', 'Pub Bar', 150, 3, 'bar', barSprite),
   neonBar: barTier('neonBar', 'Neon Bar', 260, 5, 'bar_neon', barNeonSprite),
   iceBar: barTier('iceBar', 'Ice Bar', 400, 7, 'bar_ice', barIceSprite),
+  // The ten themed bars (art/blender/bar_designs.py).
+  tikiBar: barTier('tikiBar', 'Tiki Bar', 220, 4, 'bar_tiki', bar_tikiSprite),
+  surfBar: barTier('surfBar', 'Surf Shack Bar', 300, 6, 'bar_surf', bar_surfSprite),
+  dinerBar: barTier('dinerBar', 'Retro Diner Bar', 340, 8, 'bar_diner', bar_dinerSprite),
+  gardenBar: barTier('gardenBar', 'Garden Bar', 380, 9, 'bar_garden', bar_gardenSprite),
+  breweryBar: barTier('breweryBar', 'Brewery Bar', 420, 10, 'bar_warehouse', bar_warehouseSprite),
+  speakeasyBar: barTier('speakeasyBar', 'Speakeasy Bar', 500, 12, 'bar_speakeasy', bar_speakeasySprite),
+  discoBar: barTier('discoBar', 'Disco Bar', 560, 13, 'bar_disco', bar_discoSprite),
+  candyBar: barTier('candyBar', 'Candy Bar', 620, 15, 'bar_candy', bar_candySprite),
+  marbleBar: barTier('marbleBar', 'Marble Lounge Bar', 750, 17, 'bar_marble', bar_marbleSprite),
+  cyberBar: barTier('cyberBar', 'Cyber Bar', 900, 19, 'bar_cyber', bar_cyberSprite),
   woodBooth: boothTier('woodBooth', 'Wood Booth', 180, 1, 'dj_wood', boothWoodSprite),
   proBooth: boothTier('proBooth', 'Pro Booth', 215, 2, 'dj_pro', boothProSprite),
   dj: boothTier('dj', 'Club Booth', 250, 3, 'dj_club', boothClubSprite),
@@ -338,6 +359,8 @@ export const PROP_TYPES = {
 // glow on the floor around them: [colour, radius in tiles].
 const PROP_LIGHTS = {
   bar: [0xffa050, 1.4], neonBar: [0xc040ff, 2.0], iceBar: [0x60c8ff, 2.0],
+  tikiBar: [0xff8a1f, 1.5], dinerBar: [0xff3b5a, 1.4], breweryBar: [0xffb04a, 1.3], speakeasyBar: [0xffb04a, 1.4],
+  discoBar: [0xff60c0, 2.0], candyBar: [0xff9ad0, 1.4], cyberBar: [0x23e4ff, 2.0], surfBar: [0xffd23f, 1.2],
   proBooth: [0xffb45a, 1.0], dj: [0xff60c0, 1.2], neonBooth: [0xc040ff, 1.8], iceBooth: [0x60c8ff, 1.8],
   lavaLamp: [0xff3a28, 1.5], glowTube: [0x30c0ff, 1.6], neonSign: [0xff40c0, 1.6], aquarium: [0x3080ff, 1.5],
   speakerTower: [0x30e0ff, 0.9], neonSpeaker: [0xc040ff, 1.3], discoBall: [0xc8c8ff, 1.2], spotlight: [0xfff0c0, 1.6],
