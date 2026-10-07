@@ -79,6 +79,13 @@ export class ClubScene extends Phaser.Scene {
           if (SPRITE_URLS[key]) this.load.image(key, SPRITE_URLS[key]);
         }
       }
+      // Seating's "in front of this seat" cut-outs (see addSeatOccluder()).
+      for (const [facing, row] of Object.entries(def.occluders || {})) {
+        row.forEach((off, i) => {
+          const key = `${def.sprites[0].replace(/_0$/, '')}_occ${i}_${facing}`;
+          if (off && SPRITE_URLS[key]) this.load.image(key, SPRITE_URLS[key]);
+        });
+      }
     }
 
     // Patrons: one spritesheet per character, each with its own frame grid.

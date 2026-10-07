@@ -241,6 +241,9 @@ function seatTier(key, label, cost, unlockLevel, model, fanRate, footprint = nul
     layerSprites: meta.layers ? Object.fromEntries(meta.layers.map((layer) => [layer, facings(`_${layer}`)])) : null,
     frontAlwaysNear: true,
     seats: meta.seats, sitLift: meta.sitLift,
+    // Per facing and seat, where the "in front of this seat" cut-out sits in
+    // the piece's image (build_seating.py occluders()); see seatOccluder().
+    occluders: meta.occluders || null,
     ...(footprint ? { footprint } : {}),
     displayWidth: meta.displayWidth, originX: meta.originX, originY: meta.originY,
   };

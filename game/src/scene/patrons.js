@@ -710,6 +710,7 @@ export class PatronsMixin {
     this.endChat(patron);
     this.endDanceTogether(patron);
     this.releaseSeat(patron);
+    this.removeSeatOccluder(patron);
     this.leaveBarQueue(patron);
     this.patronLeaves(patron);
     this.streetLeaver(patron.container.patronCharacter); // walks off down the street outside

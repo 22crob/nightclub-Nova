@@ -127,21 +127,19 @@ export class SeatingMixin {
       c.patronDir = facingCamera ? 'front' : 'back';
       c.scaleX = (fx !== 0 ? -1 : 1) * patron.scaleVariance;
     }
-    // A guest facing the camera sits on top of the cushions (legs showing
-    // over the seat); one facing away goes between the layers, behind the
-    // backrest, so only what shows over it is seen. On a piece whose seats
-    // face different ways (benches facing each other, an L sectional),
-    // turned so that some bench's backrest is on the camera's side, every
-    // guest goes between the layers: that backrest stands in front of them
-    // too, and hides them as it naturally would. Nearer guests go on top.
-    const mixed = def.seats.some((seat) => (seat[2] || 0) !== (def.seats[0][2] || 0));
-    const awayBench = mixed && def.seats.some((_, j) => {
-      const [fx, fy] = this.seatSpot(rec, j).front;
-      return !(fx > 0 || fy > 0);
-    });
-    const onTop = facingCamera && !awayBench;
-    const nearness = mixed ? (spot.gx + spot.gy - rec.anchor[0] - rec.anchor[1]) * 0.0001 : 0;
-    c.setDepth(rec.gameObject.baseDepth + (onTop ? 0.003 + nearness : 0.001 + nearness * 0.5));
+    if (def.occluders) {
+      // Guests sit on top of the piece, nearer ones over farther ones, and
+      // the part of the piece that's in front of their seat (its cut-out,
+      // from the piece's depth map) goes over them: a backrest or bench
+      // between them and the camera hides them as it naturally would, and
+      // nothing behind them does.
+      c.setDepth(rec.gameObject.baseDepth + 0.003 + (spot.gx + spot.gy - rec.anchor[0] - rec.anchor[1]) * 0.0001);
+      this.addSeatOccluder(patron, rec, i);
+    } else {
+      // (Pieces rendered before the cut-outs: facing the camera on top,
+      // facing away between the layers, behind the backrest.)
+      c.setDepth(rec.gameObject.baseDepth + (facingCamera ? 0.003 : 0.001));
+    }
     this.propLayer.sort('depth');
     // Some sit and chat (the 3D guests' sittalk; drawn guests just sit).
     this.setPatronAnimation(patron, Math.random() < SIT_TALK_CHANCE ? 'sittalk' : 'sit');
@@ -162,6 +160,29 @@ export class SeatingMixin {
     });
   }
 
+  // The cut-out of the piece that's in front of seat i at its facing (see
+  // occluders in catalog.js), laid exactly over the piece's picture just
+  // above the seated patron.
+  addSeatOccluder(patron, rec, i) {
+    this.removeSeatOccluder(patron);
+    const def = PROP_TYPES[rec.type];
+    const off = def.occluders[String(rec.facing)]?.[i];
+    const go = rec.gameObject;
+    const key = `${def.sprites[0].replace(/_0$/, '')}_occ${i}_${rec.facing}`;
+    if (!off || !go || !this.textures.exists(key)) return;
+    const k = go.scaleX;
+    const left = go.x - go.originX * go.frame.width * k;
+    const top = go.y - go.originY * go.frame.height * k;
+    const occ = this.add.image(left + off[0] * k, top + off[1] * k, key).setOrigin(0, 0).setScale(k);
+    occ.setDepth(patron.container.depth + 0.00001);
+    this.propLayer.add(occ);
+    patron.seatOccluder = occ;
+  }
+
+  removeSeatOccluder(patron) {
+    if (patron.seatOccluder) { patron.seatOccluder.destroy(); patron.seatOccluder = null; }
+  }
+
   // Hops a seated patron back down to the access tile (or another open tile
   // beside the piece), then carries on with whatever they do next.
   standUp(patron) {
@@ -173,6 +194,7 @@ export class SeatingMixin {
       return;
     }
     this.releaseSeat(patron);
+    this.removeSeatOccluder(patron);
     patron.sitting = false;
     patron.moving = true;
     patron.gx = access[0];
@@ -200,6 +222,7 @@ export class SeatingMixin {
       if (!patron.seat || patron.seat.rec !== rec) continue;
       if (patron.sitting) {
         const access = this.seatAccessTile(rec, patron.seat.i) || patron.seat.access;
+        this.removeSeatOccluder(patron);
         patron.sitting = false;
         patron.gx = access[0];
         patron.gy = access[1];

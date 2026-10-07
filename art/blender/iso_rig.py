@@ -207,7 +207,75 @@ def check_projection(scene, cam):
     return o
 
 
-def render_facings(scene, cam, root, name, out_dir, layers=None):
+DEPTH_RANGE = 8.0   # depth maps encode gx+gy in [-8, 8] game tiles
+
+
+def _depth_material():
+    """A flat material whose colour is how near each point is to the camera
+    in the game: gx + gy (Blender X - Y, in game tiles once the model is
+    scaled), encoded into red as (d + 8) / 16. Green is 1 wherever there's
+    something."""
+    mat = bpy.data.materials.get('DepthCode') or bpy.data.materials.new('DepthCode')
+    mat.use_nodes = True
+    nt = mat.node_tree
+    nt.nodes.clear()
+    geo = nt.nodes.new('ShaderNodeNewGeometry')
+    sep = nt.nodes.new('ShaderNodeSeparateXYZ')
+    nt.links.new(geo.outputs['Position'], sep.inputs[0])
+    sub = nt.nodes.new('ShaderNodeMath')
+    sub.operation = 'SUBTRACT'
+    nt.links.new(sep.outputs['X'], sub.inputs[0])
+    nt.links.new(sep.outputs['Y'], sub.inputs[1])
+    enc = nt.nodes.new('ShaderNodeMath')
+    enc.operation = 'MULTIPLY_ADD'
+    enc.inputs[1].default_value = 1 / (2 * DEPTH_RANGE)
+    enc.inputs[2].default_value = 0.5
+    nt.links.new(sub.outputs['Value'], enc.inputs[0])
+    comb = nt.nodes.new('ShaderNodeCombineXYZ')
+    nt.links.new(enc.outputs['Value'], comb.inputs['X'])
+    comb.inputs['Y'].default_value = 1.0
+    emit = nt.nodes.new('ShaderNodeEmission')
+    nt.links.new(comb.outputs['Vector'], emit.inputs['Color'])
+    out = nt.nodes.new('ShaderNodeOutputMaterial')
+    nt.links.new(emit.outputs['Emission'], out.inputs['Surface'])
+    return mat
+
+
+def render_depth(scene, path):
+    """Renders the depth map (see _depth_material()) at the current pose:
+    one sample, no smoothing, no lines."""
+    vl = bpy.context.view_layer
+    saved = (scene.cycles.samples, scene.cycles.use_denoising, scene.cycles.filter_width, scene.render.use_freestyle,
+             scene.view_settings.view_transform, scene.view_settings.look, scene.render.image_settings.color_depth,
+             vl.material_override)
+    scene.cycles.samples = 1
+    scene.cycles.use_denoising = False
+    scene.cycles.filter_width = 0.01
+    scene.render.use_freestyle = False
+    scene.view_settings.view_transform = 'Standard'
+    scene.view_settings.look = 'None'
+    scene.render.image_settings.color_depth = '8'
+    vl.material_override = _depth_material()
+    scene.render.filepath = path
+    bpy.ops.render.render(write_still=True)
+    (scene.cycles.samples, scene.cycles.use_denoising, scene.cycles.filter_width, scene.render.use_freestyle,
+     scene.view_settings.view_transform, scene.view_settings.look, scene.render.image_settings.color_depth,
+     vl.material_override) = saved
+
+
+def decode_depth(img):
+    """A depth map image back to (depth list, mask list) per pixel: gx+gy
+    in game tiles, and whether there's anything there."""
+    import numpy as np
+    a = np.asarray(img.convert('RGBA')).astype(np.float64) / 255.0
+    r = a[..., 0]
+    lin = np.where(r <= 0.04045, r / 12.92, ((r + 0.055) / 1.055) ** 2.4)    # undo the sRGB curve
+    d = (lin - 0.5) * 2 * DEPTH_RANGE
+    alpha = a[..., 3] if a.shape[-1] == 4 else np.ones_like(r)
+    return d, alpha > 0.5
+
+
+def render_facings(scene, cam, root, name, out_dir, layers=None, depth_dir=None):
     """Render the prop at all four facings, crop every image to the same
     box, and write <name>.json with the game's displayWidth and origin.
 
@@ -243,6 +311,9 @@ def render_facings(scene, cam, root, name, out_dir, layers=None):
             raw_layers[lname][facing] = Image.open(path).convert('RGBA')
         for o in everything:
             o.hide_render = False
+        if depth_dir:
+            os.makedirs(depth_dir, exist_ok=True)
+            render_depth(scene, os.path.join(depth_dir, f'{name}_depth_{facing}.png'))
     root.rotation_euler = (0, 0, 0)
     root.scale = old_scale
 
@@ -270,6 +341,11 @@ def render_facings(scene, cam, root, name, out_dir, layers=None):
     }
     if raw_layers:
         meta['layers'] = sorted(raw_layers)
+    if depth_dir:
+        for facing in FACINGS:
+            path = os.path.join(depth_dir, f'{name}_depth_{facing}.png')
+            Image.open(path).crop(crop).save(path)
+        meta['crop'] = list(crop)
     with open(os.path.join(out_dir, f'{name}.json'), 'w') as f:
         json.dump(meta, f, indent=2)
         f.write('\n')

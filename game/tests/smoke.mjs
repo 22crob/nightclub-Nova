@@ -2386,6 +2386,33 @@ const testMode = await page.evaluate((realSave) => {
 check('test mode starts at the top level with lots of cash, on its own save', testMode.level >= testMode.top && testMode.cash >= 10000000 && testMode.tag && testMode.test && testMode.realKept,
   JSON.stringify({ level: testMode.level, top: testMode.top, cash: testMode.cash, tag: testMode.tag, test: testMode.test, realKept: testMode.realKept }));
 
+// Seated guests and the furniture in front of them: on the Fire Pit
+// Sectional turned away from the camera, a guest gets the cut-out of the
+// part of the sofa in front of their seat drawn just over them (so the
+// backrest hides them), and it goes when they get up.
+const occl = await page.evaluate(() => {
+  const s = window.__clubNova.scene.getScene('club');
+  let rec = null;
+  for (let gy = 1; gy < s.gridH - 3 && !rec; gy++) for (let gx = 1; gx < s.gridW - 3 && !rec; gx++) {
+    if (s.footprintValid(s.getFootprint('fireSectional', 180, gx, gy), 'fireSectional')) rec = s.restoreProp('fireSectional', 180, [gx, gy]);
+  }
+  if (!rec) return { placed: false };
+  s.trySpawnPatron();
+  const p = s.patrons.find((q) => !q.gone && !q.sitting && !q.leaving);
+  if (!p) return { placed: true, guest: false };
+  s.claimSpecificSeat(p, { rec, i: 0, access: s.seatAccessTile(rec, 0) || rec.anchor });
+  s.sitDown(p);
+  const occ = p.seatOccluder;
+  const out = { placed: true, seats: rec.seatTaken.length, occluder: !!occ && occ.texture.key, above: !!occ && occ.depth > p.container.depth,
+    overPiece: !!occ && p.container.depth > rec.gameObject.depth };
+  s.releaseSeats(rec);
+  out.gone = !p.seatOccluder;
+  s.removeProp(rec);
+  return out;
+});
+check('a guest sitting with a sofa back between them and the camera is hidden by it (its cut-out over them), and it goes when they get up',
+  occl.occluder === 'seat_fireSectional_occ0_180' && occl.above && occl.overPiece && occl.gone, JSON.stringify(occl));
+
 // Real songs, the way the play link serves the game: the page from a web
 // server, the MP3s as separate files next to it (dist/music/), each
 // downloaded when it plays, in time with its measured tempo. The game's

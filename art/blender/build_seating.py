@@ -293,6 +293,48 @@ def layers_at(root, seats):
     return at
 
 
+# How far in front of a seat (toward where the guest faces, in game tiles)
+# the guest's body reaches: their knees when facing the camera.
+REACH = 0.4
+
+
+def occluders(base, meta, depth_dir):
+    """For each facing and seat, the part of the piece that is nearer the
+    camera than a guest sitting there (from the depth map), as its own
+    image, <base>_occ<seat>_<facing>.png. The game draws it over that
+    guest, so a backrest or bench in front of them hides them as it would.
+    Returns {facing: [[x, y] offset in the piece's image, or None if
+    nothing's in front, per seat]}."""
+    import numpy as np
+    from PIL import Image, ImageFilter
+    out = {}
+    for facing in iso_rig.FACINGS:
+        full = Image.open(os.path.join(bb.SPRITE_DIR, f'{base}_{facing}.png')).convert('RGBA')
+        d, solid = iso_rig.decode_depth(Image.open(os.path.join(depth_dir, f'{base}_depth_{facing}.png')))
+        f = math.radians(facing)
+        row = []
+        for i, seat in enumerate(meta['seats']):
+            bx, by, turn = seat[0], seat[1], (seat[2] if len(seat) > 2 else 0)
+            x = bx * math.cos(f) - by * math.sin(f)
+            y = bx * math.sin(f) + by * math.cos(f)
+            look = math.radians(facing + turn)
+            fx, fy = math.sin(look), math.cos(look)             # where the guest faces, game gx / gy
+            plane = (x - y) + REACH * (fx + fy)                  # gx + gy of the front of their body
+            mask = Image.fromarray(((d > plane) & solid).astype(np.uint8) * 255)
+            mask = mask.filter(ImageFilter.MaxFilter(5))         # take the edge lines along
+            alpha = np.minimum(np.asarray(full.getchannel('A')), np.asarray(mask))
+            if alpha.max() < 8:
+                row.append(None)
+                continue
+            img = full.copy()
+            img.putalpha(Image.fromarray(alpha))
+            box = img.getchannel('A').getbbox()
+            img.crop(box).save(os.path.join(bb.SPRITE_DIR, f'{base}_occ{i}_{facing}.png'), optimize=True)
+            row.append([box[0], box[1]])
+        out[str(facing)] = row
+    return out
+
+
 def build(name, preview_dir=None):
     scene = iso_rig.reset_scene()
     cam = iso_rig.add_camera(scene)
@@ -320,11 +362,16 @@ def build(name, preview_dir=None):
         print(f'{base} origin_px:', origin, flush=True)
         return
     bpy.ops.wm.save_as_mainfile(filepath=os.path.join(HERE, f'{base}.blend'))
-    meta = iso_rig.render_facings(scene, cam, root, base, bb.SPRITE_DIR, layers=layers)
+    depth_dir = os.path.join(HERE, '..', 'build', 'depth')
+    meta = iso_rig.render_facings(scene, cam, root, base, bb.SPRITE_DIR, layers=layers,
+                                  depth_dir=depth_dir if info['seats'] else None)
     # Seats are modelled at the original scale; the game wants them in tiles.
     s = iso_rig.MODEL_SCALE
     meta['seats'] = [[round(seat[0] * s, 4), round(seat[1] * s, 4), *seat[2:]] for seat in info['seats']]
     meta['sitLift'] = round(info['sitLift'] * s, 4)
+    if info['seats']:
+        meta['occluders'] = occluders(base, meta, depth_dir)
+    meta.pop('crop', None)
     with open(os.path.join(bb.SPRITE_DIR, f'{base}.json'), 'w') as f:
         json.dump(meta, f, indent=2)
         f.write('\n')
