@@ -233,38 +233,51 @@ def pose(anim, t, h, view):
                 p['leg_scale'] = 0.3                     # hidden behind him anyway
             p['armL'] = p['armR'] = 1 + 1.5 * breath
     elif anim == 'walk':
+        # A three-quarter walk: each foot steps along the way he faces (toward
+        # the camera, down-left, in the front view; away, up-right, in the
+        # back view) instead of swinging sideways, the foot coming through
+        # lifts, and the arms swing forward and back against the legs.
         a = TAU * t
         sn, cs = math.sin(a), math.cos(a)
-        p['legL_rot'], p['legR_rot'] = 15 * sn, -15 * sn
-        p['liftL'] = 0.025 * h * max(0.0, cs) ** 2      # the leg swinging through lifts
-        p['liftR'] = 0.025 * h * max(0.0, -cs) ** 2
-        p['leg_scale'] = 1 - 0.035 * abs(sn)            # lowest at full stride
-        p['armL'], p['armR'] = 5 - 12 * sn, 5 + 12 * sn   # arms swing against the legs
-        p['body_rot'] = 1.5 * sn
-        p['head_rot'] = -1.0 * sn
+        fwd = -1 if view == 'front' else 1          # which way "forward" is on screen (x)
+        A, D, lift = 0.042 * h, 0.05 * h, 0.03 * h
+        for side, ph, swing in (('L', sn, max(0.0, cs)), ('R', -sn, max(0.0, -cs))):
+            raised = D * (1 - ph) / 2 if view == 'front' else D * (1 + ph) / 2
+            p['step' + side] = (fwd * A * ph, -raised - lift * swing ** 2, ph if view == 'front' else -ph)
+        p['leg_scale'] = 1 - 0.02 * abs(sn)            # hips lowest at full stride
+        # Arms swing against the legs; a forward swing turns the hand toward
+        # "forward" on screen (PIL turns counter-clockwise for positive).
+        g = -14 if view == 'front' else 14
+        p['armL_abs'] = -3 + g * -sn
+        p['armR_abs'] = 3 + g * sn
+        p['body_rot'] = 1.0 * sn
+        p['head_rot'] = -0.8 * sn
+        p['head_dy'] = 0.004 * h * abs(cs)
     elif anim == 'dance':
+        # A two-step: a side step on every beat with the knees bouncing, the
+        # head nodding, the arms grooving against each other; on the last
+        # beat both hands go up ("raise the roof"), pumping.
         beat = 4 * t
         down = 0.5 + 0.5 * math.cos(TAU * beat)          # 1 on the beat
-        sway = math.sin(math.pi * beat)                  # hips left, then right
-        p['leg_scale'] = 1 - 0.07 * down                 # knees bounce on every beat
-        p['dx'] = 0.025 * h * sway
-        p['body_rot'] = -3 * sway
-        p['head_rot'] = 2.5 * sway + 3 * down
-        p['head_dy'] = 0.008 * h * down
-        p['legL_rot'], p['legR_rot'] = 4 * sway, 4 * sway
-        p['liftL'] = 0.015 * h * max(0.0, -sway)
-        p['liftR'] = 0.015 * h * max(0.0, sway)
-        # Arms loose by the sides, swinging out with the hips...
-        p['armL'] = 8 + 14 * max(0.0, sway) + 4 * down
-        p['armR'] = 8 + 14 * max(0.0, -sway) + 4 * down
-        # ...then one hand goes up (quickly, held with a little wave), then
-        # the other.
-        for side, start in (('armL', 2), ('armR', 3)):
-            u = beat - start
-            if 0 <= u <= 1:
-                env = min(1.0, u / 0.2, (1 - u) / 0.2)
-                env = env * env * (3 - 2 * env)          # smooth in and out
-                p[side] += env * (125 - p[side] + 6 * math.sin(TAU * 2 * beat))
+        side = math.sin(math.pi * beat)                  # left on one beat, right on the next
+        A = 0.045 * h
+        p['stepL'] = (-A * max(0.0, side), -0.012 * h * max(0.0, side), 0)
+        p['stepR'] = (A * max(0.0, -side), -0.012 * h * max(0.0, -side), 0)
+        p['leg_scale'] = 1 - 0.07 * down
+        p['dx'] = 0.02 * h * side
+        p['body_rot'] = -2.5 * side
+        p['head_rot'] = 3 * side - 2 * down
+        p['head_dy'] = 0.012 * h * down
+        groove = math.sin(math.pi * beat)
+        p['armL_abs'] = -6 - 16 * groove
+        p['armR_abs'] = 6 + 16 * groove
+        u = beat - 3
+        if 0 <= u <= 1:
+            env = min(1.0, u / 0.2, (1 - u) / 0.2)
+            env = env * env * (3 - 2 * env)
+            pump = 10 * math.sin(TAU * 2 * beat)
+            p['armL_abs'] += env * (-150 + pump - p['armL_abs'])
+            p['armR_abs'] += env * (150 - pump - p['armR_abs'])
     return p
 
 
@@ -297,6 +310,15 @@ def seated_legs(parts, size, thigh_rot):
     return shins, thighs
 
 
+def step_leg(piece, hy, h, fx, fy):
+    """A leg with its hip fixed and its foot moved by (fx, fy): the leg
+    leans and stretches or shortens to reach (fy < 0 lifts the foot)."""
+    L = h - hy
+    s = (L + fy) / L
+    b = -fx / (s * L)
+    return piece.transform(piece.size, Image.AFFINE, (1, b, -b * hy, 0, 1 / s, hy * (1 - 1 / s)), Image.BICUBIC)
+
+
 def frame(parts, size, anim, t, view):
     """One animation frame of the figure at 4x, feet at the bottom middle."""
     w, h = size
@@ -309,7 +331,12 @@ def frame(parts, size, anim, t, view):
         q['leg_scale'] = 1.0
     else:
         legs = Image.new('RGBA', size)
-    for side in ('legL', 'legR') if not q['thigh_rot'] else ():
+    steps = 'stepL' in q and not q['thigh_rot']
+    if steps:
+        for side in sorted(('L', 'R'), key=lambda k: q['step' + k][2]):   # the leg nearer us last
+            fx, fy, _ = q['step' + side]
+            legs.alpha_composite(step_leg(parts['leg' + side], hy, h, fx, fy))
+    for side in ('legL', 'legR') if not q['thigh_rot'] and not steps else ():
         bb = parts[side].getbbox()
         if bb:
             place(legs, parts[side], 0, -q['lift' + side[-1]], q[side + '_rot'], ((bb[0] + bb[2]) / 2, hy))
@@ -332,7 +359,7 @@ def frame(parts, size, anim, t, view):
     place(upper, parts['head'], 0, q['head_dy'], q['head_rot'], (w / 2, cy))
     for side in ('armL', 'armR'):
         if parts.get(side) is not None:
-            ang = -q[side] if side == 'armL' else q[side]
+            ang = q[side + '_abs'] if side + '_abs' in q else (-q[side] if side == 'armL' else q[side])
             place(upper, parts[side], 0, 0, ang, parts[side + '_pivot'])
 
     whole = Image.new('RGBA', size)
