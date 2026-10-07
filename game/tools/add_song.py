@@ -1,4 +1,4 @@
-"""Adds a song to the game: shrinks the MP3 into src/assets/music/ and
+"""Adds a song to the game: shrinks the MP3 into public/music/ and
 measures its tempo and first beat, so the speakers and lights bump in time.
 
     python3 tools/add_song.py SONG.mp3 "Title" "Artist"
@@ -15,7 +15,7 @@ import sys
 import numpy as np
 
 HERE = os.path.dirname(os.path.abspath(__file__))
-OUT = os.path.join(HERE, '..', 'src', 'assets', 'music')
+OUT = os.path.join(HERE, '..', 'public', 'music')
 RATE = 11025
 BITRATE = '112k'
 

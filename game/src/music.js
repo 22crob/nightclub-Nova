@@ -1,4 +1,4 @@
-// The club's music. Real songs (MP3s in assets/music/, added with
+// The club's music. Real songs (MP3s in public/music/, added with
 // tools/add_song.py, listed in SONG_FILES) play when there are any; without
 // them, a simple house beat made with Web Audio (SYNTH_TRACKS). It plays
 // while the DJ does, which is always once the club is open. During a Bass
@@ -18,7 +18,7 @@ const BOOST_BASS_DB = 14;
 
 // The real songs: only ones the game may use (Pixabay Music's licence lets
 // games use its tracks without credit; we credit them anyway). tools/
-// add_song.py shrinks each into assets/music/ and measures bpm (tempo) and
+// add_song.py shrinks each into public/music/ and measures bpm (tempo) and
 // offset (seconds to the first beat); lengthMs is how long it plays.
 const SONG_FILES = [
   { file: 'deep-house-sunset.mp3', title: 'Deep House Sunset', artist: 'Sunset House Grooves', bpm: 122.51, offset: 0.464, lengthMs: 191184 },
@@ -27,9 +27,17 @@ const SONG_FILES = [
   { file: 'club-house.mp3', title: 'Club House', artist: 'Aurec', bpm: 128.34, offset: 0.0, lengthMs: 144960 },
   { file: 'dance.mp3', title: 'Dance', artist: 'Kulakovka', bpm: 120.0, offset: 0.476, lengthMs: 133041 },
 ];
-const songUrls = import.meta.glob('./assets/music/*.mp3', { eager: true, import: 'default' });
-const SONGS_REAL = SONG_FILES.filter((s) => songUrls[`./assets/music/${s.file}`])
-  .map((s) => ({ ...s, url: songUrls[`./assets/music/${s.file}`], kick: [0, 4, 8, 12], clap: [4, 12] }));
+// The MP3s aren't packed into the game's page (they'd make it slow to open):
+// they're separate files in public/music/, published next to the page, and
+// each one downloads when it's about to play. The test-mode page at /test/
+// uses the same ones. Opened from disk (file://) the browser won't fetch
+// them, so the made-in-code tracks play instead.
+function musicDir() {
+  const here = new URL('.', location.href);
+  return /\/test\/$/.test(here.pathname) ? new URL('../music/', here) : new URL('music/', here);
+}
+const SONGS_REAL = location.protocol === 'file:' ? [] : SONG_FILES
+  .map((s) => ({ ...s, url: new URL(s.file, musicDir()).href, kick: [0, 4, 8, 12], clap: [4, 12] }));
 
 // The made-in-code tracks (original names; see the song box in scene/songs.js).
 // Each has its own tempo and two-bar pattern: kick and clap steps (of 16,
@@ -104,7 +112,10 @@ export const Music = {
       const k = Math.max(0, Math.ceil((at - this.songStart - track.offset) / stepDur));
       this.step = k % STEPS;
       this.nextTime = this.songStart + track.offset + k * stepDur;
-    }).catch(() => {});
+    }).catch(() => {
+      // Couldn't download it: keep the beat going at its tempo anyway.
+      if (this.playing && this.track === track) this.nextTime = ctx.currentTime + 0.05;
+    });
   },
 
   // Starts the beat, if sound is available (it needs a user gesture first:

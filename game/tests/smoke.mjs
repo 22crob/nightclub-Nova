@@ -1310,16 +1310,10 @@ const extras = await page.evaluate(async () => {
   // Skip goes to the next song (or starts the only one again).
   out.changed = document.getElementById('songTitle').textContent === s.currentSong().title && s.time.now - s.songStartedAt < 1000
     && (s.songIndex !== index0 || s.songLength() === s.currentSong().lengthMs);
-  // Real songs: each plays to its own end, with its tempo for the beat,
-  // and once sound is on it's really playing, beats counted along with it.
-  const M = window.__clubMusic;
-  if (M.playing) {
-    for (let i = 0; i < 100 && !M.source; i++) await new Promise((r) => setTimeout(r, 100));
-    const step0 = M.step;
-    await new Promise((r) => setTimeout(r, 600));
-    out.songPlaying = !!M.source && M.source.buffer.duration > 120 && M.step !== step0;
-  } else out.songPlaying = 'no sound in this browser';
-  out.realSong = !!s.currentSong().url && s.songLength() > 120000 && s.currentSong().bpm > 60 && out.songPlaying !== false;
+  // Opened from disk the songs (separate files) can't load: the
+  // made-in-code tracks play instead. (Real songs are checked over http
+  // at the end.)
+  out.diskFallback = !s.currentSong().url && s.songLength() === 60000;
   const fans0 = s.fans;
   document.getElementById('songLike').click();
   document.getElementById('songLike').click();
@@ -1445,7 +1439,7 @@ const extras = await page.evaluate(async () => {
   return out;
 });
 check('the song box changes tracks, and Like gives a fan once a song', extras.changed && extras.liked === 1, JSON.stringify(extras));
-check('the club plays a real song (MP3), for its own length, with its measured tempo', extras.realSong, JSON.stringify(extras));
+check('opened from disk, the club plays the made-in-code tracks (the songs are separate files)', extras.diskFallback, JSON.stringify(extras));
 check('guests can only be seated at a VIP booth; the button is greyed out without one', extras.greyed && extras.couchOnly && extras.lit && extras.seated, JSON.stringify(extras));
 check('a drink on the house, once a visit', extras.onHouse, JSON.stringify(extras));
 check('a guest can be sent to the dance floor', extras.danced, JSON.stringify(extras));
@@ -2391,6 +2385,52 @@ const testMode = await page.evaluate((realSave) => {
 }, realSave);
 check('test mode starts at the top level with lots of cash, on its own save', testMode.level >= testMode.top && testMode.cash >= 10000000 && testMode.tag && testMode.test && testMode.realKept,
   JSON.stringify({ level: testMode.level, top: testMode.top, cash: testMode.cash, tag: testMode.tag, test: testMode.test, realKept: testMode.realKept }));
+
+// Real songs, the way the play link serves the game: the page from a web
+// server, the MP3s as separate files next to it (dist/music/), each
+// downloaded when it plays, in time with its measured tempo. The game's
+// page itself stays small (no songs packed in).
+{
+  const http = await import('node:http');
+  const dist = path.join(root, 'dist');
+  const server = http.createServer((req, res) => {
+    const file = path.join(dist, decodeURIComponent(req.url.split('?')[0]).replace(/\/$/, '/index.html'));
+    if (!file.startsWith(dist) || !fs.existsSync(file)) { res.writeHead(404); res.end(); return; }
+    res.writeHead(200, { 'Content-Type': file.endsWith('.mp3') ? 'audio/mpeg' : 'text/html' });
+    fs.createReadStream(file).pipe(res);
+  });
+  await new Promise((r) => server.listen(0, r));
+  const port = server.address().port;
+  const songPage = await browser.newPage({ viewport: { width: 1280, height: 800 } });
+  await songPage.goto(`http://localhost:${port}/`);
+  await songPage.waitForFunction(() => {
+    const s = window.__clubNova && window.__clubNova.scene.getScene('club');
+    return s && s.world && s.sys.settings.status >= 5 && window.__clubMusic;
+  }, null, { timeout: 60000 });
+  await songPage.evaluate(() => {
+    const s = window.__clubNova.scene.getScene('club');
+    s.showLevelUp = () => {};
+    if (!s.clubName) s.setClubName('Test Club');
+    document.getElementById('namePrompt')?.classList.remove('open');
+    document.getElementById('dailyBox')?.classList.remove('open');
+  });
+  await songPage.mouse.click(640, 400);
+  const song = await songPage.evaluate(async () => {
+    const s = window.__clubNova.scene.getScene('club');
+    const M = window.__clubMusic;
+    for (let i = 0; i < 150 && !M.source; i++) await new Promise((r) => setTimeout(r, 100));
+    const step0 = M.step;
+    await new Promise((r) => setTimeout(r, 600));
+    return { url: s.currentSong().url, length: s.songLength(), bpm: s.currentSong().bpm, playing: M.playing,
+      seconds: M.source ? Math.round(M.source.buffer.duration) : 0, beats: M.step !== step0 };
+  });
+  check('over the web, the club plays real songs (separate MP3 files), each for its own length, in time with its tempo',
+    /\/music\/[\w-]+\.mp3$/.test(song.url || '') && song.length > 60000 && song.seconds > 60 && song.beats, JSON.stringify(song));
+  const pageMb = fs.statSync(path.join(dist, 'index.html')).size / 1e6;
+  check('the game page stays small (no songs packed into it)', pageMb < 18, `${pageMb.toFixed(1)} MB`);
+  await songPage.close();
+  server.close();
+}
 
 check('no errors in the page', errors.length === 0, errors.join(' | '));
 
