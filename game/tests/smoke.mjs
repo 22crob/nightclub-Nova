@@ -1304,9 +1304,22 @@ check('Luxury grows with what you place, shows in the top bar and raises tips', 
 const extras = await page.evaluate(async () => {
   const s = window.__clubNova.scene.getScene('club');
   const out = {};
-  const title0 = document.getElementById('songTitle').textContent;
+  const index0 = s.songIndex;
+  s.songStartedAt -= 30000;
   document.getElementById('songChange').click();
-  out.changed = document.getElementById('songTitle').textContent !== title0 && document.getElementById('songTitle').textContent === s.currentSong().title;
+  // Skip goes to the next song (or starts the only one again).
+  out.changed = document.getElementById('songTitle').textContent === s.currentSong().title && s.time.now - s.songStartedAt < 1000
+    && (s.songIndex !== index0 || s.songLength() === s.currentSong().lengthMs);
+  // Real songs: each plays to its own end, with its tempo for the beat,
+  // and once sound is on it's really playing, beats counted along with it.
+  const M = window.__clubMusic;
+  if (M.playing) {
+    for (let i = 0; i < 100 && !M.source; i++) await new Promise((r) => setTimeout(r, 100));
+    const step0 = M.step;
+    await new Promise((r) => setTimeout(r, 600));
+    out.songPlaying = !!M.source && M.source.buffer.duration > 120 && M.step !== step0;
+  } else out.songPlaying = 'no sound in this browser';
+  out.realSong = !!s.currentSong().url && s.songLength() > 120000 && s.currentSong().bpm > 60 && out.songPlaying !== false;
   const fans0 = s.fans;
   document.getElementById('songLike').click();
   document.getElementById('songLike').click();
@@ -1432,6 +1445,7 @@ const extras = await page.evaluate(async () => {
   return out;
 });
 check('the song box changes tracks, and Like gives a fan once a song', extras.changed && extras.liked === 1, JSON.stringify(extras));
+check('the club plays a real song (MP3), for its own length, with its measured tempo', extras.realSong, JSON.stringify(extras));
 check('guests can only be seated at a VIP booth; the button is greyed out without one', extras.greyed && extras.couchOnly && extras.lit && extras.seated, JSON.stringify(extras));
 check('a drink on the house, once a visit', extras.onHouse, JSON.stringify(extras));
 check('a guest can be sent to the dance floor', extras.danced, JSON.stringify(extras));

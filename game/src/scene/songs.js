@@ -1,7 +1,7 @@
 // ClubScene methods: the DJ's songs and the now-playing box, like Nightclub
 // City's. The box under the profile shows the track, its artist and when it
 // ends on the night's clock; Change skips to the next track, and Like gives
-// a fan once a song. Each song plays SONGS.lengthMs, then the next starts,
+// a fan once a song. Each song plays to its end (songLength()), then the next starts,
 // and the dancers cheer a new one. The tracks themselves are in music.js.
 // Mixed into ClubScene (see ClubScene.js); `this` is the scene.
 import { SONGS } from '../config.js';
@@ -11,6 +11,12 @@ import { SFX } from '../sfx.js';
 export class SongsMixin {
   currentSong() {
     return TRACKS[this.songIndex || 0];
+  }
+
+  // How long the current song plays: a real song its own length, a
+  // made-in-code one SONGS.lengthMs.
+  songLength() {
+    return this.currentSong().lengthMs || SONGS.lengthMs;
   }
 
   // Starts track `index` (wrapping round the list).
@@ -50,7 +56,7 @@ export class SongsMixin {
   // Runs every second: the next song when this one is over.
   tickSongs() {
     if (!this.clubOpen()) return;
-    if (this.time.now - this.songStartedAt >= SONGS.lengthMs) this.playSong(this.songIndex + 1);
+    if (this.time.now - this.songStartedAt >= this.songLength()) this.playSong(this.songIndex + 1);
     this.updateSongBox();
   }
 
@@ -64,7 +70,7 @@ export class SongsMixin {
     };
     set('songTitle', song.title);
     set('songArtist', song.artist);
-    const left = Math.max(0, Math.ceil((this.songStartedAt + SONGS.lengthMs - this.time.now) / 1000));
+    const left = Math.max(0, Math.ceil((this.songStartedAt + this.songLength() - this.time.now) / 1000));
     const ends = `Ends in ${Math.floor(left / 60)}:${String(left % 60).padStart(2, '0')}`;
     set('songEnds', ends);
     const row = box.querySelector('.songText');
@@ -74,6 +80,7 @@ export class SongsMixin {
   }
 
   setupSongs() {
+    window.__clubMusic = Music; // for tests: is the song really playing?
     document.getElementById('songChange')?.addEventListener('click', () => this.changeSong());
     document.getElementById('songLike')?.addEventListener('click', () => this.likeSong());
     this.playSong(0);

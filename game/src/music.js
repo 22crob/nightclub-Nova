@@ -1,25 +1,39 @@
-// The club's music: a simple house beat made with Web Audio (no audio
-// files, so the game stays one self-contained page). It plays while the DJ
-// does, which is always once the club is open. During a Bass Boost
-// boost (see boost.js) a low-shelf filter turns the bass way up and a sub
-// bass joins in.
+// The club's music. Real songs (MP3s in assets/music/, added with
+// tools/add_song.py, listed in SONG_FILES) play when there are any; without
+// them, a simple house beat made with Web Audio (SYNTH_TRACKS). It plays
+// while the DJ does, which is always once the club is open. During a Bass
+// Boost (see boost.js) a low-shelf filter turns the bass way up.
 //
-// Notes are scheduled a little ahead of time from a short timer, the usual
-// way to keep Web Audio rhythm steady.
+// Beats are counted a little ahead of time from a short timer, the usual
+// way to keep Web Audio rhythm steady: for a real song from its measured
+// tempo and first beat, so the speakers bump in time with it.
 import { SFX } from './sfx.js';
 
 const STEPS = 32; // two bars
 const VOLUME = 0.16;
 const BOOST_VOLUME = 0.22;
+const SONG_VOLUME = 0.6;
+const SONG_BOOST_VOLUME = 0.75;
 const BOOST_BASS_DB = 14;
 
-// The DJ's tracks (original names; see the song box in scene/songs.js).
+// The real songs: only ones the game may use (Pixabay Music's licence lets
+// games use its tracks without credit; we credit them anyway). tools/
+// add_song.py shrinks each into assets/music/ and measures bpm (tempo) and
+// offset (seconds to the first beat); lengthMs is how long it plays.
+const SONG_FILES = [
+  { file: 'deep-house-sunset.mp3', title: 'Deep House Sunset', artist: 'Sunset House Grooves', bpm: 122.51, offset: 0.464, lengthMs: 191184 },
+];
+const songUrls = import.meta.glob('./assets/music/*.mp3', { eager: true, import: 'default' });
+const SONGS_REAL = SONG_FILES.filter((s) => songUrls[`./assets/music/${s.file}`])
+  .map((s) => ({ ...s, url: songUrls[`./assets/music/${s.file}`], kick: [0, 4, 8, 12], clap: [4, 12] }));
+
+// The made-in-code tracks (original names; see the song box in scene/songs.js).
 // Each has its own tempo and two-bar pattern: kick and clap steps (of 16,
 // repeated each bar), a bassline in semitones above A1 (55 Hz) on each 16th
 // step (null for a rest), chords (MIDI notes) at the top of each bar, and
 // how busy the hi-hats are.
 const _ = null;
-export const TRACKS = [
+const SYNTH_TRACKS = [
   { title: 'Basement Lights', artist: 'DJ Nova', bpm: 122, kick: [0, 4, 8, 12], clap: [4, 12], hats: 'house',
     bass: [0, _, 0, _, 12, _, 0, 10, _, 0, _, 7, 0, _, 12, _, 5, _, 5, _, 17, _, 5, 3, _, 3, _, 7, 3, _, 15, _],
     chords: [[57, 60, 64], [62, 65, 69]] },
@@ -36,6 +50,8 @@ export const TRACKS = [
     bass: [0, _, _, 0, _, _, 0, _, 3, _, _, 3, _, _, 5, _, 7, _, _, 7, _, _, 7, _, 5, _, _, 5, _, _, 3, _],
     chords: [[57, 60, 64], [53, 57, 60]] },
 ];
+// What the DJ plays: the real songs, or the made-in-code ones if there are none.
+export const TRACKS = SONGS_REAL.length ? SONGS_REAL : SYNTH_TRACKS;
 const hz = (semi) => 55 * 2 ** (semi / 12);
 
 export const Music = {
@@ -47,9 +63,44 @@ export const Music = {
   step: 0,
   track: TRACKS[0],
 
-  // Switches to another track; it carries on from the next 16th note.
+  // Switches to another track (a real song starts from its beginning; a
+  // made-in-code one carries on from the next 16th note).
   setTrack(i) {
     this.track = TRACKS[((i % TRACKS.length) + TRACKS.length) % TRACKS.length];
+    this.songPos = 0;
+    if (this.playing && this.track.url) this.playSong(0);
+    else if (this.source) { this.source.stop(); this.source = null; }
+  },
+
+  // A real song's sound, decoded once and kept while it's the current one.
+  loadSong(track) {
+    if (this.loaded && this.loaded.url === track.url) return this.loaded.promise;
+    const promise = fetch(track.url).then((r) => r.arrayBuffer()).then((data) => SFX.ctx.decodeAudioData(data));
+    this.loaded = { url: track.url, promise };
+    return promise;
+  },
+
+  // Plays the current real song from `pos` seconds, and lines the beat
+  // counter up with it.
+  playSong(pos) {
+    const ctx = SFX.ctx;
+    const track = this.track;
+    if (this.source) { this.source.stop(); this.source = null; }
+    this.loadSong(track).then((buffer) => {
+      if (!this.playing || this.track !== track) return;
+      const src = ctx.createBufferSource();
+      src.buffer = buffer;
+      src.loop = true;
+      src.connect(this.nodes.master);
+      const at = ctx.currentTime + 0.05;
+      src.start(at, pos % buffer.duration);
+      this.source = src;
+      this.songStart = at - pos;
+      const stepDur = 60 / track.bpm / 4;
+      const k = Math.max(0, Math.ceil((at - this.songStart - track.offset) / stepDur));
+      this.step = k % STEPS;
+      this.nextTime = this.songStart + track.offset + k * stepDur;
+    }).catch(() => {});
   },
 
   // Starts the beat, if sound is available (it needs a user gesture first:
@@ -75,6 +126,10 @@ export const Music = {
     this.playing = true;
     this.nextTime = ctx.currentTime + 0.05;
     this.step = 0;
+    if (this.track.url) {
+      this.nextTime = Infinity;     // the beat waits for the song to load
+      this.playSong(this.songPos || 0);
+    }
     this.timer = setInterval(() => this.schedule(), 25);
   },
 
@@ -83,6 +138,11 @@ export const Music = {
     clearInterval(this.timer);
     this.timer = null;
     this.playing = false;
+    if (this.source) {
+      this.songPos = SFX.ctx.currentTime - this.songStart;    // carry on from here next time
+      this.source.stop();
+      this.source = null;
+    }
   },
 
   setBoost(on) {
@@ -94,7 +154,8 @@ export const Music = {
   applyLevels() {
     if (!this.nodes) return;
     const t = SFX.ctx.currentTime;
-    const volume = SFX.muted ? 0 : (this.boosted ? BOOST_VOLUME : VOLUME);
+    const song = !!this.track.url;
+    const volume = SFX.muted ? 0 : this.boosted ? (song ? SONG_BOOST_VOLUME : BOOST_VOLUME) : (song ? SONG_VOLUME : VOLUME);
     this.nodes.master.gain.setTargetAtTime(volume, t, 0.05);
     this.nodes.shelf.gain.setTargetAtTime(this.boosted ? BOOST_BASS_DB : 0, t, 0.3);
   },
@@ -112,6 +173,7 @@ export const Music = {
     const tr = this.track;
     const s = i % 16;
     if (this.onStep) this.onStep(s, t - SFX.ctx.currentTime); // the speakers move to it (speakers.js)
+    if (tr.url) return; // a real song: just the beat count, the song is the sound
     if (tr.kick.includes(s)) this.kick(t);
     if (tr.clap.includes(s)) this.clap(t);
     if (tr.hats === 'house') {
