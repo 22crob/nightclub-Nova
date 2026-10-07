@@ -23,6 +23,7 @@ const BOOST_BASS_DB = 14;
 const SONG_FILES = [
   { file: 'deep-house-sunset.mp3', title: 'Deep House Sunset', artist: 'Sunset House Grooves', bpm: 122.51, offset: 0.464, lengthMs: 191184 },
   { file: 'sunset-house-classic.mp3', title: 'Sunset House Classic', artist: 'Sunset House Grooves', bpm: 128.19, offset: 0.139, lengthMs: 243312 },
+  { file: 'house-july.mp3', title: 'House July', artist: 'Easy Eva', bpm: 127.0, offset: 0.441, lengthMs: 65207 },
 ];
 const songUrls = import.meta.glob('./assets/music/*.mp3', { eager: true, import: 'default' });
 const SONGS_REAL = SONG_FILES.filter((s) => songUrls[`./assets/music/${s.file}`])
