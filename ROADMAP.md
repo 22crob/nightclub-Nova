@@ -50,3 +50,4 @@ The visual and gameplay reference for everything is **Nightclub City** (2010): i
 - Booth and bar sizes matched to Nightclub City: done. DJ booths are compact 2x1 desks, a quarter lower (all five re-rendered). Bar units side by side join into one long bar with one bartender, and a new club starts with a 4-unit bar along the right wall.
 - Next: (owner to choose)
 - Then: a bouncer at the door
+- Back burner (owner): lights pulsing to the beat; the owner felt it could be overstimulating and distracting.

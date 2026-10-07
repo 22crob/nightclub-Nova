@@ -191,6 +191,22 @@ export const ZOOM_MAX = 2.2;
 // localStorage key for the save file. Bumping this (v1 -> v2) is the
 // escape hatch if the save shape ever changes incompatibly — old saves
 // under the old key are just ignored rather than crashing on load.
+// The drinks the bars can serve (src/scene/drinks.js), unlocking with level:
+// price per drink, fun (1-5, how much it cheers a guest up beyond a plain
+// drink) and mix (how long it takes to make, times BAR.serveMs). glass and
+// color draw its picture.
+export const DRINKS = [
+  { key: 'beer', name: 'Beer', price: 8, unlockLevel: 1, fun: 1, mix: 0.8, glass: 'mug', color: '#ffb52e' },
+  { key: 'cocktail', name: 'Cocktail', price: 12, unlockLevel: 1, fun: 2, mix: 1, glass: 'cocktail', color: '#ff5fa8' },
+  { key: 'shots', name: 'Shots', price: 16, unlockLevel: 3, fun: 2, mix: 0.9, glass: 'shots', color: '#ffd23f' },
+  { key: 'mojito', name: 'Mojito', price: 20, unlockLevel: 5, fun: 3, mix: 1.2, glass: 'highball', color: '#b8f07a' },
+  { key: 'martini', name: 'Martini', price: 26, unlockLevel: 8, fun: 3, mix: 1.3, glass: 'martini', color: '#d6f2ff' },
+  { key: 'champagne', name: 'Champagne', price: 40, unlockLevel: 12, fun: 4, mix: 1.5, glass: 'flute', color: '#ffe48a' },
+  { key: 'novaNeon', name: 'Nova Neon', price: 60, unlockLevel: 16, fun: 5, mix: 1.8, glass: 'neon', color: '#c04cff' },
+];
+// Extra mood per fun star (on top of MOOD.drinkMood).
+export const DRINK_FUN_MOOD = 3;
+
 // The daily gift (src/scene/daily.js): one a day, a 7-day streak. Cash grows
 // by cashPerLevel of itself for every level past 1.
 export const DAILY = {

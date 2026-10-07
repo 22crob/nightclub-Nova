@@ -38,6 +38,7 @@ import { GoalsMixin } from './goals.js';
 import { MeterMixin } from './meter.js';
 import { ClubNameMixin } from './clubName.js';
 import { DailyMixin } from './daily.js';
+import { DrinksMixin } from './drinks.js';
 import { TestModeMixin } from './testMode.js';
 import { Music } from '../music.js';
 import { applyMixins } from './applyMixins.js';
@@ -325,6 +326,7 @@ export class ClubScene extends Phaser.Scene {
     this.setupGoals(); // the goals panel (goals.js)
     this.setupClubName(); // the name and its sign outside; asks for one if there isn't (clubName.js)
     this.setupDaily(); // today's gift, once a day (daily.js)
+    this.setupDrinkMenu(); // what the bars serve (drinks.js)
     this.setupMeter(); // the drink meter on the right edge (meter.js)
     this.time.addEvent({ delay: 1000, loop: true, callback: () => this.tickMeter() });
     this.scheduleNextPatronSpawn();
@@ -391,5 +393,6 @@ applyMixins(ClubScene, [
   MeterMixin,
   ClubNameMixin,
   DailyMixin,
+  DrinksMixin,
   TestModeMixin,
 ]);

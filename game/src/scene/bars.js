@@ -269,7 +269,9 @@ export class BarsMixin {
     this.bartenderWalk(b, unit, group, () => {
       if (!b.task || b.task.patron !== patron) return;
       b.task.phase = 'serve';
-      b.task.until = this.time.now + BAR.serveMs;
+      // What they ordered; fancier drinks take longer to mix (drinks.js).
+      patron.order = this.pickDrink(patron).key;
+      b.task.until = this.time.now + BAR.serveMs * this.drinkOf(patron.order).mix;
       const c = b.container;
       this.floatText(c.x, c.y - CHARACTER_DISPLAY_HEIGHT * 0.95, '🍸', '#ffffff');
     });

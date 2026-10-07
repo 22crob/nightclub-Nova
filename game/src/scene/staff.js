@@ -2,11 +2,12 @@
 // Mixed into ClubScene (see ClubScene.js); `this` is the scene.
 import { PATRON_META, PATRON_SHEETS } from '../assets.js';
 import { PROP_TYPES, STAFF_TYPES } from '../catalog.js';
-import { BAR_QUEUE_LENGTH, BARTENDERS, BOOST, XP, CHARACTER_DISPLAY_HEIGHT, MONEY, THIRST_INTERVAL, PATRON_POPUP_Y, PROP_SCALE, SELL_REFUND_RATIO } from '../config.js';
+import { BAR_QUEUE_LENGTH, BARTENDERS, BOOST, DRINK_FUN_MOOD, XP, CHARACTER_DISPLAY_HEIGHT, MONEY, THIRST_INTERVAL, PATRON_POPUP_Y, PROP_SCALE, SELL_REFUND_RATIO } from '../config.js';
 import { realSpriteIconFor } from '../icons.js';
 import { SFX } from '../sfx.js';
 import { randRange } from '../util.js';
 import { MOOD } from './mood.js';
+import { drinkIconSvg } from './drinks.js';
 
 // Money popping up over guests is always green (the owner asked for no red).
 const MONEY_GREEN = '#1fc94a';
@@ -288,7 +289,11 @@ export class StaffMixin {
   // A patron gets a drink from a staffed bar and pays for it.
   serveDrink(rec, patron) {
     const now = this.time.now;
-    const price = (PROP_TYPES[rec.type].drinkPrice || 10) * this.drinkPriceFactor(); // doubled while the drink meter is full
+    // Their order from the drink menu (drinks.js; Bottoms Up! serves one
+    // without asking), doubled while the drink meter is full.
+    const drink = this.drinkOf(patron.order || this.pickDrink(patron).key);
+    patron.order = null;
+    const price = drink.price * this.drinkPriceFactor();
     const tip = this.tipAmount(patron, price * randRange(...MONEY.drinkTip));
     this.cash += price + tip;
     this.noteIncome('drinkMoney', price);
@@ -302,7 +307,7 @@ export class StaffMixin {
       this.partyStats.drinks += 1;
       this.partyStats.drinkRevenue += price + tip;
     }
-    this.cheerPatron(patron, MOOD.drinkMood);
+    this.cheerPatron(patron, MOOD.drinkMood + drink.fun * DRINK_FUN_MOOD);
     patron.thirstyAt = now + randRange(...THIRST_INTERVAL) / this.boostFactor() / this.partyEffect('thirst', 1);
     this.startDrinking(patron, rec); // they drink it for a while (see activities.js)
     this.popReaction(patron, 'happy', randRange(600, 1300)); // after the price pops up
@@ -468,13 +473,14 @@ export class StaffMixin {
   // allows), ✕ to let one go. Details are in the hover tip.
   renderStaffCard() {
     const el = this.shopItemsEl;
+    const menuKey = this.drinkMenu().map((d) => d.key).join(',');
     const records = this.hireableRecords();
     const type = STAFF_TYPES.bartender;
     const allowed = this.bartenderAllowance();
     const hired = this.bartenderCount();
     const next = this.nextBartenderLevel();
     // Only rebuild when something on the cards changed (this runs often).
-    const key = 'staff:' + records.map((r) => `${r.anchor}:${!!r.staff}:${this.barGroup(r).length}`).join('|') + `:${this.cash >= type.hireCost}:${allowed}`;
+    const key = 'staff:' + menuKey + ':' + records.map((r) => `${r.anchor}:${!!r.staff}:${this.barGroup(r).length}`).join('|') + `:${this.cash >= type.hireCost}:${allowed}`;
     if (el.dataset.rendered === key) return;
     el.innerHTML = '';
     el.dataset.rendered = key;
@@ -486,6 +492,14 @@ export class StaffMixin {
       el.appendChild(slot);
       return;
     }
+    // The drink menu: what the bars serve (drinks.js).
+    const menu = this.drinkMenu();
+    const card = this.makeCard('Drink Menu', `On the menu: ${menu.map((d) => d.name).join(', ')}. Click to choose what your bars serve. Fancier drinks pay more and make guests happier, but take longer to mix.`, null);
+    card.slot.classList.add('menuSlot');
+    card.icon.innerHTML = drinkIconSvg(menu.reduce((a, b) => (b.price > a.price ? b : a)));
+    card.cost.textContent = `🍹×${menu.length}`;
+    card.slot.addEventListener('click', () => this.openDrinkMenu());
+    el.appendChild(card.slot);
     const counts = {};
     const seen = new Set();
     for (const rec of records) {

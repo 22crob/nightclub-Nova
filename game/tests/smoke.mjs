@@ -2153,9 +2153,11 @@ const meter = await page.evaluate(() => {
   if (!s.patrons.some((p) => !p.gone)) { s.patronCapacity = () => 99; s.trySpawnPatron(); }
   const guest = s.patrons.find((p) => !p.gone);
   out.found = [!!bar, !!guest];
+  if (guest) guest.order = 'cocktail';
   out.normalPrice = bar && guest ? s.serveDrink(bar, guest) : null;
   s.fillMeter(1000);
   out.doubled = s.drinksDoubled() && el.classList.contains('doubled');
+  if (guest) guest.order = 'cocktail';
   out.doublePrice = bar && guest ? s.serveDrink(bar, guest) : null;
   out.frozen = (() => { const l = s.meterLevel; s.fillMeter(5); return s.meterLevel === l; })();
   s.doubleDrinksUntil = s.time.now - 1;
@@ -2224,6 +2226,41 @@ const neon = await page.evaluate(() => {
   return out;
 });
 check('the Neon Cartoon guy is a guest with idle, walk, dance and sit, front and back', neon.anims && neon.height > 0, JSON.stringify(neon));
+
+// The drink menu: drinks unlock with level and go on the menu; a click
+// takes one off or puts it back (never the last one); guests order from the
+// menu (celebrities the priciest), pay its price and fancier drinks take
+// longer to mix; the level-up menu lists new drinks.
+const drinkMenu = await page.evaluate(() => {
+  const s = window.__clubNova.scene.getScene('club');
+  const saved = { off: s.drinksOff, fans: s.fans };
+  s.drinksOff = [];
+  s.fans = 0;
+  const out = { level1: s.drinkMenu().map((d) => d.key).join() };
+  s.fans = s.fansForLevel(8);
+  out.level8 = s.drinkMenu().map((d) => d.key).join();
+  s.openDrinkMenu();
+  out.cards = document.querySelectorAll('#drinkList .drinkCard').length;
+  out.locked = document.querySelectorAll('#drinkList .drinkCard.locked').length;
+  document.querySelector('#drinkList .drinkCard[data-drink="beer"]').click();
+  out.beerOff = !s.isOnMenu('beer') && !document.querySelector('#drinkList .drinkCard[data-drink="beer"]').classList.contains('on');
+  for (const k of ['cocktail', 'shots', 'mojito']) s.toggleDrink(k);
+  out.lastStays = s.toggleDrink('martini') === false && s.drinkMenu().map((d) => d.key).join() === 'martini';
+  out.order = s.pickDrink({}).key;
+  out.celebOrder = (s.drinksOff = [], s.pickDrink({ celeb: {} }).key);
+  document.getElementById('drinkMenuClose').click();
+  out.closed = !document.getElementById('drinkMenu').classList.contains('open');
+  const bar = s.hireableRecords().find((r) => s.isWorked(r));
+  const guest = s.patrons.find((p) => !p.leaving);
+  if (bar && guest) { guest.order = 'champagne'; out.price = s.serveDrink(bar, guest); }
+  out.slower = s.drinkOf('champagne').mix > s.drinkOf('beer').mix;
+  out.levelUpLists = s.unlocksAt(12).some((u) => u.name === 'Champagne' && /<svg/.test(u.svg));
+  s.drinksOff = saved.off; s.fans = saved.fans;
+  return out;
+});
+check('the drink menu: drinks unlock and go on the menu, toggle off and on (never the last), guests order from it, fancier ones pay more and mix slower',
+  drinkMenu.level1 === 'beer,cocktail' && drinkMenu.level8 === 'beer,cocktail,shots,mojito,martini' && drinkMenu.cards === 7 && drinkMenu.locked === 2 && drinkMenu.beerOff
+  && drinkMenu.lastStays && drinkMenu.order === 'martini' && drinkMenu.celebOrder === 'martini' && drinkMenu.closed && (drinkMenu.price === undefined || drinkMenu.price >= 40) && drinkMenu.slower && drinkMenu.levelUpLists, JSON.stringify(drinkMenu));
 
 // The daily gift: once a day; the streak moves on day by day (day 7 adds a
 // decoration), starts over after a missed day, and only pays once a day.

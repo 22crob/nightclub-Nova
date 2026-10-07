@@ -632,6 +632,25 @@ body.kick .navPad > .uiArt { transform: scale(1.06); transition: none; }
 #namePrompt.first #clubNameCancel { display: none; }
 .summaryButton.later { --c: #a24bff; }
 
+/* The drink menu (drinks.js): a card per drink, lit when it's on the menu. */
+.drinkMenuCard { width: min(620px, calc(100vw - 32px)); }
+#drinkList { display: flex; flex-wrap: wrap; gap: 8px; justify-content: center; }
+.drinkCard {
+  width: 132px; box-sizing: border-box; padding: 8px 6px; border-radius: 14px; cursor: pointer;
+  background: var(--key); border: 2px solid var(--edge); box-shadow: 0 3px 0 var(--edge); opacity: 0.6; transition: transform 0.1s ease;
+}
+.drinkCard:hover { transform: translateY(-2px); }
+.drinkCard.on { opacity: 1; background: var(--shine), linear-gradient(180deg, #ff6fe0, #b81f9c); box-shadow: 0 0 14px var(--pink), 0 3px 0 var(--edge); }
+.drinkCard.locked { cursor: default; opacity: 0.45; filter: grayscale(0.7); }
+.drinkPic { height: 46px; display: flex; justify-content: center; }
+.drinkPic .uiArt { width: 46px; height: 46px; filter: drop-shadow(0 2px 2px rgba(0, 0, 0, 0.5)); }
+.drinkName { font-family: var(--display-font); font-weight: 900; font-size: 14px; color: #fff; }
+.drinkPrice { font-family: var(--money-font); font-weight: 800; font-size: 14px; color: #ffe45c; }
+.drinkInfo { font-size: 10.5px; font-weight: 700; color: #f2e8ff; line-height: 1.2; min-height: 26px; }
+.drinkState { margin-top: 3px; font-size: 11px; font-weight: 900; color: #fff; }
+.menuSlot .icon { display: flex; align-items: center; justify-content: center; }
+.menuSlot .icon .uiArt { width: 64px; height: 64px; }
+
 /* The daily gift (daily.js): a box bouncing over the card, and a row of
    seven days, today's lit pink, the ones already collected ticked. */
 .dailyCard { width: min(560px, calc(100vw - 32px)); padding-top: 44px; margin-top: 30px; }
