@@ -66,6 +66,23 @@ import decor_pool from './assets/sprites/decor_pool.json';
 import decor_aquarium from './assets/sprites/decor_aquarium.json';
 import decor_trophy from './assets/sprites/decor_trophy.json';
 import decor_luckyCat from './assets/sprites/decor_luckyCat.json';
+import decor_barrel from './assets/sprites/decor_barrel.json';
+import decor_streetLamp from './assets/sprites/decor_streetLamp.json';
+import decor_globeLamp from './assets/sprites/decor_globeLamp.json';
+import decor_globeLampPink from './assets/sprites/decor_globeLampPink.json';
+import decor_crystal from './assets/sprites/decor_crystal.json';
+import decor_crystalPink from './assets/sprites/decor_crystalPink.json';
+import decor_glowPlinth from './assets/sprites/decor_glowPlinth.json';
+import decor_stack from './assets/sprites/decor_stack.json';
+import decor_stackPurple from './assets/sprites/decor_stackPurple.json';
+import decor_partition from './assets/sprites/decor_partition.json';
+import decor_tank from './assets/sprites/decor_tank.json';
+import decor_tankBlue from './assets/sprites/decor_tankBlue.json';
+import decor_gargoyle from './assets/sprites/decor_gargoyle.json';
+import decor_robot from './assets/sprites/decor_robot.json';
+import decor_catStatue from './assets/sprites/decor_catStatue.json';
+import decor_waterfall from './assets/sprites/decor_waterfall.json';
+import decor_pagoda from './assets/sprites/decor_pagoda.json';
 
 // The bar line-up (art/blender/build_bars.py and build_bar.py): five
 // looks, from a beginner's plywood counter to an ice bar. They play the same
@@ -140,6 +157,24 @@ const DECOR_SPRITES = {
   speaker: decor_speaker, neonSpeaker: decor_neonSpeaker, rope: decor_rope, lava: decor_lava,
   tube: decor_tube, disco: decor_disco, neonSign: decor_neonSign, spotlight: decor_spotlight,
   pool: decor_pool, aquarium: decor_aquarium, trophy: decor_trophy, luckyCat: decor_luckyCat,
+  // The October 2026 batch, from the owner's main reference screenshots.
+  barrel: decor_barrel,
+  streetLamp: decor_streetLamp,
+  globeLamp: decor_globeLamp,
+  globeLampPink: decor_globeLampPink,
+  crystal: decor_crystal,
+  crystalPink: decor_crystalPink,
+  glowPlinth: decor_glowPlinth,
+  stack: decor_stack,
+  stackPurple: decor_stackPurple,
+  partition: decor_partition,
+  tank: decor_tank,
+  tankBlue: decor_tankBlue,
+  gargoyle: decor_gargoyle,
+  robot: decor_robot,
+  catStatue: decor_catStatue,
+  waterfall: decor_waterfall,
+  pagoda: decor_pagoda,
 };
 function decorTier(key, label, cost, unlockLevel, model, fanRate, extra = {}) {
   const meta = DECOR_SPRITES[model];
@@ -348,6 +383,25 @@ export const PROP_TYPES = {
   neonSpeaker: decorTier('neonSpeaker', 'Neon Speaker', 380, 26, 'neonSpeaker', 0.85, { speakerCones: 'neonSpeaker' }),
   trophy: decorTier('trophy', 'Gold Trophy', 450, 31, 'trophy', 0.9),
   luckyCat: decorTier('luckyCat', 'Lucky Cat', 550, 35, 'luckyCat', 1.0),
+  // The October 2026 batch (art/references/main): simple pieces early,
+  // glowing showpieces later, some in two colours.
+  barrel: decorTier('barrel', 'Oak Barrel', 70, 4, 'barrel', 0.25),
+  streetLamp: decorTier('streetLamp', 'Street Lamp', 120, 7, 'streetLamp', 0.4),
+  globeLamp: decorTier('globeLamp', 'Globe Lamp', 170, 10, 'globeLamp', 0.5),
+  crystal: decorTier('crystal', 'Crystal Column', 210, 12, 'crystal', 0.55),
+  glowPlinth: decorTier('glowPlinth', 'Glow Plinth', 230, 14, 'glowPlinth', 0.6),
+  globeLampPink: decorTier('globeLampPink', 'Pink Globe Lamp', 250, 16, 'globeLampPink', 0.62),
+  speakerStack: decorTier('speakerStack', 'Speaker Stack', 280, 17, 'stack', 0.65, { speakerCones: 'stack' }),
+  crystalPink: decorTier('crystalPink', 'Pink Crystal Column', 300, 20, 'crystalPink', 0.7),
+  partition: decorTier('partition', 'Glass Screen', 320, 21, 'partition', 0.72),
+  liquidTank: decorTier('liquidTank', 'Purple Liquid Tank', 380, 24, 'tank', 0.8),
+  gargoyle: decorTier('gargoyle', 'Gargoyle', 400, 25, 'gargoyle', 0.82),
+  speakerStackPurple: decorTier('speakerStackPurple', 'Purple Speaker Stack', 420, 27, 'stackPurple', 0.85, { speakerCones: 'stackPurple' }),
+  robot: decorTier('robot', 'Retro Robot', 460, 28, 'robot', 0.88),
+  catStatue: decorTier('catStatue', 'Cat Statue', 480, 30, 'catStatue', 0.9),
+  waterfall: decorTier('waterfall', 'Glass Waterfall', 560, 33, 'waterfall', 1.0),
+  liquidTankBlue: decorTier('liquidTankBlue', 'Blue Liquid Tank', 520, 34, 'tankBlue', 0.95),
+  pagoda: decorTier('pagoda', 'Pagoda Statue', 650, 38, 'pagoda', 1.1),
   // Wallpaper (src/walls.js, drawn in code): simple to fancy across the
   // first ten levels.
   wpPaint: wallTier('wpPaint', 'Paint', 8, 1, 'paint'),

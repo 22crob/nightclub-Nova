@@ -1183,6 +1183,22 @@ const decor = await page.evaluate(() => {
 });
 check('all sixteen decorations have their art', decor.missing.length === 0, decor.missing.join(', ') || '16 of 16');
 check('the pool table takes three tiles', decor.poolTiles === 3 && decor.poolTex === 'decor_pool_90', `${decor.poolTiles} tiles, ${decor.poolTex}`);
+// The October 2026 decorations: each has all four pictures, places, and
+// the speaker stacks get bumping cones.
+const newDecor = await page.evaluate(() => {
+  const s = window.__clubNova.scene.getScene('club');
+  const models = ['barrel', 'streetLamp', 'globeLamp', 'globeLampPink', 'crystal', 'crystalPink', 'glowPlinth', 'stack', 'stackPurple', 'partition', 'tank', 'tankBlue', 'gargoyle', 'robot', 'catStatue', 'waterfall', 'pagoda'];
+  const missing = models.filter((m) => [0, 90, 180, 270].some((f) => !s.textures.exists(`decor_${m}_${f}`)));
+  let spot = null;
+  for (let gy = 1; gy < s.gridH - 1 && !spot; gy++) for (let gx = 1; gx < s.gridW - 1 && !spot; gx++) {
+    if (s.footprintValid(s.getFootprint('speakerStack', 0, gx, gy), 'speakerStack')) spot = [gx, gy];
+  }
+  const rec = spot && s.restoreProp('speakerStack', 0, spot);
+  const cones = rec?.speakerFx?.cones?.length || 0;
+  if (rec) s.removeProp(rec);
+  return { missing, cones };
+});
+check('the new decorations (barrel to pagoda) all have their pictures, and the speaker stack bumps four cones', newDecor.missing.length === 0 && newDecor.cones === 4, JSON.stringify(newDecor));
 
 // The street outside: people line up at the rope and go in one by one.
 const street = await page.evaluate(() => {
@@ -1240,7 +1256,14 @@ const people = await page.evaluate(() => {
   out.clickedBar = s.clickPerson(at) && s.infoCard && s.infoCard.kind === 'bartender';
   s.patrons = crowd;
   out.barCard = document.getElementById('bottomsUp').offsetParent !== null;
-  // Line up three guests and serve them all at once.
+  // Line up three guests and serve them all at once (letting a few more in
+  // first if the club is quiet).
+  for (let i = 0; i < 6 && s.patrons.filter((q) => !q.leaving && !q.gone).length < 3; i++) {
+    const n = s.patrons.length;
+    s.trySpawnPatron();
+    const fresh = s.patrons[n];
+    if (fresh) { fresh.gx += 2 + i; fresh.gy += 1; } // step off the door so the next can come in
+  }
   const line = s.patrons.filter((q) => !q.leaving && !q.gone).slice(0, 3);
   for (const q of s.patrons) if (q.queue) s.leaveBarQueue(q);
   for (const q of line) s.joinBarQueue(q);

@@ -19,6 +19,9 @@ const CONES = {
   speaker: { front: 0.335, cones: [[0.66, 0.3, 0x30e8ff, true], [1.45, 0.215, 0x30e8ff, false], [1.92, 0.085, 0x30e8ff, false]] },
   neonSpeaker: { front: 0.345, cones: [[0.66, 0.31, 0xff2a90, true], [1.45, 0.225, 0x30e8ff, false], [1.92, 0.085, 0xff2a90, false]] },
   woodSpeaker: { front: 0.3, cones: [[0.45, 0.2, 0xc9b48a, true], [0.95, 0.12, 0xc9b48a, false]] },
+  // Speaker stacks: the lower cabinet's cones on the kick, the upper's on the clap.
+  stack: { front: 0.365, cones: [[0.37, 0.24, 0x30e8ff, true], [0.87, 0.24, 0x30e8ff, true], [1.54, 0.24, 0x30e8ff, false], [2.04, 0.24, 0x30e8ff, false]] },
+  stackPurple: { front: 0.365, cones: [[0.37, 0.24, 0xb84dff, true], [0.87, 0.24, 0xb84dff, true], [1.54, 0.24, 0xb84dff, false], [2.04, 0.24, 0xb84dff, false]] },
 };
 
 export class SpeakersMixin {
