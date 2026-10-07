@@ -1,9 +1,9 @@
 // ClubScene methods: Patrons: spawning, wandering, animation, tipping and leaving.
 // Mixed into ClubScene (see ClubScene.js); `this` is the scene.
 import Phaser from 'phaser';
-import { MODEL_PATRONS, NEON_PATRONS, PATRON_SHEETS, patronMetaOf } from '../assets.js';
+import { MODEL_PATRONS, NEON_PATRONS, PAINTED_PATRONS, PATRON_SHEETS, patronMetaOf } from '../assets.js';
 import { FLOOR_DECAL_PROPS, PROP_TYPES, STAFF_TYPES } from '../catalog.js';
-import { BOOST, CHARACTER_DISPLAY_HEIGHT, MODEL_PATRON_SHARE, NEON_PATRON_SHARE, NEON_PATRON_SHARE_TEST, TEST_MODE, HAIR_STYLES, PATRON_HAIR_COLORS, PATRON_MOVE_INTERVAL, PATRON_OUTFIT_COLORS, PATRON_POPUP_Y, PATRON_SKIN_TONES, PATRON_SPAWN_INTERVAL, MONEY, PATRON_TIP_INTERVAL, PATRON_Y_OFFSET, PROP_SCALE, VISIT } from '../config.js';
+import { BOOST, CHARACTER_DISPLAY_HEIGHT, GUEST_LOOKS, MODEL_PATRON_SHARE, NEON_PATRON_SHARE, NEON_PATRON_SHARE_TEST, TEST_MODE, HAIR_STYLES, PATRON_HAIR_COLORS, PATRON_MOVE_INTERVAL, PATRON_OUTFIT_COLORS, PATRON_POPUP_Y, PATRON_SKIN_TONES, PATRON_SPAWN_INTERVAL, MONEY, PATRON_TIP_INTERVAL, PATRON_Y_OFFSET, PROP_SCALE, VISIT } from '../config.js';
 import { SFX } from '../sfx.js';
 import { MOOD } from './mood.js';
 import { randRange } from '../util.js';
@@ -141,7 +141,9 @@ export class PatronsMixin {
     // the owner's 3D model (MODEL_PATRON_SHARE), the rest drawn.
     const neonShare = TEST_MODE ? NEON_PATRON_SHARE_TEST : NEON_PATRON_SHARE;
     let pool = choices;
-    if (NEON_PATRONS.length && Math.random() < neonShare) pool = NEON_PATRONS;
+    const looks = GUEST_LOOKS.map((name) => PAINTED_PATRONS[name]).filter((i) => i !== undefined);
+    if (looks.length) pool = looks;
+    else if (NEON_PATRONS.length && Math.random() < neonShare) pool = NEON_PATRONS;
     else if (MODEL_PATRONS.length && Math.random() < MODEL_PATRON_SHARE) pool = MODEL_PATRONS;
     container.patronCharacter = character ?? Phaser.Utils.Array.GetRandom(pool.length ? pool : [0]);
     container.patronDir = 'front';

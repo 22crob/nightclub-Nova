@@ -170,6 +170,11 @@ export const PATRON_Y_OFFSET = 6 * PROP_SCALE;
 // as a bar counter, so props and decorations read at the right size around
 // them. (It was 3.25 at first, which made characters about 2.4 counters
 // tall.)
+// The looks every ordinary guest wears (patron_3d_<name> sheets; see
+// PAINTED_PATRONS in assets.js). The owner asked for the ChatGPT-painted
+// guy01 to be the only guest; empty brings back the mix below.
+// Celebrities and staff keep their own looks.
+export const GUEST_LOOKS = ['guy01'];
 // Share of guests who are the owner's 3D model (when its sheets exist; see
 // MODEL_PATRONS in assets.js), the rest being the drawn characters.
 export const MODEL_PATRON_SHARE = 0.35;

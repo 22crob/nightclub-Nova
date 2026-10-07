@@ -41,6 +41,9 @@ const PATRON_METAS = [
 ];
 // The characters made from the owner's 3D model.
 export const MODEL_PATRONS = modelKeys.map((_, i) => drawnKeys.length + i);
+// The guests painted by ChatGPT (art/blender/build_patron_painted.py):
+// 3D sheets named in GUEST_LOOKS (config.js).
+export const PAINTED_PATRONS = Object.fromEntries(modelKeys.map((k, i) => [k.match(/patron_3d_(\w+)\.png$/)[1], drawnKeys.length + i]));
 // The Neon Cartoon characters (art/characters/neon).
 export const NEON_PATRONS = neonKeys.map((_, i) => drawnKeys.length + modelKeys.length + i);
 export function patronMetaOf(character) {
