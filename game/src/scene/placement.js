@@ -174,7 +174,8 @@ export class PlacementMixin {
     if (!this.selectedProp || !this.hoverTile) return; // deselected (see deselectProp()) — no ghost/highlight to show
 
     const def = PROP_TYPES[this.selectedProp];
-    if (def.wallStyle || def.paintStyle) return; // wallpaper and floor paint have their own previews
+    if (def.paintStyle) { this.drawFootprintOutline([[this.hoverTile.gx, this.hoverTile.gy]], PLACE_OK); return; } // the tile to floor, over everything
+    if (def.wallStyle) return; // wallpaper has its own preview
 
     const { gx, gy } = this.hoverTile;
     const facing = def.rotatable ? this.currentFacing : 0;

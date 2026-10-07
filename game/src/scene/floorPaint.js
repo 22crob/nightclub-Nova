@@ -9,6 +9,9 @@ import { FLOOR_PAINTS, floorFrameCanvas, floorTextureKey } from '../floors.js';
 import { TILE_H, TILE_W } from '../config.js';
 import { SFX } from '../sfx.js';
 
+// How see-through furniture is while a regular floor is held.
+const FLOOR_FADE_ALPHA = 0.3;
+
 export class FloorPaintMixin {
   registerFloorPaintTextures() {
     for (const style of Object.keys(FLOOR_PAINTS)) {
@@ -68,8 +71,27 @@ export class FloorPaintMixin {
     return true;
   }
 
+  // While a regular floor is held, the furniture, bartenders and DJ go
+  // see-through, so the floor under them shows and the tiles there can be
+  // pointed at and floored; they come back when it's put down.
+  fadeFurnitureForFloor() {
+    const on = !!(PROP_TYPES[this.selectedProp] && PROP_TYPES[this.selectedProp].paintStyle);
+    if (on === !!this.furnitureFaded) return;
+    this.furnitureFaded = on;
+    const alpha = on ? FLOOR_FADE_ALPHA : 1;
+    const seen = new Set();
+    for (const key in this.placed) {
+      const rec = this.placed[key];
+      if (seen.has(rec)) continue;
+      seen.add(rec);
+      if (PROP_TYPES[rec.type].floorStyle) continue; // dance floors are floor
+      for (const obj of [rec.gameObject, rec.frontObject, rec.staff && rec.staff.container]) if (obj) obj.setAlpha(alpha);
+    }
+  }
+
   // Preview of the selected floor on the hovered tile.
   updateFloorPaintGhost() {
+    this.fadeFurnitureForFloor();
     const def = PROP_TYPES[this.selectedProp];
     const tile = def && def.paintStyle ? this.hoverTile : null;
     const key = tile ? `${tile.gx},${tile.gy},${this.selectedProp}` : null;

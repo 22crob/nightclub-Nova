@@ -2172,6 +2172,28 @@ const held = await page.evaluate(() => {
 check('a held item always shows with its tiles: green where it fits, red and tinted where it does not', held.free && held.free.ghost && !held.free.tinted && held.free.filled && held.free.outlined
   && held.blocked.ghost && held.blocked.tinted && held.blocked.filled && held.blocked.outlined && held.clearedAfter, JSON.stringify(held));
 
+// Regular floors go under furniture: holding one makes the furniture (and
+// its staff) see-through and outlines the tile; laying it under a bar
+// works, and putting the floor down makes everything solid again.
+const underFloor = await page.evaluate(() => {
+  const s = window.__clubNova.scene.getScene('club');
+  const bar = Object.values(s.placed).find((r) => s.hireableRecords().includes(r));
+  const [gx, gy] = bar.tiles[0];
+  const cash = s.cash;
+  s.cash = cash + 1000;
+  s.selectProp('fpConcrete');
+  s.hoverTile = { gx, gy };
+  s.updateGhost();
+  const out = { faded: bar.gameObject.alpha < 1 && (!bar.staff || bar.staff.container.alpha < 1), outlined: s.footprintOutline.commandBuffer.length > 0 };
+  out.painted = s.paintFloor(gx, gy) && s.floorPaint[`${gx},${gy}`] === 'fpConcrete';
+  s.deselectProp();
+  out.solidAgain = bar.gameObject.alpha === 1;
+  s.removeFloorPaint(gx, gy);
+  s.cash = cash;
+  return out;
+});
+check('a regular floor goes under furniture, which turns see-through while you hold it', underFloor.faded && underFloor.outlined && underFloor.painted && underFloor.solidAgain, JSON.stringify(underFloor));
+
 // Test mode (?test, or the site's /test/ copy): top level, lots of cash, on
 // its own save, and the real save is left alone.
 const realSave = await page.evaluate(() => { window.__clubNova.scene.getScene('club').saveGame(); return localStorage.getItem('clubNovaSave_v2'); });
