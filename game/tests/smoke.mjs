@@ -74,9 +74,10 @@ const opening = await page.evaluate(() => {
   const units = s.hireableRecords().filter((rec) => rec.type === 'starterBar');
   const bar = units.find((rec) => rec.staff);
   const floor = Object.keys(s.placed).filter((k) => s.placed[k].type === 'basicFloor').sort();
-  return { floor: floor.join(' '), dancing: s.isDanceFloorTile(2, 6), type: booth && booth.type, anchor: booth && booth.anchor.join(','), dj: !!(booth && booth.staff), music: s.musicPlaying(), size: s.gridW === s.gridH ? s.gridW : -1, bar: units.map((r) => r.anchor.join(',')).sort().join(' '), bartender: !!bar, staffed: units.filter((r) => r.staff).length, worked: units.every((r) => s.isWorked(r)), boothTiles: booth && booth.tiles.length, djOnTile: !!booth && (() => { const p = s.gridToScreen(0, 5.5); return Math.abs(booth.staff.container.x - p.sx) < 1 && Math.abs(booth.staff.container.y - p.sy) < 1 && booth.tiles.filter((t) => t.back).length === 2; })() };
+  const table = Object.values(s.placed).find((r) => r.type === 'standingTable');
+  return { table: table && table.anchor.join(','), floor: floor.join(' '), dancing: s.isDanceFloorTile(2, 6), type: booth && booth.type, anchor: booth && booth.anchor.join(','), dj: !!(booth && booth.staff), music: s.musicPlaying(), size: s.gridW === s.gridH ? s.gridW : -1, bar: units.map((r) => r.anchor.join(',')).sort().join(' '), bartender: !!bar, staffed: units.filter((r) => r.staff).length, worked: units.every((r) => s.isWorked(r)), boothTiles: booth && booth.tiles.length, djOnTile: !!booth && (() => { const p = s.gridToScreen(0, 5.5); return Math.abs(booth.staff.container.x - p.sx) < 1 && Math.abs(booth.staff.container.y - p.sy) < 1 && booth.tiles.filter((t) => t.back).length === 2; })() };
 });
-check('starts with $700, a 10x10 room, a 2-tile DJ booth, a 3x3 dance floor and a 4-long bar with one bartender', st.cash === 700 && st.placed === 14 && opening.boothTiles === 4 && opening.djOnTile && opening.floor === '2,5 2,6 2,7 3,5 3,6 3,7 4,5 4,6 4,7' && opening.dancing && opening.size === 10 && opening.bar === '6,0 7,0 8,0 9,0' && opening.bartender && opening.staffed === 1 && opening.worked, `cash ${st.cash}, placed ${st.placed}, ${JSON.stringify(opening)}`);
+check('starts with $700, a 10x10 room, a 2-tile DJ booth, a 3x3 dance floor, one bar with a bartender and a standing table in the corner', st.cash === 700 && st.placed === 12 && opening.boothTiles === 4 && opening.djOnTile && opening.floor === '2,5 2,6 2,7 3,5 3,6 3,7 4,5 4,6 4,7' && opening.dancing && opening.size === 10 && opening.bar === '6,0' && opening.bartender && opening.staffed === 1 && opening.worked && opening.table === '9,0', `cash ${st.cash}, placed ${st.placed}, ${JSON.stringify(opening)}`);
 check('every club opens with a Wood Booth and a DJ playing', opening.type === 'woodBooth' && opening.anchor === '1,5' && opening.dj && opening.music, JSON.stringify(opening));
 
 // The checks below were written for the old opening (a 16x16 room with just
@@ -95,10 +96,9 @@ check('all sprites loaded', st.textures.length === 0, st.textures.join(', ') || 
 // Tips are paused while the checks below compare exact cash amounts.
 await page.evaluate(() => { const s = window.__clubNova.scene.getScene('club'); s.collectPatronTip = () => {}; s.chargeCover = () => {}; });
 
-// The dock along the bottom: Build, Staff, Club, Inventory and Goals, each
+// The dock along the bottom: Build, Staff, Club, Inventory and VIP, each
 // labelled. Build opens a row of drawn categories (NEW first, floors and
-// dance floors together) and OK closes it; Club's keys are Edit, Expand
-// and Celebrities.
+// dance floors together) and OK closes it; Club's keys are Edit and Expand.
 const tabs = await page.$$eval('.dockTab', (els) => els.map((e) => `${e.dataset.tipName}=${e.querySelector('.navLabel').textContent}`));
 await page.click('#navBuild');
 const visibleKeys = () => page.$$eval('.storeTab', (els) => els.filter((e) => e.offsetParent).map((e) => e.dataset.tipName));
@@ -106,7 +106,7 @@ const storeTabs = await visibleKeys();
 await page.click('#navClub');
 const clubKeys = await visibleKeys();
 await page.click('#navBuild');
-check('the dock is Build, Staff, Club, Inventory, Goals (labelled); Build has NEW and 6 categories; Club has Edit, Expand and Celebrities', tabs.join() === 'Build=Build,Staff=Staff,Club=Club,Inventory=Inventory,Goals=Goals' && storeTabs.join() === 'New,Bars,Seating,Floors,Wallpaper,Decorations,DJ Booths' && clubKeys.join() === 'Edit,Expand,Celebrities', `${tabs.join(' / ')} | ${storeTabs.join(' / ')} | ${clubKeys.join(' / ')}`);
+check('the dock is Build, Staff, Club, Inventory, VIP (labelled); Build has NEW and 6 categories; Club has Edit and Expand', tabs.join() === 'Build=Build,Staff=Staff,Club=Club,Inventory=Inventory,VIP Celebrities=VIP' && storeTabs.join() === 'New,Bars,Seating,Floors,Wallpaper,Decorations,DJ Booths' && clubKeys.join() === 'Edit,Expand', `${tabs.join(' / ')} | ${storeTabs.join(' / ')} | ${clubKeys.join(' / ')}`);
 check('bar shows its real sprite icon', await page.locator('.propButton .icon').first().evaluate((el) => el.style.backgroundImage.includes('data:image/png')));
 // Floors: dance floors and regular floors in one category, the tip says which.
 await page.click('.storeTab[data-tip-name="Floors"]');
@@ -1328,7 +1328,7 @@ const extras = await page.evaluate(async () => {
   out.flagsReset = true;
   s.streetQueue = [];
   q.celeb = s.celebDef('rico');
-  document.querySelector('.storeTab[data-tip-name="Celebrities"]').click();
+  document.getElementById('navCelebs').click();
   const cards = [...document.querySelectorAll('#shopItems .celebSlot')];
   out.list = cards.map((c) => `${c.querySelector('.celebName').textContent}|${c.querySelector('.celebStars').textContent}|${c.querySelector('.propCost').textContent}|${!!c.querySelector('.icon').style.backgroundImage}`);
   out.listed = cards.length === 6
@@ -1339,7 +1339,7 @@ const extras = await page.evaluate(async () => {
     && out.list[5].startsWith('Jett Starr|★★★★★|🔒 Lv 20')
     && cards[3].classList.contains('locked')
     && !!cards[0].querySelector('.regularTag') && !!cards[0].querySelector('.celebLiking');
-  out.tab = document.querySelector('.storeTab.active').dataset.tipName;
+  out.tab = document.querySelector('.dockTab.active')?.id;
   s.saveGame();
   const savedC = JSON.parse(localStorage.getItem('clubNovaSave_v2'));
   out.celebSaved = savedC.celebs && savedC.celebs.rico && savedC.celebs.rico.liking === 80 && savedC.celebs.rico.visits === 1;
@@ -1366,7 +1366,7 @@ check('the song box changes tracks, and Like gives a fan once a song', extras.ch
 check('guests can only be seated at a VIP booth; the button is greyed out without one', extras.greyed && extras.couchOnly && extras.lit && extras.seated, JSON.stringify(extras));
 check('a drink on the house, once a visit', extras.onHouse, JSON.stringify(extras));
 check('a guest can be sent to the dance floor', extras.danced, JSON.stringify(extras));
-check('the Celebrity List shows six celebrities with portrait, name, fame stars, how much they like the club, and their invite fee', extras.tab === 'Celebrities' && extras.listed, JSON.stringify(extras.list));
+check('the Celebrity List shows six celebrities with portrait, name, fame stars, how much they like the club, and their invite fee', extras.tab === 'navCelebs' && extras.listed, JSON.stringify(extras.list));
 check('celebrities come first by paid invitation only', extras.noFreeVisits && extras.invited && extras.notTwice && extras.locked && extras.arrives, JSON.stringify(extras));
 check('when a celebrity walks in, the crowd gets star eyes, goes wild and tips', extras.welcomed && extras.crowdReacts && extras.reactionTex, JSON.stringify(extras));
 check('a great visit (VIP booth, drink on the house) builds liking; they come back on their own, sooner the more they like the club, and become regulars', extras.celebLiked && extras.notYet && extras.returns && extras.fasterWhenLiked && extras.regular && extras.coldNoReturn, JSON.stringify(extras));
@@ -1851,7 +1851,7 @@ await page.click('#navInventory');
 // name and what it does.
 const icons = await page.evaluate(() => {
   // (The dock's pads carry their name in a label under the picture.)
-  const ids = ['navBuild', 'navStaff', 'navClub', 'navInventory', 'navGoals', 'boostButton', 'rushButton', 'partyButton', 'songChange', 'songLike',
+  const ids = ['navBuild', 'navStaff', 'navClub', 'navInventory', 'navCelebs', 'goalTab', 'boostButton', 'rushButton', 'partyButton', 'songChange', 'songLike',
     'tipsButton', 'muteButton', 'restartButton'];
   const bare = ids.filter((id) => {
     const el = document.getElementById(id);
@@ -1871,7 +1871,7 @@ const hoverTip = await page.evaluate(() => {
   return { shown: !!t && t.classList.contains('show'), name: t?.querySelector('.tipName').textContent, text: t?.querySelector('.tipText').textContent };
 });
 await page.mouse.move(5, 400);
-check('buttons and shop tabs are icons with no words, each with a hover name', icons.bare.length === 0 && icons.tabs === 10 && icons.tabIcons === 10, JSON.stringify(icons));
+check('buttons and shop tabs are icons with no words, each with a hover name', icons.bare.length === 0 && icons.tabs === 9 && icons.tabIcons === 9, JSON.stringify(icons));
 check('hovering Bass Boost pops up its name and what it does', hoverTip.shown && hoverTip.name === 'Bass Boost!' && hoverTip.text.length > 10, JSON.stringify(hoverTip));
 
 // Goals: three show at a time with their progress; finishing one pays its
@@ -1971,8 +1971,9 @@ check('the Inventory button shows how many things are in it', shopUi.badge === '
 check('Clear Club asks first, then puts everything but the DJ booth and bars into the inventory', shopUi.asked && shopUi.toolKept && shopUi.cleared && shopUi.plantStored && shopUi.closedAsk, JSON.stringify(shopUi));
 
 // The player panel: the level, XP bar, cash and the song with its audio
-// controls are all one panel. The Goals pad opens and closes the goals in
-// the dock, and a finished goal puts a ! on it until opened.
+// controls are all one panel. The Goals tab on the left side drops the
+// goals down and closes them (or the x does), and a finished goal puts a !
+// on it until opened.
 const topUi = await page.evaluate(() => {
   const s = window.__clubNova.scene.getScene('club');
   const out = {};
@@ -1982,17 +1983,21 @@ const topUi = await page.evaluate(() => {
   const shown = () => getComputedStyle(goals).display !== 'none';
   s.toggleGoals(false);
   out.startsClosed = !shown();
-  document.getElementById('navGoals').click();
-  out.opens = shown() && document.getElementById('navGoals').classList.contains('active') && document.querySelectorAll('#goalList .goalRow').length === 3;
-  document.getElementById('navGoals').click();
+  document.getElementById('goalTab').click();
+  out.opens = shown() && s.goalsOpen() && document.querySelectorAll('#goalList .goalRow').length === 3;
+  document.getElementById('goalTab').click();
   out.closes = !shown();
+  document.getElementById('goalTab').click();
+  document.getElementById('goalsClose').click();
+  out.xCloses = !shown();
+  out.notInDock = !document.getElementById('dock').contains(goals) && !document.getElementById('navGoals');
   delete s.completeGoal;
   const done = [...s.goalsDone];
   s.completeGoal(s.activeGoals()[0]);
   out.badge = document.getElementById('goalsBadge').textContent;
   s.goalsDone = done;
   s.completeGoal = (goal) => { s.goalsDone.push(goal.id); };
-  document.getElementById('navGoals').click();
+  document.getElementById('goalTab').click();
   out.badgeCleared = document.getElementById('goalsBadge').textContent === '';
   s.toggleGoals(false);
   return out;
@@ -2020,7 +2025,7 @@ const cashRoll = await page.evaluate(async () => {
   return out;
 });
 check('the cash rolls up to a new amount; buttons have the candy look', cashRoll.rolling && cashRoll.landed && cashRoll.stopped && cashRoll.rim === 'rgb(255, 255, 255)' && !!cashRoll.padColour, JSON.stringify(cashRoll));
-check('the Goals pad opens and closes the goals in the dock; a finished goal puts a ! on it until opened', topUi.startsClosed && topUi.opens && topUi.closes && topUi.badge === '!' && topUi.badgeCleared, JSON.stringify(topUi));
+check('the Goals tab on the side drops the goals down and closes them (tab or x), not in the dock; a finished goal puts a ! on it until opened', topUi.startsClosed && topUi.opens && topUi.closes && topUi.xCloses && topUi.notInDock && topUi.badge === '!' && topUi.badgeCleared, JSON.stringify(topUi));
 
 // With a drink in hand a guest goes and sits down with it when a seat is
 // free, or stands somewhere quiet, never on the dance floor.

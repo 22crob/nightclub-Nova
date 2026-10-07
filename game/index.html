@@ -194,8 +194,18 @@
   <!-- Big popups: "Bass Boost!", "Drink Rush!", celebrity arrivals. -->
   <div id="bigPopup"><div class="bpTitle"></div><div class="bpSub"></div></div>
 
+  <!-- Left side: the Goals tab (see scene/goals.js). Clicking it drops
+       down the three goals showing; the x (or the tab again) closes them. -->
+  <div id="goalSide">
+    <div id="goalTab" data-icon="artGoals" data-tip-name="Goals" data-tip-text="Finish goals for cash and XP."><span id="goalsBadge" class="countBadge"></span></div>
+    <div id="goals">
+      <div id="goalsTop"><span id="goalsTitle">Goals</span><div id="goalsClose" class="infoClose" data-tip-name="Close">✕</div></div>
+      <div id="goalList"></div>
+    </div>
+  </div>
+
   <!-- Bottom: the navigation dock (see scene/shop.js). Build, Staff, Club,
-       Inventory and Goals in one bar, the open one glowing, and its panel
+       Inventory and VIP (celebrities) in one bar, the open one glowing, and its panel
        above the bar: Build and Club have a row of keys on the panel's top
        edge. The green OK closes it. What you're holding shows at the top
        of the screen. -->
@@ -208,15 +218,13 @@
         <div id="shopItems"></div>
         <div id="dockNext" class="dockArrow" data-tip-name="Scroll right"></div>
       </div>
-      <!-- Goals (see scene/goals.js): three at a time, in the Goals panel. -->
-      <div id="goals"><div id="goalList"></div></div>
     </div>
     <div id="navBar">
       <div id="navBuild" class="dockTab navPad" data-nav="build" data-icon="artShop" data-tip-name="Build" data-tip-text="Buy bars, seating, floors, wallpaper, decorations and DJ booths."><span class="navLabel">Build</span></div>
       <div id="navStaff" class="dockTab navPad" data-nav="staff" data-icon="catStaff" data-tip-name="Staff" data-tip-text="Hire bartenders for your bars. Your level sets how many you can have."><span class="navLabel">Staff</span></div>
-      <div id="navClub" class="dockTab navPad" data-nav="club" data-icon="artClub" data-tip-name="Club" data-tip-text="Edit your club (move, turn, put away, sell), expand it, and invite celebrities."><span class="navLabel">Club</span></div>
+      <div id="navClub" class="dockTab navPad" data-nav="club" data-icon="artClub" data-tip-name="Club" data-tip-text="Edit your club (move, turn, put away, sell) and expand it."><span class="navLabel">Club</span></div>
       <div id="navInventory" class="dockTab navPad" data-nav="inventory" data-icon="artStorage" data-tip-name="Inventory" data-tip-text="Things you own but haven't placed. Place them again for free."><span class="navLabel">Inventory</span><span id="inventoryBadge" class="countBadge"></span></div>
-      <div id="navGoals" class="dockTab navPad" data-nav="goals" data-icon="artGoals" data-tip-name="Goals" data-tip-text="Finish goals for cash and XP."><span class="navLabel">Goals</span><span id="goalsBadge" class="countBadge"></span></div>
+      <div id="navCelebs" class="dockTab navPad" data-nav="celebs" data-icon="artCeleb" data-tip-name="VIP Celebrities" data-tip-text="Invite celebrities to your club. The more they enjoy it, the more often they come back on their own."><span class="navLabel">VIP</span></div>
       <div id="storeOk" data-icon="check" data-tip-name="OK" data-tip-text="Finish and close the panel"></div>
     </div>
   </div>

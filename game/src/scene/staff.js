@@ -421,9 +421,10 @@ export class StaffMixin {
 
   // A brand-new club opens like Nightclub City's starter room: the DJ booth
   // against the left wall, toward the front, facing into the room, with a
-  // small 3x3 Basic Floor in front of it, and a long bar of four Starter
-  // Bar units with one bartender against the right wall, toward the front,
-  // serving into the room. (ensureClubBooth() then gives the booth its DJ.)
+  // small 3x3 Basic Floor in front of it, one Starter Bar with a bartender
+  // against the right wall, serving into the room, and a Standing Table in
+  // the corner at the front end of the right wall. (ensureClubBooth() then
+  // gives the booth its DJ.)
   placeStarterLayout() {
     const n = this.gridH; // along the left wall
     const booth = this.restoreProp('woodBooth', 90, [1, n - 5]); // the DJ's tiles are against the wall
@@ -431,12 +432,9 @@ export class StaffMixin {
     for (let gx = 2; gx <= 4; gx++) {
       for (let gy = n - 5; gy <= n - 3; gy++) this.restoreProp('basicFloor', 0, [gx, gy]);
     }
-    const units = [];
-    for (let gx = this.gridW - 4; gx < this.gridW; gx++) {
-      const bar = this.restoreProp('starterBar', 0, [gx, 0]);
-      if (bar) units.push(bar);
-    }
-    if (units.length) this.attachStaff(units[Math.floor(units.length / 2)]);
+    const bar = this.restoreProp('starterBar', 0, [this.gridW - 4, 0]);
+    if (bar) this.attachStaff(bar);
+    this.restoreProp('standingTable', 0, [this.gridW - 1, 0]);
   }
 
   // Swaps the club's booth for another tier, in the same spot and facing.

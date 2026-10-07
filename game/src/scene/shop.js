@@ -8,10 +8,11 @@ import { hideTip } from '../tooltips.js';
 import { fillIcons } from '../uiIcons.js';
 
 // The dock along the bottom is the game's navigation: Build, Staff, Club,
-// Inventory and Goals in one bar, the open one glowing, with its panel
-// above. Build shows a row of category keys on the panel's top edge (NEW
-// first, then the store), with the items standing on the screen and their
-// prices under them; Club's keys are Edit, Expand and Celebrities.
+// Inventory and VIP (the celebrities) in one bar, the open one glowing,
+// with its panel above. Build shows a row of category keys on the panel's
+// top edge (NEW first, then the store), with the items standing on the
+// screen and their prices under them; Club's keys are Edit and Expand.
+// (Goals are a tab on the left side, see goals.js.)
 // Everything is a picture; names and descriptions are in the hover tips.
 const CATEGORIES = {
   New: { icon: 'newGlyph', text: 'Everything you unlocked at your last two levels.', isNew: true },
@@ -26,11 +27,10 @@ const CATEGORIES = {
 const CLUB_KEYS = {
   Edit: { icon: 'hammer', text: 'Move, turn, put away or sell the things in your club, or clear it out.', tab: 'edit' },
   Expand: { icon: 'expand', text: 'Make the club bigger, a row of floor at a time.', tab: 'expand' },
-  Celebrities: { icon: 'starGlyph', text: 'Invite celebrities to your club. The more they enjoy it, the more often they come back on their own.', tab: 'celebs' },
 };
 // Which nav pad each panel belongs to, and the panel each pad opens.
-const NAV_OF = { decor: 'build', staff: 'staff', edit: 'club', expand: 'club', celebs: 'club', inventory: 'inventory', goals: 'goals' };
-const NAV_OPENS = { build: 'decor', staff: 'staff', club: 'edit', inventory: 'inventory', goals: 'goals' };
+const NAV_OF = { decor: 'build', staff: 'staff', edit: 'club', expand: 'club', inventory: 'inventory', celebs: 'celebs' };
+const NAV_OPENS = { build: 'decor', staff: 'staff', club: 'edit', inventory: 'inventory', celebs: 'celebs' };
 const STORE_CATEGORIES = Object.keys(CATEGORIES);
 
 export class ShopMixin {
@@ -135,8 +135,8 @@ export class ShopMixin {
     for (const k in this.dockTabs || {}) this.dockTabs[k].classList.toggle('active', k === key);
   }
 
-  // Switches the dock to a panel: 'decor' (Build), 'staff', 'edit',
-  // 'expand' or 'celebs' (all three in Club), 'inventory' or 'goals'.
+  // Switches the dock to a panel: 'decor' (Build), 'staff', 'edit' or
+  // 'expand' (both in Club), 'inventory' or 'celebs' (VIP).
   setDockTab(tab) {
     if (NAV_OF[tab] === 'club') this.lastClubTab = tab;
     if (tab !== 'expand') { this.pendingExpand = null; this.clearExpandPreview?.(); }
@@ -151,7 +151,6 @@ export class ShopMixin {
     // The open panel's key is lit: the store category in Build, the panel in Club.
     const lit = NAV_OF[tab] === 'club' ? Object.keys(CLUB_KEYS).find((k) => CLUB_KEYS[k].tab === tab) : this.activeShopCategory;
     for (const cat in this.storeTabButtons || {}) this.storeTabButtons[cat].classList.toggle('active', cat === lit);
-    if (tab === 'goals') this.seenGoals();
     document.body.classList.toggle('editing', tab === 'edit');
     if (this.drawSelectionFootprint) this.drawSelectionFootprint();
     hideTip();
@@ -187,7 +186,6 @@ export class ShopMixin {
     else if (tab === 'staff') { if (this.shopItemsEl) this.shopItemsEl.dataset.rendered = ''; this.renderStaffCard(); }
     else if (tab === 'expand') { if (this.shopItemsEl) this.shopItemsEl.dataset.rendered = ''; this.renderExpandCard(); }
     else if (tab === 'celebs') { if (this.shopItemsEl) this.shopItemsEl.dataset.rendered = ''; this.renderCelebCards(); }
-    else if (tab === 'goals') this.renderGoals(true);
   }
 
   // Opens the store on one category (also used to jump to one from code).

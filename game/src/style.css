@@ -272,7 +272,7 @@ body { font-family: var(--ui-font); color: var(--ink); }
 
 /* ------------------------------------------------------------------ */
 /* Bottom: the navigation dock (see scene/shop.js). One glass bar of    */
-/* labelled pads, Build, Staff, Club, Inventory and Goals, the open one */
+/* labelled pads, Build, Staff, Club, Inventory and VIP, the open one   */
 /* glowing; its panel opens above the bar.                              */
 /* ------------------------------------------------------------------ */
 #dock {
@@ -305,7 +305,7 @@ body { font-family: var(--ui-font); color: var(--ink); }
 #navStaff { --c: #2fb8ff; }
 #navClub { --c: #b45cff; }
 #navInventory { --c: #43e04a; }
-#navGoals { --c: #ff4f8a; }
+#navCelebs { --c: #ffc21f; }
 .navPad .countBadge { top: 0; right: 8px; }
 /* On the beat the icons give a little bump. */
 body.kick .navPad > .uiArt { transform: scale(1.06); transition: none; }
@@ -349,16 +349,36 @@ body.kick .navPad > .uiArt { transform: scale(1.06); transition: none; }
   background: var(--screen); border-radius: 12px; box-shadow: inset 0 0 0 1px rgba(255, 120, 230, 0.35), inset 0 4px 10px rgba(0, 0, 0, 0.4);
 }
 #shopItems::-webkit-scrollbar { display: none; }
-/* Goals: the three showing, side by side, in place of the item row. */
+/* Goals (goals.js): a tab on the left side, under the player panel.  */
+/* Clicking it drops the three goals showing down under it; the x (or   */
+/* the tab again) closes them.                                          */
+#goalSide {
+  position: fixed; left: 10px; top: calc(134px + env(safe-area-inset-top, 0px)); z-index: 12;
+  display: flex; flex-direction: column; align-items: flex-start; gap: 8px;
+}
+#goalTab {
+  --c: #ff4f8a; position: relative; width: 58px; height: 58px; box-sizing: border-box; padding: 7px; border-radius: 16px; cursor: pointer;
+  background: var(--glass); box-shadow: var(--glass-shadow); backdrop-filter: blur(6px);
+  transition: box-shadow 0.15s ease, transform 0.15s ease;
+}
+#goalTab > .uiArt { width: 44px; height: 44px; }
+#goalTab:hover > .uiArt { animation: boing 0.35s ease-out forwards; }
+#goalSide.open #goalTab { box-shadow: inset 0 0 0 2px var(--c), 0 0 18px var(--c); }
+#goalTab.cheer { animation: cheer 0.9s ease-out 2; }
 #goals {
-  display: none; gap: 10px; height: 146px; padding: 12px; box-sizing: border-box; border-radius: 18px;
+  display: none; position: relative; flex-direction: column; gap: 8px; width: 270px; padding: 10px; box-sizing: border-box; border-radius: 18px;
   background: var(--glass); box-shadow: var(--glass-shadow); backdrop-filter: blur(6px);
 }
-#dock[data-tab="goals"] #goals { display: flex; }
-#dock[data-tab="goals"] #dockPanel { display: none; }
-#goalList { flex: 1 1 auto; display: flex; gap: 10px; }
+#goalSide.open #goals { display: flex; animation: summaryIn 0.2s ease-out; }
+#goalsTop { height: 24px; display: flex; align-items: center; }
+#goalsTitle {
+  padding-left: 4px; font-family: var(--display-font); font-weight: 900; font-size: 18px; color: var(--gold);
+  -webkit-text-stroke: 1px var(--edge); paint-order: stroke fill; text-shadow: 0 2px 0 var(--edge), 0 0 10px var(--pink);
+}
+#goalsClose { top: 10px; right: 10px; }
+#goalList { display: flex; flex-direction: column; gap: 8px; }
 .goalRow {
-  flex: 1 1 0; display: flex; flex-direction: column; justify-content: center; padding: 10px 14px; border-radius: 12px;
+  display: flex; flex-direction: column; justify-content: center; padding: 9px 12px; border-radius: 12px;
   background: var(--screen); box-shadow: inset 0 0 0 1px rgba(255, 140, 230, 0.4);
 }
 .goalRow.done { font-size: 14px; font-weight: 800; text-align: center; }
@@ -372,7 +392,6 @@ body.kick .navPad > .uiArt { transform: scale(1.06); transition: none; }
   .navPad > .uiArt { width: 34px; height: 34px; }
   .navLabel { font-size: 9.5px; }
   #storeOk { width: 46px; height: 46px; padding: 10px; }
-  #goalList { flex-direction: column; } #goals { height: auto; }
 }
 
 /* Test mode (testMode.js): a sticker at the bottom left, so the test club

@@ -1,16 +1,18 @@
 // ClubScene methods: goals, like Nightclub City's. A chain of small goals
 // (GOALS in config.js) gives the player something to aim for: three show
-// at a time in the Goals panel of the dock, each with its progress, and finishing
-// one pays its cash and XP straight away and brings in the next.
+// at a time in the Goals panel, each with its progress, and finishing one
+// pays its cash and XP straight away and brings in the next.
 //
 // Progress comes from counters (this.goalStats, saved) bumped where things
 // happen (bumpGoal()), from bests seen while playing (noteGoalBest()), or
 // from live values (the level, how many guests fit, the club's rating).
-// The panel opens from the Goals pad in the dock; a goal finishing makes
-// the pad cheer and puts a ! on it until it's opened.
+// The panel drops down from the Goals tab on the left side (#goalSide)
+// and closes with its x or the tab again; a goal finishing makes the tab
+// cheer and puts a ! on it until it's opened.
 // Mixed into ClubScene (see ClubScene.js); `this` is the scene.
 import { GOALS } from '../config.js';
 import { SFX } from '../sfx.js';
+import { hideTip } from '../tooltips.js';
 
 export class GoalsMixin {
   // How far along a goal is right now.
@@ -67,8 +69,8 @@ export class GoalsMixin {
     SFX.levelUp();
     this.showToast(`🎯 Goal complete: ${goal.text}! +$${goal.cash}${goal.xp ? ` +${goal.xp} XP` : ''}`, 4500);
     this.justDone = goal.id;
-    const button = document.getElementById('navGoals');
-    if (button && this.dockTab !== 'goals') {
+    const button = document.getElementById('goalTab');
+    if (button && !this.goalsOpen()) {
       document.getElementById('goalsBadge').textContent = '!';
       button.classList.remove('cheer');
       void button.offsetWidth; // restart the animation
@@ -117,11 +119,18 @@ export class GoalsMixin {
     this.checkGoals();
   }
 
-  // Opens (or closes) the Goals panel in the dock.
+  goalsOpen() {
+    return !!document.getElementById('goalSide')?.classList.contains('open');
+  }
+
+  // Drops the Goals panel down from its side tab (or closes it).
   toggleGoals(open) {
-    const show = open ?? this.dockTab !== 'goals';
-    if (show) this.setDockTab('goals');
-    else if (this.dockTab === 'goals') this.closeDock();
+    const side = document.getElementById('goalSide');
+    if (!side) return;
+    const show = open ?? !this.goalsOpen();
+    side.classList.toggle('open', show);
+    if (show) { this.renderGoals(true); this.seenGoals(); }
+    hideTip();
   }
 
   // The Goals panel was opened: the ! goes.
@@ -131,6 +140,8 @@ export class GoalsMixin {
   }
 
   setupGoals() {
+    document.getElementById('goalTab')?.addEventListener('click', () => { SFX.unlock(); this.toggleGoals(); });
+    document.getElementById('goalsClose')?.addEventListener('click', () => { SFX.unlock(); this.toggleGoals(false); });
     this.checkGoals();
   }
 }

@@ -144,6 +144,29 @@ def build_candle_table():
 
 
 # --------------------------------------------------------------------------
+# Standing table: a tall round cocktail table, bar height, no seats.
+# --------------------------------------------------------------------------
+
+def build_standing_table():
+    dark = principled('StandBlack', srgb('#1c1a22'), rough=0.35)
+    chrome = plain('#c9ccd6', rough=0.2)
+    top = bb.wood('StandOak', (0.2, 0.09, 0.035), (0.36, 0.17, 0.07))
+    cylinder('Base', 0, 0, 0, 0.04, 0.22, dark, verts=32)
+    cylinder('Pole', 0, 0, 0.04, 1.0, 0.035, chrome, verts=16)
+    bpy.ops.mesh.primitive_torus_add(major_radius=0.1, minor_radius=0.012, location=(0, 0, 0.32))
+    bb._finish(bpy.context.active_object, chrome, 0)
+    bpy.context.active_object.name = 'FootRing'
+    cylinder('Top', 0, 0, 1.0, 1.05, 0.3, top, verts=40)
+    bpy.ops.mesh.primitive_torus_add(major_radius=0.3, minor_radius=0.018, location=(0, 0, 1.025), major_segments=48)
+    bb._finish(bpy.context.active_object, chrome, 0)
+    bpy.context.active_object.name = 'TopRim'
+    candle('Candle', 0.06, 0.04, 1.05)
+    drink = principled('StandDrink', srgb('#3de0ff'), rough=0.1, emission=srgb('#3de0ff'), emission_strength=0.6, alpha=0.85)
+    cone('Glass', -0.1, -0.08, 1.05, 1.17, 0.03, 0.045, drink, verts=12)
+    return {'seats': [], 'sitLift': 0.0}
+
+
+# --------------------------------------------------------------------------
 # Chrome bar stool: 1 tile, one seat; patrons perch with legs dangling.
 # --------------------------------------------------------------------------
 
@@ -234,6 +257,7 @@ SEATING = {
     'woodStool': build_wood_stool,
     'couch': build_couch,
     'candleTable': build_candle_table,
+    'standingTable': build_standing_table,
     'stool': build_stool,
     'leatherCouch': build_leather_couch,
     'velvetBooth': build_velvet_booth,

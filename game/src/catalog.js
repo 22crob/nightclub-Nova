@@ -22,6 +22,7 @@ import boothIceSprite from './assets/sprites/dj_ice.json';
 import seat_woodStool from './assets/sprites/seat_woodStool.json';
 import seat_couch from './assets/sprites/seat_couch.json';
 import seat_candleTable from './assets/sprites/seat_candleTable.json';
+import seat_standingTable from './assets/sprites/seat_standingTable.json';
 import seat_stool from './assets/sprites/seat_stool.json';
 import seat_leatherCouch from './assets/sprites/seat_leatherCouch.json';
 import seat_velvetBooth from './assets/sprites/seat_velvetBooth.json';
@@ -160,7 +161,7 @@ function decorTier(key, label, cost, unlockLevel, model, fanRate, extra = {}) {
 // that seat faces (degrees from the piece's front, like its facings); `sitLift`
 // raises a seated patron (stools).
 const SEAT_SPRITES = {
-  woodStool: seat_woodStool, couch: seat_couch, candleTable: seat_candleTable, stool: seat_stool,
+  woodStool: seat_woodStool, couch: seat_couch, candleTable: seat_candleTable, standingTable: seat_standingTable, stool: seat_stool,
   leatherCouch: seat_leatherCouch, velvetBooth: seat_velvetBooth, blackBooth: seat_blackBooth, goldBooth: seat_goldBooth,
   // More booths and sofas (art/blender/seating_designs.py), each its own shape.
   beerBench: seat_beerBench,
@@ -292,6 +293,7 @@ export const PROP_TYPES = {
   // original placeholder Table and VIP Lounge, kept for old saves.
   woodStool: seatTier('woodStool', 'Wood Stool', 40, 1, 'woodStool', 0.1),
   couch: seatTier('couch', 'Fabric Couch', 90, 1, 'couch', 0.2, BOOTH_FOOTPRINT),
+  standingTable: seatTier('standingTable', 'Standing Table', 50, 1, 'standingTable', 0.1),
   table: seatTier('table', 'Candle Table', 60, 2, 'candleTable', 0.2),
   barStool: seatTier('barStool', 'Chrome Bar Stool', 70, 3, 'stool', 0.2),
   leatherCouch: seatTier('leatherCouch', 'Leather Couch', 160, 3, 'leatherCouch', 0.3, BOOTH_FOOTPRINT),
