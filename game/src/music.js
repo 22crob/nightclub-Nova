@@ -22,6 +22,7 @@ const BOOST_BASS_DB = 14;
 // offset (seconds to the first beat); lengthMs is how long it plays.
 const SONG_FILES = [
   { file: 'deep-house-sunset.mp3', title: 'Deep House Sunset', artist: 'Sunset House Grooves', bpm: 122.51, offset: 0.464, lengthMs: 191184 },
+  { file: 'sunset-house-classic.mp3', title: 'Sunset House Classic', artist: 'Sunset House Grooves', bpm: 128.19, offset: 0.139, lengthMs: 243312 },
 ];
 const songUrls = import.meta.glob('./assets/music/*.mp3', { eager: true, import: 'default' });
 const SONGS_REAL = SONG_FILES.filter((s) => songUrls[`./assets/music/${s.file}`])
