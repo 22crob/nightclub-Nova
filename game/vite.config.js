@@ -20,7 +20,9 @@ export default defineConfig({
       name: 'artifact-sprite-files',
       enforce: 'post',
       config(config) {
-        config.build.assetsInlineLimit = 5000;
+        // Guest sheets and seats (already uploaded with the link) are files;
+        // everything else, small or new, goes in the page.
+        config.build.assetsInlineLimit = (file, content) => !(content.length >= 5000 && /patrons\/|seat_/.test(file));
       },
     },
   ].filter(Boolean),

@@ -56,7 +56,7 @@ See ROADMAP.md for the plan. The reference for all art, UI and gameplay is Night
 
 ## Playable link
 
-The game is published as a claude.ai Artifact at https://claude.ai/artifact/QfPRRyNXi3X4tXz83RVvNV. To update it, run `npm run build:artifact` (`ARTIFACT=1` in vite.config.js) and publish `game/dist-artifact/artifact.html` to that URL with `root: "game/dist-artifact"` (relative to where you run from) and every `.png` in that folder as `files` (the list is in `dist-artifact/files.json`). That build inlines only sprites under 5 KB and keeps the bigger ones (about 210) as separate files beside the page, so the page stays about 3 MB: the 12 MB all-in-one page was too large for public sharing. `npm run build` / `npm test` still make the all-in-one `dist/index.html` that works from `file://`.
+The game is published as a claude.ai Artifact at https://claude.ai/artifact/QfPRRyNXi3X4tXz83RVvNV. To update it, run `npm run build:artifact` (`ARTIFACT=1` in vite.config.js) and publish `game/dist-artifact/artifact.html` to that URL with `root: "game/dist-artifact"` (relative to where you run from) and every `.png` in that folder as `files` (the list is in `dist-artifact/files.json`). That build keeps only the guest sheets and seat sprites of 5 KB or more (183 files, already uploaded to the link) as separate files beside the page and inlines everything else, so the page is about 4 MB (the 12 MB all-in-one page was too large for public sharing) and a new bar or decoration needs no new files uploaded; only new guests or seats do. `npm run build` / `npm test` still make the all-in-one `dist/index.html` that works from `file://`.
 
 ## The owner
 
