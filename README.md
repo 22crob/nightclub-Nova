@@ -4,6 +4,8 @@
 
 `game/` holds the club tycoon game, built with Phaser 3. You build out an isometric club with bars, DJ booths, dance floors and decorations. Patrons walk in, earn you fans and tip you.
 
+**Play it:** https://22crob.github.io/nightclub-Nova/ (rebuilt automatically from every push that changes the game).
+
 ### Playing and developing
 
 You need [Node.js](https://nodejs.org) installed. Then, in the `game/` folder:
@@ -13,7 +15,7 @@ npm install        # first time only
 npm run dev        # run the game at http://localhost:5173, reloads as you edit
 npm run build      # makes dist/index.html: one file, double-click to play
 npm test           # builds, then plays through the game automatically to check nothing broke
-npm run build:artifact   # makes dist/artifact.html, the version published as the shareable play link
+npm run build:artifact   # makes dist-artifact/artifact.html, for the old claude.ai play link
 ```
 
 ### Layout
