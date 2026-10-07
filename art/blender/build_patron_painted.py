@@ -87,33 +87,54 @@ def prepare(src, out_body, out_hair):
         have = grown
     body.save(out_body)
 
-    # Hair: the dark mass on the head, without the thin face lines or the
-    # eyes (separate blobs), plus its own outline.
-    dark = im.convert('L').point(lambda v: 255 if v < 75 else 0)
+    # Hair: the mass of the hair's own colour on top of the head (any
+    # colour: it's sampled just under the top of the figure), without the
+    # eyes and face lines (separate blobs), its own strand lines closed in.
+    top = next(y for y in range(TEX) if any(figure.getpixel((x, y)) for x in range(TEX // 2 - 120, TEX // 2 + 121, 3)))
+    patch = [im.getpixel((x, y)) for y in range(top + 25, top + 70, 3) for x in range(TEX // 2 - 80, TEX // 2 + 81, 3)
+             if inner.getpixel((x, y))]
+    base = tuple(sorted(c[k] for c in patch)[len(patch) // 2] for k in range(3))
+
+    def near(c):
+        return sum((a - b) ** 2 for a, b in zip(c, base)) < 70 ** 2
     head = Image.new('L', im.size, 0)
     ImageDraw.Draw(head).rectangle((0, 0, TEX, NECK_PX), fill=255)
-    dark = ImageChops.multiply(dark, head)
-    solid = dark.filter(ImageFilter.MinFilter(7)).filter(ImageFilter.MaxFilter(7))
-    seed = next(((x, y) for y in range(20, NECK_PX // 2, 4) for x in range(TEX // 2 - 60, TEX // 2 + 61, 4)
+    like = Image.new('L', im.size, 0)
+    px = like.load()
+    pix = im.load()
+    for y in range(NECK_PX):
+        for x in range(TEX):
+            if near(pix[x, y]):
+                px[x, y] = 255
+    solid = like.filter(ImageFilter.MinFilter(5)).filter(ImageFilter.MaxFilter(5))
+    seed = next(((x, y) for y in range(top, NECK_PX // 2, 2) for x in range(TEX // 2 - 120, TEX // 2 + 121, 4)
                  if solid.getpixel((x, y)) == 255), None)
     if seed is None:
         raise SystemExit(f'no hair found in {src}')
     ImageDraw.floodfill(solid, seed, 128)
     mass = solid.point(lambda v: 255 if v == 128 else 0)
-    # Back in with the thin strands and outline that touch the mass.
-    mass = ImageChops.multiply(mass.filter(ImageFilter.MaxFilter(9)), dark.filter(ImageFilter.MaxFilter(3)))
-    mass = ImageChops.lighter(mass, solid.point(lambda v: 255 if v == 128 else 0))
-    # The hair's own colour (its middle shade), and no light edge pixels
-    # left from the white background.
-    shades = sorted(im.getpixel((x, y)) for x in range(0, TEX, 3) for y in range(0, NECK_PX, 3)
-                    if mass.getpixel((x, y)) == 255 and dark.getpixel((x, y)) == 255)
-    base = shades[len(shades) // 2]
+    mass = mass.filter(ImageFilter.MaxFilter(7)).filter(ImageFilter.MinFilter(7))   # close the strand lines
+    mass = ImageChops.multiply(mass, head)
+    # Light fringe left from the white background becomes the hair colour.
     hair = im.copy()
-    pale = im.convert('L').point(lambda v: 255 if v > 110 else 0)
-    hair.paste(base, mask=pale)
+    lum = sum(base) / 3
+    halo = im.convert('L').point(lambda v: 255 if v > max(200, lum + 40) else 0)
+    hair.paste(base, mask=halo)
+    # Its outer outline would smear across the sides of the head, so the
+    # dark pixels near its edge take the hair colour too.
+    rim = ImageChops.subtract(mass, mass.filter(ImageFilter.MinFilter(2 * EDGE_PX + 3)))
+    dark_rim = ImageChops.multiply(rim, im.convert('L').point(lambda v: 255 if v < lum * 0.6 else 0))
+    hair.paste(base, mask=dark_rim)
     hair = hair.convert('RGBA')
     hair.putalpha(mass)
     hair.save(out_hair)
+    # The scalp under the hair: plain hair colour wherever the head isn't
+    # face or ears, so a gap in the hair never shows dark lines.
+    face = ImageChops.subtract(inner, mass.filter(ImageFilter.MaxFilter(9)))
+    scalp = ImageChops.subtract(head, face)
+    body = Image.open(out_body).convert('RGB')
+    body.paste(base, mask=scalp)
+    body.save(out_body)
     mass.save(out_hair.replace('.png', '_mask.png'))
     return mass.getbbox(), base
 
@@ -395,13 +416,13 @@ def make_painter(name, work):
                 if flat > 0.55:
                     while t < 1.6 and in_hair(c + spread(d, t + 0.02), side):
                         t += 0.02
-                # A rounded cut hugging the head, with tufts on the crown,
-                # never past the drawn outline.
+                # A rounded cut hugging the head, with tufts and room for
+                # tall hair on the crown, never past the drawn outline.
                 u = d.normalized()
                 theta = math.atan2(d.x, -d.y)
                 crown = bp.smoothstep(0.1, 0.8, u.z)
-                locks = max(0.0, math.cos(7 * theta + 5 * u.z)) ** 3
-                t = max(1.05, min(t, 1.07 + 0.13 * locks * crown + 0.03 * crown))
+                locks = max(0.0, math.cos(9 * theta + 6 * u.z)) ** 4
+                t = max(1.05, min(t, 1.06 + 0.2 * locks * crown + 0.1 * crown))
                 moved += 1
             reach[v] = t
         # Soften it a little, so the spikes stay but nothing is jagged.
