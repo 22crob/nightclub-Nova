@@ -25,6 +25,7 @@ const SONG_FILES = [
   { file: 'sunset-house-classic.mp3', title: 'Sunset House Classic', artist: 'Sunset House Grooves', bpm: 128.19, offset: 0.139, lengthMs: 243312 },
   { file: 'house-july.mp3', title: 'House July', artist: 'Easy Eva', bpm: 127.0, offset: 0.441, lengthMs: 65207 },
   { file: 'club-house.mp3', title: 'Club House', artist: 'Aurec', bpm: 128.34, offset: 0.0, lengthMs: 144960 },
+  { file: 'dance.mp3', title: 'Dance', artist: 'Kulakovka', bpm: 120.0, offset: 0.476, lengthMs: 133041 },
 ];
 const songUrls = import.meta.glob('./assets/music/*.mp3', { eager: true, import: 'default' });
 const SONGS_REAL = SONG_FILES.filter((s) => songUrls[`./assets/music/${s.file}`])
