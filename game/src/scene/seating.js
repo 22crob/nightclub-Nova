@@ -127,12 +127,21 @@ export class SeatingMixin {
       c.patronDir = facingCamera ? 'front' : 'back';
       c.scaleX = (fx !== 0 ? -1 : 1) * patron.scaleVariance;
     }
-    // On a piece whose seats face different ways (benches facing each
-    // other, an L sectional), guests go between its layers, nearer ones on
-    // top, so a far guest facing the camera can't cover a near one.
+    // A guest facing the camera sits on top of the cushions (legs showing
+    // over the seat); one facing away goes between the layers, behind the
+    // backrest, so only what shows over it is seen. On a piece whose seats
+    // face different ways (benches facing each other, an L sectional),
+    // turned so that some bench's backrest is on the camera's side, every
+    // guest goes between the layers: that backrest stands in front of them
+    // too, and hides them as it naturally would. Nearer guests go on top.
     const mixed = def.seats.some((seat) => (seat[2] || 0) !== (def.seats[0][2] || 0));
-    if (mixed) c.setDepth(rec.gameObject.baseDepth + 0.0015 + (spot.gx + spot.gy - rec.anchor[0] - rec.anchor[1]) * 0.0001);
-    else c.setDepth(rec.gameObject.baseDepth + (facingCamera ? 0.003 : 0.001));
+    const awayBench = mixed && def.seats.some((_, j) => {
+      const [fx, fy] = this.seatSpot(rec, j).front;
+      return !(fx > 0 || fy > 0);
+    });
+    const onTop = facingCamera && !awayBench;
+    const nearness = mixed ? (spot.gx + spot.gy - rec.anchor[0] - rec.anchor[1]) * 0.0001 : 0;
+    c.setDepth(rec.gameObject.baseDepth + (onTop ? 0.003 + nearness : 0.001 + nearness * 0.5));
     this.propLayer.sort('depth');
     // Some sit and chat (the 3D guests' sittalk; drawn guests just sit).
     this.setPatronAnimation(patron, Math.random() < SIT_TALK_CHANCE ? 'sittalk' : 'sit');

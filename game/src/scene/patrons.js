@@ -10,6 +10,10 @@ import { randRange } from '../util.js';
 
 // What a character without a clip does instead (see patronAnimKey()).
 const CLIP_FALLBACK = { drink: 'idle', sittalk: 'sit' };
+// Clips whose Mixamo animation turns the body the other way (the sit-and-
+// talk faces his left, a mirror of the plain sit), drawn flipped so the
+// guest still faces the way his seat does.
+const CLIP_MIRRORED = new Set(['sittalk']);
 
 export class PatronsMixin {
   // True once the chibi patron spritesheets have loaded; otherwise patrons
@@ -216,7 +220,10 @@ export class PatronsMixin {
     const key = `${state}_${container.patronDir}`;
     if (container.patronAnimState === key) return;
     container.patronAnimState = key;
-    sprite.play(this.patronAnimKey(container, state));
+    const animKey = this.patronAnimKey(container, state);
+    sprite.play(animKey);
+    const flip = CLIP_MIRRORED.has(state) && animKey.includes(`_${state}_`);
+    sprite.scaleX = Math.abs(sprite.scaleX) * (flip ? -1 : 1);
     if (this.energize) this.energize(patron); // dancing faster during a Bass Boost
   }
 
