@@ -324,7 +324,8 @@ def main():
                 continue
             frames = plan[clip]['frames']
             for dname, turn in DIRECTIONS:
-                for f in (frames[0], frames[len(frames) // 3], frames[2 * len(frames) // 3]):
+                stills = frames if os.environ.get('PREVIEW_ALL') else (frames[0], frames[len(frames) // 3], frames[2 * len(frames) // 3])
+                for f in stills:
                     shots.append(render(clip, f, turn, os.path.join(out_dir, f'{clip}_{dname}_{f:06.1f}.png')))
         boxes = [im.getchannel('A').getbbox() for im in shots]
         box = (min(b[0] for b in boxes), min(b[1] for b in boxes), max(b[2] for b in boxes), max(b[3] for b in boxes))
