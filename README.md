@@ -5,6 +5,7 @@
 `game/` holds the club tycoon game, built with Phaser 3. You build out an isometric club with bars, DJ booths, dance floors and decorations. Patrons walk in, earn you fans and tip you.
 
 **Play it:** https://22crob.github.io/nightclub-Nova/ (rebuilt automatically from every push that changes the game).
+**Test version:** https://22crob.github.io/nightclub-Nova/test/ (top level, $10,000,000, its own save).
 
 ### Playing and developing
 
