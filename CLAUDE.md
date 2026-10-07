@@ -2,7 +2,7 @@
 
 The main project is **Club Nova**, an isometric nightclub tycoon game in `game/` (Phaser 3 + Vite). The repo root also has two Python art generators (`generate.py` for posters, `bar.py` for an isometric bar sprite). See README.md for the layout.
 
-See ROADMAP.md for the plan. The reference for all art, UI and gameplay is Nightclub City; art/REFERENCE_NOTES.md lists what we take from the owner's screenshots. Match its style with original assets; never copy its images, logo or name.
+See ROADMAP.md for the plan and LEVEL_PLAN.md for the 1-40 unlock pacing (start plain, a small mix of unlocks per level, the cool and animated designs later so upgrades feel earned). The reference for all art, UI and gameplay is Nightclub City; art/REFERENCE_NOTES.md lists what we take from the owner's screenshots. **The main reference for designs and asset creation is the owner's five club screenshots in `art/references/main/`** (notes in REFERENCE_NOTES.md): study them for every new asset, and make variations of what's there (other colours, materials, takes) to fill the levels. Match its style with original assets; never copy its images, logo or name (the screenshots are for reference only, never used in the game).
 
 ## Working on the game
 
