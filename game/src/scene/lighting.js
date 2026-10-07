@@ -29,10 +29,10 @@ const SPOT = { beamLength: 170, beamWidth: 80, beamAlpha: 0.75, halo: 46, sway: 
 // rendered image, measured from decor_spotlight_*.png) and which grid way
 // the lamp points (it tilts up and back, opposite its front).
 const SPOT_LENS = {
-  0: { lens: [50, 13], dir: [0, -1] },
-  90: { lens: [22, 13], dir: [-1, 0] },
-  180: { lens: [28, 22], dir: [0, 1] },
-  270: { lens: [45, 22], dir: [1, 0] },
+  0: { lens: [49, 12], dir: [0, -1] },
+  90: { lens: [21, 12], dir: [-1, 0] },
+  180: { lens: [27, 21], dir: [0, 1] },
+  270: { lens: [44, 21], dir: [1, 0] },
 };
 
 export class LightingMixin {
