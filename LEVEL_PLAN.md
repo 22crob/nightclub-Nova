@@ -1,4 +1,4 @@
-# Club Nova: level plan (draft, agreed in principle by the owner; not applied to the game yet)
+# Club Nova: level plan (agreed by the owner; applied to the game in October 2026)
 
 **The idea:** start plain, earn the cool stuff. Each level gives a small mix of unlocks across different categories instead of something from every category. Simple looks come first; animations, themes and showpieces come later, so there's always an upgrade to plan and save for. The top level goes from 20 to **40**.
 
@@ -59,3 +59,5 @@
 | 39 | Bar: Cyber Bar; Party: NEW Neon Rave |
 | 40 | Seat/booth: Royal Thrones |
 *Expanding the club will also continue past level 9 (bigger walls up to level 40), and the late levels get more new furniture in a later batch made in Blender.*
+
+**Walls (expansion limits)** now grow to level 35: 10 tiles at level 1, 12 at 2, 14 at 3, 16 at 5, 18 at 7, 20 at 9, 22 at 12, 24 at 15, 26 at 19, 28 at 24, 30 at 29, 32 at 35 (`EXPANSION.limits` in catalog.js). Bigger clubs already built keep their size.

@@ -56,6 +56,43 @@ function glowRect(ctx, x, y, w, h, color, blur) {
   ctx.restore();
 }
 
+// A frosted glass panel lit from below in `rgb`, `k` (0-1) how bright.
+function litPanel(ctx, S, rgb, k) {
+  const [r, g, b] = rgb;
+  ctx.fillStyle = '#1c1826';
+  ctx.fillRect(0, 0, S, S);
+  const inset = 7;
+  const glow = ctx.createRadialGradient(S / 2, S / 2, 4, S / 2, S / 2, S * 0.72);
+  const mix = (c, t) => Math.round(40 + (c - 40) * t);
+  glow.addColorStop(0, `rgb(${mix(Math.min(255, r + 60), k)},${mix(Math.min(255, g + 60), k)},${mix(Math.min(255, b + 60), k)})`);
+  glow.addColorStop(1, `rgb(${mix(r, k * 0.75)},${mix(g, k * 0.75)},${mix(b, k * 0.75)})`);
+  ctx.save();
+  ctx.shadowColor = `rgba(${r},${g},${b},${0.8 * k})`;
+  ctx.shadowBlur = 4 + 10 * k;
+  ctx.fillStyle = glow;
+  ctx.fillRect(inset, inset, S - inset * 2, S - inset * 2);
+  ctx.restore();
+  // Frosted sheen.
+  const sheen = ctx.createLinearGradient(0, 0, S, S);
+  sheen.addColorStop(0, 'rgba(255,255,255,0.22)');
+  sheen.addColorStop(0.5, 'rgba(255,255,255,0)');
+  ctx.fillStyle = sheen;
+  ctx.fillRect(inset, inset, S - inset * 2, S - inset * 2);
+  bevel(ctx, S, 'rgba(255,255,255,0.15)', 'rgba(0,0,0,0.6)');
+}
+
+// A slow pulse of a lit panel, all tiles together.
+function pulseFloor(rgb, frames, speed) {
+  return {
+    frames,
+    speed,
+    phase: 'sync',
+    draw(ctx, S, frame) {
+      litPanel(ctx, S, rgb, 0.35 + 0.65 * (0.5 - 0.5 * Math.cos((frame / frames) * Math.PI * 2)));
+    },
+  };
+}
+
 export const FLOOR_STYLES = {
   // A plain dark tile, the beginner's floor.
   plain: {
@@ -158,6 +195,54 @@ export const FLOOR_STYLES = {
         }
       }
       bevel(ctx, S, 'rgba(255,220,180,0.2)');
+    },
+  },
+
+  // The first lit floors: a frosted panel lit from underneath that slowly
+  // brightens and dims, every tile together. Soft Glow is white, then blue
+  // and pink versions.
+  softGlow: pulseFloor([255, 255, 255], 16, 3),
+  bluePulse: pulseFloor([60, 150, 255], 12, 2),
+  pinkPulse: pulseFloor([255, 70, 180], 12, 2),
+
+  // A checkerboard of pink and blue that swaps colours on the beat.
+  twoTone: {
+    frames: 2,
+    speed: 4,
+    phase: 'ripple',
+    draw(ctx, S, frame) {
+      const color = frame ? [70, 170, 255] : [255, 70, 190];
+      litPanel(ctx, S, color, 1);
+    },
+  },
+
+  // A purple-blue galaxy flowing across the floor with twinkling stars.
+  galaxy: {
+    frames: 24,
+    speed: 1,
+    phase: 'flow',
+    period: 6,
+    draw(ctx, S, frame) {
+      flowFill(ctx, S, frame, 24, 6, (x) => {
+        const k = 0.5 + 0.5 * Math.sin(x * Math.PI * 2);
+        const j = 0.5 + 0.5 * Math.sin(x * Math.PI * 4 + 1);
+        return `rgb(${(30 + 120 * k * j) | 0},${(15 + 40 * j) | 0},${(70 + 150 * k) | 0})`;
+      });
+      const r = rng(31);
+      for (let i = 0; i < 14; i++) {
+        const x = r() * S, y = r() * S, tw = (i + frame) % 6;
+        const a = tw < 3 ? 0.35 + tw * 0.2 : 0.95 - (tw - 3) * 0.2;
+        ctx.save();
+        ctx.globalAlpha = a;
+        ctx.shadowColor = '#ffffff';
+        ctx.shadowBlur = 6;
+        ctx.fillStyle = '#ffffff';
+        ctx.beginPath();
+        ctx.arc(x, y, i % 4 ? 1.6 : 3, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.restore();
+      }
+      bevel(ctx, S, 'rgba(200,170,255,0.25)', 'rgba(0,0,0,0.55)');
     },
   },
 
@@ -330,6 +415,64 @@ export const FLOOR_STYLES = {
 // on dance floors. Static, with soft seams so a painted area reads as one
 // surface.
 export const FLOOR_PAINTS = {
+  // Plain cream tiles with grey grout, four to a floor tile: the first step
+  // up from bare concrete.
+  plainTile: {
+    frames: 1,
+    draw(ctx, S) {
+      const r = rng(41);
+      const h = S / 2;
+      ctx.fillStyle = '#8c887e';
+      ctx.fillRect(0, 0, S, S);
+      for (let i = 0; i < 2; i++) {
+        for (let j = 0; j < 2; j++) {
+          const v = 196 + Math.floor(r() * 10);
+          ctx.fillStyle = `rgb(${v},${v - 6},${v - 18})`;
+          ctx.fillRect(i * h + 2, j * h + 2, h - 4, h - 4);
+          ctx.fillStyle = 'rgba(255,255,255,0.18)';
+          ctx.fillRect(i * h + 4, j * h + 4, h - 8, 3);
+        }
+      }
+    },
+  },
+
+  // Black glass tiles with a silver star in each, like an ice palace floor.
+  starryGlass: {
+    frames: 1,
+    draw(ctx, S) {
+      const g = ctx.createLinearGradient(0, 0, S, S);
+      g.addColorStop(0, '#20222e');
+      g.addColorStop(1, '#0d0e16');
+      ctx.fillStyle = g;
+      ctx.fillRect(0, 0, S, S);
+      const star = (cx, cy, R, color) => {
+        ctx.fillStyle = color;
+        ctx.beginPath();
+        for (let k = 0; k < 10; k++) {
+          const a = -Math.PI / 2 + (k * Math.PI) / 5;
+          const rad = k % 2 ? R * 0.42 : R;
+          ctx.lineTo(cx + rad * Math.cos(a), cy + rad * Math.sin(a));
+        }
+        ctx.closePath();
+        ctx.fill();
+      };
+      ctx.save();
+      ctx.shadowColor = 'rgba(200,220,255,0.8)';
+      ctx.shadowBlur = 8;
+      star(S / 2, S / 2, S * 0.26, '#d8dde8');
+      ctx.restore();
+      for (const [x, y] of [[0, 0], [S, 0], [0, S], [S, S]]) star(x, y, S * 0.1, 'rgba(200,206,220,0.75)');
+      const sheen = ctx.createLinearGradient(0, 0, S, S);
+      sheen.addColorStop(0, 'rgba(255,255,255,0.16)');
+      sheen.addColorStop(0.4, 'rgba(255,255,255,0)');
+      ctx.fillStyle = sheen;
+      ctx.fillRect(0, 0, S, S);
+      ctx.strokeStyle = 'rgba(160,170,200,0.35)';
+      ctx.lineWidth = 2;
+      ctx.strokeRect(1, 1, S - 2, S - 2);
+    },
+  },
+
   // Plain dark concrete.
   concrete: {
     frames: 1,

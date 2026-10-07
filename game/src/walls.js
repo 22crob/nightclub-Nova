@@ -433,6 +433,39 @@ export const WALL_STYLES = {
     },
   },
 
+  // Holographic panels: a soft rainbow sheen that drifts along the wall,
+  // between thin silver frames.
+  holo: {
+    frames: 24,
+    speed: 2,
+    phase: 'flow',
+    period: 4,
+    draw(ctx, W, H, frame) {
+      const shift = (frame / 24) * 4;
+      const g = ctx.createLinearGradient(0, 0, W, H);
+      for (let k = 0; k <= 8; k++) {
+        const pos = (k / 8) - shift;
+        const hue = ((((pos / 4) % 1) + 1) % 1) * 360;
+        g.addColorStop(k / 8, `hsl(${(hue + (k * 12)) | 0},70%,72%)`);
+      }
+      ctx.fillStyle = g;
+      ctx.fillRect(0, 0, W, H);
+      const shine = ctx.createLinearGradient(0, 0, W, 0);
+      shine.addColorStop(0, 'rgba(255,255,255,0.35)');
+      shine.addColorStop(0.5, 'rgba(255,255,255,0.05)');
+      shine.addColorStop(1, 'rgba(255,255,255,0.3)');
+      ctx.fillStyle = shine;
+      ctx.fillRect(0, 0, W, H);
+      ctx.strokeStyle = '#e8ecf4';
+      ctx.lineWidth = 4;
+      ctx.strokeRect(2, 2, W - 4, H - BASEBOARD - 4);
+      ctx.strokeStyle = 'rgba(80,90,120,0.5)';
+      ctx.lineWidth = 1.5;
+      ctx.strokeRect(5, 5, W - 10, H - BASEBOARD - 10);
+      baseboard(ctx, W, H, '#c8ccd8');
+    },
+  },
+
   // A wall of LEDs showing a rainbow wave that flows along the wall.
   ledWall: {
     frames: 24,

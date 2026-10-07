@@ -147,9 +147,10 @@ check('bar shows its real sprite icon', await page.locator('.propButton .icon').
 await page.click('.storeTab[data-tip-name="Floors"]');
 const floorTips = await page.$$eval('#shopItems .propSlot', (els) => els.map((e) => e.dataset.tipText));
 check('dance floors and regular floors share one category, and the tip says which', floorTips.some((t) => /^Dance floor/.test(t)) && floorTips.some((t) => /^Regular floor/.test(t)) && floorTips.every((t) => /Luxury: \d+/.test(t)), floorTips.length + ' floors');
-// Floors unlock one a level, taking turns: regular, dance, regular, ...
+// Floors are listed in the order they unlock (LEVEL_PLAN.md): a mix of
+// regular and dance floors spread over levels 1-37.
 const floorOrder = await page.$$eval('#shopItems .propSlot', (els) => els.map((e) => /^Dance/.test(e.dataset.tipText) ? 'D' : 'R').join(''));
-check('floors alternate regular and dance floors, one per level (plus the Basic dance floor at level 1)', floorOrder === 'RDDRDRDRDRDRDRDRDD', floorOrder);
+check('regular and dance floors unlock mixed together, in the order of the level plan', floorOrder === 'RDRDRDDDRDDRDRDRDDRDDRDRD', floorOrder);
 // Clicking a card picks the item up; clicking it again puts it down.
 await page.click('.storeTab[data-tip-name="Seating"]');
 await page.locator('.propSlot').first().click();
@@ -278,7 +279,10 @@ await page.evaluate(() => { const s = window.__clubNova.scene.getScene('club'); 
 
 // Patrons arrive, get thirsty, buy drinks, earn fans and tip.
 const fansBefore = (await state()).fans;
+const stormsBefore = await page.evaluate(() => window.__clubNova.scene.getScene('club').stormedOut || 0);
 await page.waitForTimeout(24000);
+// A guest storming out costs 2 XP; leave that out of the comparison.
+const stormXp = 2 * ((await page.evaluate(() => window.__clubNova.scene.getScene('club').stormedOut || 0)) - stormsBefore);
 st = await state();
 check('patrons arrive', st.patrons > 0, `${st.patrons} on the floor`);
 const looks = await page.evaluate(() => {
@@ -301,7 +305,7 @@ const facing = await page.evaluate(() => {
   return out;
 });
 check('patrons face the way they walk', facing.downLeft === 'front' && facing.downRight === 'front mirrored' && facing.upRight === 'back' && facing.upLeft === 'back mirrored', JSON.stringify(facing));
-check('fans grow over time', st.fans > fansBefore, `${fansBefore.toFixed(1)} -> ${st.fans.toFixed(1)} fans`);
+check('fans grow over time', st.fans + stormXp > fansBefore, `${fansBefore.toFixed(1)} -> ${st.fans.toFixed(1)} fans`);
 // Patrons want their first drink 3-18s after arriving, so give it time.
 await page.waitForFunction(() => (window.__clubNova.scene.getScene('club').drinksSold || 0) > 0, null, { timeout: 30000 }).catch(() => {});
 const drinks = await page.evaluate(() => window.__clubNova.scene.getScene('club').drinksSold || 0);
@@ -372,7 +376,7 @@ check('the DJ booth and its DJ come back after reload', djAfterReload);
 const upgrade = await page.evaluate(() => {
   const s = window.__clubNova.scene.getScene('club');
   const fans = s.fans;
-  s.fans = Math.max(s.fans, s.fansForLevel(2)); // level 2, for the Pro Booth
+  s.fans = Math.max(s.fans, s.fansForLevel(7)); // level 7, for the Pro Booth
   const c0 = s.cash;
   s.sellProp(6, 0);
   const kept = !!s.clubBooth() && s.cash === c0;
@@ -685,20 +689,20 @@ const buyXp = await page.evaluate(() => {
   s.cash += 2000;
   let at = null;
   for (let gy = 1; gy < s.gridH - 1 && !at; gy++) for (let gx = 1; gx < s.gridW - 1 && !at; gx++) {
-    if (s.footprintValid(s.getFootprint('woodSpeaker', 0, gx, gy), 'woodSpeaker')) at = [gx, gy];
+    if (s.footprintValid(s.getFootprint('plant', 0, gx, gy), 'plant')) at = [gx, gy];
   }
   const xp0 = s.fans;
-  s.selectProp('woodSpeaker');
+  s.selectProp('plant');
   s.currentFacing = 0;
   s.placeProp(at[0], at[1]);
   const rec = s.placed[`${at[0]},${at[1]}`];
   out.gained = +(s.fans - xp0).toFixed(2);
-  out.expected = +(s.currentCost('woodSpeaker') * 0.05).toFixed(2);
+  out.expected = +(s.currentCost('plant') * 0.05).toFixed(2);
   s.deselectProp();
   // Put it away and place it again: no XP either way.
   const xp1 = s.fans;
   s.pickUpProp(rec);
-  s.selectFromInventory('woodSpeaker');
+  s.selectFromInventory('plant');
   s.placeProp(at[0], at[1]);
   out.moveFree = Math.abs(s.fans - xp1) < 1e-9;
   // Sell it: the XP goes back.
@@ -908,12 +912,12 @@ await page.evaluate(() => { const s = window.__clubNova.scene.getScene('club'); 
 const zoom2 = await page.evaluate(() => window.__clubNova.scene.getScene('club').world.scaleX);
 check('zooming in and out stays within limits', zoom1 > zoom0 && Math.abs(zoom2 - 0.6) < 1e-6, `${zoom0.toFixed(2)} -> ${zoom1.toFixed(2)} -> ${zoom2.toFixed(2)}`);
 
-// Dance floors: nine designs, the animated ones move only while the DJ
+// Dance floors: fifteen designs, the animated ones move only while the DJ
 // plays, and a Step Floor lights up under a patron.
 const floors = await page.evaluate(async () => {
   const s = window.__clubNova.scene.getScene('club');
-  const floorKeys = ['basicFloor', 'plainFloor', 'dance', 'woodFloor', 'glowFloor', 'neonFloor', 'ringFloor', 'waveFloor', 'rainbowFloor', 'stepFloor'];
-  const missing = floorKeys.filter((k) => !s.textures.exists(`floor_${{ basicFloor: 'basic', plainFloor: 'plain', dance: 'checker', woodFloor: 'parquet', glowFloor: 'glow', neonFloor: 'lightUp', ringFloor: 'neonRings', waveFloor: 'wave', rainbowFloor: 'rainbow', stepFloor: 'step' }[k]}_0`));
+  const styles = ['basic', 'plain', 'checker', 'softGlow', 'parquet', 'bluePulse', 'pinkPulse', 'twoTone', 'glow', 'lightUp', 'neonRings', 'wave', 'rainbow', 'step', 'galaxy'];
+  const missing = styles.filter((k) => !s.textures.exists(`floor_${k}_0`));
   const wave = s.restoreProp('waveFloor', 0, [9, 9]);
   const step = s.restoreProp('stepFloor', 0, [10, 9]);
   const music = s.musicPlaying();
@@ -930,7 +934,7 @@ const floors = await page.evaluate(async () => {
   if (patron) { patron.gx = 10; patron.gy = 9; s.animateFloors(); lit = step.gameObject.floorFrame; }
   return { missing, music, waveFrames: frames.size, lit, broken: [...broken] };
 });
-check('all nine dance floor designs are drawn', floors.missing.length === 0, floors.missing.join(', ') || '9 of 9');
+check('all fifteen dance floor designs are drawn', floors.missing.length === 0, floors.missing.join(', ') || '15 of 15');
 check('an animated floor moves while the DJ plays', floors.music && floors.waveFrames > 3, `${floors.waveFrames} frames`);
 check('every animated floor tile always has a picture', floors.broken.length === 0, floors.broken.join(', ') || 'none blank');
 check('a Step Floor lights up under a patron', floors.lit === 7, `frame ${floors.lit}`);
@@ -1284,7 +1288,9 @@ const extras = await page.evaluate(async () => {
   out.liked = Math.round((s.fans - fans0) * 10) / 10;
   // Seating: only at VIP booths. With just a couch the button is greyed
   // out; with a Red Velvet Booth the guest goes to it.
-  const p = s.patrons.find((q) => !q.leaving && !q.gone && !q.sitting && !q.seat);
+  const free = () => s.patrons.find((q) => !q.leaving && !q.gone && !q.sitting && !q.seat);
+  if (!free()) s.trySpawnPatron();
+  const p = free();
   const couch = s.restoreProp('couch', 0, [12, 9]);
   s.openInfoCard('guest', p);
   out.greyed = document.getElementById('seatGuest').classList.contains('disabled') && /no VIP booth/.test(document.getElementById('seatGuest').dataset.tip);
@@ -1311,7 +1317,7 @@ const extras = await page.evaluate(async () => {
   // like the club, and once they've been and like it they come back on
   // their own, more often the more they like it.
   const realLevel = s.levelInfo.bind(s);
-  s.levelInfo = () => ({ ...realLevel(), level: 11 });
+  s.levelInfo = () => ({ ...realLevel(), level: 18 });
   const queue0 = s.streetQueue;
   s.streetQueue = [];
   s.celebState = {};
@@ -1322,7 +1328,7 @@ const extras = await page.evaluate(async () => {
   s.cash = 1000;
   out.invited = s.inviteCelebrity('rico') && s.cash === 1000 - 250 && s.celebStatus(s.celebDef('rico')) === 'invited';
   out.notTwice = s.inviteCelebrity('rico') === false;
-  out.locked = s.inviteCelebrity('leo') === false; // level 14
+  out.locked = s.inviteCelebrity('leo') === false; // level 24
   s.celebInvites.rico = 0;
   const drop = s.celebDropIn();
   out.arrives = !!drop && drop.celeb === 'rico' && !s.celebInvites.rico;
@@ -1373,8 +1379,8 @@ const extras = await page.evaluate(async () => {
     && out.list[0] === 'Rico Diamond|★|In Club|true'
     && out.list[1] === 'Max Volt|★|Invite $250|true'
     && out.list[2] === 'DJ Kai Blaze|★★|Invite $500|true'
-    && out.list[3].startsWith('Leo Lux|★★★|🔒 Lv 14')
-    && out.list[5].startsWith('Jett Starr|★★★★★|🔒 Lv 20')
+    && out.list[3].startsWith('Leo Lux|★★★|🔒 Lv 24')
+    && out.list[5].startsWith('Jett Starr|★★★★★|🔒 Lv 37')
     && cards[3].classList.contains('locked')
     && !!cards[0].querySelector('.regularTag') && !!cards[0].querySelector('.celebLiking');
   out.tab = document.querySelector('.dockTab.active')?.id;
@@ -1463,14 +1469,14 @@ const longBar = await page.evaluate(() => {
   s.fans = 0;
   out.limit1 = s.bartenderAllowance() === 1 && s.hireStaff(units[1]) === false;
   // Level 4: a second bartender, here the long bar's first, in the middle.
-  s.fans = s.fansForLevel(4);
-  out.level4 = s.levelInfo().level === 4 && s.bartenderAllowance() === 2;
+  s.fans = s.fansForLevel(5);
+  out.level4 = s.levelInfo().level === 5 && s.bartenderAllowance() === 2;
   out.hired = s.hireStaff(units[0]) && !!units[1].staff && !units[0].staff;
   out.allWorked = units.every((u) => s.isWorked(u));
   out.limit2 = s.hireStaff(units[0]) === false;
   // Level 7: a third, joining the same long bar; the two spread out.
-  s.fans = s.fansForLevel(7);
-  out.level7 = s.levelInfo().level === 7 && s.bartenderAllowance() === 3;
+  s.fans = s.fansForLevel(10);
+  out.level7 = s.levelInfo().level === 10 && s.bartenderAllowance() === 3;
   out.second = s.hireStaff(units[0]) && !!units[0].staff && !units[1].staff && !!units[2].staff;
   s.fireStaff(units[0]);
   out.letGo = units.filter((u) => u.staff).length === 1 && !!units[1].staff;
@@ -1485,7 +1491,7 @@ const longBar = await page.evaluate(() => {
   return out;
 });
 check('bar units side by side make one long bar', longBar.placed && longBar.joined && longBar.allWorked, JSON.stringify(longBar));
-check('your level sets how many bartenders you can hire (1, then 2 at level 4, 3 at level 7)', longBar.limit1 && longBar.level4 && longBar.hired && longBar.limit2 && longBar.level7, JSON.stringify(longBar));
+check('your level sets how many bartenders you can hire (1, then 2 at level 5, 3 at level 10)', longBar.limit1 && longBar.level4 && longBar.hired && longBar.limit2 && longBar.level7, JSON.stringify(longBar));
 check('a long bar can take more bartenders, spread along it, and let one go', longBar.second && longBar.letGo, JSON.stringify(longBar));
 check('a long bar keeps its bartender when the unit they stood at is sold', longBar.split && longBar.kept, JSON.stringify(longBar));
 
@@ -1561,7 +1567,7 @@ const party = await page.evaluate(() => {
   s.time.delayedCall = later;
   return out;
 });
-check('the party picker lists four parties, the fancy ones locked at first', party.labelAtStart === 'Throw a Party' && party.rows === 4 && party.locked >= 1, JSON.stringify(party));
+check('the party picker lists seven parties, the fancy ones locked at first', party.labelAtStart === 'Throw a Party' && party.rows === 7 && party.locked >= 1, JSON.stringify(party));
 check('a House Party costs $60 and counts down before it starts', party.paid === 60 && party.closed && party.countdown, JSON.stringify(party));
 check('when it starts, a crowd lines up outside and gets let in a few at a time', party.running && party.crowdInLine > 0 && party.crowdInLine + party.crowdWaiting >= 6 && party.gradual, JSON.stringify(party));
 check('during the party tips are higher, with a timer banner', party.tips > 1 && party.banner && party.button === 'active', JSON.stringify(party));
@@ -1871,11 +1877,12 @@ const lvl = await page.evaluate(() => {
   const pictures = [...document.querySelectorAll('#levelUnlocks .unlockPic')].every((p) => p.style.backgroundImage || p.querySelector('svg') || p.textContent || (p.querySelector('.unlockFace') && p.querySelector('.unlockFace').style.backgroundImage));
   const out = { open: document.getElementById('levelUp').classList.contains('open'), title: document.getElementById('levelUpTitle').textContent, names, pictures };
   document.getElementById('levelOk').click();
-  out.bartender = Object.getPrototypeOf(s).unlocksAt.call(s, 4).some((u) => u.name === '+1 Bartender') && !s.unlocksAt(5).some((u) => u.name === '+1 Bartender');
+  out.bartender = Object.getPrototypeOf(s).unlocksAt.call(s, 5).some((u) => u.name === '+1 Bartender') && !s.unlocksAt(4).some((u) => u.name === '+1 Bartender');
+  out.celeb = s.unlocksAt(8).some((u) => u.name === 'Rico Diamond' && u.portrait !== undefined);
   out.closed = !document.getElementById('levelUp').classList.contains('open');
   return out;
 });
-check('levelling up shows a menu of everything unlocked, each with a picture', lvl.open && lvl.title === 'Level 5!' && lvl.names.includes('Old Brick') && lvl.names.includes('Brick') && lvl.names.includes('Rico Diamond') && lvl.names.some((n) => /Walls up to/.test(n)) && lvl.pictures && lvl.closed && lvl.bartender, JSON.stringify(lvl));
+check('levelling up shows a menu of everything unlocked, each with a picture', lvl.open && lvl.title === 'Level 5!' && lvl.names.includes('Soft Glow') && lvl.names.includes('Stripes') && lvl.names.includes('Hip Hop Night') && lvl.celeb && lvl.names.some((n) => /Walls up to/.test(n)) && lvl.pictures && lvl.closed && lvl.bartender, JSON.stringify(lvl));
 
 // A new club's walls are beaten-up torn wallpaper; brick is a level 5 wallpaper.
 const walls = await page.evaluate(() => {
@@ -1964,9 +1971,9 @@ const shopUi = await page.evaluate(() => {
   document.querySelector('.storeTab[data-tip-name="Edit"]').click();
   out.edit = { tab: s.dockTab, lit: lit() };
   out.tools = [...document.querySelectorAll('#shopItems .toolSlot')].map((e) => e.dataset.tool).join();
-  // NEW: at level 5, things that unlock at levels 4 and 5.
+  // NEW: at level 7, things that unlock at levels 6 and 7.
   const real = s.levelInfo.bind(s);
-  s.levelInfo = () => ({ ...real(), level: 5 });
+  s.levelInfo = () => ({ ...real(), level: 7 });
   s.setShopCategory('New');
   const slots = [...document.querySelectorAll('#shopItems .propSlot')];
   out.newCount = slots.length;
@@ -2004,7 +2011,7 @@ check('each dock pad lights up for its own panels: Staff, Club (Edit, Expand, re
   && shopUi.expand.tab === 'expand' && shopUi.expand.lit === 'navClub' && shopUi.expand.cards === 2 && shopUi.clubRemembers && shopUi.bars.tab === 'decor' && shopUi.bars.lit === 'navBuild'
   && shopUi.edit.tab === 'edit' && shopUi.edit.lit === 'navClub', JSON.stringify(shopUi));
 check('Edit has Move, Turn, Put away, Sell and Clear Club', shopUi.tools === 'move,rotate,store,sell,clear', JSON.stringify(shopUi));
-check('NEW lists what the last two levels unlocked, each tagged NEW, and the tags show in other categories too', shopUi.newCount > 3 && shopUi.allTagged && /Neon Bar/.test(shopUi.barTags) && !/Pub Bar/.test(shopUi.barTags), JSON.stringify(shopUi));
+check('NEW lists what the last two levels unlocked, each tagged NEW, and the tags show in other categories too', shopUi.newCount > 3 && shopUi.allTagged && /Pub Bar/.test(shopUi.barTags) && !/Wood Bar/.test(shopUi.barTags), JSON.stringify(shopUi));
 check('the Inventory button shows how many things are in it', shopUi.badge === '3' && shopUi.badgeEmpty === '', JSON.stringify(shopUi));
 check('Clear Club asks first, then puts everything but the DJ booth and bars into the inventory', shopUi.asked && shopUi.toolKept && shopUi.cleared && shopUi.plantStored && shopUi.closedAsk, JSON.stringify(shopUi));
 
@@ -2190,7 +2197,7 @@ check('money pops up big over guests, with "+1.5x Tip!" while tips are boosted (
 const held = await page.evaluate(() => {
   const s = window.__clubNova.scene.getScene('club');
   const real = s.levelInfo.bind(s);
-  s.levelInfo = () => ({ ...real(), level: 8 });
+  s.levelInfo = () => ({ ...real(), level: 9 });
   s.deselectProp();
   s.selectProp('vipLounge');
   const at = (gx, gy) => {
@@ -2237,7 +2244,7 @@ const drinkMenu = await page.evaluate(() => {
   s.drinksOff = [];
   s.fans = 0;
   const out = { level1: s.drinkMenu().map((d) => d.key).join() };
-  s.fans = s.fansForLevel(8);
+  s.fans = s.fansForLevel(16);
   out.level8 = s.drinkMenu().map((d) => d.key).join();
   s.openDrinkMenu();
   out.cards = document.querySelectorAll('#drinkList .drinkCard').length;
@@ -2254,12 +2261,12 @@ const drinkMenu = await page.evaluate(() => {
   const guest = s.patrons.find((p) => !p.leaving);
   if (bar && guest) { guest.order = 'champagne'; out.price = s.serveDrink(bar, guest); }
   out.slower = s.drinkOf('champagne').mix > s.drinkOf('beer').mix;
-  out.levelUpLists = s.unlocksAt(12).some((u) => u.name === 'Champagne' && /<svg/.test(u.svg));
+  out.levelUpLists = s.unlocksAt(24).some((u) => u.name === 'Champagne' && /<svg/.test(u.svg));
   s.drinksOff = saved.off; s.fans = saved.fans;
   return out;
 });
 check('the drink menu: drinks unlock and go on the menu, toggle off and on (never the last), guests order from it, fancier ones pay more and mix slower',
-  drinkMenu.level1 === 'beer,cocktail' && drinkMenu.level8 === 'beer,cocktail,shots,mojito,martini' && drinkMenu.cards === 7 && drinkMenu.locked === 2 && drinkMenu.beerOff
+  drinkMenu.level1 === 'beer' && drinkMenu.level8 === 'beer,cocktail,shots,mojito,martini' && drinkMenu.cards === 7 && drinkMenu.locked === 2 && drinkMenu.beerOff
   && drinkMenu.lastStays && drinkMenu.order === 'martini' && drinkMenu.celebOrder === 'martini' && drinkMenu.closed && (drinkMenu.price === undefined || drinkMenu.price >= 40) && drinkMenu.slower && drinkMenu.levelUpLists, JSON.stringify(drinkMenu));
 
 // The daily gift: once a day; the streak moves on day by day (day 7 adds a

@@ -284,13 +284,15 @@ def seashell_booth():
     coral = principled('ShellCoral', srgb('#f6b7a6'), rough=0.4)
     pearl = principled('ShellPearl', srgb('#fff4ec'), rough=0.2, emission=srgb('#ffe6f0'), emission_strength=0.15)
     sphere('LowerShell', 0, 0.05, 0.2, 1.0, coral, scale=(1.0, 0.72, 0.24), segments=40)
-    box('Seat', -0.8, 0.8, -0.35, 0.45, 0.3, 0.44, principled('ShellSeat', srgb('#7fd6cf'), rough=0.85), bevel=0.08)
-    # The upper shell stands up behind: ribs fanning out from the hinge.
-    n = 13
+    box('Seat', -0.7, 0.7, -0.3, 0.42, 0.3, 0.44, principled('ShellSeat', srgb('#7fd6cf'), rough=0.85), bevel=0.1)
+    # The upper shell stands up behind: one smooth fan, with soft ribs on
+    # its face that stop short of the rim, so nothing sticks out.
+    sphere('BackShell', 0, 0.66, 0.35, 1.0, coral, scale=(1.0, 0.16, 1.08), segments=40)
+    n = 9
     for k in range(n):
-        a = math.radians(8 + k * (164 / (n - 1)))
-        tube(f'BackRib{k}', (0, 0.62, 0.35), (1.0 * math.cos(a), 0.62 + 0.08 * math.sin(a), 0.35 + 1.1 * math.sin(a)), 0.09,
-             pearl if k % 2 else coral, verts=16)
+        a = math.radians(14 + k * (152 / (n - 1)))
+        tube(f'BackRib{k}', (0, 0.54, 0.38), (0.86 * math.cos(a), 0.54 + 0.03 * math.sin(a), 0.38 + 0.9 * math.sin(a)), 0.045,
+             pearl, verts=12)
     sphere('BackHinge', 0, 0.62, 0.35, 0.14, coral, segments=16)
     cylinder('PearlStand', 0, -0.62, 0, 0.3, 0.05, coral, verts=16)
     sphere('Pearl', 0, -0.62, 0.42, 0.12, mat('#ffffff', rough=0.1, glow=0.5))

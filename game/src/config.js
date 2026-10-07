@@ -197,12 +197,12 @@ export const ZOOM_MAX = 2.2;
 // color draw its picture.
 export const DRINKS = [
   { key: 'beer', name: 'Beer', price: 8, unlockLevel: 1, fun: 1, mix: 0.8, glass: 'mug', color: '#ffb52e' },
-  { key: 'cocktail', name: 'Cocktail', price: 12, unlockLevel: 1, fun: 2, mix: 1, glass: 'cocktail', color: '#ff5fa8' },
-  { key: 'shots', name: 'Shots', price: 16, unlockLevel: 3, fun: 2, mix: 0.9, glass: 'shots', color: '#ffd23f' },
-  { key: 'mojito', name: 'Mojito', price: 20, unlockLevel: 5, fun: 3, mix: 1.2, glass: 'highball', color: '#b8f07a' },
-  { key: 'martini', name: 'Martini', price: 26, unlockLevel: 8, fun: 3, mix: 1.3, glass: 'martini', color: '#d6f2ff' },
-  { key: 'champagne', name: 'Champagne', price: 40, unlockLevel: 12, fun: 4, mix: 1.5, glass: 'flute', color: '#ffe48a' },
-  { key: 'novaNeon', name: 'Nova Neon', price: 60, unlockLevel: 16, fun: 5, mix: 1.8, glass: 'neon', color: '#c04cff' },
+  { key: 'cocktail', name: 'Cocktail', price: 12, unlockLevel: 3, fun: 2, mix: 1, glass: 'cocktail', color: '#ff5fa8' },
+  { key: 'shots', name: 'Shots', price: 16, unlockLevel: 6, fun: 2, mix: 0.9, glass: 'shots', color: '#ffd23f' },
+  { key: 'mojito', name: 'Mojito', price: 20, unlockLevel: 10, fun: 3, mix: 1.2, glass: 'highball', color: '#b8f07a' },
+  { key: 'martini', name: 'Martini', price: 26, unlockLevel: 16, fun: 3, mix: 1.3, glass: 'martini', color: '#d6f2ff' },
+  { key: 'champagne', name: 'Champagne', price: 40, unlockLevel: 24, fun: 4, mix: 1.5, glass: 'flute', color: '#ffe48a' },
+  { key: 'novaNeon', name: 'Nova Neon', price: 60, unlockLevel: 34, fun: 5, mix: 1.8, glass: 'neon', color: '#c04cff' },
 ];
 // Extra mood per fun star (on top of MOOD.drinkMood).
 export const DRINK_FUN_MOOD = 3;
@@ -254,7 +254,7 @@ export const BAR = {
 // How many bartenders you may hire: one more at each of these levels (one
 // to start, two at level 4, ... five at level 15). Extra bartenders can work
 // another bar or join a long bar that already has one.
-export const BARTENDERS = { levels: [1, 4, 7, 11, 15] };
+export const BARTENDERS = { levels: [1, 5, 10, 16, 23, 30] };
 
 // Bass Boost (see boost.js): for durationMs, guests are danceWeight times
 // as keen to dance, dancers tip `speedUp` times as often and `tipMultiplier`
@@ -370,12 +370,12 @@ export const SECURITY = {
 // is their look (a patron sheet). Celebrities tip 1 + tipPerFame x fame
 // times as much and bring fansPerFame x fame extra fans leaving happy.
 export const CELEBRITIES = [
-  { key: 'rico', name: 'Rico Diamond', level: 5, fame: 1, character: 1 },
-  { key: 'max', name: 'Max Volt', level: 8, fame: 1, character: 7 },
-  { key: 'kai', name: 'DJ Kai Blaze', level: 11, fame: 2, character: 3 },
-  { key: 'leo', name: 'Leo Lux', level: 14, fame: 3, character: 5 },
-  { key: 'tony', name: 'Tony Fame', level: 17, fame: 4, character: 9 },
-  { key: 'jett', name: 'Jett Starr', level: 20, fame: 5, character: 11 },
+  { key: 'rico', name: 'Rico Diamond', level: 8, fame: 1, character: 1 },
+  { key: 'max', name: 'Max Volt', level: 13, fame: 1, character: 7 },
+  { key: 'kai', name: 'DJ Kai Blaze', level: 18, fame: 2, character: 3 },
+  { key: 'leo', name: 'Leo Lux', level: 24, fame: 3, character: 5 },
+  { key: 'tony', name: 'Tony Fame', level: 30, fame: 4, character: 9 },
+  { key: 'jett', name: 'Jett Starr', level: 37, fame: 5, character: 11 },
 ];
 // Celebrities (see celebrities.js). The first visit is by invitation only:
 // inviteCost by fame (index = stars), and they turn up inviteArriveMs later.
@@ -398,12 +398,18 @@ export const CELEB = {
 export const PARTIES = [
   { key: 'house', label: 'House Party', emoji: '🏠', cost: 60, unlockLevel: 1, arrivals: 1.3, tips: 1.25, thirst: 1.1, fans: 1.2, shade: 0x1a0b2e, crowd: 6, leaveOverMs: [10000, 70000],
     blurb: 'Invite the neighbours. A couple more guests and a friendly crowd.' },
-  { key: 'hiphop', label: 'Hip Hop Night', emoji: '🎤', cost: 150, unlockLevel: 2, arrivals: 1.5, tips: 1.4, thirst: 1.3, fans: 1.4, shade: 0x2e0b12, crowd: 9, leaveOverMs: [10000, 70000],
+  { key: 'hiphop', label: 'Hip Hop Night', emoji: '🎤', cost: 150, unlockLevel: 5, arrivals: 1.5, tips: 1.4, thirst: 1.3, fans: 1.4, shade: 0x2e0b12, crowd: 9, leaveOverMs: [10000, 70000],
     blurb: 'Big beats, bigger crowd. Guests drink more and tip better.' },
-  { key: 'neon', label: 'Neon Night', emoji: '💜', cost: 300, unlockLevel: 4, arrivals: 1.7, tips: 1.6, thirst: 1.4, fans: 1.7, shade: 0x2a0636, crowd: 12, leaveOverMs: [10000, 70000],
+  { key: 'neon', label: 'Neon Night', emoji: '💜', cost: 300, unlockLevel: 12, arrivals: 1.7, tips: 1.6, thirst: 1.4, fans: 1.7, shade: 0x2a0636, crowd: 12, leaveOverMs: [10000, 70000],
     blurb: 'Glow sticks and neon paint. The whole town wants in.' },
-  { key: 'gala', label: 'VIP Gala', emoji: '🥂', cost: 600, unlockLevel: 6, arrivals: 2, tips: 2, thirst: 1.5, fans: 2, shade: 0x2e2306, crowd: 15, leaveOverMs: [10000, 70000],
+  { key: 'gala', label: 'VIP Gala', emoji: '🥂', cost: 600, unlockLevel: 20, arrivals: 2, tips: 2, thirst: 1.5, fans: 2, shade: 0x2e2306, crowd: 15, leaveOverMs: [10000, 70000],
     blurb: 'Red carpet, champagne, the A-list. Huge tips and XP.' },
+  { key: 'glow', label: 'Glow Party', emoji: '✨', cost: 900, unlockLevel: 26, arrivals: 2.2, tips: 2.2, thirst: 1.6, fans: 2.2, shade: 0x062a2e, crowd: 17, leaveOverMs: [10000, 70000],
+    blurb: 'Glow sticks for everyone and the lights down low. A packed, happy floor.' },
+  { key: 'masquerade', label: 'Masquerade Ball', emoji: '🎭', cost: 1300, unlockLevel: 33, arrivals: 2.4, tips: 2.5, thirst: 1.6, fans: 2.4, shade: 0x2e0624, crowd: 19, leaveOverMs: [10000, 70000],
+    blurb: 'Masks, gowns and mystery. The fanciest guests in town, tipping big.' },
+  { key: 'rave', label: 'Neon Rave', emoji: '🌈', cost: 1800, unlockLevel: 39, arrivals: 2.7, tips: 2.7, thirst: 1.8, fans: 2.7, shade: 0x0a062e, crowd: 22, leaveOverMs: [10000, 70000],
+    blurb: 'The biggest night of the year: lasers, bass and a line round the block.' },
 ];
 // A bartender's Bottoms Up! (see scene/guests.js): serves their whole line
 // at once, then needs cooldownMs to recover. The game suggests it when a
