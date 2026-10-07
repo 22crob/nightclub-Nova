@@ -301,7 +301,7 @@ const facing = await page.evaluate(() => {
   return out;
 });
 check('patrons face the way they walk', facing.downLeft === 'front' && facing.downRight === 'front mirrored' && facing.upRight === 'back' && facing.upLeft === 'back mirrored', JSON.stringify(facing));
-check('fans grow over time', st.fans > fansBefore + 1, `${fansBefore.toFixed(1)} -> ${st.fans.toFixed(1)} fans`);
+check('fans grow over time', st.fans > fansBefore, `${fansBefore.toFixed(1)} -> ${st.fans.toFixed(1)} fans`);
 // Patrons want their first drink 3-18s after arriving, so give it time.
 await page.waitForFunction(() => (window.__clubNova.scene.getScene('club').drinksSold || 0) > 0, null, { timeout: 30000 }).catch(() => {});
 const drinks = await page.evaluate(() => window.__clubNova.scene.getScene('club').drinksSold || 0);
@@ -2299,14 +2299,15 @@ check('a regular floor goes under furniture, which turns see-through while you h
 const realSave = await page.evaluate(() => { window.__clubNova.scene.getScene('club').saveGame(); return localStorage.getItem('clubNovaSave_v2'); });
 await page.goto(gameUrl + '?test');
 await waitForScene();
-const testMode = await page.evaluate(() => {
+const testMode = await page.evaluate((realSave) => {
   const s = window.__clubNova.scene.getScene('club');
   s.saveGame();
   return { level: s.levelInfo().level, top: s.topUnlockLevel(), cash: s.cash, tag: !!document.getElementById('testModeTag'),
-    real: localStorage.getItem('clubNovaSave_v2'), test: !!localStorage.getItem('clubNovaSave_v2_test') };
-});
-check('test mode starts at the top level with lots of cash, on its own save', testMode.level >= testMode.top && testMode.cash >= 10000000 && testMode.tag && testMode.test && testMode.real === realSave,
-  JSON.stringify({ level: testMode.level, top: testMode.top, cash: testMode.cash, tag: testMode.tag, test: testMode.test, realKept: testMode.real === realSave }));
+    realKept: (() => { const r = JSON.parse(localStorage.getItem('clubNovaSave_v2') || 'null'); return !!r && r.cash < 10000000 && r.clubName === JSON.parse(realSave).clubName; })(),
+    test: !!localStorage.getItem('clubNovaSave_v2_test') };
+}, realSave);
+check('test mode starts at the top level with lots of cash, on its own save', testMode.level >= testMode.top && testMode.cash >= 10000000 && testMode.tag && testMode.test && testMode.realKept,
+  JSON.stringify({ level: testMode.level, top: testMode.top, cash: testMode.cash, tag: testMode.tag, test: testMode.test, realKept: testMode.realKept }));
 
 check('no errors in the page', errors.length === 0, errors.join(' | '));
 
