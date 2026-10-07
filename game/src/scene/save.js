@@ -5,6 +5,8 @@ import { cleanClubName } from './clubName.js';
 import { BASE_GRID_SIZE, SAVE_KEY as REAL_SAVE_KEY, TEST, TEST_MODE } from '../config.js';
 
 const SAVE_KEY = TEST_MODE ? TEST.saveKey : REAL_SAVE_KEY;
+// Save codes (Save backup) start with this, so other pasted text is refused.
+const SAVE_CODE_PREFIX = 'NOVA1:';
 
 export class SaveMixin {
   // A lightweight peek at the save file for just the room's size [gridW,
@@ -76,6 +78,64 @@ export class SaveMixin {
     document.getElementById('restartButton')?.addEventListener('click', () => box.classList.add('open'));
     document.getElementById('restartNo')?.addEventListener('click', () => box.classList.remove('open'));
     document.getElementById('restartYes')?.addEventListener('click', () => this.restartClub());
+  }
+
+  // The save as a code you can copy (base64 of the save, with a prefix so
+  // anything else pasted is refused), and back.
+  saveCode() {
+    const json = JSON.stringify(this.serializeState());
+    return SAVE_CODE_PREFIX + btoa(unescape(encodeURIComponent(json)));
+  }
+
+  readSaveCode(code) {
+    const text = String(code || '').replace(/\s+/g, '');
+    if (!text.startsWith(SAVE_CODE_PREFIX)) return null;
+    try {
+      const data = JSON.parse(decodeURIComponent(escape(atob(text.slice(SAVE_CODE_PREFIX.length)))));
+      return data && typeof data === 'object' && Array.isArray(data.placed) ? data : null;
+    } catch (e) {
+      return null;
+    }
+  }
+
+  setupBackup() {
+    const box = document.getElementById('backupBox');
+    if (!box) return;
+    const msg = document.getElementById('backupMsg');
+    const paste = document.getElementById('backupPaste');
+    for (const type of ['keydown', 'keyup', 'keypress']) paste.addEventListener(type, (e) => e.stopPropagation());
+    document.getElementById('backupButton')?.addEventListener('click', () => {
+      this.saveGame();
+      document.getElementById('backupCode').value = this.saveCode();
+      paste.value = '';
+      msg.textContent = '';
+      box.classList.add('open');
+    });
+    document.getElementById('backupClose')?.addEventListener('click', () => box.classList.remove('open'));
+    document.getElementById('backupCopy')?.addEventListener('click', () => {
+      const area = document.getElementById('backupCode');
+      area.select();
+      const done = () => { msg.textContent = 'Copied! Keep it somewhere safe.'; };
+      if (navigator.clipboard) navigator.clipboard.writeText(area.value).then(done, () => { document.execCommand('copy'); done(); });
+      else { document.execCommand('copy'); done(); }
+    });
+    document.getElementById('backupLoad')?.addEventListener('click', () => {
+      const data = this.readSaveCode(paste.value);
+      if (!data) { msg.textContent = "That isn't a Club Nova save code."; return; }
+      this.loadSaveData(data);
+    });
+  }
+
+  // Replaces this club with one from a save code, then reloads into it.
+  loadSaveData(data) {
+    this.restarting = true; // don't save the old club over it on the way out
+    try {
+      localStorage.setItem(SAVE_KEY, JSON.stringify(data));
+    } catch (e) {
+      console.error('[Club Nova] could not store the loaded club:', e);
+      return;
+    }
+    window.location.reload();
   }
 
   restartClub() {

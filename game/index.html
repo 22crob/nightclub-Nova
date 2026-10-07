@@ -28,6 +28,7 @@
         <div id="tipsButton" class="toolButton" data-icon="tips" data-tip-name="How to play"
           data-tip-text="The club never closes. Happy guests tip and earn you XP; thirsty or bored ones leave. Click a guest or bartender for their card. Click to place, right-click to sell, R to rotate, Esc to put down, drag to move around, scroll (or + and -) to zoom."></div>
         <div id="restartButton" class="toolButton" data-icon="restart" data-tip-name="New club" data-tip-text="Start a brand-new club from scratch"></div>
+        <div id="backupButton" class="toolButton" data-icon="backup" data-tip-name="Save backup" data-tip-text="Copy your club as a code to keep it safe or move it to another computer, or load a club from a code"></div>
       </div>
     </div>
     <!-- Now playing (see scene/songs.js), with the audio controls. -->
@@ -57,6 +58,24 @@
       <div class="summaryButtons">
         <div id="clubNameOk" class="summaryButton">Light it up!</div>
         <div id="clubNameCancel" class="summaryButton later">Cancel</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Save backup (see scene/save.js): the club as a code to copy, and a
+       box to load a club from a code. -->
+  <div id="backupBox" class="overlay">
+    <div class="summaryCard">
+      <div class="summaryTitle">Save backup</div>
+      <div class="summaryVerdict">Your club lives in this browser. Copy this code and keep it somewhere safe, or paste it into the game on another computer or phone.</div>
+      <textarea id="backupCode" readonly spellcheck="false"></textarea>
+      <div class="summaryButtons"><div id="backupCopy" class="summaryButton">Copy code</div></div>
+      <div class="summaryVerdict backupLoadLabel">Load a club from a code (replaces this one):</div>
+      <textarea id="backupPaste" spellcheck="false" placeholder="Paste a save code here"></textarea>
+      <div id="backupMsg" class="backupMsg"></div>
+      <div class="summaryButtons">
+        <div id="backupLoad" class="summaryButton danger">Load this club</div>
+        <div id="backupClose" class="summaryButton later">Close</div>
       </div>
     </div>
   </div>

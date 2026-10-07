@@ -1884,7 +1884,7 @@ await page.click('#navInventory');
 const icons = await page.evaluate(() => {
   // (The dock's pads carry their name in a label under the picture.)
   const ids = ['navBuild', 'navStaff', 'navClub', 'navInventory', 'navCelebs', 'goalTab', 'boostButton', 'rushButton', 'partyButton', 'songChange', 'songLike',
-    'tipsButton', 'muteButton', 'restartButton'];
+    'tipsButton', 'muteButton', 'restartButton', 'backupButton'];
   const bare = ids.filter((id) => {
     const el = document.getElementById(id);
     const words = [...el.childNodes].filter((n) => n.nodeType === 3).map((n) => n.textContent.trim()).join('');
@@ -2218,6 +2218,25 @@ const neon = await page.evaluate(() => {
   return out;
 });
 check('the Neon Cartoon guy is a guest with idle, walk, dance and sit, front and back', neon.anims && neon.height > 0, JSON.stringify(neon));
+
+// Save backup: the club as a code to copy, which reads back to the same
+// club; anything else pasted is refused.
+const backup = await page.evaluate(() => {
+  const s = window.__clubNova.scene.getScene('club');
+  document.getElementById('backupButton').click();
+  const code = document.getElementById('backupCode').value;
+  const out = { open: document.getElementById('backupBox').classList.contains('open'), prefixed: code.startsWith('NOVA1:') };
+  const back = s.readSaveCode(code);
+  out.same = JSON.stringify(back) === JSON.stringify(s.serializeState());
+  out.name = back && back.clubName;
+  document.getElementById('backupPaste').value = 'hello there';
+  document.getElementById('backupLoad').click();
+  out.refused = /isn't a Club Nova save code/.test(document.getElementById('backupMsg').textContent);
+  document.getElementById('backupClose').click();
+  out.closed = !document.getElementById('backupBox').classList.contains('open');
+  return out;
+});
+check('Save backup gives the club as a code that reads back the same, and refuses anything else', backup.open && backup.prefixed && backup.same && backup.name && backup.refused && backup.closed, JSON.stringify(backup));
 
 // Regular floors go under furniture: holding one makes the furniture (and
 // its staff) see-through and outlines the tile; laying it under a bar

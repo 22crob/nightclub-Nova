@@ -131,6 +131,17 @@ body { font-family: var(--ui-font); color: var(--ink); }
 .toolButton { position: relative; width: 24px; height: 24px; padding: 4px; border-radius: 50%; border-width: 2px; --c: #a24bff; }
 #tipsButton { --c: #43e04a; }
 #restartButton { --c: #ff4f6a; }
+#backupButton { --c: #2fb8ff; }
+#hudTools { display: grid; grid-template-columns: 24px; grid-auto-rows: 24px; gap: 3px; }
+/* Save backup (save.js): the code to copy and a box to paste one. */
+#backupBox textarea {
+  display: block; width: 100%; height: 58px; box-sizing: border-box; padding: 8px 10px; border-radius: 12px; resize: none;
+  border: 2px solid var(--edge); background: #120820; color: #d9cdf0; font-family: var(--money-font); font-size: 11px;
+  word-break: break-all; box-shadow: inset 0 2px 6px rgba(0, 0, 0, 0.6); outline: none;
+}
+#backupBox textarea:focus { border-color: var(--pink); }
+#backupBox .backupLoadLabel { margin: 16px 0 6px; font-size: 13px; }
+.backupMsg { min-height: 18px; margin-top: 6px; font-size: 13px; font-weight: 800; color: #ffd84a; }
 
 /* Now playing (scene/songs.js): one smaller row, a spinning record, the */
 /* song and its artist, and like / skip / sound.                         */
@@ -353,7 +364,7 @@ body.kick .navPad > .uiArt { transform: scale(1.06); transition: none; }
 /* Clicking it drops the three goals showing down under it; the x (or   */
 /* the tab again) closes them.                                          */
 #goalSide {
-  position: fixed; left: 10px; top: calc(134px + env(safe-area-inset-top, 0px)); z-index: 12;
+  position: fixed; left: 10px; top: calc(152px + env(safe-area-inset-top, 0px)); z-index: 12;
   display: flex; flex-direction: column; align-items: flex-start; gap: 8px;
 }
 #goalTab {

@@ -273,6 +273,7 @@ export class ClubScene extends Phaser.Scene {
     this.setupLevelUp();
     this.setupClubHours();
     this.setupRestart();
+    this.setupBackup(); // copy / load the club as a code (save.js)
 
     // Outline layer for the "which tiles will this actually occupy" marker
     // — always drawn on top of props/ghost so a tall sprite's artwork can
