@@ -157,8 +157,9 @@ export const GUEST_LUXURY = { per: 300 };
 // seated guests cheer up comfortFactor[comfort] times as fast and sit that
 // much longer. Admiring a decoration gives admireMood. A guest still happy
 // (stayMood+) when their visit ends stays stayLonger longer, once. A guest
-// who wanted to do something and found nothing free loses nothingToDoMood.
-export const HAPPINESS = { comfortCosts: [0, 60, 150, 300, 700], comfortFactor: [0, 0.6, 0.85, 1.1, 1.35, 1.6], admireMood: 10, stayMood: 75, stayLonger: 0.4, nothingToDoMood: 3 };
+// who wanted to do something and found nothing free loses nothingToDoMood,
+// at most once every nothingToDoEveryMs.
+export const HAPPINESS = { comfortCosts: [0, 60, 150, 300, 700], comfortFactor: [0, 0.6, 0.85, 1.1, 1.35, 1.6], admireMood: 10, stayMood: 75, stayLonger: 0.4, nothingToDoMood: 1.5, nothingToDoEveryMs: 45000 };
 export const PATRON_SPAWN_INTERVAL = [4000, 7000]; // ms between spawn attempts
 export const PATRON_MOVE_INTERVAL = [1500, 3000];  // ms a patron waits between wander steps
 // A patron who's actually landed somewhere worth being — a dance floor tile,

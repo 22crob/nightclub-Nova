@@ -73,11 +73,15 @@ export class ActivitiesMixin {
       r -= w[k];
       if (r <= 0) { order.push(k); break; }
     }
+    // Nothing free for what they wanted: they'd rather dance or chat than
+    // wander about bored.
+    for (const k of ['dance', 'chat']) if (!order.includes(k)) order.push(k);
     order.push('wander');
     for (const kind of order) {
       if (this.beginActivity(patron, kind)) {
         // Wanted to do something and nothing was free: a bit fed up.
-        if (kind === 'wander' && order[0] !== 'wander') {
+        if (kind === 'wander' && order[0] !== 'wander' && now >= (patron.fedUpAt || 0)) {
+          patron.fedUpAt = now + HAPPINESS.nothingToDoEveryMs;
           patron.mood = Math.max(0, patron.mood - HAPPINESS.nothingToDoMood);
           this.moodBubble?.(patron, '😕');
         }
