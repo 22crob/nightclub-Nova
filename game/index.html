@@ -26,7 +26,7 @@
       </div>
       <div id="hudTools">
         <div id="tipsButton" class="toolButton" data-icon="tips" data-tip-name="How to play"
-          data-tip-text="The club never closes. Happy guests tip and earn you XP; thirsty or bored ones leave. Click a guest or bartender for their card. Click to place, right-click to sell, R to rotate, Esc to put down, drag to move around, scroll (or + and -) to zoom."></div>
+          data-tip-text="Click for the step-by-step guide. The club never closes. Happy guests tip and earn you XP; thirsty or bored ones leave. Click a guest or bartender for their card. Click to place, right-click to sell, R to rotate, Esc to put down, drag to move around, scroll (or + and -) to zoom."></div>
         <div id="restartButton" class="toolButton" data-icon="restart" data-tip-name="New club" data-tip-text="Start a brand-new club from scratch"></div>
         <div id="renameButton" class="toolButton" data-icon="rename" data-tip-name="Rename club" data-tip-text="Change the name on your neon sign"></div>
         <div id="backupButton" class="toolButton" data-icon="backup" data-tip-name="Save backup" data-tip-text="Copy your club as a code to keep it safe or move it to another computer, or load a club from a code"></div>
@@ -51,6 +51,12 @@
   <!-- Asked before starting over (see restartClub()) -->
   <!-- The club's name, for its neon sign outside (see scene/clubName.js).
        Asked on a new club; clicking the sign renames it. -->
+  <!-- The How to play guide (tutorial.js): one step at a time, at the top. -->
+  <div id="tutorialBox">
+    <div class="tutorialHead"><span class="tutorialTitle">How to play</span><span id="tutorialCount"></span></div>
+    <div id="tutorialText"></div>
+    <div class="tutorialButtons"><div id="tutorialSkip" class="tutorialLink">Skip the guide</div><div id="tutorialNext" class="summaryButton">Next</div></div>
+  </div>
   <div id="namePrompt" class="overlay">
     <div class="summaryCard">
       <div id="namePromptTitle" class="summaryTitle">Name your club!</div>

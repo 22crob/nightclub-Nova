@@ -39,11 +39,42 @@ export class PlacementMixin {
   // doorway tile stays free of anything solid, or no one could get in.
   // (A save from before this rule may still have something there; loading
   // it passes allowDoor.)
+  // Something was just placed: anyone standing where it went steps to the
+  // nearest free tile (floors and dance floors don't need it).
+  stepGuestsOff(rec) {
+    if (!rec || !rec.tiles || PROP_TYPES[rec.type].floorStyle || this.isDanceFloorTile?.(rec.tiles[0][0], rec.tiles[0][1])) return;
+    const under = new Set(rec.tiles.map(([x, y]) => `${x},${y}`));
+    for (const p of this.patrons) {
+      if (p.gone || p.sitting || !under.has(`${p.gx},${p.gy}`)) continue;
+      let best = null;
+      let bestD = Infinity;
+      for (let x = 0; x < this.gridW; x++) {
+        for (let y = 0; y < this.gridH; y++) {
+          if (this.isBlockingProp(x, y) || this.patronTileOccupied(x, y)) continue;
+          const d = Math.abs(x - p.gx) + Math.abs(y - p.gy);
+          if (d < bestD) { bestD = d; best = [x, y]; }
+        }
+      }
+      if (!best) continue;
+      this.tweens.killTweensOf(p.container);
+      [p.gx, p.gy] = best;
+      p.moving = false;
+      p.path = null;
+      const { sx, sy } = this.gridToScreen(best[0], best[1]);
+      p.container.setPosition(sx, sy);
+      this.setPatronDepth(p, best[0] + best[1]);
+      p.nextMoveAt = this.time.now + 500;
+    }
+  }
+
   footprintValid(tiles, type = this.selectedProp, allowDoor = false) {
+    // Solid things can't go on the door tile or right beside it, so the
+    // way in is never blocked (floors can).
     const solid = !allowDoor && !(PROP_TYPES[type] && PROP_TYPES[type].floorStyle);
+    const door = this.doorTile();
     return tiles.every(([tx, ty]) => (
       this.inGrid(tx, ty) && !this.placed[`${tx},${ty}`] &&
-      !(solid && tx === this.doorTile().gx && ty === this.doorTile().gy)
+      !(solid && Math.abs(tx - door.gx) + Math.abs(ty - door.gy) <= 1)
     ));
   }
 
@@ -249,6 +280,8 @@ export class PlacementMixin {
     // gave when it was first bought.
     const center = this.footprintCenter(tiles);
     record.xp = fromInventory ? this.takeInventoryXp(record.type) : this.awardPurchaseXp(cost, center.sx, center.sy - 60, record.type);
+    this.noteTutorial?.('placed');
+    this.stepGuestsOff(record);
     if (!fromInventory && cost > 0) {
       this.bumpGoal('bought');
       if (def.category === 'Decorations') this.bumpGoal('decorBought');

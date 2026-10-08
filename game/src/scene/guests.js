@@ -70,6 +70,7 @@ export class GuestsMixin {
 
   openInfoCard(kind, target) {
     this.infoCard = { kind, target };
+    if (kind === 'guest') this.noteTutorial?.('guestCard');
     document.getElementById('infoCard')?.classList.add('open');
     this.refreshInfoCard();
   }

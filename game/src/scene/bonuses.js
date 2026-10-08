@@ -141,6 +141,7 @@ export class BonusesMixin {
     const b = this.bonusAt(pointer.x, pointer.y, pointer.wasTouch);
     if (!b) return false;
     b.collected = true;
+    this.noteTutorial?.('bonus');
     this.bumpGoal(b.kind === 'tip' ? 'admired' : 'bonuses');
     this.cash += b.amount;
     this.noteIncome('bonuses', b.amount);

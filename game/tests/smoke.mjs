@@ -62,6 +62,9 @@ const waitForScene = async () => {
     // The daily gift would pay cash and cover the buttons (checked on its own below).
     s.showDaily = () => false;
     document.getElementById('dailyBox')?.classList.remove('open');
+    // The How to play guide would cover the top of the screen (checked on its own below).
+    s.tutorial = { step: 99, done: true };
+    s.showTutorialStep();
   });
 };
 
@@ -222,11 +225,11 @@ const order = await page.evaluate(() => {
   const s = window.__clubNova.scene.getScene('club');
   const cashBefore = s.cash;
   s.selectedProp = 'plant'; s.cash += 1000;
-  s.placeProp(1, 1);
-  const behind = s.placed['1,1'].gameObject;
+  s.placeProp(3, 1);
+  const behind = s.placed['3,1'].gameObject;
   const front = s.placed['2,5'].gameObject;
   const ok = s.propLayer.getIndex(behind) < s.propLayer.getIndex(front);
-  s.sellProp(1, 1); s.cash = cashBefore; s.selectedProp = 'starterBar';
+  s.sellProp(3, 1); s.cash = cashBefore; s.selectedProp = 'starterBar';
   return ok;
 });
 check('props draw back to front', order);
@@ -2608,6 +2611,48 @@ const partyLook = await page.evaluate(() => {
   return out;
 });
 check('parties have their own look: guests dress up (masks, glasses, hats) and the room gets effects (flying neon lights), all gone when it ends', partyLook.masked && partyLook.newcomerDressed && partyLook.lights && partyLook.cleared, JSON.stringify(partyLook));
+
+// The way in stays open: nothing solid goes on the door tile or beside it.
+// A guest standing where something is placed steps off to a free tile.
+const wayIn = await page.evaluate(() => {
+  const s = window.__clubNova.scene.getScene('club');
+  const d = s.doorTile();
+  const beside = [[d.gx + 1, d.gy], [d.gx, d.gy + 1], [d.gx, d.gy - 1]].find(([x, y]) => s.inGrid(x, y));
+  const out = { blocked: !s.footprintValid([beside], 'plant'), floorOk: s.footprintValid([beside], 'basicFloor') };
+  s.trySpawnPatron();
+  const p = s.patrons.filter((q) => !q.gone && !q.sitting && !q.leaving).pop();
+  let spot = null;
+  for (let y = 3; y < s.gridH - 1 && !spot; y++) for (let x = 3; x < s.gridW - 1 && !spot; x++) if (s.footprintValid([[x, y]], 'plant') && !s.patronTileOccupied(x, y)) spot = [x, y];
+  if (p && spot) {
+    [p.gx, p.gy] = spot; p.moving = false;
+    const cash = s.cash; s.cash += 500;
+    s.selectProp('plant'); s.placeProp(spot[0], spot[1]); s.deselectProp();
+    out.steppedOff = !(p.gx === spot[0] && p.gy === spot[1]) && !s.isBlockingProp(p.gx, p.gy);
+    s.sellProp(spot[0], spot[1]); s.cash = cash;
+  }
+  return out;
+});
+check('nothing solid can block the doorway (floors can), and a guest where something is placed steps off it', wayIn.blocked && wayIn.floorOk && wayIn.steppedOff, JSON.stringify(wayIn));
+
+// The How to play guide: steps that move on as you do them, glowing round
+// the button they talk about; skippable, saved, and the ? button runs it again.
+const guide = await page.evaluate(() => {
+  const s = window.__clubNova.scene.getScene('club');
+  const out = {};
+  document.getElementById('tipsButton').click();
+  out.open = document.getElementById('tutorialBox').classList.contains('open') && s.tutorial.step === 0;
+  document.getElementById('tutorialNext').click();
+  out.glows = document.getElementById('navBuild').classList.contains('tutorialGlow');
+  s.setDockTab('decor');
+  s.tickTutorial();
+  out.movedOn = s.tutorial.step === 2;
+  out.saved = s.serializeState().tutorial.step === 2;
+  document.getElementById('tutorialSkip').click();
+  out.skipped = s.tutorial.done && !document.getElementById('tutorialBox').classList.contains('open') && !document.querySelector('.tutorialGlow');
+  s.closeDock();
+  return out;
+});
+check('the How to play guide walks through the basics (moves on as you do each step, glows round its button), can be skipped, and the ? button runs it again', guide.open && guide.glows && guide.movedOn && guide.saved && guide.skipped, JSON.stringify(guide));
 
 // Staff: the Staff panel shows people (bartenders per bar, bouncers) with
 // pictures; more bouncers unlock with levels. Troublemakers bother the guests

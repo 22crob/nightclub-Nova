@@ -47,6 +47,7 @@ export class PartiesMixin {
   }
 
   throwParty(key) {
+    this.noteTutorial?.('party');
     const def = PARTIES.find((p) => p.key === key);
     if (!def || this.partyBlocker(def)) { SFX.denied(); return false; }
     this.cash -= def.cost;
