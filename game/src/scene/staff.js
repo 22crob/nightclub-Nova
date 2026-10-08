@@ -626,7 +626,7 @@ export class StaffMixin {
         if (full) status += ' Every spot behind this bar is taken.';
         else if (atLimit) status += ` ${limit}`;
         else status += ` Click to hire ${working ? 'another' : 'one'} for $${type.hireCost}. ${limit}`;
-        if (staffRec && !staffRec.staff.name) staffRec.staff.name = this.guestName();
+        if (staffRec && !staffRec.staff.name) staffRec.staff.name = this.staffNameFor(`bar:${staffRec.anchor}`);
         const look = staffRec ? staffRec.staff.container.staffCharacter : type.character;
         const name = staffRec ? staffRec.staff.name.split(' ')[0] : 'Hire one';
         const { slot, button, cost } = personCard(`Bartender · ${barName}`, status, look, name, def.label);

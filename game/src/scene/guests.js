@@ -26,6 +26,20 @@ export class GuestsMixin {
     return `${pick(FIRST)} ${pick(LAST)}`;
   }
 
+  // A staff member's name: the same every time the club loads (picked from
+  // `key`, e.g. their bar's tile or their post), and no two working staff
+  // share a first name.
+  staffNameFor(key) {
+    let h = 0;
+    for (const ch of `${this.clubName || ''}|${key}`) h = (h * 31 + ch.charCodeAt(0)) >>> 0;
+    const taken = new Set();
+    for (const g of this.guards || []) if (g.name) taken.add(g.name.split(' ')[0]);
+    for (const rec of new Set(Object.values(this.placed || {}))) if (rec.staff && rec.staff.name) taken.add(rec.staff.name.split(' ')[0]);
+    let i = h % FIRST.length;
+    for (let n = 0; n < FIRST.length && taken.has(FIRST[i]); n++) i = (i + 1) % FIRST.length;
+    return `${FIRST[i]} ${LAST[(h >>> 8) % LAST.length]}`;
+  }
+
   // What a guest is saying right now, from how they feel. Small talk is
   // picked once and kept for a while so the card doesn't flicker.
   guestQuote(patron) {
@@ -145,7 +159,7 @@ export class GuestsMixin {
     }
     const rec = card.target;
     if (!rec.staff || !this.placed[`${rec.anchor[0]},${rec.anchor[1]}`]) { this.closeInfoCard(); return; }
-    if (!rec.staff.name) rec.staff.name = this.guestName();
+    if (!rec.staff.name) rec.staff.name = this.staffNameFor(`bar:${rec.anchor}`);
     this.setPortrait(document.getElementById('infoPortrait'), rec.staff.container.staffCharacter);
     const waiting = this.barGroupQueue(rec).length;
     set('infoName', rec.staff.name);

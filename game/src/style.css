@@ -881,11 +881,11 @@ input, textarea { -webkit-user-select: text; user-select: text; }
 .staffGroupCards { display: flex; gap: 4px; flex: 1 1 auto; align-items: stretch; }
 #dock .staffGroupCards .propSlot, #dock[data-mode] .staffGroupCards .propSlot.staffSlot, #dock[data-mode] .staffGroupCards .propSlot.menuSlot { width: 72px; height: 94px; }
 #dock .staffGroupCards .propSlot.emptySlot { width: 150px; }
-.propSlot.staffPerson .icon.headshot { inset: auto; left: 50%; top: 15px; width: 46px; height: 46px; transform: translateX(-50%); background-size: cover; background-position: center; border-radius: 50%; background-color: #2d1650; box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.6); filter: none; }
+.propSlot.staffPerson .icon.headshot { inset: auto; left: 50%; top: 12px; width: 38px; height: 38px; transform: translateX(-50%); background-size: cover; background-position: center; border-radius: 50%; background-color: #2d1650; box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.6); filter: none; }
 .propSlot.staffPerson .propButton { overflow: hidden; }
 .staffName, .staffRole { position: absolute; left: 0; right: 0; text-align: center; font-weight: 800; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; text-shadow: 0 1px 2px #000; pointer-events: none; }
-.staffName { top: 0; font-size: 10px; color: #fff; padding: 1px 2px 0; }
-.staffRole { bottom: 0; font-size: 8.5px; color: #ff9be9; background: linear-gradient(0deg, rgba(14, 5, 32, 0.9), rgba(14, 5, 32, 0)); padding: 4px 2px 1px; }
+.staffName { top: 0; font-size: 10px; color: #fff; padding: 0 2px; }
+.staffRole { bottom: 0; font-size: 8.5px; color: #ff9be9; padding: 0 2px 2px; }
 .propSlot.staffPerson .propButton.vacant .icon { filter: brightness(0.35) saturate(0.3); }
 
 /* The How to play guide (tutorial.js): a card at the top of the screen, and

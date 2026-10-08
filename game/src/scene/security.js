@@ -35,7 +35,7 @@ export class SecurityMixin {
     const container = this.drawPatronCharacterSprite(sx, sy, SECURITY.scale, look);
     container.staffCharacter = look;
     this.propLayer.add(container);
-    const g = { gx, gy, container, scaleVariance: SECURITY.scale, moving: false, path: null, index, name: this.guestName() };
+    const g = { gx, gy, container, scaleVariance: SECURITY.scale, moving: false, path: null, index, name: this.staffNameFor(`guard:${index}`) };
     this.guards.push(g);
     this.faceFront(g);
     this.setPatronDepth(g, gx + gy);

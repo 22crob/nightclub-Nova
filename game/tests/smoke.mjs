@@ -2754,9 +2754,14 @@ const security = await page.evaluate(() => {
   for (const p of [bad, victim]) { p.entering = false; p.moving = false; p.sitting = false; p.troublemaker = false; }
   bad.troublemaker = true; bad.annoyAt = 0; bad.disturbances = 0;
   const g = s.guard;
+  // The bouncer standing idle (not mid-walk or settling an argument), the only one on duty.
+  g.moving = false; g.goal = null; g.target = null; s.argument = null;
+  const others = s.guards.filter((o) => o !== g && !o.target);
+  for (const o of others) o.target = {};
   bad.gx = g.gx + 2; bad.gy = g.gy; victim.gx = bad.gx + 1; victim.gy = bad.gy;
   const mood0 = victim.mood = 80;
   s.tickTroublemakers();
+  for (const o of others) o.target = null;
   out.annoyed = victim.mood < mood0 && bad.disturbances === 1;
   out.spotted = g.target === bad && bad.targetedBy === g;
   const fans0 = s.fans;
