@@ -10,8 +10,10 @@ import { BOTTOMS_UP, CHARACTER_DISPLAY_HEIGHT, THIRST_INTERVAL } from '../config
 import { MOOD } from './mood.js';
 import { SFX } from '../sfx.js';
 
-const FIRST = ['Marsha', 'Trina', 'Dev', 'Jordan', 'Kai', 'Rosa', 'Marcus', 'Lena', 'Andre', 'Mia', 'Theo', 'Nina', 'Omar', 'Jade',
-  'Rico', 'Tasha', 'Leo', 'Bree', 'Sam', 'Zoe', 'Ty', 'Gwen', 'Malik', 'Ivy', 'Cole', 'Dani', 'Rex', 'Luz', 'Benny', 'Kat'];
+// Every guest and staff member is a guy for now (the girl base isn't in
+// the game yet), so their names are guys' names.
+const FIRST = ['Marcus', 'Dev', 'Jordan', 'Kai', 'Andre', 'Theo', 'Omar', 'Rico', 'Leo', 'Sam', 'Ty', 'Malik', 'Cole', 'Rex',
+  'Benny', 'Jay', 'Nico', 'Zane', 'Eli', 'Dante', 'Miles', 'Luca', 'Isaac', 'Felix', 'Hugo', 'Max', 'Ravi', 'Owen', 'Jace', 'Milo'];
 const LAST = ['High', 'Forest', 'Rivera', 'Nguyen', 'Brooks', 'Stone', 'Vega', 'Park', 'Lane', 'Cruz', 'Fox', 'Banks', 'Reed',
   'Diaz', 'Knight', 'Moss', 'Blaze', 'Starr', 'Wilde', 'Cole', 'Hart', 'Frost', 'Lux', 'Day', 'Rose'];
 const CHAT = ['Nice place!', 'I love this song!', 'Have you seen the bartender\'s moves?', 'Who is that DJ? Amazing!',
