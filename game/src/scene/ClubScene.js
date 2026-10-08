@@ -45,6 +45,7 @@ import { UpgradesMixin } from './upgrades.js';
 import { PartyFxMixin } from './partyFx.js';
 import { TutorialMixin } from './tutorial.js';
 import { AchievementsMixin } from './achievements.js';
+import { TouchPlaceMixin } from './touchPlace.js';
 import { Music } from '../music.js';
 import { applyMixins } from './applyMixins.js';
 
@@ -182,7 +183,9 @@ export class ClubScene extends Phaser.Scene {
     this.input.on('pointerdown', (p) => {
       SFX.unlock(); // first real user gesture — safe/cheap to call every time
       this.isDragging = false;
-      if (this.startPinch()) { dragStart = null; return; }
+      if (this.startPinch()) { dragStart = null; this.placeGrab = null; return; }
+      // On a phone, a finger on the held item drags it (touchPlace.js).
+      if (p.wasTouch && this.touchPlacing() && this.grabTouchPlace(p)) { dragStart = null; return; }
       // A finger has no hover: bring the hover state (tile, ghost, object)
       // to where it touched first.
       if (p.wasTouch) { this.updateHoverFromPointer(p); this.updateHoverObject(p); }
@@ -202,6 +205,7 @@ export class ClubScene extends Phaser.Scene {
 
     this.input.on('pointermove', (p) => {
       if (this.pinch) { this.pinchMove(); return; }
+      if (this.placeGrab) { this.dragTouchPlace(p); return; }
       if (dragStart) {
         const dx = p.x - dragStart.x;
         const dy = p.y - dragStart.y;
@@ -229,6 +233,7 @@ export class ClubScene extends Phaser.Scene {
         this.saveGame();
         return;
       }
+      if (this.placeGrab) { this.releaseTouchPlace(p); return; }
       const wasDragging = this.isDragging;
       dragStart = null;
       this.isDragging = false;
@@ -236,6 +241,12 @@ export class ClubScene extends Phaser.Scene {
       // A bonus badge comes first: collecting it never opens a card or
       // places, moves or sells anything underneath.
       if (p.button === 0 && this.clickBonus(p)) return;
+      // On a phone, a tap with something in hand hops it there; the ✓ buys it (touchPlace.js).
+      if (p.wasTouch && this.touchPlacing()) {
+        const at = this.tileAtScreen(p.x, p.y);
+        if (this.inGrid(at.gx, at.gy)) this.moveTouchPlace(at.gx, at.gy);
+        return;
+      }
       const holding = PROP_TYPES[this.selectedProp];
       if (holding && holding.wallStyle) {
         if (p.button === 0 && this.hoverWall) this.paintWall(this.hoverWall);
@@ -360,6 +371,7 @@ export class ClubScene extends Phaser.Scene {
     this.setupDaily(); // today's gift, once a day (daily.js)
     this.setupTutorial(); // the How to play guide (tutorial.js)
     this.setupAchievements(); // badges and the trophy wall (achievements.js)
+    this.setupTouchPlace(); // drag-and-confirm placing on phones (touchPlace.js)
     this.setupDrinkMenu(); // what the bars serve (drinks.js)
     this.setupMeter(); // the drink meter on the right edge (meter.js)
     this.time.addEvent({ delay: 1000, loop: true, callback: () => this.tickMeter() });
@@ -399,6 +411,7 @@ applyMixins(ClubScene, [
   PartyFxMixin,
   TutorialMixin,
   AchievementsMixin,
+  TouchPlaceMixin,
   InventoryMixin,
   ActivitiesMixin,
   WorldMixin,

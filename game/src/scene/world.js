@@ -224,6 +224,7 @@ export class WorldMixin {
   // ghost preview together so they can never fall out of sync with each
   // other or with what a click would actually place.
   updateHoverFromPointer(pointer) {
+    if (this.touchPlacing()) return; // the held item stays on its spot until dragged (touchPlace.js)
     const localX = (pointer.x - this.world.x) / this.world.scaleX;
     const localY = (pointer.y - this.world.y) / this.world.scaleY;
     const { gx, gy } = this.screenToGrid(localX, localY);

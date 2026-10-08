@@ -292,6 +292,12 @@
        edge. The green OK closes it. What you're holding shows at the top
        of the screen. -->
   <div id="selectedChip"></div>
+  <!-- On phones: the held item waits on the floor until ✓ (see scene/touchPlace.js). -->
+  <div id="placeBar">
+    <div id="placeCancel" class="summaryButton danger" data-tip-name="Cancel">✕</div>
+    <div id="placeTurn" class="summaryButton later" data-tip-name="Turn it">⟳</div>
+    <div id="placeOk" class="summaryButton">✓ Buy</div>
+  </div>
   <div id="dock" data-tab="" data-nav="" data-mode="closed">
     <div id="dockCenter">
       <div id="storeTabs"></div>

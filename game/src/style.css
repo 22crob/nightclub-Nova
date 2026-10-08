@@ -935,3 +935,13 @@ input, textarea { -webkit-user-select: text; user-select: text; }
 .trophy.earned .trophyName { color: var(--gold); }
 .trophy.earned .trophyBar { display: none; }
 #tutorialBox.hint #tutorialSkip { visibility: hidden; }
+
+/* ---- Placing on phones (scene/touchPlace.js): Cancel, Turn and the ✓ that buys, above the dock. */
+#placeBar {
+  display: none; position: fixed; left: 50%; transform: translateX(-50%); z-index: 33;
+  gap: 6px; padding: 4px; border-radius: 18px; background: var(--glass); box-shadow: var(--glass-shadow); backdrop-filter: blur(6px);
+}
+#placeBar.open { display: flex; }
+#placeBar .summaryButton { margin: 0; padding: 6px 12px; font-size: 14px; border-radius: 14px; cursor: pointer; }
+#placeOk { min-width: 84px; text-align: center; }
+#placeBar .summaryButton.blocked { filter: grayscale(0.85) brightness(0.75); }

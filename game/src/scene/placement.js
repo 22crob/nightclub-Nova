@@ -205,6 +205,8 @@ export class PlacementMixin {
   // (with the picture tinted red too), so you can see the item and its
   // space before finding a free spot.
   updateGhost() {
+    this.syncPlaceSpot(); // on a touch screen the held item sits on its own spot (touchPlace.js)
+    if (this.placeSpot) this.showPlaceBar(true);
     this.updateWallGhost();
     this.updateFloorPaintGhost();
     if (this.ghost) {

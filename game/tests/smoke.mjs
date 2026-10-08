@@ -2869,6 +2869,41 @@ check('the ten new wallpapers each paint a wall', newWalls.painted === newWalls.
     return { share: +(d.height / window.innerHeight).toFixed(2), okOn: ok.right <= window.innerWidth && ok.width > 0, tabsOnTray: Math.abs(tabs.bottom - tray.top) < 2 };
   });
   check('on a phone, the open shop (folder tabs over a tray) takes under a third of the screen and fits across', dockFit.share < 0.33 && dockFit.okOn && dockFit.tabsOnTray, JSON.stringify(dockFit));
+  // Placing on a phone: picking an item puts it on a free spot (nothing bought yet); a tap hops it,
+  // a drag from it slides it, and only the ✓ buys it there. ✕ puts it down.
+  const scr = (gx, gy) => tp.evaluate(([gx, gy]) => { const s = window.__clubNova.scene.getScene('club'); const t = s.gridToScreen(gx, gy); return { x: s.world.x + t.sx * s.world.scaleX, y: s.world.y + t.sy * s.world.scaleY }; }, [gx, gy]);
+  const state = () => tp.evaluate(() => { const s = window.__clubNova.scene.getScene('club'); return { spot: s.placeSpot && [s.placeSpot.gx, s.placeSpot.gy], bar: document.getElementById('placeBar').classList.contains('open'), cash: s.cash, plants: new Set(Object.values(s.placed).filter((r) => r.type === 'plant')).size, held: s.selectedProp }; });
+  await tp.evaluate(() => { const s = window.__clubNova.scene.getScene('club'); s.completeGoal = (goal) => { s.goalsDone.push(goal.id); }; s.checkAchievements = () => {}; s.closeDock(); s.cash = 5000; s.zoomTo(1.2); s.selectProp('plant'); });
+  const picked = await state();
+  const free = await tp.evaluate(() => { const s = window.__clubNova.scene.getScene('club'); for (let y = 2; y < s.gridH - 1; y++) for (let x = 2; x < s.gridW - 1; x++) if (s.footprintValid([[x, y]], 'plant') && !s.isBlockingProp(x + 1, y) && !s.isBlockingProp(x, y + 1) && (x !== s.placeSpot.gx || y !== s.placeSpot.gy)) return [x, y]; return null; });
+  const t1 = await scr(...free);
+  await tp.touchscreen.tap(t1.x, t1.y);
+  await tp.waitForTimeout(150);
+  const hopped = await state();
+  const from = await scr(...hopped.spot);
+  const to = await scr(hopped.spot[0] + 1, hopped.spot[1]);
+  await touch('touchStart', [[from.x, from.y]]);
+  for (let i = 1; i <= 6; i++) { await touch('touchMove', [[from.x + (to.x - from.x) * i / 6, from.y + (to.y - from.y) * i / 6]]); await tp.waitForTimeout(20); }
+  await touch('touchEnd', []);
+  await tp.waitForTimeout(150);
+  const dragged = await state();
+  const okBox = await tp.evaluate(() => { const r = document.getElementById('placeOk').getBoundingClientRect(); return { x: r.x + r.width / 2, y: r.y + r.height / 2 }; });
+  await tp.touchscreen.tap(okBox.x, okBox.y);
+  await tp.waitForTimeout(150);
+  const bought = await state();
+  const placedAt = await tp.evaluate(([x, y]) => window.__clubNova.scene.getScene('club').placed[`${x},${y}`]?.type, dragged.spot);
+  const cancelBox = await tp.evaluate(() => { const r = document.getElementById('placeCancel').getBoundingClientRect(); return { x: r.x + r.width / 2, y: r.y + r.height / 2 }; });
+  await tp.touchscreen.tap(cancelBox.x, cancelBox.y);
+  await tp.waitForTimeout(150);
+  const cancelled = await state();
+  const plantCost = await tp.evaluate(() => window.__clubNova.scene.getScene('club').currentCost('plant'));
+  const placing = { picked, hopped, dragged, bought, placedAt, cancelled, plantCost };
+  check('on a phone, a picked item waits on the floor (nothing bought), a tap or a drag moves it, ✓ buys it there and ✕ puts it down',
+    picked.bar && picked.spot && picked.cash === 5000
+    && hopped.spot[0] === free[0] && hopped.spot[1] === free[1] && hopped.plants === picked.plants && hopped.cash === 5000
+    && dragged.spot[0] === free[0] + 1 && dragged.spot[1] === free[1] && dragged.plants === picked.plants
+    && bought.plants === picked.plants + 1 && bought.cash === 5000 - plantCost && placedAt === 'plant'
+    && !cancelled.bar && !cancelled.held, JSON.stringify(placing));
   await phone.close();
 }
 
