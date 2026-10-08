@@ -121,7 +121,7 @@ export class GuestsMixin {
       if (p.gone) { this.closeInfoCard(); return; }
       this.setPortrait(document.getElementById('infoPortrait'), p.container.patronCharacter);
       set('infoName', p.name || 'Guest');
-      set('infoRole', p.leaving ? 'Heading home' : (p.celeb ? `⭐ Celebrity · ${'★'.repeat(p.celeb.fame)} · likes your club ${this.celebRecord(p.celeb.key).liking}%` : 'Guest'));
+      set('infoRole', p.leaving ? 'Heading home' : (p.celeb ? `⭐ Celebrity · ${'★'.repeat(p.celeb.fame)} · likes your club ${this.celebRecord(p.celeb.key).liking}%` : (p.type ? p.type.label : 'Guest')));
       set('infoQuote', `"${this.guestQuote(p)}"`);
       set('infoMoodIcon', this.vibeEmoji(p.mood));
       set('infoMood', `${Math.round(p.mood)}%`);

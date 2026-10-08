@@ -11,7 +11,7 @@
 // Mixed into ClubScene (see ClubScene.js); `this` is the scene.
 import Phaser from 'phaser';
 import { FLOOR_DECAL_PROPS } from '../catalog.js';
-import { ADMIRE, GUEST_TYPES, PATRON_MOVE_INTERVAL, PATRON_POPUP_Y, VISIT } from '../config.js';
+import { ADMIRE, GUEST_LUXURY, GUEST_TYPES, HAPPINESS, PATRON_MOVE_INTERVAL, PATRON_POPUP_Y, VISIT } from '../config.js';
 import { PROP_TYPES } from '../catalog.js';
 import { randRange } from '../util.js';
 
@@ -21,9 +21,21 @@ export class ActivitiesMixin {
   // A new guest's visit length and personality.
   startVisit(patron) {
     const now = this.time.now;
-    patron.type = Phaser.Utils.Array.GetRandom(GUEST_TYPES);
-    patron.despawnAt = now + randRange(...VISIT.visitMs);
+    patron.type = this.pickGuestType();
+    patron.troublemaker = !!patron.type.trouble; // bothers people until a bouncer walks them out (security.js)
+    patron.visitMs = randRange(...VISIT.visitMs);
+    patron.despawnAt = now + patron.visitMs;
     patron.activity = null;
+  }
+
+  // What kind of guest walks in: by their shares, the big-spending kinds
+  // more often in a fancier club.
+  pickGuestType() {
+    const lux = 1 + this.luxury() / GUEST_LUXURY.per;
+    const shares = GUEST_TYPES.map((t) => t.share * (t.luxury ? lux : 1));
+    let r = Math.random() * shares.reduce((a, b) => a + b, 0);
+    for (let i = 0; i < GUEST_TYPES.length; i++) { r -= shares[i]; if (r <= 0) return GUEST_TYPES[i]; }
+    return GUEST_TYPES[0];
   }
 
   // How much a guest fancies each activity right now: their type's taste,
@@ -43,7 +55,13 @@ export class ActivitiesMixin {
   // their visit is over. A thirsty guest goes for a drink first.
   chooseActivity(patron) {
     const now = this.time.now;
-    if (now >= patron.despawnAt) { this.startPatronDeparture(patron); return; }
+    if (now >= patron.despawnAt) {
+      // Still having a great time: they stay a while longer (once).
+      if (!patron.stayedLonger && patron.mood >= HAPPINESS.stayMood && !patron.ejected) {
+        patron.stayedLonger = true;
+        patron.despawnAt = now + (patron.visitMs || VISIT.visitMs[0]) * HAPPINESS.stayLonger;
+      } else { this.startPatronDeparture(patron); return; }
+    }
     const order = [];
     // Answering the Bass Boost or Drink Rush (see rallyGuests()).
     if (patron.wantActivity) { order.push(patron.wantActivity); patron.wantActivity = null; }
@@ -56,7 +74,16 @@ export class ActivitiesMixin {
       if (r <= 0) { order.push(k); break; }
     }
     order.push('wander');
-    for (const kind of order) if (this.beginActivity(patron, kind)) return;
+    for (const kind of order) {
+      if (this.beginActivity(patron, kind)) {
+        // Wanted to do something and nothing was free: a bit fed up.
+        if (kind === 'wander' && order[0] !== 'wander') {
+          patron.mood = Math.max(0, patron.mood - HAPPINESS.nothingToDoMood);
+          this.moodBubble?.(patron, '😕');
+        }
+        return;
+      }
+    }
   }
 
   // Starts heading for an activity. False if it isn't possible right now
@@ -397,7 +424,7 @@ export class ActivitiesMixin {
     this.patronLayer.add(label);
     this.tweens.add({ targets: label, scale: 1.1, duration: 200, ease: 'Back.easeOut' });
     this.tweens.add({ targets: label, y: label.y - 26, alpha: 0, delay: 700, duration: 700, onComplete: () => label.destroy() });
-    patron.mood = Math.min(100, patron.mood + 4);
+    patron.mood = Math.min(100, patron.mood + HAPPINESS.admireMood);
     const cost = PROP_TYPES[rec.type].cost || 0;
     const tip = Math.round(Math.max(ADMIRE.tipMin, Math.min(ADMIRE.tipMax, cost * ADMIRE.tipPerDollar)));
     this.offerBonus(patron, 'tip', tip);

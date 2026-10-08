@@ -13,7 +13,7 @@
 // `celebs`: { key: { visits, liking } }).
 // Mixed into ClubScene (see ClubScene.js); `this` is the scene.
 import { PATRON_META, PATRON_SHEETS } from '../assets.js';
-import { CELEB, CELEBRITIES, PATRON_POPUP_Y } from '../config.js';
+import { CELEB, CELEBRITIES, PATRON_POPUP_Y, GUEST_TYPES } from '../config.js';
 import { SFX } from '../sfx.js';
 import { randRange } from '../util.js';
 
@@ -113,6 +113,8 @@ export class CelebritiesMixin {
     if (!def) return;
     patron.celeb = def;
     patron.name = def.name;
+    patron.type = { ...(GUEST_TYPES.find((t) => t.key === 'vip') || patron.type), tip: 1 }; // VIP tastes, never a troublemaker (their tips come from celebTipFactor())
+    patron.troublemaker = false;
     this.bumpGoal('celebs');
     if (this.partyStats) this.partyStats.celebs.push(def.name); // came during a party
     const c = patron.container;

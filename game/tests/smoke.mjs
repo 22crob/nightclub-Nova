@@ -2476,6 +2476,46 @@ check('a guest sitting with a sofa back between them and the camera is hidden by
   server.close();
 }
 
+// Kinds of guest: regulars, party animals, social butterflies, big spenders,
+// high rollers, VIP guests and troublemakers; the big-spending kinds come more
+// often to a fancier club, order pricier drinks and tip more. Comfier seats
+// (by price, VIP booths most) cheer guests up faster; a happy guest stays longer.
+const guestKinds = await page.evaluate(() => {
+  const s = window.__clubNova.scene.getScene('club');
+  const out = {};
+  const count = (n) => { const c = {}; for (let i = 0; i < n; i++) { const t = s.pickGuestType(); c[t.key] = (c[t.key] || 0) + 1; } return c; };
+  const realLux = s.luxury.bind(s);
+  s.luxury = () => 0;
+  const plain = count(4000);
+  s.luxury = () => 1200;
+  const fancy = count(4000);
+  s.luxury = realLux;
+  const rich = (c) => (c.bigSpender || 0) + (c.highRoller || 0) + (c.vip || 0);
+  out.kinds = Object.keys(fancy).sort().join();
+  out.richerWhenFancy = rich(fancy) > rich(plain) * 1.5;
+  const types = Object.fromEntries(['regular', 'vip', 'bigSpender'].map((k) => [k, s.pickGuestType.call({ luxury: () => 0 }) && null]));
+  const T = (key) => { for (let i = 0; i < 20000; i++) { const t = s.pickGuestType(); if (t.key === key) return t; } return null; };
+  const vipT = T('vip'), regT = T('regular'), bigT = T('bigSpender');
+  out.vipTipsMore = s.tipAmount({ mood: 60, type: vipT }, 10) > s.tipAmount({ mood: 60, type: regT }, 10);
+  const menu = s.drinkMenu();
+  const cheapest = Math.min(...menu.map((d) => d.price));
+  out.priceyOrders = menu.length < 2 || Array.from({ length: 30 }, () => s.pickDrink({ type: bigT }).price).every((p) => p > cheapest);
+  out.stool = s.seatComfort('woodStool');
+  out.booth = s.seatComfort('vipLounge');
+  out.comfier = out.booth > out.stool;
+  // A guest still happy when their visit runs out stays a while longer.
+  s.trySpawnPatron();
+  const p = s.patrons.filter((q) => !q.gone && !q.leaving).pop();
+  if (p) {
+    p.mood = 90; p.stayedLonger = false; p.despawnAt = s.time.now - 1;
+    s.chooseActivity(p);
+    out.stays = !p.leaving && p.despawnAt > s.time.now;
+  }
+  return out;
+});
+check('seven kinds of guest; big spenders, high rollers and VIPs come more often to a fancier club, order pricier drinks and tip more', guestKinds.kinds === 'bigSpender,highRoller,partier,regular,social,troublemaker,vip' && guestKinds.richerWhenFancy && guestKinds.vipTipsMore && guestKinds.priceyOrders, JSON.stringify(guestKinds));
+check('seats have comfort (VIP booths comfier than stools), and a guest still happy at the end of their visit stays longer', guestKinds.comfier && guestKinds.stays, JSON.stringify(guestKinds));
+
 // Staff: the Staff panel shows people (bartenders per bar, bouncers) with
 // pictures; more bouncers unlock with levels. Troublemakers bother the guests
 // near them; a bouncer walks over and walks them out the door, for 5 XP.

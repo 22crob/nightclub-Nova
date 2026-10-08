@@ -76,6 +76,10 @@ export class DrinksMixin {
   pickDrink(patron) {
     const menu = this.drinkMenu();
     if (patron && patron.celeb) return menu.reduce((a, b) => (b.price > a.price ? b : a));
+    if (patron && patron.type && patron.type.pricey && menu.length > 1) {
+      const top = [...menu].sort((a, b) => b.price - a.price).slice(0, Math.ceil(menu.length / 2));
+      return top[Math.floor(Math.random() * top.length)];
+    }
     return menu[Math.floor(Math.random() * menu.length)];
   }
 

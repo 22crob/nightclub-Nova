@@ -50,7 +50,7 @@ export class MoodMixin {
     // Fun.
     let fun = patron.fun - MOOD.boredomPerSec * dt;
     if (dancing) fun += MOOD.danceFunPerSec * dt;
-    else if (patron.sitting) fun += MOOD.seatedFunPerSec * dt;
+    else if (patron.sitting) fun += MOOD.seatedFunPerSec * this.comfortFactor(patron) * dt;
     else if (!patron.moving && this.isNearRevenueProp(patron.gx, patron.gy)) fun += MOOD.livelyFunPerSec * dt;
     patron.fun = clamp(fun);
 
@@ -58,7 +58,7 @@ export class MoodMixin {
     let mood = patron.mood;
     if (patron.fun < 20) mood -= MOOD.boredMoodPerSec * dt;
     if (patron.fun > 60) mood += MOOD.funMoodPerSec * dt;
-    if (patron.sitting) mood += MOOD.seatedMoodPerSec * dt;
+    if (patron.sitting) mood += MOOD.seatedMoodPerSec * this.comfortFactor(patron) * dt; // comfier seats cheer up faster
     const thirsty = now >= patron.thirstyAt;
     // A thirsty patron gets up from their seat soon to go and order.
     if (thirsty && patron.sitting) patron.nextMoveAt = Math.min(patron.nextMoveAt, now + 2000);

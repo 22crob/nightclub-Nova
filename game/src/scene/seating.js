@@ -9,7 +9,7 @@
 // tile for others. Sitting slowly cheers them up (see updatePatronMood());
 // after a while, or when thirsty, they hop back down.
 import { PROP_TYPES, VIP_BOOTHS } from '../catalog.js';
-import { TILE_W, VISIT } from '../config.js';
+import { HAPPINESS, TILE_W, VISIT } from '../config.js';
 
 // Screen pixels per Blender unit of height, for sitLift.
 const UNIT_HEIGHT_PX = (TILE_W / Math.SQRT2) * Math.cos(Math.PI / 6);
@@ -58,15 +58,38 @@ export class SeatingMixin {
   // Returns false if there's nowhere to sit.
   // `types`, if given, limits it to those seating types.
   claimSeat(patron, types) {
-    const free = this.freeSeats(types);
+    let free = this.freeSeats(types);
     if (free.length === 0) return false;
-    const seat = free[Math.floor(Math.random() * free.length)];
+    // High rollers and VIP guests take a VIP booth if one's free; everyone
+    // else leans toward the comfier seats.
+    if (!types && patron.type && patron.type.vipSeats) {
+      const vip = free.filter((f) => VIP_BOOTHS.has(f.rec.type));
+      if (vip.length) free = vip;
+    }
+    const weights = free.map((f) => this.seatComfort(f.rec.type));
+    let r = Math.random() * weights.reduce((a, b) => a + b, 0);
+    let seat = free[free.length - 1];
+    for (let k = 0; k < free.length; k++) { r -= weights[k]; if (r <= 0) { seat = free[k]; break; } }
     seat.rec.seatTaken = seat.rec.seatTaken || [];
     seat.rec.seatTaken[seat.i] = patron;
     patron.seat = seat;
     [patron.targetGx, patron.targetGy] = seat.access;
     patron.path = null;
     return true;
+  }
+
+  // A seat's comfort, 1-5 stars: pricier seats are comfier, VIP booths most.
+  seatComfort(type) {
+    const def = PROP_TYPES[type];
+    if (!def || !def.seats) return 0;
+    let stars = HAPPINESS.comfortCosts.filter((c) => (def.cost || 0) >= c).length;
+    if (VIP_BOOTHS.has(type)) stars += 1;
+    return Math.max(1, Math.min(5, stars));
+  }
+
+  // How much faster a seated guest cheers up (and how much longer they sit).
+  comfortFactor(patron) {
+    return patron.seat ? HAPPINESS.comfortFactor[this.seatComfort(patron.seat.rec.type)] || 1 : 1;
   }
 
   // Every free, reachable seat ({ rec, i, access }), of `types` if given.
@@ -155,7 +178,7 @@ export class SeatingMixin {
         const a = patron.activity;
         patron.nextMoveAt = a && a.kind === 'drink' && a.phase === 'drinking' && a.until > this.time.now
           ? a.until
-          : this.time.now + randRange(...VISIT.sitMs);
+          : this.time.now + randRange(...VISIT.sitMs) * this.comfortFactor(patron);
       },
     });
   }

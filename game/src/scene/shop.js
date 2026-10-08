@@ -256,6 +256,7 @@ export class ShopMixin {
       if (def.category === 'Dance Floors') lines.push('Dance floor: guests dance on it.');
       if (def.category === 'Floors') lines.push('Regular floor: paint it tile by tile.');
       lines.push(`Luxury: ${Math.round((def.cost || 0) * LUXURY.perDollar)}`);
+      if (def.seats) lines.push(`Comfort: ${'★'.repeat(this.seatComfort(key))}${'☆'.repeat(5 - this.seatComfort(key))} (comfier seats make guests happier and stay longer)`);
       const picture = realSpriteIconFor(key) || renderIsoIcon(def.color, FLOOR_DECAL_PROPS.has(key));
       const { slot, button, cost } = this.makeCard(def.label, lines.join(' '), picture);
       cost.textContent = this.isUnlocked(key) ? `$${this.currentCost(key)}` : `🔒 Lv ${def.unlockLevel || 1}`;

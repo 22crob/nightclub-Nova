@@ -3,7 +3,7 @@
 import Phaser from 'phaser';
 import { MODEL_PATRONS, NEON_PATRONS, PAINTED_PATRONS, PATRON_SHEETS, patronMetaOf } from '../assets.js';
 import { FLOOR_DECAL_PROPS, PROP_TYPES, STAFF_TYPES } from '../catalog.js';
-import { BOOST, CHARACTER_DISPLAY_HEIGHT, GUEST_LOOKS, MODEL_PATRON_SHARE, NEON_PATRON_SHARE, NEON_PATRON_SHARE_TEST, TEST_MODE, HAIR_STYLES, PATRON_HAIR_COLORS, PATRON_MOVE_INTERVAL, PATRON_OUTFIT_COLORS, PATRON_POPUP_Y, PATRON_SKIN_TONES, PATRON_SPAWN_INTERVAL, MONEY, PATRON_TIP_INTERVAL, PATRON_Y_OFFSET, PROP_SCALE, VISIT, TROUBLE } from '../config.js';
+import { BOOST, CHARACTER_DISPLAY_HEIGHT, GUEST_LOOKS, MODEL_PATRON_SHARE, NEON_PATRON_SHARE, NEON_PATRON_SHARE_TEST, TEST_MODE, HAIR_STYLES, PATRON_HAIR_COLORS, PATRON_MOVE_INTERVAL, PATRON_OUTFIT_COLORS, PATRON_POPUP_Y, PATRON_SKIN_TONES, PATRON_SPAWN_INTERVAL, MONEY, PATRON_TIP_INTERVAL, PATRON_Y_OFFSET, PROP_SCALE, VISIT } from '../config.js';
 import { SFX } from '../sfx.js';
 import { MOOD } from './mood.js';
 import { randRange } from '../util.js';
@@ -82,7 +82,6 @@ export class PatronsMixin {
       thirstyAt: now + randRange(3000, 18000), // most patrons want a drink soon after arriving, not all at once
       name: this.guestName(),
       spent: 0,
-      troublemaker: Math.random() < TROUBLE.share, // bothers people until a bouncer walks them out (security.js)
       mood: MOOD.start,
       fun: MOOD.startFun,
       thirstSince: null,
@@ -624,11 +623,12 @@ export class PatronsMixin {
   }
 
   // How much a tip of `base` dollars becomes: happier guests, a boost, a
-  // party, a fancier club and VIPs all tip more.
+  // party, a fancier club, VIPs and big-spending kinds of guest all tip more.
   tipAmount(patron, base) {
     const moodFactor = 0.5 + patron.mood / 100; // unhappy guests tip half, happy ones up to 1.5x
     const boost = this.isBoosted() ? BOOST.tipMultiplier : 1;
-    return Math.max(1, Math.round(base * moodFactor * boost * this.partyEffect('tips', 1) * this.luxuryTipFactor() * this.celebTipFactor(patron)));
+    const kind = (patron.type && patron.type.tip) || 1; // big spenders, high rollers and VIPs tip more
+    return Math.max(1, Math.round(base * moodFactor * boost * kind * this.partyEffect('tips', 1) * this.luxuryTipFactor() * this.celebTipFactor(patron)));
   }
 
   // A dancer's tip, now and then (see tickPatrons()).

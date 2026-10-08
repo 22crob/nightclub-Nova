@@ -127,15 +127,29 @@ export const VISIT = {
   thirstGraceMs: 5000, // thirsty this long, they stop what they're doing for a drink
   drinkSeatChance: 0.75, // with a drink, how often a guest goes and sits down with it (if a seat is free)
 };
-// Kinds of guest: how much each likes each activity (relative weights), so
-// they don't all follow the same routine.
+// Kinds of guest (see activities.js): `share` is how common each is,
+// `weights` how much they like each activity, `tip` multiplies their tips;
+// `pricey` ones order from the top half of the drink menu, `vipSeats` ones
+// head for VIP booths first, `trouble` ones are troublemakers (security.js).
+// The `luxury` kinds get more common the fancier the club: their share is
+// multiplied by 1 + luxury / GUEST_LUXURY.per.
 export const GUEST_TYPES = [
-  { key: 'dancer', label: 'Dancer', weights: { dance: 6, drink: 2, sit: 1, chat: 2, wander: 1 } },
-  { key: 'barfly', label: 'Barfly', weights: { dance: 1, drink: 5, sit: 2, chat: 3, wander: 1 } },
-  { key: 'social', label: 'Social butterfly', weights: { dance: 2, drink: 2, sit: 2, chat: 6, wander: 1 } },
-  { key: 'chill', label: 'Chiller', weights: { dance: 1, drink: 2, sit: 6, chat: 2, wander: 2 } },
-  { key: 'partier', label: 'Party animal', weights: { dance: 4, drink: 4, sit: 1, chat: 2, wander: 1 } },
+  { key: 'regular', label: 'Regular', share: 34, tip: 1, weights: { dance: 3, drink: 3, sit: 2, chat: 3, wander: 1 } },
+  { key: 'partier', label: 'Party Animal', share: 22, tip: 1, weights: { dance: 6, drink: 5, sit: 1, chat: 2, wander: 1 } },
+  { key: 'social', label: 'Social Butterfly', share: 22, tip: 1, weights: { dance: 1, drink: 2, sit: 5, chat: 6, wander: 1 } },
+  { key: 'bigSpender', label: 'Big Spender', share: 9, luxury: true, tip: 1.6, pricey: true, weights: { dance: 2, drink: 6, sit: 2, chat: 2, wander: 1 } },
+  { key: 'highRoller', label: 'High Roller', share: 5, luxury: true, tip: 2, pricey: true, vipSeats: true, weights: { dance: 1, drink: 3, sit: 7, chat: 2, wander: 1 } },
+  { key: 'vip', label: 'VIP Guest', share: 1.5, luxury: true, tip: 3, pricey: true, vipSeats: true, weights: { dance: 2, drink: 4, sit: 5, chat: 2, wander: 1 } },
+  { key: 'troublemaker', label: 'Troublemaker', share: 6, tip: 0.5, trouble: true, weights: { dance: 2, drink: 3, sit: 1, chat: 4, wander: 4 } },
 ];
+export const GUEST_LUXURY = { per: 300 };
+// Happiness (see mood.js, activities.js, seating.js): seats have a comfort of
+// 1-5 by price (comfortCosts: the price each star needs; VIP booths +1), and
+// seated guests cheer up comfortFactor[comfort] times as fast and sit that
+// much longer. Admiring a decoration gives admireMood. A guest still happy
+// (stayMood+) when their visit ends stays stayLonger longer, once. A guest
+// who wanted to do something and found nothing free loses nothingToDoMood.
+export const HAPPINESS = { comfortCosts: [0, 60, 150, 300, 700], comfortFactor: [0, 0.6, 0.85, 1.1, 1.35, 1.6], admireMood: 10, stayMood: 75, stayLonger: 0.4, nothingToDoMood: 3 };
 export const PATRON_SPAWN_INTERVAL = [4000, 7000]; // ms between spawn attempts
 export const PATRON_MOVE_INTERVAL = [1500, 3000];  // ms a patron waits between wander steps
 // A patron who's actually landed somewhere worth being — a dance floor tile,
@@ -381,11 +395,11 @@ export const GOALS = [
 // guard, free) and `wage` every WAGE_INTERVAL_MS like bartenders.
 // characters are their looks (patron sheets), all in black.
 export const BOUNCERS = { levels: [1, 8, 18, 30], hireCost: [0, 300, 900, 2000], wage: 3, characters: [4, 4, 4, 4] };
-// Troublemakers (security.js): `share` of new guests. Every annoyEveryMs
+// Troublemakers (security.js, the 'troublemaker' GUEST_TYPES). Every annoyEveryMs
 // one bothers the guests within annoyRange tiles (annoyMood off their mood).
 // A bouncer within detectRange tiles of one who has caused trouble walks
 // over and walks them out the door, for `xp` XP.
-export const TROUBLE = { share: 0.07, annoyEveryMs: [7000, 12000], annoyRange: 2, annoyMood: 6, detectRange: 8, xp: 5 };
+export const TROUBLE = { annoyEveryMs: [7000, 12000], annoyRange: 2, annoyMood: 6, detectRange: 8, xp: 5 };
 export const SECURITY = {
   character: 4, scale: 1.12, stepMs: 380, // all in black, like the bouncer
   argueChance: 0.12, cooldownMs: 90 * 1000, argueMs: [8000, 12000],
