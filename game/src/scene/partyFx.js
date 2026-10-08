@@ -21,6 +21,10 @@ const EYES = -53;
 const HEAD_TOP = -77;
 const NECK = -42;
 
+// The box costume textures are drawn in (container units: x from -x, y
+// from -y), at `res` times the size for zooming in, `variants` per costume.
+const COSTUME_BOX = { x: 32, y: 108, w: 64, h: 84, res: 2, variants: 4 };
+
 const NEON = [0xff3dd2, 0x3de0ff, 0xb45cff, 0x7dff5a, 0xffe14a];
 
 // The costume piece each party gives its guests, and whether it only shows
@@ -73,11 +77,27 @@ export class PartyFxMixin {
     if (!fx || !c || !c.active || c.partyCostume || p.celeb) return;
     const costume = COSTUME[fx.key];
     if (!costume) return;
-    const g = this.add.graphics();
-    this[`draw_${costume.draw}`](g, p);
+    const g = this.add.image(-COSTUME_BOX.x, -COSTUME_BOX.y, this.costumeTexture(costume.draw)).setOrigin(0, 0).setScale(1 / COSTUME_BOX.res);
     g.frontOnly = !!costume.front;
     c.add(g);
     c.partyCostume = g;
+  }
+
+  // Each costume is drawn once into a few textures (its colours vary) and
+  // worn as a plain image: shapes redrawn on every guest every frame were
+  // slow on phones.
+  costumeTexture(draw) {
+    const key = `costume_${draw}_${Math.floor(Math.random() * COSTUME_BOX.variants)}`;
+    if (!this.textures.exists(key)) {
+      const { x, y, w, h, res } = COSTUME_BOX;
+      const g = this.make.graphics({ x: 0, y: 0 }, false);
+      g.scaleCanvas(res, res);
+      g.translateCanvas(x, y);
+      this[`draw_${draw}`](g);
+      g.generateTexture(key, w * res, h * res);
+      g.destroy();
+    }
+    return key;
   }
 
   undressGuest(p) {
@@ -233,8 +253,16 @@ export class PartyFxMixin {
 
   // A neon light that flies round the room on a smooth loop, with a soft glow.
   fxNeonLight(color, i) {
-    const g = this.add.graphics();
-    g.fillStyle(color, 0.12).fillCircle(0, 0, 22).fillStyle(color, 0.3).fillCircle(0, 0, 11).fillStyle(0xffffff, 0.95).fillCircle(0, 0, 3.5).fillStyle(color, 1).fillCircle(0, 0, 2.5);
+    // Drawn once into a texture per colour: a plain image is far cheaper to
+    // draw every frame than shapes (this mattered on phones).
+    const key = `fxNeon_${color.toString(16)}`;
+    if (!this.textures.exists(key)) {
+      const d = this.make.graphics({ x: 0, y: 0 }, false);
+      d.fillStyle(color, 0.12).fillCircle(22, 22, 22).fillStyle(color, 0.3).fillCircle(22, 22, 11).fillStyle(0xffffff, 0.95).fillCircle(22, 22, 3.5).fillStyle(color, 1).fillCircle(22, 22, 2.5);
+      d.generateTexture(key, 44, 44);
+      d.destroy();
+    }
+    const g = this.add.image(0, 0, key);
     this.fxAdd(g, true);
     const phase = i * 1.7;
     const speed = 0.00035 + (i % 3) * 0.0001;

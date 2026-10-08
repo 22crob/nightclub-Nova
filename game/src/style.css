@@ -934,3 +934,4 @@ input, textarea { -webkit-user-select: text; user-select: text; }
 .trophy.earned .trophyIcon { filter: drop-shadow(0 0 6px rgba(255,210,80,0.8)); }
 .trophy.earned .trophyName { color: var(--gold); }
 .trophy.earned .trophyBar { display: none; }
+#tutorialBox.hint #tutorialSkip { visibility: hidden; }

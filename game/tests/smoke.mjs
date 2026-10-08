@@ -67,6 +67,8 @@ const waitForScene = async () => {
     s.showTutorialStep();
     // Achievements would pay cash at odd moments (checked on their own below).
     s.checkAchievements = () => {};
+    // So would the one-time tips (checked on their own below).
+    s.tickHints = () => {};
   });
 };
 
@@ -2660,6 +2662,32 @@ const guide = await page.evaluate(() => {
   return out;
 });
 check('the How to play guide walks through the basics (moves on as you do each step, glows round its button), can be skipped, and the ? button runs it again', guide.open && guide.glows && guide.movedOn && guide.saved && guide.skipped, JSON.stringify(guide));
+
+// One-time tips: the first time something comes up (here, a full club) a tip
+// shows on the guide's card, glowing round its button; Got it closes it, and
+// it never shows again (saved).
+const hints = await page.evaluate(() => {
+  const s = window.__clubNova.scene.getScene('club');
+  const tick = Object.getPrototypeOf(s).tickHints;
+  const out = {};
+  s.hintsSeen = ['unworkedBar', 'lowStock', 'troublemaker'];
+  s.hint = null; s.nextHintAt = 0;
+  const cap = s.patronCapacity;
+  s.patronCapacity = () => 0;
+  tick.call(s);
+  const box = document.getElementById('tutorialBox');
+  out.shown = box.classList.contains('open') && box.classList.contains('hint') && /full/.test(document.getElementById('tutorialText').textContent);
+  out.glow = document.getElementById('hudStats').classList.contains('tutorialGlow');
+  out.saved = s.serializeState().hintsSeen.includes('full');
+  document.getElementById('tutorialNext').click();
+  out.closed = !box.classList.contains('open') && !document.querySelector('.tutorialGlow');
+  s.nextHintAt = 0;
+  tick.call(s);
+  out.once = !box.classList.contains('open');
+  s.patronCapacity = cap;
+  return out;
+});
+check('one-time tips show the first time something comes up (a full club), glow round their button, and never again', hints.shown && hints.glow && hints.saved && hints.closed && hints.once, JSON.stringify(hints));
 
 // Achievements: reaching a milestone pays its cash and XP once, with a big
 // popup and a ! on the Trophies tab; the trophy wall shows every badge.

@@ -77,7 +77,7 @@ export class PartiesMixin {
     this.moodColor = def.shade;
     this.drawMoodShade();
     this.startPartyFx(def); // costumes and the room's effects (partyFx.js)
-    SFX.levelUp();
+    SFX.partyHorn();
     this.showToast(`${def.emoji} The ${def.label} has started! Here comes the crowd.`);
     // The crowd: everyone waits their turn in the line outside.
     this.partyCrowd = [];

@@ -98,7 +98,7 @@ export class UpgradesMixin {
       p.mood = Math.min(100, p.mood + BAR_TRICKS.cheerMood);
       this.popReaction(p, 'excited', randRange(200, 900));
     }
-    SFX.levelUp();
+    SFX.shaker();
     this.refreshInfoCard();
     return true;
   }
@@ -136,7 +136,7 @@ export class UpgradesMixin {
     this.cash -= cost;
     this.noteIncome('restock', cost);
     this.drinkStock = this.maxDrinkStock();
-    SFX.place();
+    SFX.clink();
     this.showToast('📦 The bars are fully stocked!');
     this.updateUI();
     this.saveGame();

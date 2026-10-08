@@ -45,7 +45,7 @@ export class AchievementsMixin {
       this.fans += a.xp;
       this.unseenTrophies = (this.unseenTrophies || 0) + 1;
       this.showBigPopup?.(`${a.icon} ${a.name}!`, `${a.text} · +${formatMoney(a.cash)}${a.xp ? ` · +${a.xp} XP` : ''}`);
-      SFX.levelUp();
+      SFX.trophy();
       this.updateTrophyBadge();
       this.updateUI();
       this.saveGame();

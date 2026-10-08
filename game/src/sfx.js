@@ -68,6 +68,32 @@ export const SFX = {
     this.tone(330, { duration: 0.1, type: 'sawtooth', gain: 0.14, delay: 0.08 });
     this.tone(440, { duration: 0.2, type: 'sawtooth', gain: 0.16, delay: 0.16 });
   },
+  // Bar Tricks: a cocktail shaker's quick rattle, then a little ding.
+  shaker() {
+    for (let i = 0; i < 6; i++) this.tone(i % 2 ? 1900 : 2300, { duration: 0.035, type: 'square', gain: 0.05, delay: i * 0.055 });
+    this.tone(1568, { duration: 0.2, type: 'sine', gain: 0.12, delay: 0.38 });
+  },
+  // A bouncer walks a troublemaker out: a two-note whistle.
+  whistle() {
+    this.tone(1760, { duration: 0.12, type: 'sine', gain: 0.1 });
+    this.tone(2350, { duration: 0.22, type: 'sine', gain: 0.1, delay: 0.14 });
+  },
+  // Restocking the bars: bottles clinking.
+  clink() {
+    for (const [f, d] of [[2637, 0], [3136, 0.09], [2794, 0.17], [3520, 0.26]]) this.tone(f, { duration: 0.09, type: 'triangle', gain: 0.08, delay: d });
+  },
+  // A party starts: a party-horn blare over the fanfare.
+  partyHorn() {
+    this.tone(392, { duration: 0.32, type: 'sawtooth', gain: 0.1 });
+    this.tone(494, { duration: 0.32, type: 'sawtooth', gain: 0.08 });
+    this.tone(587, { duration: 0.45, type: 'sawtooth', gain: 0.08, delay: 0.1 });
+    this.levelUp();
+  },
+  // An achievement: a bright arpeggio with a sparkle on top.
+  trophy() {
+    [523, 784, 1047, 1319, 1568].forEach((f, i) => this.tone(f, { duration: 0.14, type: 'triangle', gain: 0.14, delay: i * 0.07 }));
+    this.tone(2093, { duration: 0.35, type: 'sine', gain: 0.08, delay: 0.38 });
+  },
   levelUp() {
     // A short ascending 4-note fanfare — a bigger moment than a tip or a
     // placement, so it gets more notes and a brighter waveform.
