@@ -340,7 +340,7 @@ export class WorldMixin {
     if (this.cash < tier.cost) { SFX.denied(); return false; }
 
     this.cash -= tier.cost;
-    this.awardPurchaseXp(tier.cost);
+    this.awardPurchaseXp(tier.cost, undefined, undefined, `expand:${side}:${tier.newLen}`, true);
     this.bumpGoal('expansions');
     if (side === 'left') this.gridH += 1;
     else this.gridW += 1;

@@ -465,7 +465,7 @@ export class StaffMixin {
     this.attachStaff(rec);
     this.cash += refund - def.cost;
     const at = this.footprintCenter(rec.tiles);
-    rec.xp = this.awardPurchaseXp(def.cost, at.sx, at.sy - 80);
+    rec.xp = this.awardPurchaseXp(def.cost, at.sx, at.sy - 80, type, true);
     SFX.levelUp();
     this.showToast(`🎧 Your DJ moved into the ${def.label}!`);
     this.updateUI();

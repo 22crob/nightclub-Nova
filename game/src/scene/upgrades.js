@@ -63,6 +63,7 @@ export class UpgradesMixin {
     if (!next || this.levelInfo().level < next.unlockLevel || this.cash < next.cost) { SFX.denied(); return false; }
     this.cash -= next.cost;
     this.barTraining = next.level;
+    this.awardPurchaseXp(next.cost, undefined, undefined, `training:${next.level}`, true);
     this.showToast(`🎓 Your bartenders are trained up: they work ${Math.round((this.trainingSpeed() - 1) * 100)}% faster!`);
     SFX.levelUp();
     this.updateUI();

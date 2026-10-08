@@ -32,20 +32,25 @@ export class EconomyMixin {
   // XP for buying something that cost `cost`, shown floating at (x, y) if
   // given. Returns the XP, which the item keeps (rec.xp) so selling it can
   // take it back.
-  awardPurchaseXp(cost, x, y) {
-    const xp = Math.max(0, cost) * XP.perDollar;
-    if (xp <= 0) return 0;
+  // XP for buying `key` (a type, or e.g. an expansion row) the first time:
+  // by price (XP.purchaseMin to purchaseMax), or XP.majorUpgrade for a
+  // major upgrade. Nothing for anything bought before.
+  awardPurchaseXp(cost, x, y, key = null, major = false) {
+    if (key) {
+      this.boughtTypes = this.boughtTypes || new Set();
+      if (this.boughtTypes.has(key)) return 0;
+      this.boughtTypes.add(key);
+    }
+    if (!(cost > 0)) return 0;
+    const xp = major ? XP.majorUpgrade : Math.round(Math.min(XP.purchaseMax, Math.max(XP.purchaseMin, cost * XP.perDollar)));
     this.fans += xp;
     if (x !== undefined && xp >= 0.5) this.floatText(x, y, `+${Math.round(xp)} XP`, '#9fe7ff');
     return xp;
   }
 
-  // Selling something takes back the XP it gave when bought.
-  revokePurchaseXp(xp, x, y) {
-    if (!xp) return;
-    this.fans = Math.max(0, this.fans - xp);
-    if (x !== undefined && xp >= 0.5) this.floatText(x, y, `-${Math.round(xp)} XP`, '#ff9a9a');
-  }
+  // Purchase XP only ever comes from an item's first buy (see
+  // awardPurchaseXp()), so selling doesn't take it back.
+  revokePurchaseXp() {}
 
   // Items in the inventory keep the XP they gave when bought (a list per
   // type), so putting one away and selling it later still takes it back.

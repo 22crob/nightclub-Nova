@@ -331,7 +331,7 @@ const mood = await page.evaluate(() => {
 });
 check('there is no Vibe readout', mood.vibeHidden);
 check('a drink cheers a patron up', mood.cheered === 65, `mood ${mood.cheered}`);
-check('happy guests bring 5 XP, angry ones cost 2', mood.happyFans === 5 && mood.angryFans === -2, JSON.stringify(mood));
+check('happy guests bring 3 XP, angry ones cost 2', mood.happyFans === 3 && mood.angryFans === -2, JSON.stringify(mood));
 check('a very unhappy patron storms out', mood.stormed === true);
 
 // Wages: $4 + $6 every 30 seconds; if the club can't pay, staff quit.
@@ -703,38 +703,44 @@ const growth = await page.evaluate(() => {
 });
 check('expanding is locked by level: walls of 10 at level 1, 11 at 3, 14 at 10, 26 at 40', growth.l1 === 10 && growth.l3 === 11 && growth.l10 === 14 && growth.l40 === 26, JSON.stringify(growth));
 
-// XP for purchases: buying gives XP by price, moving gives none, and
-// selling takes it back, so buying and selling can't farm levels.
+// XP for purchases: the first buy of an item gives XP by price (5 to 30);
+// buying it again, moving it and selling it give and take nothing, so
+// buying and selling can't farm levels.
 const buyXp = await page.evaluate(() => {
   const s = window.__clubNova.scene.getScene('club');
   const out = {};
   s.cash += 2000;
-  let at = null;
-  for (let gy = 1; gy < s.gridH - 1 && !at; gy++) for (let gx = 1; gx < s.gridW - 1 && !at; gx++) {
-    if (s.footprintValid(s.getFootprint('plant', 0, gx, gy), 'plant')) at = [gx, gy];
-  }
+  s.boughtTypes?.delete('plant');
+  const spot = () => { for (let gy = 1; gy < s.gridH - 1; gy++) for (let gx = 1; gx < s.gridW - 1; gx++) if (s.footprintValid(s.getFootprint('plant', 0, gx, gy), 'plant')) return [gx, gy]; return null; };
+  let at = spot();
   const xp0 = s.fans;
   s.selectProp('plant');
   s.currentFacing = 0;
   s.placeProp(at[0], at[1]);
   const rec = s.placed[`${at[0]},${at[1]}`];
-  out.gained = +(s.fans - xp0).toFixed(2);
-  out.expected = +(s.currentCost('plant') * 0.05).toFixed(2);
+  out.gained = s.fans - xp0;
+  out.expected = Math.round(Math.min(30, Math.max(5, s.currentCost('plant') * 0.05)));
+  // A second one: no XP.
+  const xp1 = s.fans;
+  const at2 = spot();
+  s.placeProp(at2[0], at2[1]);
+  out.secondFree = s.fans === xp1;
   s.deselectProp();
   // Put it away and place it again: no XP either way.
-  const xp1 = s.fans;
   s.pickUpProp(rec);
   s.selectFromInventory('plant');
   s.placeProp(at[0], at[1]);
-  out.moveFree = Math.abs(s.fans - xp1) < 1e-9;
-  // Sell it: the XP goes back.
+  out.moveFree = s.fans === xp1;
+  // Sell both: nothing taken back, and buying again gives nothing.
   s.sellProp(at[0], at[1]);
-  out.sellBack = Math.abs(s.fans - xp0) < 1e-9;
+  s.sellProp(at2[0], at2[1]);
+  out.sellKeeps = s.fans === xp1;
+  out.saved = s.serializeState().bought.includes('plant');
   s.updateUI();
   out.label = document.querySelector('[data-tip-name="XP"]') !== null && /XP$/.test(document.getElementById('xpText')?.textContent || 'XP');
   return out;
 });
-check('buying gives XP by price, moving gives none, and selling takes it back', buyXp.gained > 0 && buyXp.gained === buyXp.expected && buyXp.moveFree && buyXp.sellBack && buyXp.label, JSON.stringify(buyXp));
+check('the first buy of an item gives 5-30 XP by price; a second one, moving and selling give and take nothing', buyXp.gained > 0 && buyXp.gained === buyXp.expected && buyXp.secondFree && buyXp.moveFree && buyXp.sellKeeps && buyXp.saved && buyXp.label, JSON.stringify(buyXp));
 
 // The card's red X stays in its corner with nothing under it, even on a
 // bartender's card with a long line of dialogue.
@@ -1771,11 +1777,11 @@ const levels = await page.evaluate(() => {
   const s = window.__clubNova.scene.getScene('club');
   const fans = s.fans;
   const at = (n) => { s.fans = n; return s.levelInfo().level; };
-  const out = { at: [at(0), at(119), at(120), at(s.fansForLevel(3) - 1), at(s.fansForLevel(3)), at(s.fansForLevel(5))].join(), steps: [1, 2, 3, 4, 5].map((l) => s.fansToNextLevel(l)) };
+  const out = { at: [at(0), at(199), at(200), at(s.fansForLevel(3) - 1), at(s.fansForLevel(3)), at(s.fansForLevel(5))].join(), steps: [1, 2, 3, 4, 5].map((l) => s.fansToNextLevel(l)) };
   s.fans = fans;
   return out;
 });
-check('levels need more XP each time (120 for level 2)', levels.at === '1,1,2,2,3,5' && levels.steps.every((v, i, a) => i === 0 || v > a[i - 1] + (a[i - 1] - (a[i - 2] || 0)) * 0), JSON.stringify(levels));
+check('levels need more XP each time (200 for level 2)', levels.at === '1,1,2,2,3,5' && levels.steps.every((v, i, a) => i === 0 || v > a[i - 1] + (a[i - 1] - (a[i - 2] || 0)) * 0), JSON.stringify(levels));
 
 // One endless night: no night clock or summary, the doors and the music
 // never stop, wages keep being paid, and every minute the club gets stars
@@ -2475,6 +2481,23 @@ check('a guest sitting with a sofa back between them and the camera is hidden by
   await songPage.close();
   server.close();
 }
+
+// XP from guests: +1 walking in, +2 a dance finished, +3 a decoration admired.
+const guestXp = await page.evaluate(() => {
+  const s = window.__clubNova.scene.getScene('club');
+  const out = {};
+  let f = s.fans;
+  const n = s.patrons.length;
+  s.trySpawnPatron();
+  out.enter = s.patrons.length > n ? s.fans - f : 1;
+  const p = s.patrons.filter((q) => !q.gone && !q.leaving).pop();
+  f = s.fans;
+  p.activity = { kind: 'dance', until: s.time.now - 1 };
+  s.nextActivityStep(p);
+  out.danced = s.fans - f;
+  return out;
+});
+check('guests bring XP walking in (+1) and finishing a dance (+2)', guestXp.enter === 1 && guestXp.danced >= 2, JSON.stringify(guestXp));
 
 // Kinds of guest: regulars, party animals, social butterflies, big spenders,
 // high rollers, VIP guests and troublemakers; the big-spending kinds come more

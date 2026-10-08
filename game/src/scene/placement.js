@@ -248,7 +248,7 @@ export class PlacementMixin {
     // XP for a purchase; an item from the inventory brings back the XP it
     // gave when it was first bought.
     const center = this.footprintCenter(tiles);
-    record.xp = fromInventory ? this.takeInventoryXp(record.type) : this.awardPurchaseXp(cost, center.sx, center.sy - 60);
+    record.xp = fromInventory ? this.takeInventoryXp(record.type) : this.awardPurchaseXp(cost, center.sx, center.sy - 60, record.type);
     if (!fromInventory && cost > 0) {
       this.bumpGoal('bought');
       if (def.category === 'Decorations') this.bumpGoal('decorBought');

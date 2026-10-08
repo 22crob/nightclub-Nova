@@ -64,7 +64,7 @@ export class FloorPaintMixin {
       if (this.inventoryCount(type) <= 0) { this.holdingFromInventory = false; this.selectedProp = null; this.updateGhost(); }
       this.refreshDock();
     } else {
-      this.awardPurchaseXp(cost);
+      this.awardPurchaseXp(cost, undefined, undefined, type);
     }
     SFX.place();
     this.updateUI();

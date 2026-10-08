@@ -9,7 +9,7 @@
 // tile for others. Sitting slowly cheers them up (see updatePatronMood());
 // after a while, or when thirsty, they hop back down.
 import { PROP_TYPES, VIP_BOOTHS } from '../catalog.js';
-import { HAPPINESS, TILE_W, VISIT } from '../config.js';
+import { HAPPINESS, TILE_W, VISIT, XP } from '../config.js';
 
 // Screen pixels per Blender unit of height, for sitLift.
 const UNIT_HEIGHT_PX = (TILE_W / Math.SQRT2) * Math.cos(Math.PI / 6);
@@ -131,6 +131,7 @@ export class SeatingMixin {
   // The patron has reached their seat's access tile: hop onto the seat.
   sitDown(patron) {
     const { rec, i } = patron.seat;
+    this.fans += XP.seated; // XP for a guest using the seating
     const def = PROP_TYPES[rec.type];
     const spot = this.seatSpot(rec, i);
     const { sx, sy } = this.gridToScreen(spot.gx, spot.gy);

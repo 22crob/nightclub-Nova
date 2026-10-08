@@ -106,13 +106,20 @@ export const POPULARITY = { happy: 3, content: 1, unhappy: -1, stormOut: -5, arr
 // level 10 at 9,432. Tuned against a simulated club (about 25-30 XP a
 // minute from guests, plus purchase XP): level 2 in about 3 minutes, level
 // 5 in about 40, level 10 in about 4 hours of play.
-export const LEVEL_FANS = { first: 120, step: 130, curve: 18 };
+export const LEVEL_FANS = { first: 200, step: 220, curve: 30 };
 // Where XP (the save calls it fans) comes from: mostly good service,
 // satisfied visits and successful parties, not guests just moving between
 // activities; and buying things: perDollar XP for each $ spent on
 // furniture, decorations, floors, wallpaper and expansions. Moving gives
 // none, and selling takes back what the item gave.
-export const XP = { drinkServed: 1, partyPerGuest: 1, partyMax: 60, perDollar: 0.05 };
+// Guests: enter (walking in), drinkServed, danceDone (a dance finished),
+// seated (sitting down), admire (a decoration admired); leaving happy is
+// LEAVING_FANS in mood.js; a troublemaker walked out is TROUBLE.xp.
+// Buying: perDollar of the price, between purchaseMin and purchaseMax, and
+// majorUpgrade for an expansion row, a DJ booth upgrade or bartender
+// training; only the first time you buy each item (boughtTypes, saved as
+// `bought`), so buying and selling can't farm XP.
+export const XP = { enter: 1, drinkServed: 2, danceDone: 2, seated: 2, admire: 3, partyPerGuest: 1, partyMax: 60, perDollar: 0.05, purchaseMin: 5, purchaseMax: 30, majorUpgrade: 40 };
 // Guest visits (see scene/activities.js): a guest stays visitMs, moving
 // between activities that each last about their range (ms). They finish
 // what they're doing before leaving; overstayMs past that, they're sent off.

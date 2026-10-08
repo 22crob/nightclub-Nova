@@ -11,7 +11,7 @@
 // Mixed into ClubScene (see ClubScene.js); `this` is the scene.
 import Phaser from 'phaser';
 import { FLOOR_DECAL_PROPS } from '../catalog.js';
-import { ADMIRE, GUEST_LUXURY, GUEST_TYPES, HAPPINESS, PATRON_MOVE_INTERVAL, PATRON_POPUP_Y, VISIT } from '../config.js';
+import { ADMIRE, GUEST_LUXURY, GUEST_TYPES, HAPPINESS, XP, PATRON_MOVE_INTERVAL, PATRON_POPUP_Y, VISIT } from '../config.js';
 import { PROP_TYPES } from '../catalog.js';
 import { randRange } from '../util.js';
 
@@ -135,6 +135,7 @@ export class ActivitiesMixin {
       }
     }
     if (a) patron.lastActivity = a.kind;
+    if (a && a.kind === 'dance' && a.until && now >= a.until && !a.xpGiven) { a.xpGiven = true; this.fans += XP.danceDone; } // a dance finished
     this.endChat(patron);
     this.endDanceTogether(patron);
     patron.activity = null;
@@ -425,6 +426,7 @@ export class ActivitiesMixin {
     this.tweens.add({ targets: label, scale: 1.1, duration: 200, ease: 'Back.easeOut' });
     this.tweens.add({ targets: label, y: label.y - 26, alpha: 0, delay: 700, duration: 700, onComplete: () => label.destroy() });
     patron.mood = Math.min(100, patron.mood + HAPPINESS.admireMood);
+    this.fans += XP.admire;
     const cost = PROP_TYPES[rec.type].cost || 0;
     const tip = Math.round(Math.max(ADMIRE.tipMin, Math.min(ADMIRE.tipMax, cost * ADMIRE.tipPerDollar)));
     this.offerBonus(patron, 'tip', tip);

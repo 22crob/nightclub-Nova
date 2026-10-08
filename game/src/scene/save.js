@@ -56,7 +56,7 @@ export class SaveMixin {
       inventory[this.movingBooth.type] -= 1;
       if (inventory[this.movingBooth.type] <= 0) delete inventory[this.movingBooth.type];
     }
-    return { cash: this.cash, fans: this.fans, popularity: this.popularity || 0, bouncers: this.bouncers || 1, barTraining: this.barTraining || 0, drinkStock: this.drinkStock ?? null, gridW: this.gridW, gridH: this.gridH, placed: placedList, wallpaper: { ...this.wallpaper }, floorPaint: { ...this.floorPaint }, nightStars: this.nightStars || [], inventory, inventoryXp, goalsDone: this.goalsDone || [], goalStats: this.goalStats || {}, clubName: this.clubName || '', daily: this.daily || null, drinksOff: this.drinksOff || [], celebs: this.celebState || {}, celebInvited: Object.keys(this.celebInvites || {}) };
+    return { cash: this.cash, fans: this.fans, popularity: this.popularity || 0, bouncers: this.bouncers || 1, barTraining: this.barTraining || 0, bought: [...(this.boughtTypes || [])], drinkStock: this.drinkStock ?? null, gridW: this.gridW, gridH: this.gridH, placed: placedList, wallpaper: { ...this.wallpaper }, floorPaint: { ...this.floorPaint }, nightStars: this.nightStars || [], inventory, inventoryXp, goalsDone: this.goalsDone || [], goalStats: this.goalStats || {}, clubName: this.clubName || '', daily: this.daily || null, drinksOff: this.drinksOff || [], celebs: this.celebState || {}, celebInvited: Object.keys(this.celebInvites || {}) };
   }
 
   saveGame() {
@@ -172,6 +172,17 @@ export class SaveMixin {
     if (Array.isArray(data.drinksOff)) this.drinksOff = data.drinksOff.filter((k) => typeof k === 'string');
     if (data.daily && typeof data.daily.last === 'string') this.daily = { last: data.daily.last, streak: Number(data.daily.streak) || 1 };
     if (typeof data.fans === 'number') this.fans = data.fans;
+    if (Array.isArray(data.bought)) this.boughtTypes = new Set(data.bought.filter((k) => typeof k === 'string'));
+    else if (typeof data.cash === 'number') {
+      // A club from before first-buy XP: everything it already has counts as bought.
+      const have = new Set();
+      for (const e of data.placed || []) if (e && e.type) have.add(e.type);
+      for (const t of Object.keys(data.inventory || {})) have.add(t);
+      for (const t of Object.values(data.wallpaper || {})) have.add(t);
+      for (const t of Object.values(data.floorPaint || {})) have.add(t);
+      this.boughtTypes = have;
+      this.boughtLegacy = true; // expansions too, once the room size is known (below)
+    }
     if (typeof data.barTraining === 'number') this.barTraining = Math.max(0, Math.floor(data.barTraining));
     if (typeof data.drinkStock === 'number') this.drinkStock = Math.max(0, data.drinkStock);
     if (typeof data.bouncers === 'number') this.bouncers = Math.max(1, Math.floor(data.bouncers));
@@ -193,6 +204,11 @@ export class SaveMixin {
       this.gridH = Math.max(this.gridH, size[1]);
       this.buildTiles();
       this.buildWalls();
+    }
+    if (this.boughtLegacy) {
+      for (let n = BASE_GRID_SIZE + 1; n <= this.gridW; n++) this.boughtTypes.add(`expand:right:${n}`);
+      for (let n = BASE_GRID_SIZE + 1; n <= this.gridH; n++) this.boughtTypes.add(`expand:left:${n}`);
+      this.boughtLegacy = false;
     }
     if (Array.isArray(data.placed)) {
       // The DJ booth goes last, so if it has to move (see below) it can't

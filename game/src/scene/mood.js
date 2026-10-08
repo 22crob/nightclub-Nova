@@ -32,8 +32,8 @@ export const MOOD = {
 
 // What a departing patron is worth in fans, by mood.
 export const LEAVING_FANS = [
-  { min: 70, fans: 5, emoji: '😍' },
-  { min: 40, fans: 2, emoji: '🙂' },
+  { min: 70, fans: 3, emoji: '😍' },
+  { min: 40, fans: 1, emoji: '🙂' },
   { min: 0, fans: 0, emoji: '😕' },
 ];
 export const STORM_OUT_FANS = -2;
