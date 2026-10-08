@@ -1,5 +1,7 @@
 # Club Nova: level plan (agreed by the owner; applied to the game in October 2026)
 
+> **Coming rewrite (owner, October 2026):** a new bar, floor or booth at nearly every level is too much, and a lot of the designs don't fit a club vibe. The plan is to cut the off-vibe items and rewrite the unlock pacing so levels give fewer, better unlocks. Until that's done, don't add more bars, floors or booths to fill levels, and bring any new item to the owner first. Removed items go in `REMOVED_ITEMS` (catalog.js) so saves that own them get their money back.
+
 **The idea:** start plain, earn the cool stuff. Each level gives a small mix of unlocks across different categories instead of something from every category. Simple looks come first; animations, themes and showpieces come later, so there's always an upgrade to plan and save for. The top level goes from 20 to **40**.
 
 **How each category grows:**
