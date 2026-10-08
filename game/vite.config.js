@@ -11,10 +11,21 @@ import { viteSingleFile } from 'vite-plugin-singlefile';
 // enough for public sharing.
 const artifact = !!process.env.ARTIFACT;
 
+// Each build's id, baked into the page and written to version.json beside it,
+// so a copy left open on a phone can tell a newer one is out (scene/appUpdate.js).
+const BUILD_ID = Date.now().toString(36);
+
 export default defineConfig({
   base: './',
+  define: { __BUILD_ID__: JSON.stringify(BUILD_ID) },
   plugins: [
     viteSingleFile(),
+    {
+      name: 'version-file',
+      generateBundle() {
+        this.emitFile({ type: 'asset', fileName: 'version.json', source: JSON.stringify({ build: BUILD_ID }) });
+      },
+    },
     // viteSingleFile inlines every asset; for the play link only small ones.
     artifact && {
       name: 'artifact-sprite-files',

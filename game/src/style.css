@@ -792,11 +792,11 @@ body { touch-action: manipulation; -webkit-user-select: none; user-select: none;
 canvas { touch-action: none; }
 input, textarea { -webkit-user-select: text; user-select: text; }
 @media (width <= 560px) {
-  #hudProfile, #hudRight, #goalSide, #drinkMeter, .partyBanner, #dock, #selectedChip, #testModeTag { zoom: 0.58; }
+  #hudProfile, #hudRight, #goalSide, #drinkMeter, .partyBanner, #dock, #selectedChip, #testModeTag, #updateButton { zoom: 0.58; }
   #hudCash .amount { font-size: 19px; }
 }
 @media (height <= 500px) and (width > 560px) {
-  #hudProfile, #hudRight, #goalSide, #drinkMeter, .partyBanner, #dock, #selectedChip, #testModeTag { zoom: 0.62; }
+  #hudProfile, #hudRight, #goalSide, #drinkMeter, .partyBanner, #dock, #selectedChip, #testModeTag, #updateButton { zoom: 0.62; }
   .summaryCard, .levelCard, #infoCard { zoom: 0.8; }
 }
 
@@ -945,3 +945,10 @@ input, textarea { -webkit-user-select: text; user-select: text; }
 #placeBar .summaryButton { margin: 0; padding: 6px 12px; font-size: 14px; border-radius: 14px; cursor: pointer; }
 #placeOk { min-width: 84px; text-align: center; }
 #placeBar .summaryButton.blocked { filter: grayscale(0.85) brightness(0.75); }
+
+/* ---- A newer version is out (scene/appUpdate.js): a green pill at the top. */
+#updateButton {
+  display: none; position: fixed; top: calc(10px + env(safe-area-inset-top, 0px)); left: 50%; transform: translateX(-50%); z-index: 60;
+  padding: 7px 16px; font-size: 14px; white-space: nowrap; cursor: pointer; animation: cheer 0.9s ease-out 2;
+}
+#updateButton.open { display: block; }

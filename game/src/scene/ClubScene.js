@@ -46,6 +46,7 @@ import { PartyFxMixin } from './partyFx.js';
 import { TutorialMixin } from './tutorial.js';
 import { AchievementsMixin } from './achievements.js';
 import { TouchPlaceMixin } from './touchPlace.js';
+import { AppUpdateMixin } from './appUpdate.js';
 import { Music } from '../music.js';
 import { applyMixins } from './applyMixins.js';
 
@@ -372,6 +373,7 @@ export class ClubScene extends Phaser.Scene {
     this.setupTutorial(); // the How to play guide (tutorial.js)
     this.setupAchievements(); // badges and the trophy wall (achievements.js)
     this.setupTouchPlace(); // drag-and-confirm placing on phones (touchPlace.js)
+    this.setupAppUpdate(); // the New version button (appUpdate.js)
     this.setupDrinkMenu(); // what the bars serve (drinks.js)
     this.setupMeter(); // the drink meter on the right edge (meter.js)
     this.time.addEvent({ delay: 1000, loop: true, callback: () => this.tickMeter() });
@@ -412,6 +414,7 @@ applyMixins(ClubScene, [
   TutorialMixin,
   AchievementsMixin,
   TouchPlaceMixin,
+  AppUpdateMixin,
   InventoryMixin,
   ActivitiesMixin,
   WorldMixin,

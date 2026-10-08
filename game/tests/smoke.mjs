@@ -2453,7 +2453,7 @@ check('a guest sitting with a sofa back between them and the camera is hidden by
   const server = http.createServer((req, res) => {
     const file = path.join(dist, decodeURIComponent(req.url.split('?')[0]).replace(/\/$/, '/index.html'));
     if (!file.startsWith(dist) || !fs.existsSync(file)) { res.writeHead(404); res.end(); return; }
-    res.writeHead(200, { 'Content-Type': file.endsWith('.mp3') ? 'audio/mpeg' : 'text/html' });
+    res.writeHead(200, { 'Content-Type': file.endsWith('.mp3') ? 'audio/mpeg' : file.endsWith('.json') ? 'application/json' : 'text/html' });
     fs.createReadStream(file).pipe(res);
   });
   await new Promise((r) => server.listen(0, r));
@@ -2483,6 +2483,20 @@ check('a guest sitting with a sofa back between them and the camera is hidden by
   });
   check('over the web, the club plays real songs (separate MP3 files), each for its own length, in time with its tempo',
     /\/music\/[\w-]+\.mp3$/.test(song.url || '') && song.length > 60000 && song.seconds > 60 && song.beats, JSON.stringify(song));
+  // A copy left open notices a newer build on the site and offers to update.
+  const upd = await songPage.evaluate(async () => {
+    const s = window.__clubNova.scene.getScene('club');
+    const same = await s.checkForUpdate();
+    const shownSame = document.getElementById('updateButton').classList.contains('open');
+    const real = s.buildId;
+    s.buildId = 'an-older-build';
+    const newer = await s.checkForUpdate();
+    const shown = document.getElementById('updateButton').classList.contains('open');
+    s.buildId = real;
+    await s.checkForUpdate();
+    return { same, shownSame, newer, shown, id: real };
+  });
+  check('a copy left open (like a Home Screen app) notices a newer version on the site and shows the update button', !upd.same && !upd.shownSame && upd.newer && upd.shown && !!upd.id, JSON.stringify(upd));
   const pageMb = fs.statSync(path.join(dist, 'index.html')).size / 1e6;
   check('the game page stays small (no songs packed into it)', pageMb < 18, `${pageMb.toFixed(1)} MB`);
   await songPage.close();
