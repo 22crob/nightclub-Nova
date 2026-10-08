@@ -7,6 +7,9 @@ import { setupTooltips } from './tooltips.js';
 
 fillIcons();
 setupTooltips();
+// iPhone Safari zooms the whole page on a pinch even when told not to; the
+// pinch is the club's own zoom instead (world.js).
+for (const type of ['gesturestart', 'gesturechange']) document.addEventListener(type, (e) => e.preventDefault(), { passive: false });
 
 const config = {
   type: Phaser.AUTO,

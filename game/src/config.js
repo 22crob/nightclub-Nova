@@ -316,6 +316,12 @@ export const BONUS = { amount: 88, everyMs: [30000, 60000], lifeMs: 8000, minMoo
 // Hovering and selecting (see selection.js): the outline glow round
 // whatever's under the cursor (colour, strength), round a selected piece,
 // the room the glow needs, and how opaque a pixel must be to count as hit.
+// Phones and tablets: a tap may move tapSlop px before it counts as a drag;
+// a finger that just misses a guest, the DJ or a piece still picks it if it's
+// within reach px (objectNear() in selection.js); bonus badges take a tap
+// bonusReach times their size from their middle (bonusAt()).
+export const TOUCH = { tapSlop: 14, reach: 18, bonusReach: 1.1 };
+
 export const HOVER = { color: 0xffffff, strength: 2.5, selectColor: 0x5dff8a, selectStrength: 4, padding: 10, alphaHit: 40 };
 
 // Admiring decorations (see activities.js): now and then (weight, among the

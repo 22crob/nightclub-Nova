@@ -780,3 +780,21 @@ body.kick .navPad > .uiArt { transform: scale(1.06); transition: none; }
 }
 .actionTip.show { display: block; }
 .actionTip:after { content: ""; position: absolute; left: 50%; bottom: -8px; margin-left: -7px; border: 7px solid transparent; border-top-color: var(--edge); border-bottom: 0; }
+
+/* ------------------------------------------------------------------ */
+/* Phones: the HUD is drawn smaller so the panels fit side by side and  */
+/* the club stays in view (portrait: narrow; landscape: short). Pages   */
+/* don't scroll or zoom; a pinch zooms the club (world.js).             */
+/* ------------------------------------------------------------------ */
+html, body { overscroll-behavior: none; -webkit-tap-highlight-color: transparent; }
+body { touch-action: manipulation; -webkit-user-select: none; user-select: none; -webkit-touch-callout: none; }
+canvas { touch-action: none; }
+input, textarea { -webkit-user-select: text; user-select: text; }
+@media (width <= 560px) {
+  #hudProfile, #hudRight, #goalSide, #drinkMeter, .partyBanner, #dock, #selectedChip, #testModeTag { zoom: 0.58; }
+  #hudCash .amount { font-size: 19px; }
+}
+@media (height <= 500px) and (width > 560px) {
+  #hudProfile, #hudRight, #goalSide, #drinkMeter, .partyBanner, #dock, #selectedChip, #testModeTag { zoom: 0.62; }
+  .summaryCard, .levelCard, #infoCard { zoom: 0.8; }
+}

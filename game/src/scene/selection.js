@@ -8,7 +8,7 @@
 // Bonus badges (bonuses.js) are checked before any of this.
 // Mixed into ClubScene (see ClubScene.js); `this` is the scene.
 import { PROP_TYPES } from '../catalog.js';
-import { HOVER } from '../config.js';
+import { HOVER, TOUCH } from '../config.js';
 
 export class SelectionMixin {
   // Everything that can be hovered: its images (in draw order) and depth.
@@ -52,6 +52,22 @@ export class SelectionMixin {
     if (hits.length === 0) return null;
     hits.sort((a, b) => b.depth - a.depth);
     return hits[0];
+  }
+
+  // A finger is less exact than a mouse: if nothing is drawn right under
+  // the tap, take the nearest thing within TOUCH.reach px around it.
+  objectNear(x, y) {
+    const hit = this.objectAt(x, y);
+    if (hit) return hit;
+    const r = TOUCH.reach;
+    for (const k of [0.5, 1]) {
+      for (let a = 0; a < 8; a++) {
+        const t = (a / 8) * Math.PI * 2;
+        const near = this.objectAt(x + Math.cos(t) * r * k, y + Math.sin(t) * r * k);
+        if (near) return near;
+      }
+    }
+    return null;
   }
 
   // --- The outline glow -------------------------------------------------------
@@ -154,7 +170,7 @@ export class SelectionMixin {
   // (anywhere on it), a person opens their card, and furniture is selected.
   // True if the click was used.
   clickObject(pointer) {
-    const hit = this.objectAt(pointer.x, pointer.y);
+    const hit = pointer.wasTouch ? this.objectNear(pointer.x, pointer.y) : this.objectAt(pointer.x, pointer.y);
     if (this.dockTab === 'edit') {
       if (hit && hit.kind === 'prop') {
         const [ax, ay] = hit.target.anchor;

@@ -368,6 +368,32 @@ export class WorldMixin {
     this.world.y = sy - localY * next;
   }
 
+  // Pinch to zoom (phones): when a second finger comes down, remember how
+  // far apart the two are and the zoom then. True if a pinch started.
+  startPinch() {
+    const a = this.input.pointer1;
+    const b = this.input.pointer2;
+    if (!a || !b || !a.isDown || !b.isDown) return false;
+    this.pinch = { dist: Math.max(1, Math.hypot(a.x - b.x, a.y - b.y)), zoom: this.world.scaleX, mx: (a.x + b.x) / 2, my: (a.y + b.y) / 2 };
+    this.isDragging = false;
+    return true;
+  }
+
+  // Zooms by how much the fingers spread, around the point between them,
+  // and pans as that point moves.
+  pinchMove() {
+    const a = this.input.pointer1;
+    const b = this.input.pointer2;
+    if (!a.isDown || !b.isDown) return;
+    const mx = (a.x + b.x) / 2;
+    const my = (a.y + b.y) / 2;
+    this.world.x += mx - this.pinch.mx;
+    this.world.y += my - this.pinch.my;
+    this.pinch.mx = mx;
+    this.pinch.my = my;
+    this.zoomTo(this.pinch.zoom * Math.hypot(a.x - b.x, a.y - b.y) / this.pinch.dist, mx, my);
+  }
+
   // Centres the whole room (floor plus back walls) in the space between the
   // top bar and the shop button.
   // Zooms out from ZOOM_DEFAULT if needed so the whole room fits.

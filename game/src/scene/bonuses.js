@@ -8,7 +8,7 @@
 // it never opens a card or moves anything underneath.
 // Mixed into ClubScene (see ClubScene.js); `this` is the scene.
 import Phaser from 'phaser';
-import { BONUS, CHARACTER_DISPLAY_HEIGHT } from '../config.js';
+import { BONUS, CHARACTER_DISPLAY_HEIGHT, TOUCH } from '../config.js';
 import { SFX } from '../sfx.js';
 import { randRange } from '../util.js';
 
@@ -129,15 +129,16 @@ export class BonusesMixin {
   }
 
   // The badge under a screen point, or null.
-  bonusAt(screenX, screenY) {
+  bonusAt(screenX, screenY, touch = false) {
     const x = (screenX - this.world.x) / this.world.scaleX;
     const y = (screenY - this.world.y) / this.world.scaleY;
-    return (this.bonuses || []).find((b) => !b.collected && Math.hypot(x - b.holder.x, y - b.holder.y) <= b.size * 0.7) || null;
+    const reach = touch ? TOUCH.bonusReach : 0.7; // a finger is less exact than a mouse
+    return (this.bonuses || []).find((b) => !b.collected && Math.hypot(x - b.holder.x, y - b.holder.y) <= b.size * reach) || null;
   }
 
   // A click on a badge collects it. True if it did.
   clickBonus(pointer) {
-    const b = this.bonusAt(pointer.x, pointer.y);
+    const b = this.bonusAt(pointer.x, pointer.y, pointer.wasTouch);
     if (!b) return false;
     b.collected = true;
     this.bumpGoal(b.kind === 'tip' ? 'admired' : 'bonuses');

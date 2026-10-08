@@ -3,7 +3,7 @@
 import Phaser from 'phaser';
 import { PATRON_SHEETS, SPRITE_URLS, patronMetaOf } from '../assets.js';
 import { PROP_TYPES } from '../catalog.js';
-import { BASE_GRID_SIZE, FACINGS, PASSIVE_FAN_SHARE, FLOOR_TICK_MS, STARTING_CASH, WAGE_INTERVAL_MS, ZOOM_DEFAULT } from '../config.js';
+import { BASE_GRID_SIZE, FACINGS, PASSIVE_FAN_SHARE, FLOOR_TICK_MS, STARTING_CASH, TOUCH, WAGE_INTERVAL_MS, ZOOM_DEFAULT } from '../config.js';
 import { SFX } from '../sfx.js';
 import { WorldMixin } from './world.js';
 import { PlacementMixin } from './placement.js';
@@ -166,28 +166,39 @@ export class ClubScene extends Phaser.Scene {
     this.isDragging = false;
     let dragStart = null;
 
+    // Touch: a second finger pinches to zoom (see pinchMove()); a tap may
+    // wobble a little more than a mouse click before it counts as a drag.
+    this.input.addPointer(1);
+    this.pinch = null;
+    const dragSlop = (p) => (p.wasTouch ? TOUCH.tapSlop : 6);
+
     this.input.on('pointerdown', (p) => {
       SFX.unlock(); // first real user gesture — safe/cheap to call every time
       this.isDragging = false;
+      if (this.startPinch()) { dragStart = null; return; }
+      // A finger has no hover: bring the hover state (tile, ghost, object)
+      // to where it touched first.
+      if (p.wasTouch) { this.updateHoverFromPointer(p); this.updateHoverObject(p); }
       // Holding a regular floor: the left button paints (drag to paint a
       // stroke) instead of moving the view.
       const holding = PROP_TYPES[this.selectedProp];
-      if (holding && holding.paintStyle && p.event.button === 0) {
+      if (holding && holding.paintStyle && p.button === 0) {
         this.paintingFloor = true;
         dragStart = null;
         if (this.hoverTile) this.paintFloor(this.hoverTile.gx, this.hoverTile.gy);
         return;
       }
       // A bonus badge under the pointer takes the click (see pointerup).
-      if (this.bonusAt(p.x, p.y)) { dragStart = null; return; }
+      if (this.bonusAt(p.x, p.y, p.wasTouch)) { dragStart = null; return; }
       dragStart = { x: p.x, y: p.y, wx: this.world.x, wy: this.world.y };
     });
 
     this.input.on('pointermove', (p) => {
+      if (this.pinch) { this.pinchMove(); return; }
       if (dragStart) {
         const dx = p.x - dragStart.x;
         const dy = p.y - dragStart.y;
-        if (Math.abs(dx) + Math.abs(dy) > 6) {
+        if (Math.abs(dx) + Math.abs(dy) > dragSlop(p)) {
           this.isDragging = true;
           this.world.x = dragStart.wx + dx;
           this.world.y = dragStart.wy + dy;
@@ -199,6 +210,13 @@ export class ClubScene extends Phaser.Scene {
     });
 
     this.input.on('pointerup', (p) => {
+      // A pinch ends when the last finger lifts; none of its fingers click.
+      if (this.pinch) {
+        if (!this.input.pointer1.isDown && !this.input.pointer2.isDown) this.pinch = null;
+        dragStart = null;
+        this.isDragging = false;
+        return;
+      }
       if (this.paintingFloor) {
         this.paintingFloor = false;
         this.saveGame();
@@ -210,27 +228,27 @@ export class ClubScene extends Phaser.Scene {
       if (wasDragging) return;
       // A bonus badge comes first: collecting it never opens a card or
       // places, moves or sells anything underneath.
-      if (p.event.button === 0 && this.clickBonus(p)) return;
+      if (p.button === 0 && this.clickBonus(p)) return;
       const holding = PROP_TYPES[this.selectedProp];
       if (holding && holding.wallStyle) {
-        if (p.event.button === 0 && this.hoverWall) this.paintWall(this.hoverWall);
+        if (p.button === 0 && this.hoverWall) this.paintWall(this.hoverWall);
         return;
       }
       // With nothing in hand, a click goes to whatever is drawn under the
       // cursor: the Edit tools act on the piece clicked (anywhere on it), a
       // person opens their card, furniture is selected (selection.js).
       // With something in hand, a click always places it.
-      if (p.event.button === 0 && !this.selectedProp && this.clickObject(p)) return;
-      if (p.event.button === 0 && this.dockTab === 'edit' && !this.selectedProp && this.hoverTile
+      if (p.button === 0 && !this.selectedProp && this.clickObject(p)) return;
+      if (p.button === 0 && this.dockTab === 'edit' && !this.selectedProp && this.hoverTile
         && this.editClick(this.hoverTile.gx, this.hoverTile.gy)) return;
-      if (p.event.button === 2) {
+      if (p.button === 2) {
         const hit = this.objectAt(p.x, p.y);
         if (hit && hit.kind === 'prop') { this.sellProp(hit.target.anchor[0], hit.target.anchor[1]); return; }
       }
       if (!this.hoverTile) return;
-      if (p.event.button === 0) {
+      if (p.button === 0) {
         this.placeProp(this.hoverTile.gx, this.hoverTile.gy);
-      } else if (p.event.button === 2) {
+      } else if (p.button === 2) {
         this.sellProp(this.hoverTile.gx, this.hoverTile.gy);
       }
     });

@@ -1,7 +1,7 @@
 // Smoke test: opens the built game (dist/index.html, straight from disk like
 // a player double-clicking it) in headless Chromium and plays through the
 // core loop. Run with `npm test` (builds first).
-import { chromium } from 'playwright';
+import { chromium, devices } from 'playwright';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 import path from 'node:path';
 import fs from 'node:fs';
@@ -2458,6 +2458,68 @@ check('a guest sitting with a sofa back between them and the camera is hidden by
   check('the game page stays small (no songs packed into it)', pageMb < 18, `${pageMb.toFixed(1)} MB`);
   await songPage.close();
   server.close();
+}
+
+// Phones: on a touch screen a tap on a guest opens their card, a tap
+// collects a high five (a little off the badge still counts), two fingers
+// pinch to zoom, and the HUD's top panels don't overlap.
+{
+  const phone = await browser.newContext({ ...devices['iPhone 13'] });
+  const tp = await phone.newPage();
+  tp.on('pageerror', (e) => errors.push(`phone: ${e.message}`));
+  await tp.goto(gameUrl);
+  await tp.waitForFunction(() => { const s = window.__clubNova && window.__clubNova.scene.getScene('club'); return s && s.world && s.sys.settings.status >= 5; });
+  await tp.evaluate(() => {
+    const s = window.__clubNova.scene.getScene('club');
+    s.showLevelUp = () => {}; s.showDaily = () => false;
+    if (!s.clubName) s.setClubName('Phone Club');
+    document.getElementById('namePrompt')?.classList.remove('open');
+    document.getElementById('dailyBox')?.classList.remove('open');
+  });
+  const at = await tp.evaluate(() => {
+    const s = window.__clubNova.scene.getScene('club');
+    s.trySpawnPatron();
+    const p = s.patrons[s.patrons.length - 1];
+    p.moving = false; p.path = [];
+    const st = s.gridToScreen(5, 5);
+    p.container.x = st.sx; p.container.y = st.sy;
+    s.time.timeScale = 0; s.tweens.timeScale = 0;
+    return { x: s.world.x + st.sx * s.world.scaleX, y: s.world.y + (st.sy - 40) * s.world.scaleY };
+  });
+  await tp.waitForTimeout(200);
+  await tp.touchscreen.tap(at.x, at.y);
+  await tp.waitForTimeout(300);
+  const card = await tp.evaluate(() => document.getElementById('infoCard').classList.contains('open'));
+  await tp.evaluate(() => document.getElementById('infoCard').classList.remove('open'));
+  const bonus = await tp.evaluate(() => {
+    const s = window.__clubNova.scene.getScene('club');
+    s.offerBonus(s.patrons[s.patrons.length - 1]);
+    const b = s.bonuses[s.bonuses.length - 1];
+    return { x: s.world.x + b.holder.x * s.world.scaleX, y: s.world.y + b.holder.y * s.world.scaleY, cash: s.cash, amount: b.amount };
+  });
+  await tp.touchscreen.tap(bonus.x + 4, bonus.y + 6);
+  await tp.waitForTimeout(300);
+  const paid = await tp.evaluate(() => window.__clubNova.scene.getScene('club').cash) - bonus.cash;
+  const cdp = await phone.newCDPSession(tp);
+  const touch = (type, pts) => cdp.send('Input.dispatchTouchEvent', { type, touchPoints: pts.map(([x, y], id) => ({ x, y, id })) });
+  const zoom = () => tp.evaluate(() => window.__clubNova.scene.getScene('club').world.scaleX);
+  const z0 = await zoom();
+  await touch('touchStart', [[150, 400]]);
+  await touch('touchStart', [[150, 400], [240, 400]]);
+  for (let i = 1; i <= 8; i++) { await touch('touchMove', [[150 - i * 5, 400], [240 + i * 5, 400]]); await tp.waitForTimeout(20); }
+  await touch('touchEnd', []);
+  await tp.waitForTimeout(200);
+  const z1 = await zoom();
+  const layout = await tp.evaluate(() => {
+    const a = document.getElementById('hudProfile').getBoundingClientRect();
+    const b = document.getElementById('hudRight').getBoundingClientRect();
+    return { gap: Math.round(b.left - a.right), fits: b.right <= window.innerWidth };
+  });
+  check('on a phone, tapping a guest opens their card', card);
+  check('on a phone, tapping a high five collects it', paid === bonus.amount, `paid ${paid}`);
+  check('on a phone, two fingers pinch to zoom', z1 > z0 * 1.3, `${z0.toFixed(2)} -> ${z1.toFixed(2)}`);
+  check('on a phone, the top panels fit side by side', layout.gap > 0 && layout.fits, JSON.stringify(layout));
+  await phone.close();
 }
 
 check('no errors in the page', errors.length === 0, errors.join(' | '));
