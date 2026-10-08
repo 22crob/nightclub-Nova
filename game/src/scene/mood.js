@@ -49,7 +49,7 @@ export class MoodMixin {
 
     // Fun.
     let fun = patron.fun - MOOD.boredomPerSec * dt;
-    if (dancing) fun += MOOD.danceFunPerSec * dt;
+    if (dancing) fun += MOOD.danceFunPerSec * this.djQuality() * dt; // a better booth entertains more (upgrades.js)
     else if (patron.sitting) fun += MOOD.seatedFunPerSec * this.comfortFactor(patron) * dt;
     else if (!patron.moving && this.isNearRevenueProp(patron.gx, patron.gy)) fun += MOOD.livelyFunPerSec * dt;
     patron.fun = clamp(fun);

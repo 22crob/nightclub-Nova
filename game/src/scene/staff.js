@@ -2,7 +2,7 @@
 // Mixed into ClubScene (see ClubScene.js); `this` is the scene.
 import { PATRON_META, PATRON_SHEETS } from '../assets.js';
 import { PROP_TYPES, STAFF_TYPES } from '../catalog.js';
-import { BAR_QUEUE_LENGTH, BARTENDERS, BOOST, DRINK_FUN_MOOD, XP, CHARACTER_DISPLAY_HEIGHT, MONEY, THIRST_INTERVAL, PATRON_POPUP_Y, PROP_SCALE, SELL_REFUND_RATIO, BOUNCERS } from '../config.js';
+import { BAR_QUEUE_LENGTH, BARTENDERS, BOOST, DRINK_FUN_MOOD, XP, CHARACTER_DISPLAY_HEIGHT, MONEY, THIRST_INTERVAL, PATRON_POPUP_Y, PROP_SCALE, SELL_REFUND_RATIO, BOUNCERS, BAR_TRAINING, DRINK_STOCK } from '../config.js';
 import { SFX } from '../sfx.js';
 import { randRange } from '../util.js';
 import { MOOD } from './mood.js';
@@ -294,12 +294,13 @@ export class StaffMixin {
     const drink = this.drinkOf(patron.order || this.pickDrink(patron).key);
     patron.order = null;
     const price = drink.price * this.drinkPriceFactor();
-    const tip = this.tipAmount(patron, price * randRange(...MONEY.drinkTip));
+    const tip = Math.round(this.tipAmount(patron, price * randRange(...MONEY.drinkTip)) * this.barTricksFactor(rec));
     this.cash += price + tip;
     this.noteIncome('drinkMoney', price);
     this.noteIncome('tips', tip);
     patron.spent = (patron.spent || 0) + price + tip;
     patron.drinks = (patron.drinks || 0) + 1;
+    this.useDrinkStock(); // one less in the bars (upgrades.js)
     this.fans += XP.drinkServed; // XP for good service
     this.drinksSold = (this.drinksSold || 0) + 1;
     this.bumpGoal('drinks');
@@ -491,7 +492,7 @@ export class StaffMixin {
     const bouncerAllowed = this.bouncerAllowance();
     // Only rebuild when something on the cards changed (this runs often).
     const key = 'staff:' + menuKey + ':' + records.map((r) => `${r.anchor}:${!!r.staff}:${this.barGroup(r).length}`).join('|')
-      + `:${this.cash >= type.hireCost}:${allowed}:${bouncers}:${bouncerAllowed}:${this.cash >= bouncerCost}`;
+      + `:${this.cash >= type.hireCost}:${allowed}:${bouncers}:${bouncerAllowed}:${this.cash >= bouncerCost}:${this.drinkStockLeft()}:${this.barTraining || 0}:${this.cash >= this.restockCost()}:${this.levelInfo().level}`;
     if (el.dataset.rendered === key) return;
     el.innerHTML = '';
     el.dataset.rendered = key;
@@ -525,6 +526,36 @@ export class StaffMixin {
       card.cost.textContent = `🍹×${menu.length}`;
       card.slot.addEventListener('click', () => this.openDrinkMenu());
       el.appendChild(card.slot);
+      // Drink stock: click to restock the bars (upgrades.js).
+      const left = this.drinkStockLeft();
+      const full = this.maxDrinkStock();
+      const restock = this.restockCost();
+      const stock = this.makeCard('Restock the bars', left === 0
+        ? `Out of drinks! The bartenders can't serve anyone. Restock all ${full} for $${restock}.`
+        : `${left} of ${full} drinks in stock. Every drink served uses one${restock > 0 ? `; restock the rest for $${restock}` : ': fully stocked'}.`, null);
+      stock.slot.classList.add('menuSlot', 'stockSlot');
+      stock.icon.innerHTML = '<div class="emojiIcon">📦</div>';
+      stock.cost.textContent = `${left}/${full}`;
+      stock.button.classList.toggle('unaffordable', restock > 0 && this.cash < restock);
+      if (left <= full * DRINK_STOCK.lowShare) stock.slot.classList.add('lowStock');
+      stock.slot.addEventListener('click', () => { this.restockBar(); this.renderStaffCard(); });
+      el.appendChild(stock.slot);
+      // Bartender training: every bartender works faster.
+      const next = this.nextTraining();
+      const stars = '★'.repeat(this.barTraining || 0) + '☆'.repeat(BAR_TRAINING.costs.length - (this.barTraining || 0));
+      const train = this.makeCard(`Bartender training ${stars}`, next
+        ? `Your bartenders work ${Math.round((this.trainingSpeed() - 1) * 100)}% faster. ${this.levelInfo().level >= next.unlockLevel ? `Train them up for $${next.cost}: ${Math.round(BAR_TRAINING.speedPer * 100)}% faster again.` : `More training at level ${next.unlockLevel}.`}`
+        : `Fully trained: your bartenders work ${Math.round((this.trainingSpeed() - 1) * 100)}% faster.`, null);
+      train.slot.classList.add('menuSlot', 'trainSlot');
+      train.icon.innerHTML = '<div class="emojiIcon">🎓</div>';
+      if (!next) train.cost.textContent = stars;
+      else if (this.levelInfo().level < next.unlockLevel) { train.cost.textContent = `🔒 Lv ${next.unlockLevel}`; train.button.classList.add('locked'); }
+      else {
+        train.cost.textContent = `+$${next.cost}`;
+        train.button.classList.toggle('unaffordable', this.cash < next.cost);
+        train.slot.addEventListener('click', () => { this.trainBartenders(); this.renderStaffCard(); });
+      }
+      el.appendChild(train.slot);
     } else {
       const { slot, cost } = this.makeCard('No bars yet', `Place a bar first, then hire a bartender to work it. ${limit}`, null);
       slot.classList.add('emptySlot');

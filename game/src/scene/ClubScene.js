@@ -41,6 +41,7 @@ import { DailyMixin } from './daily.js';
 import { DrinksMixin } from './drinks.js';
 import { TestModeMixin } from './testMode.js';
 import { PopularityMixin } from './popularity.js';
+import { UpgradesMixin } from './upgrades.js';
 import { Music } from '../music.js';
 import { applyMixins } from './applyMixins.js';
 
@@ -389,6 +390,7 @@ export class ClubScene extends Phaser.Scene {
 
 applyMixins(ClubScene, [
   PopularityMixin,
+  UpgradesMixin,
   InventoryMixin,
   ActivitiesMixin,
   WorldMixin,

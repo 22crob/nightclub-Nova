@@ -458,6 +458,26 @@ export const PARTIES = [
 // line reaches slammedLine the bartender says so in a speech bubble (at
 // most every hintEveryMs), suggesting it.
 export const BOTTOMS_UP = { durationMs: 30 * 1000, speed: 2, cooldownMs: 90 * 1000, slammedLine: 3, hintEveryMs: 60 * 1000, sayMs: 4500 };
+// DJ, bar and seating upgrades (src/scene/upgrades.js).
+// A better DJ booth entertains more: dancers have fun djQuality times as fast,
+// from qualityMin (the cheapest booth) to qualityMax (the priciest).
+// Song Dedication (guest card): the DJ plays one for that guest, +dedicationMood
+// mood and +dedicationFun fun, then needs dedicationCooldownMs.
+export const DJ = { qualityMin: 0.8, qualityMax: 1.5, dedicationMood: 25, dedicationFun: 25, dedicationCooldownMs: 120 * 1000 };
+// Bar Tricks (bartender card): for durationMs that bar's tips are
+// tipMultiplier times bigger, and guests within range tiles cheer up by
+// cheerMood; then cooldownMs.
+export const BAR_TRICKS = { durationMs: 30 * 1000, cooldownMs: 120 * 1000, tipMultiplier: 1.5, cheerMood: 8, range: 4 };
+// Bartender training (Staff panel): each level makes every bartender work
+// speedPer faster. Level n costs costs[n-1] and unlocks at levels[n-1].
+export const BAR_TRAINING = { costs: [400, 1200, 3000], levels: [3, 8, 15], speedPer: 0.2 };
+// Drink stock (Staff panel): every drink served uses one; the bars hold
+// base + perBarUnit per bar unit. Restocking costs costPerDrink a drink. At
+// lowShare the bartender warns, and with none left they can't serve.
+export const DRINK_STOCK = { base: 40, perBarUnit: 20, costPerDrink: 2, lowShare: 0.2, warnEveryMs: 60 * 1000 };
+// VIP booths: a high roller, VIP guest or celebrity who sits at one pays a
+// reservation of feeShare of the booth's price (at least feeMin).
+export const VIP_BOOTH = { feeShare: 0.1, feeMin: 20 };
 // Luxury (see luxury() in economy.js): a tenth of what everything placed,
 // painted and papered cost. Each point raises tips by luxuryTipPerPoint,
 // up to luxuryTipMax extra.

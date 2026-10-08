@@ -869,3 +869,5 @@ input, textarea { -webkit-user-select: text; user-select: text; }
    a bouncer to hire shows the person darkened. */
 .propSlot.staffPerson .propButton.vacant .icon { filter: brightness(0.3) saturate(0.4); }
 .propSlot.staffPerson .celebName { font-size: 10px; }
+.propSlot .emojiIcon { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; font-size: 30px; }
+.propSlot.lowStock { box-shadow: 0 0 0 2px #ff5a5a, 0 0 12px #ff5a5a; }

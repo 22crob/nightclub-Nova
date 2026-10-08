@@ -2516,6 +2516,55 @@ const guestKinds = await page.evaluate(() => {
 check('seven kinds of guest; big spenders, high rollers and VIPs come more often to a fancier club, order pricier drinks and tip more', guestKinds.kinds === 'bigSpender,highRoller,partier,regular,social,troublemaker,vip' && guestKinds.richerWhenFancy && guestKinds.vipTipsMore && guestKinds.priceyOrders, JSON.stringify(guestKinds));
 check('seats have comfort (VIP booths comfier than stools), and a guest still happy at the end of their visit stays longer', guestKinds.comfier && guestKinds.stays, JSON.stringify(guestKinds));
 
+// DJ, bar and seating upgrades: a better booth entertains more; Song
+// Dedication cheers one guest (then a cooldown); Bar Tricks makes a bar's
+// tips bigger for a while; training makes bartenders faster; drinks run out
+// and the bars are restocked from Staff; big spenders pay to sit at a VIP booth.
+const upgrades = await page.evaluate(() => {
+  const s = window.__clubNova.scene.getScene('club');
+  const out = {};
+  const realBooth = s.clubBooth.bind(s);
+  s.clubBooth = () => ({ type: 'woodBooth' }); out.wood = s.djQuality();
+  s.clubBooth = () => ({ type: 'holoBooth' }); out.holo = s.djQuality();
+  s.clubBooth = realBooth;
+  out.boothMatters = out.holo > out.wood;
+  s.trySpawnPatron();
+  const p = s.patrons.filter((q) => !q.gone && !q.leaving).pop();
+  s.dedicationAt = 0;
+  if (p) { p.mood = 40; out.dedicated = s.dedicateSong(p) && p.mood >= 65; out.cooldown = !s.dedicateSong(p); }
+  const bar = s.hireableRecords().find((r) => r.staff);
+  bar.staff.tricksAt = 0; bar.staff.tricksUntil = 0;
+  out.tricks = s.barTricks(bar) && s.barTricksFactor(bar) === 1.5 && !s.barTricks(bar);
+  bar.staff.tricksUntil = 0;
+  const real = s.levelInfo.bind(s);
+  const cash0 = s.cash;
+  s.levelInfo = () => ({ ...real(), level: 3 });
+  s.cash = 5000; s.barTraining = 0; bar.staff.fastUntil = 0;
+  out.trained = s.trainBartenders() && s.barTraining === 1 && Math.abs(s.bartenderSpeed(bar.staff) - 1.2) < 1e-9;
+  out.notYet = !s.trainBartenders(); // the next level of training is at level 8
+  s.levelInfo = real;
+  s.barTraining = 0;
+  // Drink stock.
+  const full = s.maxDrinkStock();
+  s.drinkStock = 0;
+  const q = s.patrons.find((x) => !x.gone && !x.leaving && !x.queue);
+  out.cantOrderWhenOut = q ? !s.joinBarQueue(q) : true;
+  s.cash = 5000;
+  out.restockCost = s.restockCost();
+  out.restocked = s.restockBar() && s.drinkStockLeft() === full && 5000 - s.cash === full * 2;
+  // VIP booth reservation.
+  const roller = { type: { vipSeats: true }, container: { x: 0, y: 0 }, spent: 0 };
+  const c1 = s.cash;
+  out.fee = s.vipBoothFee(roller, { type: 'vipLounge' });
+  out.feeOnce = s.vipBoothFee(roller, { type: 'vipLounge' }) === 0 && s.cash - c1 === out.fee;
+  out.regularNoFee = s.vipBoothFee({ type: { vipSeats: false }, container: { x: 0, y: 0 } }, { type: 'vipLounge' }) === 0;
+  s.cash = cash0;
+  return out;
+});
+check('a better DJ booth entertains more; Song Dedication cheers a guest up, then recovers', upgrades.boothMatters && upgrades.dedicated && upgrades.cooldown, JSON.stringify(upgrades));
+check('Bar Tricks makes a bar\'s tips 1.5x for a while; training makes bartenders 20% faster (more at higher levels)', upgrades.tricks && upgrades.trained && upgrades.notYet, JSON.stringify(upgrades));
+check('drinks run out (nobody can order) and restocking from Staff fills the bars for $2 a drink; big spenders pay once to sit at a VIP booth', upgrades.cantOrderWhenOut && upgrades.restocked && upgrades.fee >= 20 && upgrades.feeOnce && upgrades.regularNoFee, JSON.stringify(upgrades));
+
 // Staff: the Staff panel shows people (bartenders per bar, bouncers) with
 // pictures; more bouncers unlock with levels. Troublemakers bother the guests
 // near them; a bouncer walks over and walks them out the door, for 5 XP.

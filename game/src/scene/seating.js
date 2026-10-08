@@ -137,7 +137,7 @@ export class SeatingMixin {
     const c = patron.container;
     patron.sitting = true;
     patron.moving = true;
-    if (VIP_BOOTHS.has(rec.type)) patron.vipSeated = true; // a celebrity likes that (see celebVisitOver())
+    if (VIP_BOOTHS.has(rec.type)) { patron.vipSeated = true; this.vipBoothFee(patron, rec); } // a celebrity likes that (see celebVisitOver()); big spenders pay to sit there (upgrades.js)
     patron.gx = Math.round(spot.gx);
     patron.gy = Math.round(spot.gy);
     // Facing the camera, they sit on top of the cushions (in front of the

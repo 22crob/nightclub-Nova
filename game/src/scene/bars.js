@@ -103,6 +103,7 @@ export class BarsMixin {
   // False if every bar is full (or there's none).
   joinBarQueue(patron) {
     if (patron.queue) return true;
+    if (this.drinkStockLeft() <= 0) return false; // nothing to serve (upgrades.js)
     let best = null;
     for (const group of this.workedBars()) {
       const customers = this.barGroupQueue(group[0]).length;
@@ -247,6 +248,7 @@ export class BarsMixin {
       // Free bartenders go to the nearest customer waiting at a spot nobody
       // else is serving.
       const ready = this.barGroupQueue(group[0]).filter((p) => p.readyToOrder && this.atServiceSpot(p) && !p.servedBy && !p.leaving);
+      if (this.drinkStockLeft() <= 0) { this.warnDrinkStock(); this.checkBarPatience(group); continue; } // out of drinks
       for (const b of staff) {
         if (b.task || ready.length === 0) continue;
         const at = group.indexOf(b.atUnit);

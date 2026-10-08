@@ -131,6 +131,9 @@ export class GuestsMixin {
       action('seatGuest', this.seatBlocker(p), 'Seat this guest at one of your VIP booths');
       action('danceGuest', this.danceBlocker(p), 'Send this guest to the dance floor');
       action('drinkGuest', this.drinkBlocker(p), 'Give this guest a drink on the house');
+      const dedReady = this.dedicationReady();
+      action('dedicateGuest', !this.musicPlaying() ? 'no music playing' : (dedReady ? null : 'the DJ needs a moment'), 'Song Dedication: the DJ plays one for this guest, a big cheer');
+      set('dedicateTimer', dedReady ? '' : `${Math.ceil((this.dedicationAt - this.time.now) / 1000)}s`);
       show('infoGuestStats', true);
       show('infoGuestActions', true);
       show('infoBarStats', false);
@@ -143,12 +146,16 @@ export class GuestsMixin {
     this.setPortrait(document.getElementById('infoPortrait'), rec.staff.container.staffCharacter);
     const waiting = this.barGroupQueue(rec).length;
     set('infoName', rec.staff.name);
-    set('infoRole', `Bartender · ${waiting} waiting for a drink`);
+    set('infoRole', `Bartender · ${waiting} waiting · ${this.drinkStockLeft()}/${this.maxDrinkStock()} drinks in stock`);
     set('infoQuote', this.bartenderSpeed(rec.staff) > 1 ? '"Bottoms up!"' : waiting >= 3 ? '"The bar is slammed!"' : (waiting ? '"Coming right up!"' : '"Who\'s thirsty?"'));
     const ready = this.bottomsUpReady(rec);
     const fast = this.bartenderSpeed(rec.staff) > 1;
     action('bottomsUp', fast ? 'working twice as fast now' : (!ready ? 'recovering' : null), 'Bottoms Up! This bartender works twice as fast for 30 seconds.');
     set('bottomsUpTimer', ready ? '' : `${Math.ceil((rec.staff.bottomsUpAt - this.time.now) / 1000)}s`);
+    const tricks = this.barTricksReady(rec);
+    const tricking = this.time.now < (rec.staff.tricksUntil || 0);
+    action('barTricks', tricking ? 'showing off now' : (tricks ? null : 'recovering'), 'Bar Tricks! This bartender shows off: guests nearby cheer and tips at this bar are 1.5x for 30 seconds.');
+    set('barTricksTimer', tricks ? '' : `${Math.ceil((rec.staff.tricksAt - this.time.now) / 1000)}s`);
     show('infoGuestStats', false);
     show('infoGuestActions', false);
     show('infoBarStats', true);
@@ -286,7 +293,7 @@ export class GuestsMixin {
 
   // How fast a bartender works right now: BOTTOMS_UP.speed during Bottoms Up!, else 1.
   bartenderSpeed(b) {
-    return b && this.time.now < (b.fastUntil || 0) ? BOTTOMS_UP.speed : 1;
+    return (b && this.time.now < (b.fastUntil || 0) ? BOTTOMS_UP.speed : 1) * this.trainingSpeed();
   }
 
   // A bartender says something in a speech bubble over their head.
@@ -335,10 +342,14 @@ export class GuestsMixin {
     guestAction('seatGuest', this.seatGuest);
     guestAction('danceGuest', this.danceGuest);
     guestAction('drinkGuest', this.drinkGuest);
+    guestAction('dedicateGuest', this.dedicateSong);
     for (const el of document.querySelectorAll('#infoCard .actionButton')) {
       el.addEventListener('mouseenter', () => this.showActionTip(el));
       el.addEventListener('mouseleave', () => this.showActionTip(null));
     }
+    document.getElementById('barTricks')?.addEventListener('click', () => {
+      if (this.infoCard && this.infoCard.kind === 'bartender') this.barTricks(this.infoCard.target);
+    });
     document.getElementById('bottomsUp')?.addEventListener('click', () => {
       if (this.infoCard && this.infoCard.kind === 'bartender') this.bottomsUp(this.infoCard.target);
     });
