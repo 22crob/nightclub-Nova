@@ -496,6 +496,318 @@ export const WALL_STYLES = {
       baseboard(ctx, W, H, '#050508');
     },
   },
+  // --- The October 2026 batch, from the owner's reference clubs ----------
+
+  // Grey cinder blocks, a cheap first step up from the torn paper.
+  cinderBlock: {
+    frames: 1,
+    draw(ctx, W, H) {
+      ctx.fillStyle = '#4a4a4c'; // mortar
+      ctx.fillRect(0, 0, W, H);
+      const r = rng(41);
+      const bh = 26, bw = W, gap = 3;
+      for (let row = 0; row * bh < H; row++) {
+        const off = row % 2 ? bw / 2 : 0;
+        for (let k = -1; k < 2; k++) {
+          const tone = 112 + Math.floor(r() * 18);
+          const x = k * bw + off + gap / 2, y = row * bh + gap / 2;
+          ctx.fillStyle = `rgb(${tone},${tone},${tone - 4})`;
+          ctx.fillRect(x, y, bw - gap, bh - gap);
+          ctx.fillStyle = 'rgba(255,255,255,0.12)';
+          ctx.fillRect(x, y, bw - gap, 2);
+          // Pitted surface.
+          for (let i = 0; i < 18; i++) {
+            ctx.fillStyle = `rgba(0,0,0,${0.08 + r() * 0.12})`;
+            ctx.fillRect(x + r() * (bw - gap), y + 2 + r() * (bh - gap - 3), 2, 2);
+          }
+        }
+      }
+      verticalShade(ctx, W, H);
+      baseboard(ctx, W, H, '#2e2e31');
+    },
+  },
+
+  // White subway tiles with dark grout, a little grubby low down.
+  subwayTile: {
+    frames: 1,
+    draw(ctx, W, H) {
+      ctx.fillStyle = '#5d6168';
+      ctx.fillRect(0, 0, W, H);
+      const th = 11, tw = W / 3, gap = 2;
+      for (let row = 0; row * th < H; row++) {
+        const off = row % 2 ? tw / 2 : 0;
+        for (let k = -1; k < 4; k++) {
+          const x = k * tw + off + gap / 2, y = row * th + gap / 2;
+          const g = ctx.createLinearGradient(0, y, 0, y + th);
+          g.addColorStop(0, '#f4f6f4');
+          g.addColorStop(1, '#d5dad6');
+          ctx.fillStyle = g;
+          ctx.fillRect(x, y, tw - gap, th - gap);
+        }
+      }
+      const grime = ctx.createLinearGradient(0, 0, 0, H);
+      grime.addColorStop(0.55, 'rgba(70,60,40,0)');
+      grime.addColorStop(1, 'rgba(70,60,40,0.3)');
+      ctx.fillStyle = grime;
+      ctx.fillRect(0, 0, W, H);
+      baseboard(ctx, W, H, '#2b2d33');
+    },
+  },
+
+  // Rough wooden planks running across, like a beer hall.
+  woodPlanks: {
+    frames: 1,
+    draw(ctx, W, H) {
+      const r = rng(57);
+      const ph = 17;
+      for (let row = 0; row * ph < H; row++) {
+        const tone = 0.85 + r() * 0.3;
+        ctx.fillStyle = `rgb(${(128 * tone) | 0},${(80 * tone) | 0},${(46 * tone) | 0})`;
+        ctx.fillRect(0, row * ph, W, ph);
+        // Grain.
+        ctx.strokeStyle = 'rgba(60,32,14,0.35)';
+        ctx.lineWidth = 1;
+        for (let i = 0; i < 3; i++) {
+          const y = row * ph + 3 + r() * (ph - 6);
+          ctx.beginPath();
+          ctx.moveTo(0, y);
+          ctx.bezierCurveTo(W * 0.3, y + r() * 3 - 1.5, W * 0.7, y + r() * 3 - 1.5, W, y);
+          ctx.stroke();
+        }
+        // Seam and a butt joint somewhere along the plank.
+        ctx.fillStyle = 'rgba(30,14,4,0.75)';
+        ctx.fillRect(0, row * ph + ph - 2, W, 2);
+        ctx.fillRect((r() * W) | 0, row * ph, 2, ph);
+        ctx.fillStyle = '#2a1a10';
+        ctx.fillRect(6, row * ph + ph / 2 - 1, 2, 2); // nails
+        ctx.fillRect(W - 8, row * ph + ph / 2 - 1, 2, 2);
+      }
+      verticalShade(ctx, W, H);
+      baseboard(ctx, W, H, '#3a2210');
+    },
+  },
+
+  // Theatre red: deep red panels framed in gold, like the red-floor club.
+  theatreRed: {
+    frames: 1,
+    draw(ctx, W, H) {
+      const bg = ctx.createLinearGradient(0, 0, W, 0);
+      bg.addColorStop(0, '#6a0c14');
+      bg.addColorStop(0.5, '#8c1420');
+      bg.addColorStop(1, '#6a0c14');
+      ctx.fillStyle = bg;
+      ctx.fillRect(0, 0, W, H);
+      const top = 16, bot = H - BASEBOARD - 12;
+      ctx.strokeStyle = '#e2b44c';
+      ctx.lineWidth = 3;
+      ctx.strokeRect(9, top, W - 18, bot - top);
+      ctx.strokeStyle = 'rgba(255,230,150,0.5)';
+      ctx.lineWidth = 1;
+      ctx.strokeRect(14, top + 5, W - 28, bot - top - 10);
+      // Gold rosette in the middle of the panel.
+      const cx = W / 2, cy = (top + bot) / 2;
+      ctx.fillStyle = '#e2b44c';
+      for (let a = 0; a < 8; a++) {
+        ctx.beginPath();
+        ctx.ellipse(cx + Math.cos(a * Math.PI / 4) * 6, cy + Math.sin(a * Math.PI / 4) * 6, 4, 2, a * Math.PI / 4, 0, Math.PI * 2);
+        ctx.fill();
+      }
+      ctx.fillStyle = '#fff0b8';
+      ctx.beginPath(); ctx.arc(cx, cy, 3, 0, Math.PI * 2); ctx.fill();
+      // Gold picture rail at the top.
+      ctx.fillStyle = '#c9952e';
+      ctx.fillRect(0, 4, W, 5);
+      ctx.fillStyle = 'rgba(255,240,180,0.6)';
+      ctx.fillRect(0, 4, W, 1.5);
+      verticalShade(ctx, W, H);
+      baseboard(ctx, W, H, '#3a0608');
+    },
+  },
+
+  // A wall of speaker cabinets, black boxes with yellow and cyan cones.
+  speakerWall: {
+    frames: 1,
+    draw(ctx, W, H) {
+      ctx.fillStyle = '#0d0d10';
+      ctx.fillRect(0, 0, W, H);
+      const bh = (H - BASEBOARD) / 4;
+      for (let row = 0; row < 4; row++) {
+        const y = row * bh;
+        ctx.fillStyle = '#1d1d22';
+        ctx.fillRect(2, y + 2, W - 4, bh - 4);
+        ctx.strokeStyle = '#3a3a44';
+        ctx.lineWidth = 1.5;
+        ctx.strokeRect(2, y + 2, W - 4, bh - 4);
+        const ring = row % 2 ? '#3de0ff' : '#ffd23d';
+        const big = row % 2 === 0;
+        const cones = big ? [[W / 2, y + bh / 2, bh * 0.36]] : [[W * 0.28, y + bh / 2, bh * 0.26], [W * 0.72, y + bh / 2, bh * 0.26]];
+        for (const [cx, cy, rad] of cones) {
+          ctx.fillStyle = ring;
+          ctx.beginPath(); ctx.arc(cx, cy, rad, 0, Math.PI * 2); ctx.fill();
+          const g = ctx.createRadialGradient(cx - rad * 0.2, cy - rad * 0.2, 0, cx, cy, rad * 0.82);
+          g.addColorStop(0, '#4a4a54');
+          g.addColorStop(1, '#0a0a0c');
+          ctx.fillStyle = g;
+          ctx.beginPath(); ctx.arc(cx, cy, rad * 0.82, 0, Math.PI * 2); ctx.fill();
+          ctx.fillStyle = '#2a2a30';
+          ctx.beginPath(); ctx.arc(cx, cy, rad * 0.25, 0, Math.PI * 2); ctx.fill();
+        }
+      }
+      baseboard(ctx, W, H, '#050507');
+    },
+  },
+
+  // Black with tall grey arch silhouettes, like the Art Deco club.
+  blackArches: {
+    frames: 1,
+    draw(ctx, W, H) {
+      ctx.fillStyle = '#121116';
+      ctx.fillRect(0, 0, W, H);
+      const x0 = 12, x1 = W - 12, top = 24, bot = H - BASEBOARD - 6;
+      const rad = (x1 - x0) / 2;
+      const arch = (inset) => {
+        ctx.beginPath();
+        ctx.moveTo(x0 + inset, bot);
+        ctx.lineTo(x0 + inset, top + rad);
+        ctx.arc(W / 2, top + rad, rad - inset, Math.PI, 0);
+        ctx.lineTo(x1 - inset, bot);
+        ctx.closePath();
+      };
+      arch(0);
+      ctx.fillStyle = '#3a3a44';
+      ctx.fill();
+      arch(4);
+      ctx.fillStyle = '#26252e';
+      ctx.fill();
+      // A thin gold keystone line.
+      ctx.fillStyle = '#c9a046';
+      ctx.fillRect(W / 2 - 2, top - 2, 4, 8);
+      verticalShade(ctx, W, H);
+      baseboard(ctx, W, H, '#08080b');
+    },
+  },
+
+  // Backlit white shelves full of bottles, as behind the best bars.
+  bottleShelf: {
+    frames: 1,
+    draw(ctx, W, H) {
+      ctx.fillStyle = '#16121c';
+      ctx.fillRect(0, 0, W, H);
+      const r = rng(73);
+      const shelves = 5, sh = (H - BASEBOARD - 8) / shelves;
+      const colors = ['#2f8a3a', '#7a3a12', '#c8d4dc', '#3a5ab8', '#a01a3a', '#d8a030', '#5a2a78'];
+      for (let row = 0; row < shelves; row++) {
+        const y = 6 + row * sh;
+        // Glow behind the bottles.
+        const g = ctx.createLinearGradient(0, y, 0, y + sh);
+        g.addColorStop(0, 'rgba(255,250,235,0.25)');
+        g.addColorStop(1, 'rgba(255,250,235,0.85)');
+        ctx.fillStyle = g;
+        ctx.fillRect(3, y, W - 6, sh - 4);
+        // Bottles standing on the shelf.
+        let x = 6;
+        while (x < W - 10) {
+          const bw = 6 + r() * 3, bh2 = sh * (0.55 + r() * 0.3);
+          ctx.fillStyle = colors[(r() * colors.length) | 0];
+          const by = y + sh - 4 - bh2;
+          ctx.fillRect(x, by + bh2 * 0.35, bw, bh2 * 0.65);
+          ctx.fillRect(x + bw / 2 - 1.5, by, 3, bh2 * 0.4);
+          ctx.fillStyle = 'rgba(255,255,255,0.35)';
+          ctx.fillRect(x + 1, by + bh2 * 0.4, 1.5, bh2 * 0.5);
+          x += bw + 2 + r() * 2;
+        }
+        // The white shelf.
+        ctx.fillStyle = '#f2f0ec';
+        ctx.fillRect(0, y + sh - 4, W, 4);
+      }
+      baseboard(ctx, W, H, '#0c0a10');
+    },
+  },
+
+  // Dark wall with glowing purple panels.
+  purpleGlow: {
+    frames: 1,
+    draw(ctx, W, H) {
+      ctx.fillStyle = '#100a1c';
+      ctx.fillRect(0, 0, W, H);
+      const top = 14, bot = H - BASEBOARD - 10, x0 = 10, x1 = W - 10;
+      ctx.save();
+      ctx.shadowColor = '#b24bff';
+      ctx.shadowBlur = 16;
+      const g = ctx.createLinearGradient(0, top, 0, bot);
+      g.addColorStop(0, '#d08cff');
+      g.addColorStop(0.5, '#9a3cf0');
+      g.addColorStop(1, '#5a14b8');
+      ctx.fillStyle = g;
+      ctx.fillRect(x0, top, x1 - x0, bot - top);
+      ctx.restore();
+      ctx.fillStyle = 'rgba(255,255,255,0.35)';
+      ctx.fillRect(x0 + 4, top + 4, 3, bot - top - 8);
+      ctx.strokeStyle = '#e8c8ff';
+      ctx.lineWidth = 1.5;
+      ctx.strokeRect(x0, top, x1 - x0, bot - top);
+      baseboard(ctx, W, H, '#07040c');
+    },
+  },
+
+  // Icy blue glowing panels with frosty cracks, like the ice club.
+  icePanels: {
+    frames: 1,
+    draw(ctx, W, H) {
+      const g = ctx.createLinearGradient(0, 0, 0, H);
+      g.addColorStop(0, '#bfeaff');
+      g.addColorStop(0.5, '#5ab8f0');
+      g.addColorStop(1, '#1e5aa8');
+      ctx.fillStyle = g;
+      ctx.fillRect(0, 0, W, H);
+      const r = rng(91);
+      // Blocks of ice.
+      ctx.strokeStyle = 'rgba(255,255,255,0.7)';
+      ctx.lineWidth = 2;
+      const bh = (H - BASEBOARD) / 3;
+      for (let row = 0; row < 3; row++) ctx.strokeRect(3, row * bh + 3, W - 6, bh - 6);
+      // Frosty cracks.
+      ctx.strokeStyle = 'rgba(255,255,255,0.55)';
+      ctx.lineWidth = 1;
+      for (let i = 0; i < 5; i++) {
+        let x = r() * W, y = r() * (H - BASEBOARD);
+        ctx.beginPath();
+        ctx.moveTo(x, y);
+        for (let k = 0; k < 4; k++) { x += r() * 16 - 8; y += r() * 14 - 4; ctx.lineTo(x, y); }
+        ctx.stroke();
+      }
+      const shine = ctx.createLinearGradient(0, 0, W, 0);
+      shine.addColorStop(0, 'rgba(255,255,255,0.3)');
+      shine.addColorStop(0.4, 'rgba(255,255,255,0)');
+      ctx.fillStyle = shine;
+      ctx.fillRect(0, 0, W, H);
+      baseboard(ctx, W, H, '#dff4ff');
+    },
+  },
+
+  // Black wall covered in small white lights that twinkle now and then.
+  ledDots: {
+    frames: 8,
+    speed: 3,
+    phase: 'random',
+    draw(ctx, W, H, frame) {
+      ctx.fillStyle = '#08080c';
+      ctx.fillRect(0, 0, W, H);
+      const r = rng(7);
+      const step = 10;
+      for (let y = step / 2; y < H - BASEBOARD; y += step) {
+        for (let x = step / 2; x < W; x += step) {
+          const seed = r();
+          const twinkle = ((seed * 8) | 0) === frame;
+          ctx.fillStyle = twinkle ? 'rgba(255,255,255,1)' : `rgba(255,250,235,${0.35 + seed * 0.3})`;
+          ctx.beginPath();
+          ctx.arc(x, y, twinkle ? 2.2 : 1.4, 0, Math.PI * 2);
+          ctx.fill();
+        }
+      }
+      baseboard(ctx, W, H, '#030305');
+    },
+  },
 };
 
 // One frame of a design, sheared onto a wall. 'right' is the wall along
