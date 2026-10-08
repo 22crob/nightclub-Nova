@@ -72,10 +72,32 @@ export class PlacementMixin {
     // way in is never blocked (floors can).
     const solid = !allowDoor && !(PROP_TYPES[type] && PROP_TYPES[type].floorStyle);
     const door = this.doorTile();
-    return tiles.every(([tx, ty]) => (
+    const fits = tiles.every(([tx, ty]) => (
       this.inGrid(tx, ty) && !this.placed[`${tx},${ty}`] &&
       !(solid && Math.abs(tx - door.gx) + Math.abs(ty - door.gy) <= 1)
     ));
+    return fits && (!solid || this.doorStaysOpen(tiles));
+  }
+
+  // Would the door still lead into most of the room with `tiles` filled?
+  // Stops furniture boxing the doorway into a little pocket nobody can get
+  // out of (guests would stand stuck on the door and the line would stop).
+  doorStaysOpen(tiles) {
+    const blocked = new Set(tiles.map(([x, y]) => `${x},${y}`));
+    const open = (x, y) => this.inGrid(x, y) && !blocked.has(`${x},${y}`) && !this.isBlockingProp(x, y);
+    let total = 0;
+    for (let x = 0; x < this.gridW; x++) for (let y = 0; y < this.gridH; y++) if (open(x, y)) total++;
+    const { gx, gy } = this.doorTile();
+    const seen = new Set([`${gx},${gy}`]);
+    const queue = [[gx, gy]];
+    while (queue.length) {
+      const [x, y] = queue.pop();
+      for (const [dx, dy] of [[1, 0], [-1, 0], [0, 1], [0, -1]]) {
+        const k = `${x + dx},${y + dy}`;
+        if (!seen.has(k) && open(x + dx, y + dy)) { seen.add(k); queue.push([x + dx, y + dy]); }
+      }
+    }
+    return seen.size >= total * 0.5;
   }
 
   // Screen position at the center of a footprint (the midpoint between

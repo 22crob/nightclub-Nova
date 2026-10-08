@@ -180,8 +180,8 @@ export class WorldMixin {
     return keys;
   }
 
-  // A clear tile a few steps inside the door, for someone who just came in
-  // to walk to before deciding what to do.
+  // A clear tile a few steps inside the door that can be walked to from it,
+  // for someone who just came in to walk to before deciding what to do.
   entrySpot() {
     const { gx, gy } = this.doorTile();
     const off = this.keepOffTiles();
@@ -193,7 +193,9 @@ export class WorldMixin {
         spots.push([x, y]);
       }
     }
-    return spots.length ? spots[Math.floor(Math.random() * spots.length)] : null;
+    // Random order, first one with a way there (furniture can wall some off).
+    for (let i = spots.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [spots[i], spots[j]] = [spots[j], spots[i]]; }
+    return spots.find(([x, y]) => this.findPath(gx, gy, x, y)) || null;
   }
 
   // The club's front door (see doorCanvas() in walls.js), set into the left

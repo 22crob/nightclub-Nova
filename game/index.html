@@ -270,6 +270,20 @@
       <div id="goalsTop"><span id="goalsTitle">Goals</span><div id="goalsClose" class="infoClose" data-tip-name="Close">✕</div></div>
       <div id="goalList"></div>
     </div>
+    <div id="trophyTab" data-tip-name="Trophies" data-tip-text="Your achievements: big milestones that pay cash and XP."><span class="trophyTabIcon">🏅</span><span id="trophyBadge" class="countBadge"></span></div>
+  </div>
+
+  <!-- The trophy wall: every achievement, earned ones in gold (see
+       scene/achievements.js). -->
+  <div id="trophyBox" class="overlay">
+    <div class="levelCard summaryCard trophyCard">
+      <div class="levelTitle">Trophy Wall</div>
+      <div class="levelSub">Earned <span id="trophyCount">0 / 0</span></div>
+      <div id="trophyShelf"></div>
+      <div class="levelButtons">
+        <div id="trophyClose" class="levelButton ok" data-icon="check" data-tip-name="Close" data-tip-text="Back to your club"></div>
+      </div>
+    </div>
   </div>
 
   <!-- Bottom: the navigation dock (see scene/shop.js). Build, Staff, Club,

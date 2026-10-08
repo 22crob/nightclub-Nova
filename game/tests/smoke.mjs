@@ -65,6 +65,8 @@ const waitForScene = async () => {
     // The How to play guide would cover the top of the screen (checked on its own below).
     s.tutorial = { step: 99, done: true };
     s.showTutorialStep();
+    // Achievements would pay cash at odd moments (checked on their own below).
+    s.checkAchievements = () => {};
   });
 };
 
@@ -2630,9 +2632,14 @@ const wayIn = await page.evaluate(() => {
     out.steppedOff = !(p.gx === spot[0] && p.gy === spot[1]) && !s.isBlockingProp(p.gx, p.gy);
     s.sellProp(spot[0], spot[1]); s.cash = cash;
   }
+  // A ring of furniture two steps out would box the door into a pocket: the last piece of it is refused.
+  const ring = [];
+  for (let x = d.gx - 2; x <= d.gx + 2; x++) for (let y = d.gy - 2; y <= d.gy + 2; y++) if (Math.abs(x - d.gx) + Math.abs(y - d.gy) === 2 && s.inGrid(x, y)) ring.push([x, y]);
+  out.ringOk = s.footprintValid(ring.slice(0, -1), 'plant');
+  out.boxedIn = !s.footprintValid(ring, 'plant') && s.footprintValid(ring, 'basicFloor');
   return out;
 });
-check('nothing solid can block the doorway (floors can), and a guest where something is placed steps off it', wayIn.blocked && wayIn.floorOk && wayIn.steppedOff, JSON.stringify(wayIn));
+check('nothing solid can block the doorway or box it in (floors can), and a guest where something is placed steps off it', wayIn.blocked && wayIn.floorOk && wayIn.steppedOff && wayIn.ringOk && wayIn.boxedIn, JSON.stringify(wayIn));
 
 // The How to play guide: steps that move on as you do them, glowing round
 // the button they talk about; skippable, saved, and the ? button runs it again.
@@ -2653,6 +2660,38 @@ const guide = await page.evaluate(() => {
   return out;
 });
 check('the How to play guide walks through the basics (moves on as you do each step, glows round its button), can be skipped, and the ? button runs it again', guide.open && guide.glows && guide.movedOn && guide.saved && guide.skipped, JSON.stringify(guide));
+
+// Achievements: reaching a milestone pays its cash and XP once, with a big
+// popup and a ! on the Trophies tab; the trophy wall shows every badge.
+const trophies = await page.evaluate(() => {
+  const s = window.__clubNova.scene.getScene('club');
+  const check = Object.getPrototypeOf(s).checkAchievements;
+  const out = {};
+  s.achievements = [];
+  s.achievementsQuiet = false;
+  s.goalStats = { ...(s.goalStats || {}), drinks: 50 };
+  const cash0 = s.cash;
+  const realProgress = s.achievementProgress;
+  s.achievementProgress = (a) => (a.stat === 'drinks' ? 50 : 0); // only this one reached
+  check.call(s);
+  out.earned = s.achievements.includes('drinks50');
+  out.paid = s.cash - cash0;
+  out.badge = document.getElementById('trophyBadge').textContent === '1';
+  check.call(s);
+  out.once = s.cash - cash0 === out.paid;
+  out.saved = s.serializeState().achievements.includes('drinks50');
+  s.achievementProgress = realProgress;
+  document.getElementById('trophyTab').click();
+  out.open = document.getElementById('trophyBox').classList.contains('open');
+  out.badges = document.querySelectorAll('#trophyShelf .trophy').length;
+  out.gold = document.querySelectorAll('#trophyShelf .trophy.earned').length;
+  out.cleared = document.getElementById('trophyBadge').textContent === '';
+  document.getElementById('trophyClose').click();
+  out.closed = !document.getElementById('trophyBox').classList.contains('open');
+  document.getElementById('bigPopup')?.classList.remove('show');
+  return out;
+});
+check('achievements pay once when reached (popup, ! on the Trophies tab), are saved, and the trophy wall shows every badge', trophies.earned && trophies.paid === 150 && trophies.badge && trophies.once && trophies.saved && trophies.open && trophies.badges >= 20 && trophies.gold === 1 && trophies.cleared && trophies.closed, JSON.stringify(trophies));
 
 // Staff: the Staff panel shows people (bartenders per bar, bouncers) with
 // pictures; more bouncers unlock with levels. Troublemakers bother the guests

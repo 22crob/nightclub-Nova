@@ -95,6 +95,7 @@ export class PatronsMixin {
     const inside = this.entrySpot();
     if (inside) {
       patron.entering = true;
+      patron.enterBy = now + 15000; // if they can't get there (blocked in), they get on with their visit anyway
       [patron.targetGx, patron.targetGy] = inside;
       patron.nextMoveAt = now + 150;
     }
@@ -379,6 +380,7 @@ export class PatronsMixin {
   // Gives a patron somewhere to go: their place in a bar line, the next
   // step of what they're doing, or their next activity (see activities.js).
   pickRoamTarget(patron) {
+    if (patron.entering && this.time.now > (patron.enterBy || 0)) patron.entering = false;
     if (patron.entering && patron.targetGx !== undefined && !(patron.gx === patron.targetGx && patron.gy === patron.targetGy)) return;
     // In line at a bar: stay in line.
     if (patron.queue) { this.updateQueueTarget(patron); if (patron.queue) return; }

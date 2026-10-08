@@ -91,8 +91,19 @@ export class ActivitiesMixin {
   }
 
   // Starts heading for an activity. False if it isn't possible right now
-  // (no free bar, dance floor space, seat or anyone to talk to).
+  // (no free bar, dance floor space, seat or anyone to talk to), or the spot
+  // picked for it can't be walked to (furniture in the way).
   beginActivity(patron, kind) {
+    const ok = this.beginActivityAt(patron, kind);
+    if (!ok || kind === 'drink' || kind === 'chat' || kind === 'wander') return ok;
+    const { targetGx: tx, targetGy: ty } = patron;
+    if (tx === undefined || (tx === patron.gx && ty === patron.gy) || this.findPath(patron.gx, patron.gy, tx, ty)) return true;
+    this.releaseSeat(patron);
+    patron.activity = null;
+    return false;
+  }
+
+  beginActivityAt(patron, kind) {
     const now = this.time.now;
     if (kind === 'drink') {
       if (!this.joinBarQueue(patron)) return false;

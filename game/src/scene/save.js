@@ -56,7 +56,7 @@ export class SaveMixin {
       inventory[this.movingBooth.type] -= 1;
       if (inventory[this.movingBooth.type] <= 0) delete inventory[this.movingBooth.type];
     }
-    return { cash: this.cash, fans: this.fans, popularity: this.popularity || 0, bouncers: this.bouncers || 1, barTraining: this.barTraining || 0, tutorial: this.tutorial || null, bought: [...(this.boughtTypes || [])], drinkStock: this.drinkStock ?? null, gridW: this.gridW, gridH: this.gridH, placed: placedList, wallpaper: { ...this.wallpaper }, floorPaint: { ...this.floorPaint }, nightStars: this.nightStars || [], inventory, inventoryXp, goalsDone: this.goalsDone || [], goalStats: this.goalStats || {}, clubName: this.clubName || '', daily: this.daily || null, drinksOff: this.drinksOff || [], celebs: this.celebState || {}, celebInvited: Object.keys(this.celebInvites || {}) };
+    return { cash: this.cash, fans: this.fans, popularity: this.popularity || 0, bouncers: this.bouncers || 1, barTraining: this.barTraining || 0, tutorial: this.tutorial || null, achievements: this.achievements || [], bought: [...(this.boughtTypes || [])], drinkStock: this.drinkStock ?? null, gridW: this.gridW, gridH: this.gridH, placed: placedList, wallpaper: { ...this.wallpaper }, floorPaint: { ...this.floorPaint }, nightStars: this.nightStars || [], inventory, inventoryXp, goalsDone: this.goalsDone || [], goalStats: this.goalStats || {}, clubName: this.clubName || '', daily: this.daily || null, drinksOff: this.drinksOff || [], celebs: this.celebState || {}, celebInvited: Object.keys(this.celebInvites || {}) };
   }
 
   saveGame() {
@@ -184,6 +184,8 @@ export class SaveMixin {
       this.boughtLegacy = true; // expansions too, once the room size is known (below)
     }
     // The How to play guide: where it got to; a club from before it counts as done.
+    this.achievements = Array.isArray(data.achievements) ? data.achievements.filter((id) => typeof id === 'string') : [];
+    this.achievementsQuiet = !Array.isArray(data.achievements); // a save from before achievements
     this.tutorial = data.tutorial && typeof data.tutorial === 'object' ? { step: Number(data.tutorial.step) || 0, done: !!data.tutorial.done } : { step: 0, done: true };
     if (typeof data.barTraining === 'number') this.barTraining = Math.max(0, Math.floor(data.barTraining));
     if (typeof data.drinkStock === 'number') this.drinkStock = Math.max(0, data.drinkStock);

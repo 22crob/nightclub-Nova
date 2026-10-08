@@ -416,6 +416,37 @@ export const SECURITY = {
   settleChance: 0.7, fightMs: 3500, moodHit: 12,
   danceTogetherChance: 0.35,
 };
+// Achievements (see achievements.js): badges for milestones, shown on the
+// trophy wall (the 🏅 tab on the left). `stat` is a goal counter (goalStats,
+// bumped where things happen) or a live value (level, popularity, luxury,
+// wall: the longer wall); reaching `target` pays `cash` and `xp` once.
+export const ACHIEVEMENTS = [
+  { id: 'drinks50', icon: '🍺', name: 'Barkeep', text: 'Serve 50 drinks', stat: 'drinks', target: 50, cash: 150, xp: 25 },
+  { id: 'drinks500', icon: '🍸', name: 'Mixologist', text: 'Serve 500 drinks', stat: 'drinks', target: 500, cash: 800, xp: 120 },
+  { id: 'drinks5000', icon: '🥂', name: 'Legend of the Bar', text: 'Serve 5,000 drinks', stat: 'drinks', target: 5000, cash: 5000, xp: 600 },
+  { id: 'happy25', icon: '😊', name: 'Good Times', text: '25 guests leave happy', stat: 'happyGuests', target: 25, cash: 150, xp: 25 },
+  { id: 'happy250', icon: '😍', name: 'Crowd Pleaser', text: '250 guests leave happy', stat: 'happyGuests', target: 250, cash: 1000, xp: 150 },
+  { id: 'happy2500', icon: '🌟', name: 'Best Night Ever', text: '2,500 guests leave happy', stat: 'happyGuests', target: 2500, cash: 6000, xp: 700 },
+  { id: 'party1', icon: '🎉', name: 'Party Starter', text: 'Throw your first party', stat: 'parties', target: 1, cash: 100, xp: 20 },
+  { id: 'party10', icon: '🪩', name: 'Party Machine', text: 'Throw 10 parties', stat: 'parties', target: 10, cash: 1200, xp: 150 },
+  { id: 'celeb1', icon: '⭐', name: 'Star Struck', text: 'A celebrity visits your club', stat: 'celebs', target: 1, cash: 250, xp: 40 },
+  { id: 'celeb10', icon: '🎬', name: 'A-List Hangout', text: '10 celebrity visits', stat: 'celebs', target: 10, cash: 2000, xp: 250 },
+  { id: 'walkout1', icon: '🚪', name: 'Not Tonight', text: 'Your bouncers walk out a troublemaker', stat: 'walkouts', target: 1, cash: 100, xp: 20 },
+  { id: 'walkout25', icon: '🛡️', name: 'Safe and Sound', text: 'Walk out 25 troublemakers', stat: 'walkouts', target: 25, cash: 1000, xp: 120 },
+  { id: 'bonus25', icon: '✋', name: 'High Five!', text: 'Catch 25 high fives', stat: 'bonuses', target: 25, cash: 200, xp: 30 },
+  { id: 'bonus250', icon: '🙌', name: 'Quick Hands', text: 'Catch 250 high fives', stat: 'bonuses', target: 250, cash: 1500, xp: 180 },
+  { id: 'level10', icon: '🔟', name: 'Rising Star', text: 'Reach level 10', stat: 'level', target: 10, cash: 500, xp: 0 },
+  { id: 'level20', icon: '💫', name: 'Hot Spot', text: 'Reach level 20', stat: 'level', target: 20, cash: 2000, xp: 0 },
+  { id: 'level30', icon: '🔥', name: 'Talk of the Town', text: 'Reach level 30', stat: 'level', target: 30, cash: 5000, xp: 0 },
+  { id: 'level40', icon: '👑', name: 'Nightlife Royalty', text: 'Reach level 40', stat: 'level', target: 40, cash: 10000, xp: 0 },
+  { id: 'pop100', icon: '💖', name: 'Getting Noticed', text: 'Reach 100 popularity', stat: 'popularity', target: 100, cash: 300, xp: 50 },
+  { id: 'pop1000', icon: '💘', name: 'Everyone Wants In', text: 'Reach 1,000 popularity', stat: 'popularity', target: 1000, cash: 2500, xp: 300 },
+  { id: 'lux500', icon: '💎', name: 'Classy', text: 'Reach 500 luxury', stat: 'luxury', target: 500, cash: 500, xp: 80 },
+  { id: 'lux3000', icon: '💍', name: 'Pure Luxury', text: 'Reach 3,000 luxury', stat: 'luxury', target: 3000, cash: 3000, xp: 350 },
+  { id: 'wall15', icon: '🏗️', name: 'Moving On Up', text: 'Grow a wall to 15 tiles', stat: 'wall', target: 15, cash: 600, xp: 80 },
+  { id: 'wall22', icon: '🏙️', name: 'Mega Club', text: 'Grow a wall to 22 tiles', stat: 'wall', target: 22, cash: 4000, xp: 400 },
+];
+
 // The Celebrity List (see celebrities.js): each unlocks at a club level and
 // from then on drops in on their own now and then: one every visitEveryMs
 // (the first firstVisitMs after the game opens), joining the line outside. `fame` is their stars (1-5); `character`

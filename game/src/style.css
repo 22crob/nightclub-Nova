@@ -906,3 +906,31 @@ input, textarea { -webkit-user-select: text; user-select: text; }
 .tutorialGlow { animation: tutorialGlow 1.1s ease-in-out infinite !important; position: relative; z-index: 46; }
 @keyframes tutorialGlow { 0%, 100% { box-shadow: 0 0 0 2px var(--gold), 0 0 10px var(--gold); } 50% { box-shadow: 0 0 0 4px var(--gold), 0 0 26px var(--gold); } }
 @media (width <= 560px) { #tutorialBox { top: calc(70px + env(safe-area-inset-top, 0px)); } }
+
+/* ---- Trophies (scene/achievements.js): a tab under Goals and the trophy wall. */
+#trophyTab {
+  --c: #ffc21f; position: relative; width: 58px; height: 58px; box-sizing: border-box; border-radius: 16px; cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  background: var(--glass); box-shadow: var(--glass-shadow); backdrop-filter: blur(6px);
+}
+.trophyTabIcon { font-size: 34px; line-height: 1; filter: drop-shadow(0 2px 0 rgba(0,0,0,0.4)); }
+#trophyTab:hover .trophyTabIcon { display: inline-block; animation: boing 0.35s ease-out forwards; }
+#trophyTab.cheer { animation: cheer 0.9s ease-out 2; box-shadow: inset 0 0 0 2px var(--c), 0 0 18px var(--c); }
+#trophyBox { z-index: 58; }
+.trophyCard { max-width: 560px; }
+#trophyShelf {
+  display: grid; grid-template-columns: repeat(auto-fill, minmax(96px, 1fr)); gap: 8px;
+  max-height: min(56vh, 420px); overflow-y: auto; padding: 4px; margin: 6px 0 10px;
+}
+.trophy {
+  display: flex; flex-direction: column; align-items: center; gap: 4px; padding: 8px 6px; border-radius: 12px;
+  background: var(--screen); box-shadow: inset 0 0 0 1px rgba(255,255,255,0.08);
+}
+.trophyIcon { font-size: 30px; line-height: 1; filter: grayscale(1) brightness(0.55); }
+.trophyName { font-size: 11px; font-weight: 800; text-align: center; color: #b9a9d6; line-height: 1.15; min-height: 26px; }
+.trophyBar { width: 100%; height: 5px; border-radius: 3px; background: rgba(255,255,255,0.12); overflow: hidden; }
+.trophyBar > div { height: 100%; background: linear-gradient(90deg, #ff4fd8, #ffc21f); }
+.trophy.earned { box-shadow: inset 0 0 0 2px #ffc21f, 0 0 12px rgba(255,194,31,0.45); }
+.trophy.earned .trophyIcon { filter: drop-shadow(0 0 6px rgba(255,210,80,0.8)); }
+.trophy.earned .trophyName { color: var(--gold); }
+.trophy.earned .trophyBar { display: none; }

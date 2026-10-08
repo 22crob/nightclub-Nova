@@ -213,6 +213,7 @@ export class SecurityMixin {
     this.faceToward(g, p.container.x, p.container.y);
     this.floatText(p.container.x, p.container.y - PATRON_POPUP_Y - 10, '🚫 Out you go!', '#ff5a5a');
     this.fans += TROUBLE.xp;
+    this.bumpGoal?.('walkouts');
     this.floatText(g.container.x, g.container.y - PATRON_POPUP_Y, `+${TROUBLE.xp} XP`, '#ffe27a');
     this.troublemakersRemoved = (this.troublemakersRemoved || 0) + 1;
     if (this.partyStats) this.partyStats.ejections += 1;
