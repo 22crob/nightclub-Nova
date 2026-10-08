@@ -17,11 +17,11 @@ import { fillIcons } from '../uiIcons.js';
 const CATEGORIES = {
   New: { icon: 'newGlyph', text: 'Everything you unlocked at your last two levels.', isNew: true },
   Bars: { icon: 'bars', text: 'Bars sell drinks. Each long bar needs one bartender.' },
-  Seating: { icon: 'seating', text: 'Couches and booths where guests sit down and relax.' },
+  Seating: { label: 'Seats', icon: 'seating', text: 'Couches and booths where guests sit down and relax.' },
   Floors: { icon: 'floors', text: 'Dance floors, where guests dance, and regular floors, painted tile by tile.', includes: ['Dance Floors', 'Floors'] },
-  Wallpaper: { icon: 'roller', text: 'Paper the walls, section by section.' },
-  Decorations: { icon: 'lamp', text: 'Plants, lights and statues to make the club fancier.' },
-  'DJ Booths': { icon: 'turntable', text: 'Upgrade your DJ booth. A better booth earns more XP.' },
+  Wallpaper: { label: 'Walls', icon: 'roller', text: 'Paper the walls, section by section.' },
+  Decorations: { label: 'Decor', icon: 'lamp', text: 'Plants, lights and statues to make the club fancier.' },
+  'DJ Booths': { label: 'DJ', icon: 'turntable', text: 'Upgrade your DJ booth. A better booth earns more XP.' },
 };
 // The Club panel's keys, each its own panel.
 const CLUB_KEYS = {
@@ -102,6 +102,10 @@ export class ShopMixin {
       key.dataset.tipName = name;
       key.dataset.tipText = def.text;
       key.addEventListener('click', onClick);
+      const label = document.createElement('span');
+      label.className = 'keyLabel';
+      label.textContent = def.label || name;
+      key.appendChild(label);
       row.appendChild(key);
       this.storeTabButtons[name] = key;
     };

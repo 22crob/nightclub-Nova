@@ -2519,6 +2519,16 @@ check('a guest sitting with a sofa back between them and the camera is hidden by
   check('on a phone, tapping a high five collects it', paid === bonus.amount, `paid ${paid}`);
   check('on a phone, two fingers pinch to zoom', z1 > z0 * 1.3, `${z0.toFixed(2)} -> ${z1.toFixed(2)}`);
   check('on a phone, the top panels fit side by side', layout.gap > 0 && layout.fits, JSON.stringify(layout));
+  // The shop is folder tabs over a low tray: open, it stays a small part of the screen and fits across.
+  const dockFit = await tp.evaluate(() => {
+    document.getElementById('navBuild').click();
+    const d = document.getElementById('dock').getBoundingClientRect();
+    const ok = document.getElementById('storeOk').getBoundingClientRect();
+    const tray = document.getElementById('dockCenter').getBoundingClientRect();
+    const tabs = document.getElementById('navBar').getBoundingClientRect();
+    return { share: +(d.height / window.innerHeight).toFixed(2), okOn: ok.right <= window.innerWidth && ok.width > 0, tabsOnTray: Math.abs(tabs.bottom - tray.top) < 2 };
+  });
+  check('on a phone, the open shop (folder tabs over a tray) takes under a third of the screen and fits across', dockFit.share < 0.33 && dockFit.okOn && dockFit.tabsOnTray, JSON.stringify(dockFit));
   await phone.close();
 }
 

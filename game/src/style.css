@@ -798,3 +798,69 @@ input, textarea { -webkit-user-select: text; user-select: text; }
   #hudProfile, #hudRight, #goalSide, #drinkMeter, .partyBanner, #dock, #selectedChip, #testModeTag { zoom: 0.62; }
   .summaryCard, .levelCard, #infoCard { zoom: 0.8; }
 }
+
+/* ------------------------------------------------------------------ */
+/* The dock as folder tabs (the owner's pick, "Option C" in the Figma   */
+/* file Club Nova UI): the five pads are low tabs, icon beside label,   */
+/* sticking up from the top edge of a tray along the bottom. The tray   */
+/* holds the category chips and one row of items you swipe. Closed,     */
+/* only the tabs show. These rules override the dock's earlier ones.    */
+/* ------------------------------------------------------------------ */
+#dock { gap: 0; align-items: center; bottom: calc(4px + env(safe-area-inset-bottom, 0px)); }
+#navBar {
+  order: 0; width: min(980px, 100%); box-sizing: border-box; align-items: flex-end; gap: 4px;
+  padding: 0 0 0 14px; background: none; box-shadow: none; backdrop-filter: none; border-radius: 0;
+}
+#dockCenter { order: 1; width: min(980px, 100%); }
+.navPad {
+  flex-direction: row; align-items: center; justify-content: flex-start; gap: 5px;
+  width: auto; height: 34px; padding: 4px 12px 4px 8px; border-radius: 12px 12px 0 0;
+  background: linear-gradient(180deg, #462476, #2a1450); border: 1.5px solid #6b4aa0; border-bottom: none;
+}
+.navPad > .uiArt { width: 24px; height: 24px; }
+.navLabel { margin: 0; font-size: 12px; color: #d8c8f0; }
+.navPad:hover { background: linear-gradient(180deg, #56308c, #33195e); }
+.navPad.active {
+  background: var(--shine), linear-gradient(180deg, #ff7ae4, #a8158c); border-color: #fff;
+  box-shadow: 0 0 12px var(--pink); transform: none;
+}
+.navPad.active .navLabel { color: #fff; }
+.navPad .countBadge { top: -6px; right: -4px; }
+/* Closed: just the tabs, rounded all round. */
+#dock[data-mode="closed"] .navPad { border-radius: 12px; border-bottom: 1.5px solid #6b4aa0; }
+#dock[data-mode="closed"] .navPad.active { border-bottom-color: #fff; }
+/* The green OK: a tab at the far end of the row. */
+#storeOk { width: 46px; height: 34px; padding: 5px 12px; margin-left: 8px; border-radius: 12px 12px 0 0; border-bottom: none; box-sizing: border-box; }
+/* The tray: categories on top, items underneath. */
+#dockCenter {
+  box-sizing: border-box; padding: 6px 8px; border-radius: 0 14px 14px 14px;
+  background: linear-gradient(180deg, #462476, #1e0e38); box-shadow: var(--glass-shadow);
+}
+#storeTabs { height: auto; padding: 0 0 4px; margin: 0; gap: 4px; align-items: center; flex-wrap: wrap; }
+.storeTab {
+  display: flex; align-items: center; gap: 4px; width: auto; height: 24px; padding: 2px 10px 2px 6px; box-sizing: border-box;
+  border-radius: 999px; border: 1.5px solid #6b4aa0; background: #2d1650;
+}
+.storeTab > .uiGlyph, .storeTab > .uiArt { width: 14px; height: 14px; flex: 0 0 auto; }
+.storeTab .keyLabel { font-weight: 800; font-size: 11px; color: #fff; white-space: nowrap; }
+.storeTab.active { height: 24px; border-color: #fff; background: var(--shine), linear-gradient(180deg, #ff7ae4, #b81f9c); box-shadow: 0 0 8px var(--pink); }
+#dockPanel { height: 84px; padding: 0; gap: 0; background: none; box-shadow: none; backdrop-filter: none; border-radius: 10px; }
+.dockArrow { display: none; }
+#shopItems { gap: 4px; padding: 0 4px; border-radius: 10px; background: rgba(14, 5, 32, 0.45); box-shadow: none; }
+#dock[data-mode="store"] .propSlot, #dock[data-mode="main"] .propSlot { width: 64px; height: 76px; }
+#dock[data-mode="store"] .propSlot.staffSlot, #dock[data-mode="store"] .propSlot.expandSlot, #dock[data-mode="store"] .propSlot.confirmSlot,
+#dock[data-mode="main"] .propSlot.staffSlot, #dock[data-mode="main"] .propSlot.celebSlot { width: 72px; height: 76px; }
+#dock[data-mode="store"] .propCost { height: 16px; font-size: 10.5px; padding: 0 7px; border-width: 1.5px; }
+#dock .propCost { font-size: 10.5px; height: 18px; }
+#dock .propSlot.emptySlot { width: 200px; }
+/* Phones: the dock a little smaller than desktop, not as small as the rest of the HUD. */
+@media (width <= 560px) { #dock { zoom: 0.8; } }
+@media (height <= 500px) and (width > 560px) { #dock { zoom: 0.85; } }
+#storeTabs { flex-wrap: nowrap; overflow-x: auto; scrollbar-width: none; }
+#storeTabs::-webkit-scrollbar { display: none; }
+.storeTab { flex: 0 0 auto; }
+/* Narrow screens: only the open tab shows its name, so the row fits. */
+@media (width <= 560px) {
+  .navPad:not(.active) .navLabel { display: none; }
+  .navPad:not(.active) { padding-right: 8px; }
+}
