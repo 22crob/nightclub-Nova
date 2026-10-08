@@ -56,7 +56,7 @@ export class SaveMixin {
       inventory[this.movingBooth.type] -= 1;
       if (inventory[this.movingBooth.type] <= 0) delete inventory[this.movingBooth.type];
     }
-    return { cash: this.cash, fans: this.fans, popularity: this.popularity || 0, gridW: this.gridW, gridH: this.gridH, placed: placedList, wallpaper: { ...this.wallpaper }, floorPaint: { ...this.floorPaint }, nightStars: this.nightStars || [], inventory, inventoryXp, goalsDone: this.goalsDone || [], goalStats: this.goalStats || {}, clubName: this.clubName || '', daily: this.daily || null, drinksOff: this.drinksOff || [], celebs: this.celebState || {}, celebInvited: Object.keys(this.celebInvites || {}) };
+    return { cash: this.cash, fans: this.fans, popularity: this.popularity || 0, bouncers: this.bouncers || 1, gridW: this.gridW, gridH: this.gridH, placed: placedList, wallpaper: { ...this.wallpaper }, floorPaint: { ...this.floorPaint }, nightStars: this.nightStars || [], inventory, inventoryXp, goalsDone: this.goalsDone || [], goalStats: this.goalStats || {}, clubName: this.clubName || '', daily: this.daily || null, drinksOff: this.drinksOff || [], celebs: this.celebState || {}, celebInvited: Object.keys(this.celebInvites || {}) };
   }
 
   saveGame() {
@@ -172,6 +172,7 @@ export class SaveMixin {
     if (Array.isArray(data.drinksOff)) this.drinksOff = data.drinksOff.filter((k) => typeof k === 'string');
     if (data.daily && typeof data.daily.last === 'string') this.daily = { last: data.daily.last, streak: Number(data.daily.streak) || 1 };
     if (typeof data.fans === 'number') this.fans = data.fans;
+    if (typeof data.bouncers === 'number') this.bouncers = Math.max(1, Math.floor(data.bouncers));
     if (typeof data.popularity === 'number') this.popularity = Math.max(0, data.popularity);
     else if (data.fans > 0) {
       // A club from before popularity: start it where the guests it already

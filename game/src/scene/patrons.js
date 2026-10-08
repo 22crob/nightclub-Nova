@@ -3,7 +3,7 @@
 import Phaser from 'phaser';
 import { MODEL_PATRONS, NEON_PATRONS, PAINTED_PATRONS, PATRON_SHEETS, patronMetaOf } from '../assets.js';
 import { FLOOR_DECAL_PROPS, PROP_TYPES, STAFF_TYPES } from '../catalog.js';
-import { BOOST, CHARACTER_DISPLAY_HEIGHT, GUEST_LOOKS, MODEL_PATRON_SHARE, NEON_PATRON_SHARE, NEON_PATRON_SHARE_TEST, TEST_MODE, HAIR_STYLES, PATRON_HAIR_COLORS, PATRON_MOVE_INTERVAL, PATRON_OUTFIT_COLORS, PATRON_POPUP_Y, PATRON_SKIN_TONES, PATRON_SPAWN_INTERVAL, MONEY, PATRON_TIP_INTERVAL, PATRON_Y_OFFSET, PROP_SCALE, VISIT } from '../config.js';
+import { BOOST, CHARACTER_DISPLAY_HEIGHT, GUEST_LOOKS, MODEL_PATRON_SHARE, NEON_PATRON_SHARE, NEON_PATRON_SHARE_TEST, TEST_MODE, HAIR_STYLES, PATRON_HAIR_COLORS, PATRON_MOVE_INTERVAL, PATRON_OUTFIT_COLORS, PATRON_POPUP_Y, PATRON_SKIN_TONES, PATRON_SPAWN_INTERVAL, MONEY, PATRON_TIP_INTERVAL, PATRON_Y_OFFSET, PROP_SCALE, VISIT, TROUBLE } from '../config.js';
 import { SFX } from '../sfx.js';
 import { MOOD } from './mood.js';
 import { randRange } from '../util.js';
@@ -82,6 +82,7 @@ export class PatronsMixin {
       thirstyAt: now + randRange(3000, 18000), // most patrons want a drink soon after arriving, not all at once
       name: this.guestName(),
       spent: 0,
+      troublemaker: Math.random() < TROUBLE.share, // bothers people until a bouncer walks them out (security.js)
       mood: MOOD.start,
       fun: MOOD.startFun,
       thirstSince: null,

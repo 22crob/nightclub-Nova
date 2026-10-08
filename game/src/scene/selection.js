@@ -22,7 +22,7 @@ export class SelectionMixin {
     for (const rec of this.staffableRecords()) {
       if (rec.staff) person(rec.staff.kind === 'dj' ? 'dj' : 'bartender', rec, rec.staff.container, rec.staff.container.staffSprite);
     }
-    if (this.guard) person('guard', this.guard, this.guard.container, this.guard.container.patronSprite);
+    for (const g of this.guards || []) person('guard', g, g.container, g.container.patronSprite);
     const seen = new Set();
     for (const key in this.placed) {
       const rec = this.placed[key];

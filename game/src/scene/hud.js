@@ -1,7 +1,7 @@
 // ClubScene methods: Top bar readouts, mute button, level-up celebration and toasts.
 // Mixed into ClubScene (see ClubScene.js); `this` is the scene.
 import { EXPANSION, FLOOR_DECAL_PROPS, PROP_TYPES } from '../catalog.js';
-import { BARTENDERS, CELEBRITIES, DRINKS, PARTIES } from '../config.js';
+import { BARTENDERS, BOUNCERS, CELEBRITIES, DRINKS, PARTIES } from '../config.js';
 import { realSpriteIconFor, renderIsoIcon } from '../icons.js';
 import { SFX } from '../sfx.js';
 import { hideTip } from '../tooltips.js';
@@ -113,6 +113,9 @@ export class HudMixin {
     }
     if (level > 1 && BARTENDERS.levels.includes(level)) {
       out.push({ name: '+1 Bartender', kind: 'You can hire one more bartender (Staff)', art: 'catStaff' });
+    }
+    if (level > 1 && BOUNCERS.levels.includes(level)) {
+      out.push({ name: '+1 Bouncer', kind: 'You can hire one more bouncer to keep troublemakers out (Staff)', art: 'catStaff' });
     }
     for (const celeb of CELEBRITIES) {
       if (celeb.level === level) out.push({ name: celeb.name, kind: `New celebrity (${'★'.repeat(celeb.fame)}): invite them from VIP`, portrait: celeb.character });

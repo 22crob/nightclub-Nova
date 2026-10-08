@@ -376,6 +376,16 @@ export const GOALS = [
   { id: 'level10', text: 'Reach level 10', stat: 'level', target: 10, cash: 1500, xp: 0 },
 ];
 
+// Bouncers (security.js): the club starts with one; levels lets you hire
+// one more at each of the later levels, for hireCost (first is the house
+// guard, free) and `wage` every WAGE_INTERVAL_MS like bartenders.
+// characters are their looks (patron sheets), all in black.
+export const BOUNCERS = { levels: [1, 8, 18, 30], hireCost: [0, 300, 900, 2000], wage: 3, characters: [4, 4, 4, 4] };
+// Troublemakers (security.js): `share` of new guests. Every annoyEveryMs
+// one bothers the guests within annoyRange tiles (annoyMood off their mood).
+// A bouncer within detectRange tiles of one who has caused trouble walks
+// over and walks them out the door, for `xp` XP.
+export const TROUBLE = { share: 0.07, annoyEveryMs: [7000, 12000], annoyRange: 2, annoyMood: 6, detectRange: 8, xp: 5 };
 export const SECURITY = {
   character: 4, scale: 1.12, stepMs: 380, // all in black, like the bouncer
   argueChance: 0.12, cooldownMs: 90 * 1000, argueMs: [8000, 12000],

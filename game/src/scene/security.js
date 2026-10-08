@@ -4,55 +4,85 @@
 // by the door, walks over. Usually he calms them down; if he can't, or
 // doesn't get there in time, it turns into a short cartoon fight (a dust
 // cloud) and he throws one of them out. Settings are SECURITY in config.js.
+// Troublemaker guests bother the people near them until a bouncer walks
+// them out (TROUBLE); more bouncers can be hired (BOUNCERS, Staff panel).
 // Mixed into ClubScene (see ClubScene.js); `this` is the scene.
 import Phaser from 'phaser';
-import { PATRON_POPUP_Y, SECURITY } from '../config.js';
+import { BOUNCERS, PATRON_POPUP_Y, SECURITY, TROUBLE } from '../config.js';
 import { SFX } from '../sfx.js';
 import { randRange } from '../util.js';
 
 export class SecurityMixin {
-  // --- The guard ---------------------------------------------------------------
+  // --- The bouncers --------------------------------------------------------------
 
-  // Puts the security guard at his post inside the door.
+  // Puts the club's bouncers at their posts: this.guards (this.guard is the
+  // first, posted inside the door, who also breaks up arguments). How many
+  // is this.bouncers (saved; hired from the Staff panel, see hireBouncer()).
   setupSecurity() {
-    if (!this.hasCharacterSprites() || this.guard) return;
-    const [gx, gy] = this.guardPost();
-    const { sx, sy } = this.gridToScreen(gx, gy);
-    const container = this.drawPatronCharacterSprite(sx, sy, SECURITY.scale, SECURITY.character);
-    this.propLayer.add(container);
-    this.guard = { gx, gy, container, scaleVariance: SECURITY.scale, moving: false, path: null };
-    this.faceFront(this.guard);
-    this.setPatronDepth(this.guard, gx + gy);
+    if (!this.hasCharacterSprites()) return;
+    if (!this.guards) this.guards = [];
+    const want = Math.max(1, Math.min(BOUNCERS.levels.length, this.bouncers || 1));
+    while (this.guards.length > want) this.removeGuard(this.guards[this.guards.length - 1]);
+    while (this.guards.length < want) this.addGuard();
+    this.guard = this.guards[0];
   }
 
-  // The guard's spot: just inside the door, or the nearest open tile to it.
-  guardPost() {
+  addGuard() {
+    const index = this.guards.length;
+    const [gx, gy] = this.guardPost(index);
+    const { sx, sy } = this.gridToScreen(gx, gy);
+    const look = BOUNCERS.characters[index] ?? SECURITY.character;
+    const container = this.drawPatronCharacterSprite(sx, sy, SECURITY.scale, look);
+    container.staffCharacter = look;
+    this.propLayer.add(container);
+    const g = { gx, gy, container, scaleVariance: SECURITY.scale, moving: false, path: null, index, name: this.guestName() };
+    this.guards.push(g);
+    this.faceFront(g);
+    this.setPatronDepth(g, gx + gy);
+    return g;
+  }
+
+  removeGuard(g) {
+    this.tweens.killTweensOf(g.container);
+    if (g.target) g.target.targetedBy = null;
+    g.container.destroy();
+    this.guards = this.guards.filter((x) => x !== g);
+  }
+
+  // A bouncer's post: the first just inside the door, the others spread over
+  // the room (the middle, the front corner, the back corner); the nearest
+  // open tile to it that no other bouncer stands on.
+  guardPost(index = 0) {
     const door = this.doorTile();
     const doorway = new Set(this.doorZone());
-    const want = [door.gx + 1, door.gy + 1];
+    const wants = [[door.gx + 1, door.gy + 1], [Math.floor(this.gridW / 2), Math.floor(this.gridH / 2)], [this.gridW - 2, this.gridH - 2], [this.gridW - 2, 1]];
+    const want = wants[index % wants.length];
+    const taken = new Set((this.guards || []).filter((g) => g.index !== index).map((g) => `${g.postX},${g.postY}`));
     let best = null;
     let bestD = Infinity;
     for (let x = 0; x < this.gridW; x++) {
       for (let y = 0; y < this.gridH; y++) {
-        if (this.isBlockingProp(x, y) || doorway.has(`${x},${y}`)) continue; // just out of the doorway
+        if (this.isBlockingProp(x, y) || doorway.has(`${x},${y}`) || taken.has(`${x},${y}`)) continue;
         const d = Math.abs(x - want[0]) + Math.abs(y - want[1]);
         if (d < bestD) { bestD = d; best = [x, y]; }
       }
     }
-    return best || [door.gx, door.gy];
+    const post = best || [door.gx, door.gy];
+    const g = (this.guards || [])[index];
+    if (g) { g.postX = post[0]; g.postY = post[1]; }
+    return post;
   }
 
-  // Walks the guard to a tile, then calls `done`. A new walk replaces the
-  // old one at the next step.
-  guardWalkTo(gx, gy, done) {
-    const g = this.guard;
+  // Walks a bouncer (the first unless given) to a tile, then calls `done`.
+  // A new walk replaces the old one at the next step.
+  guardWalkTo(gx, gy, done, g = this.guard) {
     if (!g) return;
     g.goal = { gx, gy, done };
-    if (!g.moving) this.guardStep();
+    if (!g.moving) this.guardStep(g);
   }
 
-  guardStep() {
-    const g = this.guard;
+  guardStep(g = this.guard) {
+    if (!g || !g.container.active) return;
     const goal = g.goal;
     if (!goal) return;
     if (g.gx === goal.gx && g.gy === goal.gy) {
@@ -62,7 +92,7 @@ export class SecurityMixin {
       return;
     }
     const path = this.findPath(g.gx, g.gy, goal.gx, goal.gy);
-    if (!path || path.length === 0) { // can't get there: give up where he is
+    if (!path || path.length === 0) { // can't get there: give up where they are
       g.goal = null;
       this.setPatronAnimation(g, 'idle');
       if (goal.done) goal.done();
@@ -82,18 +112,115 @@ export class SecurityMixin {
       onComplete: () => {
         g.moving = false;
         this.setPatronDepth(g, g.gx + g.gy);
-        this.guardStep();
+        this.guardStep(g);
       },
     });
   }
 
-  // Back to his post when there's nothing to deal with.
-  guardGoHome() {
-    const g = this.guard;
-    if (!g || g.goal || g.moving) return;
-    const [px, py] = this.guardPost();
+  // Back to their post when there's nothing to deal with.
+  guardGoHome(g = this.guard) {
+    if (!g || g.goal || g.moving || g.target) return;
+    const [px, py] = this.guardPost(g.index || 0);
     if (g.gx === px && g.gy === py) return;
-    this.guardWalkTo(px, py, () => this.faceFront(g));
+    this.guardWalkTo(px, py, () => this.faceFront(g), g);
+  }
+
+  // --- Hiring bouncers ---------------------------------------------------------
+
+  // How many bouncers your level allows, and the level that allows one more.
+  bouncerAllowance() {
+    const level = this.levelInfo().level;
+    return BOUNCERS.levels.filter((l) => level >= l).length;
+  }
+
+  nextBouncerLevel() {
+    const level = this.levelInfo().level;
+    return BOUNCERS.levels.find((l) => l > level) || null;
+  }
+
+  hireBouncer() {
+    const n = this.bouncers || 1;
+    if (n >= this.bouncerAllowance()) { SFX.denied(); return false; }
+    const cost = BOUNCERS.hireCost[n] || 0;
+    if (this.cash < cost) { SFX.denied(); return false; }
+    this.cash -= cost;
+    this.bouncers = n + 1;
+    this.setupSecurity();
+    SFX.place();
+    this.updateUI();
+    this.saveGame();
+    return true;
+  }
+
+  // Lets the newest bouncer go (the house bouncer always stays).
+  fireBouncer() {
+    if ((this.bouncers || 1) <= 1) return false;
+    this.bouncers -= 1;
+    this.setupSecurity();
+    SFX.sell();
+    this.updateUI();
+    this.saveGame();
+    return true;
+  }
+
+  // --- Troublemakers -----------------------------------------------------------
+
+  // Runs with the patron tick: troublemakers bother the guests near them,
+  // and a free bouncer close enough to one who has caused trouble walks
+  // them out.
+  tickTroublemakers() {
+    const now = this.time.now;
+    for (const p of this.patrons) {
+      if (!p.troublemaker || p.celeb || p.gone || p.leaving || p.entering || p.ejected) continue;
+      if (now < (p.annoyAt || 0)) continue;
+      p.annoyAt = now + randRange(...TROUBLE.annoyEveryMs);
+      if (p.moving || p.sitting) continue;
+      const near = this.patrons.filter((q) => q !== p && !q.gone && !q.leaving && !q.troublemaker
+        && Math.abs(q.gx - p.gx) + Math.abs(q.gy - p.gy) <= TROUBLE.annoyRange);
+      if (near.length === 0) continue;
+      p.disturbances = (p.disturbances || 0) + 1;
+      this.floatText(p.container.x, p.container.y - PATRON_POPUP_Y, '😈', '#ff5a5a');
+      for (const q of near) {
+        q.mood = Math.max(0, q.mood - TROUBLE.annoyMood);
+        this.floatText(q.container.x, q.container.y - PATRON_POPUP_Y, '😠', '#ff8a8a');
+      }
+    }
+    for (const g of this.guards || []) {
+      if (g.target || g.goal || g.moving || (g === this.guard && this.argument)) continue;
+      const bad = this.patrons.find((p) => p.troublemaker && p.disturbances && !p.targetedBy && !p.gone && !p.leaving && !p.ejected
+        && Math.abs(p.gx - g.gx) + Math.abs(p.gy - g.gy) <= TROUBLE.detectRange);
+      if (bad) this.goGetTroublemaker(g, bad);
+    }
+  }
+
+  // A bouncer heads over to a troublemaker.
+  goGetTroublemaker(g, p) {
+    g.target = p;
+    p.targetedBy = g;
+    this.floatText(g.container.x, g.container.y - PATRON_POPUP_Y, '👀', '#9fe7ff');
+    const spot = this.tileNextTo(p, p, g) || [p.gx, p.gy];
+    this.guardWalkTo(spot[0], spot[1], () => this.escortOut(g, p), g);
+  }
+
+  // The bouncer reaches the troublemaker and walks them out the door.
+  escortOut(g, p) {
+    g.target = null;
+    p.targetedBy = null;
+    if (p.gone || p.leaving || p.ejected) { this.guardGoHome(g); return; }
+    p.ejected = true;
+    p.escorted = true;
+    if (p.sitting) this.standUp?.(p);
+    this.faceToward(g, p.container.x, p.container.y);
+    this.floatText(p.container.x, p.container.y - PATRON_POPUP_Y - 10, '🚫 Out you go!', '#ff5a5a');
+    this.fans += TROUBLE.xp;
+    this.floatText(g.container.x, g.container.y - PATRON_POPUP_Y, `+${TROUBLE.xp} XP`, '#ffe27a');
+    this.troublemakersRemoved = (this.troublemakersRemoved || 0) + 1;
+    if (this.partyStats) this.partyStats.ejections += 1;
+    this.startPatronDeparture(p);
+    // Walk alongside them to the door, then back to the post.
+    const door = this.doorTile();
+    this.guardWalkTo(door.gx + 1, door.gy, () => this.guardGoHome(g), g);
+    this.updateUI();
   }
 
   // --- Dancing together ------------------------------------------------------
@@ -134,7 +261,7 @@ export class SecurityMixin {
   // Two guests have just started chatting: once in a while it goes badly.
   maybeArgue(a, b) {
     const now = this.time.now;
-    if (this.argument || !this.guard || a.celeb || b.celeb) return false;
+    if (this.argument || !this.guard || this.guard.target || a.celeb || b.celeb) return false;
     if (now < (this.lastArgumentAt || -Infinity) + SECURITY.cooldownMs) return false;
     if (Math.random() > SECURITY.argueChance) return false;
     this.startArgument(a, b);
@@ -162,8 +289,7 @@ export class SecurityMixin {
   }
 
   // An open tile next to either guest, nearest the guard.
-  tileNextTo(a, b) {
-    const g = this.guard;
+  tileNextTo(a, b, g = this.guard) {
     const spots = [];
     for (const p of [a, b]) {
       for (const [dx, dy] of [[1, 0], [-1, 0], [0, 1], [0, -1], [1, 1], [-1, -1], [1, -1], [-1, 1]]) {
@@ -305,8 +431,10 @@ export class SecurityMixin {
 
   // Runs with the patron tick: moves an argument along.
   tickSecurity() {
+    this.tickTroublemakers();
+    for (const g of this.guards || []) if (g !== this.guard || !this.argument) this.guardGoHome(g);
     const arg = this.argument;
-    if (!arg) { this.guardGoHome(); return; }
+    if (!arg) return;
     const now = this.time.now;
     const gone = (p) => p.gone || p.leaving;
     if (gone(arg.a) || gone(arg.b)) { this.clearArgument(); this.guardGoHome(); return; }

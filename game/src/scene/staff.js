@@ -2,8 +2,7 @@
 // Mixed into ClubScene (see ClubScene.js); `this` is the scene.
 import { PATRON_META, PATRON_SHEETS } from '../assets.js';
 import { PROP_TYPES, STAFF_TYPES } from '../catalog.js';
-import { BAR_QUEUE_LENGTH, BARTENDERS, BOOST, DRINK_FUN_MOOD, XP, CHARACTER_DISPLAY_HEIGHT, MONEY, THIRST_INTERVAL, PATRON_POPUP_Y, PROP_SCALE, SELL_REFUND_RATIO } from '../config.js';
-import { realSpriteIconFor } from '../icons.js';
+import { BAR_QUEUE_LENGTH, BARTENDERS, BOOST, DRINK_FUN_MOOD, XP, CHARACTER_DISPLAY_HEIGHT, MONEY, THIRST_INTERVAL, PATRON_POPUP_Y, PROP_SCALE, SELL_REFUND_RATIO, BOUNCERS } from '../config.js';
 import { SFX } from '../sfx.js';
 import { randRange } from '../util.js';
 import { MOOD } from './mood.js';
@@ -43,7 +42,8 @@ export class StaffMixin {
   totalWages() {
     return this.staffableRecords()
       .filter((rec) => rec.staff)
-      .reduce((sum, rec) => sum + STAFF_TYPES[PROP_TYPES[rec.type].staff].wage, 0);
+      .reduce((sum, rec) => sum + STAFF_TYPES[PROP_TYPES[rec.type].staff].wage, 0)
+      + ((this.bouncers || 1) - 1) * BOUNCERS.wage; // the house bouncer is free
   }
 
   // --- Long bars ----------------------------------------------------------
@@ -322,7 +322,7 @@ export class StaffMixin {
   payWages() {
     if (!this.clubOpen()) return; // nobody works between nights
     const working = this.hireableRecords().filter((rec) => rec.staff);
-    if (working.length === 0) return;
+    if (working.length === 0 && (this.bouncers || 1) <= 1) return;
     const wageOf = (rec) => STAFF_TYPES[PROP_TYPES[rec.type].staff].wage;
     working.sort((a, b) => wageOf(b) - wageOf(a));
     const quit = [];
@@ -331,12 +331,18 @@ export class StaffMixin {
       quit.push(STAFF_TYPES[PROP_TYPES[rec.type].staff].label);
       this.detachStaff(rec);
     }
+    while (this.totalWages() > this.cash && (this.bouncers || 1) > 1) { // then bouncers, newest first
+      this.bouncers -= 1;
+      quit.push('Bouncer');
+      this.setupSecurity();
+    }
     this.noteIncome('wages', this.totalWages());
     this.cash -= this.totalWages();
     for (const rec of working) {
       const { x, y } = rec.staff.container;
       this.floatText(x, y - PATRON_POPUP_Y, `-$${wageOf(rec)}`, '#ffb1b1');
     }
+    for (const g of (this.guards || []).slice(1)) this.floatText(g.container.x, g.container.y - PATRON_POPUP_Y, `-$${BOUNCERS.wage}`, '#ffb1b1');
     if (quit.length) {
       this.showToast(`😬 Couldn't pay wages: your ${quit.join(' and ')} quit!`);
       SFX.denied();
@@ -468,9 +474,10 @@ export class StaffMixin {
 
   // --- Shop tab -----------------------------------------------------------
 
-  // The dock's Staff tab: a card per long bar with how many
-  // bartenders work it; click to hire one more (up to what your level
-  // allows), ✕ to let one go. Details are in the hover tip.
+  // The dock's Staff tab: who works for you, with their pictures. The drink
+  // menu first; then a bartender card per long bar (click to hire one more,
+  // up to what your level allows, ✕ to let one go); then the bouncers and a
+  // card to hire another (security.js). Details are in the hover tips.
   renderStaffCard() {
     const el = this.shopItemsEl;
     const menuKey = this.drinkMenu().map((d) => d.key).join(',');
@@ -479,27 +486,52 @@ export class StaffMixin {
     const allowed = this.bartenderAllowance();
     const hired = this.bartenderCount();
     const next = this.nextBartenderLevel();
+    const bouncers = this.bouncers || 1;
+    const bouncerCost = BOUNCERS.hireCost[bouncers] || 0;
+    const bouncerAllowed = this.bouncerAllowance();
     // Only rebuild when something on the cards changed (this runs often).
-    const key = 'staff:' + menuKey + ':' + records.map((r) => `${r.anchor}:${!!r.staff}:${this.barGroup(r).length}`).join('|') + `:${this.cash >= type.hireCost}:${allowed}`;
+    const key = 'staff:' + menuKey + ':' + records.map((r) => `${r.anchor}:${!!r.staff}:${this.barGroup(r).length}`).join('|')
+      + `:${this.cash >= type.hireCost}:${allowed}:${bouncers}:${bouncerAllowed}:${this.cash >= bouncerCost}`;
     if (el.dataset.rendered === key) return;
     el.innerHTML = '';
     el.dataset.rendered = key;
     const limit = `You have ${hired} of the ${allowed} bartender${allowed > 1 ? 's' : ''} your level allows${next ? `; one more at level ${next}` : ''}.`;
-    if (records.length === 0) {
+    // A card with a staff member's picture and a name under it.
+    const personCard = (title, text, character, label) => {
+      const card = this.makeCard(title, text, null);
+      card.slot.classList.add('celebSlot', 'staffPerson');
+      this.celebPortrait(card.icon, character);
+      const name = document.createElement('div');
+      name.className = 'celebName';
+      name.textContent = label;
+      card.button.append(name);
+      return card;
+    };
+    const fireButton = (slot, tip, onFire) => {
+      const fire = document.createElement('div');
+      fire.className = 'staffFire';
+      fire.textContent = '✕';
+      fire.dataset.tipName = 'Let go';
+      fire.dataset.tipText = tip;
+      fire.addEventListener('click', (e) => { e.stopPropagation(); onFire(); this.renderStaffCard(); });
+      slot.appendChild(fire);
+    };
+    // The drink menu: what the bars serve (drinks.js).
+    if (records.length) {
+      const menu = this.drinkMenu();
+      const card = this.makeCard('Drink Menu', `On the menu: ${menu.map((d) => d.name).join(', ')}. Click to choose what your bars serve. Fancier drinks pay more and make guests happier, but take longer to mix.`, null);
+      card.slot.classList.add('menuSlot');
+      card.icon.innerHTML = drinkIconSvg(menu.reduce((a, b) => (b.price > a.price ? b : a)));
+      card.cost.textContent = `🍹×${menu.length}`;
+      card.slot.addEventListener('click', () => this.openDrinkMenu());
+      el.appendChild(card.slot);
+    } else {
       const { slot, cost } = this.makeCard('No bars yet', `Place a bar first, then hire a bartender to work it. ${limit}`, null);
       slot.classList.add('emptySlot');
-      cost.textContent = '–';
+      cost.textContent = 'No bars';
       el.appendChild(slot);
-      return;
     }
-    // The drink menu: what the bars serve (drinks.js).
-    const menu = this.drinkMenu();
-    const card = this.makeCard('Drink Menu', `On the menu: ${menu.map((d) => d.name).join(', ')}. Click to choose what your bars serve. Fancier drinks pay more and make guests happier, but take longer to mix.`, null);
-    card.slot.classList.add('menuSlot');
-    card.icon.innerHTML = drinkIconSvg(menu.reduce((a, b) => (b.price > a.price ? b : a)));
-    card.cost.textContent = `🍹×${menu.length}`;
-    card.slot.addEventListener('click', () => this.openDrinkMenu());
-    el.appendChild(card.slot);
+    // Bartenders, one card per long bar.
     const counts = {};
     const seen = new Set();
     for (const rec of records) {
@@ -509,18 +541,23 @@ export class StaffMixin {
       const def = PROP_TYPES[rec.type];
       counts[rec.type] = (counts[rec.type] || 0) + 1;
       const working = group.filter((r) => r.staff).length;
-      const name = group.length > 1 ? `${def.label} ${counts[rec.type]} (${group.length} long)` : `${def.label} ${counts[rec.type]}`;
+      const barName = group.length > 1 ? `${def.label} ${counts[rec.type]} (${group.length} long)` : `${def.label} ${counts[rec.type]}`;
       const full = working >= group.length;
       const atLimit = hired >= allowed;
+      const staffRec = group.find((r) => r.staff);
       let status = working
-        ? `${working} bartender${working > 1 ? 's' : ''} working · $${type.wage} each every 30 seconds.`
-        : 'No bartender: not selling drinks.';
+        ? `${working} bartender${working > 1 ? 's' : ''} working at the ${barName} · $${type.wage} each every 30 seconds.`
+        : `No bartender at the ${barName}: it's not selling drinks.`;
       if (full) status += ' Every spot behind this bar is taken.';
       else if (atLimit) status += ` ${limit}`;
       else status += ` Click to hire ${working ? 'another' : 'one'} for $${type.hireCost}. ${limit}`;
-      const { slot, button, cost } = this.makeCard(name, status, realSpriteIconFor(rec.type));
+      const look = staffRec ? staffRec.staff.container.staffCharacter : type.character;
+      if (staffRec && !staffRec.staff.name) staffRec.staff.name = this.guestName();
+      const label = staffRec ? staffRec.staff.name : 'Hire!';
+      const { slot, button, cost } = personCard(`Bartender · ${barName}`, status, look, label);
       slot.classList.add('staffSlot');
       slot.classList.toggle('staffed', working > 0);
+      if (!working) button.classList.add('vacant');
       const badge = working ? `🍸×${working}` : '';
       if (full || atLimit) {
         cost.textContent = badge || (next ? `🔒 Lv ${next}` : '–');
@@ -530,14 +567,35 @@ export class StaffMixin {
         cost.textContent = `${badge ? badge + ' ' : ''}+$${type.hireCost}`;
         slot.addEventListener('click', () => { this.hireStaff(rec); this.renderStaffCard(); });
       }
-      if (working) {
-        const fire = document.createElement('div');
-        fire.className = 'staffFire';
-        fire.textContent = '✕';
-        fire.dataset.tipName = 'Let one go';
-        fire.dataset.tipText = working > 1 ? 'Let one of this bar\'s bartenders go.' : 'Let this bartender go. The bar stops selling drinks.';
-        fire.addEventListener('click', (e) => { e.stopPropagation(); this.fireStaff(rec); this.renderStaffCard(); });
-        slot.appendChild(fire);
+      if (working) fireButton(slot, working > 1 ? 'Let one of this bar\'s bartenders go.' : 'Let this bartender go. The bar stops selling drinks.', () => this.fireStaff(rec));
+      el.appendChild(slot);
+    }
+    // Bouncers: the house one, any hired, and a card to hire another.
+    for (const g of this.guards || []) {
+      const house = g.index === 0;
+      const text = house
+        ? 'Your house bouncer: keeps the door, breaks up arguments and walks troublemakers out. Always on the team, free.'
+        : `A bouncer you hired: watches their part of the room and walks troublemakers out · $${BOUNCERS.wage} every 30 seconds.`;
+      const { slot, cost } = personCard(`Bouncer · ${g.name}`, text, g.container.staffCharacter, g.name);
+      slot.classList.add('staffSlot', 'staffed', 'bouncerSlot');
+      cost.textContent = house ? '🛡️ House' : `🛡️ $${BOUNCERS.wage}`;
+      if (!house) fireButton(slot, 'Let this bouncer go.', () => this.fireBouncer());
+      el.appendChild(slot);
+    }
+    if (bouncers < BOUNCERS.levels.length) {
+      const nextB = BOUNCERS.levels[bouncers];
+      const unlocked = bouncers < bouncerAllowed;
+      const text = unlocked
+        ? `Hire another bouncer for $${bouncerCost}: they watch another part of the room and walk troublemakers out ($${BOUNCERS.wage} every 30 seconds).`
+        : `Another bouncer unlocks at level ${nextB}.`;
+      const { slot, button, cost } = personCard('Hire a bouncer', text, BOUNCERS.characters[bouncers] ?? 4, 'Hire!');
+      slot.classList.add('staffSlot', 'bouncerSlot', 'hireBouncer');
+      button.classList.add('vacant');
+      if (!unlocked) { button.classList.add('locked'); cost.textContent = `🔒 Lv ${nextB}`; }
+      else {
+        button.classList.toggle('unaffordable', this.cash < bouncerCost);
+        cost.textContent = `+$${bouncerCost}`;
+        slot.addEventListener('click', () => { this.hireBouncer(); this.renderStaffCard(); });
       }
       el.appendChild(slot);
     }

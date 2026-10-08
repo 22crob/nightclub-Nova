@@ -50,6 +50,7 @@ export class ClubScene extends Phaser.Scene {
     this.cash = STARTING_CASH;
     this.fans = 0;
     this.popularity = 0; // the club's reputation (popularity.js)
+    this.bouncers = 1; // hired bouncers, the house one included (security.js)
     this.selectedProp = null; // nothing in hand until you pick something in the shop
     this.currentFacing = 0; // facing used for the NEXT rotatable prop placed
     this.wallpaper = {}; // wall section -> wallpaper type (see wallpaper.js)

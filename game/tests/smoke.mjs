@@ -269,8 +269,9 @@ check('the DJ booth earns fans from the start', openingRate > 0, `rate ${opening
 await page.keyboard.press('Escape');
 await page.evaluate(() => window.__clubNova.scene.getScene('club').setDockTab('inventory'));
 await page.evaluate(() => window.__clubNova.scene.getScene('club').setDockTab('staff'));
-const staffRows = await page.locator('.staffSlot').count();
-check('Staff lists just the bar (the DJ is free)', staffRows === 1, `${staffRows} cards`);
+const staffRows = await page.locator('.staffSlot:not(.bouncerSlot)').count();
+const bouncerRows = await page.locator('.bouncerSlot').count();
+check('Staff lists the bar\'s bartender (the DJ is free) and the bouncers', staffRows === 1 && bouncerRows === 2, `${staffRows} bartender cards, ${bouncerRows} bouncer cards`);
 await page.locator('.staffSlot:not(.staffed)').first().click();
 const staffed = await page.evaluate(() => {
   const s = window.__clubNova.scene.getScene('club');
@@ -2474,6 +2475,51 @@ check('a guest sitting with a sofa back between them and the camera is hidden by
   await songPage.close();
   server.close();
 }
+
+// Staff: the Staff panel shows people (bartenders per bar, bouncers) with
+// pictures; more bouncers unlock with levels. Troublemakers bother the guests
+// near them; a bouncer walks over and walks them out the door, for 5 XP.
+const security = await page.evaluate(() => {
+  const s = window.__clubNova.scene.getScene('club');
+  const out = {};
+  const real = s.levelInfo.bind(s);
+  const cash0 = s.cash;
+  s.levelInfo = () => ({ ...real(), level: 8 });
+  s.cash = 5000;
+  s.setDockTab('staff');
+  s.shopItemsEl.dataset.rendered = '';
+  s.renderStaffCard();
+  out.people = document.querySelectorAll('#shopItems .staffPerson').length;
+  out.portraits = [...document.querySelectorAll('#shopItems .staffPerson .icon')].every((e) => /url\(/.test(e.style.backgroundImage));
+  out.hireCard = !!document.querySelector('#shopItems .hireBouncer');
+  out.hired = s.hireBouncer() && s.guards.length === 2 && s.bouncers === 2;
+  out.cantThird = !s.hireBouncer() && s.guards.length === 2; // the third unlocks at 18
+  out.saved = s.serializeState().bouncers === 2;
+  out.fired = s.fireBouncer() && s.guards.length === 1;
+  s.levelInfo = real;
+  s.cash = cash0;
+  s.closeDock();
+  // A troublemaker next to another guest.
+  for (let i = 0; i < 2; i++) s.trySpawnPatron();
+  const inside = s.patrons.filter((p) => !p.gone && !p.leaving);
+  const [bad, victim] = inside.slice(-2);
+  if (!bad || !victim) return out;
+  for (const p of [bad, victim]) { p.entering = false; p.moving = false; p.sitting = false; p.troublemaker = false; }
+  bad.troublemaker = true; bad.annoyAt = 0; bad.disturbances = 0;
+  const g = s.guard;
+  bad.gx = g.gx + 2; bad.gy = g.gy; victim.gx = bad.gx + 1; victim.gy = bad.gy;
+  const mood0 = victim.mood = 80;
+  s.tickTroublemakers();
+  out.annoyed = victim.mood < mood0 && bad.disturbances === 1;
+  out.spotted = g.target === bad && bad.targetedBy === g;
+  const fans0 = s.fans;
+  g.goal = null;
+  s.escortOut(g, bad);
+  out.out = bad.ejected && bad.leaving && s.fans - fans0 === 5 && !g.target;
+  return out;
+});
+check('the Staff panel shows bartenders and bouncers with pictures; a second bouncer can be hired at level 8 (saved), a third not until 18', security.people >= 2 && security.portraits && security.hireCard && security.hired && security.cantThird && security.saved && security.fired, JSON.stringify(security));
+check('a troublemaker upsets guests near them; a bouncer spots them and walks them out the door, for 5 XP', security.annoyed && security.spotted && security.out, JSON.stringify(security));
 
 // The October 2026 wallpapers: each paints a wall section at level 40.
 const newWalls = await page.evaluate(() => {
