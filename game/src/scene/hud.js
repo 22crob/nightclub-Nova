@@ -20,6 +20,8 @@ export class HudMixin {
     this.rollCash(Math.floor(this.cash));
     if (this.fansText) this.fansText.textContent = Math.floor(this.fans);
     if (this.luxuryText) this.luxuryText.textContent = this.luxury();
+    const pop = document.getElementById('popularityVal');
+    if (pop) pop.textContent = formatMoney(this.popularity || 0).replace('$', '');
     const rating = this.clubRating();
     const ratingEl = document.getElementById('ratingVal');
     if (ratingEl) ratingEl.textContent = rating == null ? '–' : String(rating);

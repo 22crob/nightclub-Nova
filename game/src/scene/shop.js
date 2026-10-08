@@ -312,7 +312,7 @@ export class ShopMixin {
         button.classList.toggle('locked', !unlocked);
         button.classList.toggle('selected', pending === side);
         cost.textContent = unlocked ? `$${tier.cost}` : `🔒 Lv ${tier.unlockLevel}`;
-        slot.dataset.tipText = `${tier.tiles} more floor tiles along the front-${side} edge: the ${side} wall grows from ${wall} to ${tier.newLen} tiles, and 1 more guest fits.`
+        slot.dataset.tipText = `${tier.tiles} more floor tiles along the front-${side} edge: the ${side} wall grows from ${wall} to ${tier.newLen} tiles: more room for a popular club's crowd.`
           + (unlocked ? ' Click to see it, then confirm.' : ` Reach level ${tier.unlockLevel} to build it.`);
         slot.addEventListener('mouseenter', () => this.showExpandPreview(side));
         slot.addEventListener('mouseleave', () => this.showExpandPreview(this.pendingExpand));

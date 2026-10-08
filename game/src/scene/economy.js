@@ -1,7 +1,7 @@
 // ClubScene methods: Fan rate, patron capacity and level progression.
 // Mixed into ClubScene (see ClubScene.js); `this` is the scene.
 import { FLOOR_DECAL_PROPS, PROP_TYPES } from '../catalog.js';
-import { BASE_GRID_SIZE, CAPACITY, LEVEL_FANS, LUXURY, XP } from '../config.js';
+import { LEVEL_FANS, LUXURY, XP } from '../config.js';
 
 export class EconomyMixin {
   // Sums every placed prop's fanRate (dance tiles, DJ booth, neon floor —
@@ -57,13 +57,6 @@ export class EconomyMixin {
   takeInventoryXp(type) {
     const list = this.inventoryXp && this.inventoryXp[type];
     return list && list.length ? list.pop() : 0;
-  }
-
-  // How many guests fit: CAPACITY.base plus one for every row of floor
-  // bought.
-  patronCapacity() {
-    const rows = (this.gridW - BASE_GRID_SIZE) + (this.gridH - BASE_GRID_SIZE); // expansions bought
-    return CAPACITY.base + CAPACITY.perExpansion * rows;
   }
 
   // Guests inside the club now (staff don't count; celebrities do).

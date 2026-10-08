@@ -40,6 +40,7 @@ import { ClubNameMixin } from './clubName.js';
 import { DailyMixin } from './daily.js';
 import { DrinksMixin } from './drinks.js';
 import { TestModeMixin } from './testMode.js';
+import { PopularityMixin } from './popularity.js';
 import { Music } from '../music.js';
 import { applyMixins } from './applyMixins.js';
 
@@ -48,6 +49,7 @@ export class ClubScene extends Phaser.Scene {
     super('club');
     this.cash = STARTING_CASH;
     this.fans = 0;
+    this.popularity = 0; // the club's reputation (popularity.js)
     this.selectedProp = null; // nothing in hand until you pick something in the shop
     this.currentFacing = 0; // facing used for the NEXT rotatable prop placed
     this.wallpaper = {}; // wall section -> wallpaper type (see wallpaper.js)
@@ -385,6 +387,7 @@ export class ClubScene extends Phaser.Scene {
 }
 
 applyMixins(ClubScene, [
+  PopularityMixin,
   InventoryMixin,
   ActivitiesMixin,
   WorldMixin,

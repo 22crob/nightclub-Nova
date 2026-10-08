@@ -23,6 +23,7 @@ export class TestModeMixin {
     if (!TEST_MODE) return;
     this.fans = Math.max(this.fans, this.fansForLevel(this.topUnlockLevel()));
     this.cash = Math.max(this.cash, TEST.cash);
+    this.popularity = Math.max(this.popularity || 0, TEST.popularity);
     const tag = document.createElement('div');
     tag.id = 'testModeTag';
     tag.textContent = 'TEST MODE';

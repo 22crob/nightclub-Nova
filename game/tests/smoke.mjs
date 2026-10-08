@@ -171,7 +171,7 @@ const unlockAll = () => page.evaluate(() => {
   const s = window.__clubNova.scene.getScene('club');
   const real = s.levelInfo.bind(s);
   s.__realLevelInfo = real;
-  s.levelInfo = () => ({ ...real(), level: 9 });
+  s.levelInfo = () => ({ ...real(), level: 40 });
   s.__cash = s.cash;
   s.cash = 99999;
   s.shopItemsEl.dataset.rendered = '';
@@ -658,22 +658,32 @@ const select = await page.evaluate(() => {
 check('hovering any part of a three-tile booth glows the whole booth; clicking selects it and outlines its footprint', select.tiles === 9 && select.hitPoints > 3 && select.glow && select.selected && select.cleared, JSON.stringify(select));
 check('in Edit, clicking anywhere on the booth picks the whole booth up', select.pickedUp, JSON.stringify(select));
 
-// Capacity: 8 guests in a new 10x10 club, one more per expansion row;
-// staff don't count. Shown as "n/max" over a Guests label.
+// Capacity: 8 guests in a new club; more as popularity grows (not by
+// expanding), as long as the room holds them. Happy visits raise popularity,
+// storming out lowers it. Shown as "n/max" over a Guests label.
 const capacity = await page.evaluate(() => {
   const s = window.__clubNova.scene.getScene('club');
-  const [w, h] = [s.gridW, s.gridH];
+  const [w, h, pop] = [s.gridW, s.gridH, s.popularity];
   const out = {};
-  s.gridW = 10; s.gridH = 10;
+  s.gridW = 10; s.gridH = 10; s.popularity = 0;
   out.base = s.patronCapacity();
-  s.gridW = 11;
-  out.one = s.patronCapacity();
-  s.gridH = 12;
-  out.three = s.patronCapacity();
-  [s.gridW, s.gridH] = [w, h];
+  s.gridW = 12;
+  out.expandedOnly = s.patronCapacity();
+  s.gridW = 10; s.popularity = 100;
+  out.popular = s.patronCapacity();
+  s.popularity = 10000;
+  out.roomLimit = s.patronCapacity();
+  s.popularity = 50;
+  s.noteVisitPopularity({ mood: 90 });
+  out.happyUp = s.popularity - 50;
+  s.noteVisitPopularity({ mood: 10, stormedOut: true });
+  out.stormDown = s.popularity - 50 - out.happyUp;
+  out.faster = s.popularityArrivalFactor() > 1;
+  [s.gridW, s.gridH, s.popularity] = [w, h, pop];
   s.updateUI();
   out.text = document.getElementById('placedVal').textContent;
   out.matches = out.text === `${s.patrons.filter((p) => !p.gone).length}/${s.patronCapacity()}`;
+  out.popShown = document.getElementById('popularityVal').textContent === String(s.popularity);
   // Full: nobody else comes in.
   const n0 = s.patrons.length;
   const cap = s.patronCapacity;
@@ -683,7 +693,14 @@ const capacity = await page.evaluate(() => {
   s.patronCapacity = cap;
   return out;
 });
-check('8 guests fit in a new club, +1 per expansion row, shown as "n/max" under Guests, and a full club lets nobody in', capacity.base === 8 && capacity.one === 9 && capacity.three === 11 && capacity.matches && capacity.fullBlocks, JSON.stringify(capacity));
+check('8 guests fit a new club; more as popularity grows (expanding alone adds none), up to what the room holds; happy visits raise popularity and storm-outs lower it', capacity.base === 8 && capacity.expandedOnly === 8 && capacity.popular === 20 && capacity.roomLimit === 25 && capacity.happyUp === 3 && capacity.stormDown === -5 && capacity.faster && capacity.matches && capacity.popShown && capacity.fullBlocks, JSON.stringify(capacity));
+
+// A club can only grow a row per wall every couple of levels.
+const growth = await page.evaluate(() => {
+  const s = window.__clubNova.scene.getScene('club');
+  return { l1: s.maxWallAt(1), l3: s.maxWallAt(3), l10: s.maxWallAt(10), l40: s.maxWallAt(40) };
+});
+check('expanding is locked by level: walls of 10 at level 1, 11 at 3, 14 at 10, 26 at 40', growth.l1 === 10 && growth.l3 === 11 && growth.l10 === 14 && growth.l40 === 26, JSON.stringify(growth));
 
 // XP for purchases: buying gives XP by price, moving gives none, and
 // selling takes it back, so buying and selling can't farm levels.

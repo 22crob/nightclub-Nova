@@ -2,7 +2,7 @@
 // Mixed into ClubScene (see ClubScene.js); `this` is the scene.
 import { PROP_TYPES, REMOVED_ITEMS } from '../catalog.js';
 import { cleanClubName } from './clubName.js';
-import { BASE_GRID_SIZE, SAVE_KEY as REAL_SAVE_KEY, TEST, TEST_MODE } from '../config.js';
+import { BASE_GRID_SIZE, CAPACITY, SAVE_KEY as REAL_SAVE_KEY, TEST, TEST_MODE } from '../config.js';
 
 const SAVE_KEY = TEST_MODE ? TEST.saveKey : REAL_SAVE_KEY;
 // Save codes (Save backup) start with this, so other pasted text is refused.
@@ -56,7 +56,7 @@ export class SaveMixin {
       inventory[this.movingBooth.type] -= 1;
       if (inventory[this.movingBooth.type] <= 0) delete inventory[this.movingBooth.type];
     }
-    return { cash: this.cash, fans: this.fans, gridW: this.gridW, gridH: this.gridH, placed: placedList, wallpaper: { ...this.wallpaper }, floorPaint: { ...this.floorPaint }, nightStars: this.nightStars || [], inventory, inventoryXp, goalsDone: this.goalsDone || [], goalStats: this.goalStats || {}, clubName: this.clubName || '', daily: this.daily || null, drinksOff: this.drinksOff || [], celebs: this.celebState || {}, celebInvited: Object.keys(this.celebInvites || {}) };
+    return { cash: this.cash, fans: this.fans, popularity: this.popularity || 0, gridW: this.gridW, gridH: this.gridH, placed: placedList, wallpaper: { ...this.wallpaper }, floorPaint: { ...this.floorPaint }, nightStars: this.nightStars || [], inventory, inventoryXp, goalsDone: this.goalsDone || [], goalStats: this.goalStats || {}, clubName: this.clubName || '', daily: this.daily || null, drinksOff: this.drinksOff || [], celebs: this.celebState || {}, celebInvited: Object.keys(this.celebInvites || {}) };
   }
 
   saveGame() {
@@ -172,6 +172,14 @@ export class SaveMixin {
     if (Array.isArray(data.drinksOff)) this.drinksOff = data.drinksOff.filter((k) => typeof k === 'string');
     if (data.daily && typeof data.daily.last === 'string') this.daily = { last: data.daily.last, streak: Number(data.daily.streak) || 1 };
     if (typeof data.fans === 'number') this.fans = data.fans;
+    if (typeof data.popularity === 'number') this.popularity = Math.max(0, data.popularity);
+    else if (data.fans > 0) {
+      // A club from before popularity: start it where the guests it already
+      // fitted (8 plus one per row bought) still fit, or by its XP if higher.
+      const w = data.gridW || data.gridSize || BASE_GRID_SIZE, h = data.gridH || data.gridSize || BASE_GRID_SIZE;
+      const oldCap = CAPACITY.base + (w - BASE_GRID_SIZE) + (h - BASE_GRID_SIZE);
+      this.popularity = Math.round(Math.max(((oldCap - CAPACITY.base) / CAPACITY.perRootPopularity) ** 2 + 1, data.fans / 20));
+    }
     // Already set once, before the tile grid was built, by
     // peekSavedGridSize() in create() — re-applying it here is just
     // defensive and never shrinks it, since a corrupt/missing value just

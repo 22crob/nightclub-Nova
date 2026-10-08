@@ -89,10 +89,17 @@ export const FACINGS = [0, 90, 180, 270];
 // as ambient "reputation from having a nice venue" growth, on top of
 // this.
 // ---------------------------------------------------------------------
-// How many guests fit in the club (see patronCapacity()): `base`, plus
-// `perExpansion` for every row of floor bought (see expandClub()). Staff
-// don't count; celebrities do. When it's full, arrivals wait outside.
-export const CAPACITY = { base: 8, perExpansion: 1 };
+// How many guests fit (see patronCapacity() in popularity.js): `base`, plus
+// perRootPopularity x the square root of the club's popularity (8 at 0, 14 at
+// 25, 20 at 100, 32 at 400), but never more than one per tilesPerGuest floor
+// tiles (25 in the first 10x10 room), so a bigger room still matters later.
+export const CAPACITY = { base: 8, perRootPopularity: 1.2, tilesPerGuest: 4 };
+// Popularity (see popularity.js): the club's reputation. Each guest's visit
+// moves it: leaving happy (mood 70+) +happy, content (40+) +content, unhappy
+// +unhappy, storming out +stormOut. It sets how many guests fit
+// (CAPACITY) and brings guests faster: arrivalPer faster per point, up to
+// arrivalMax (so 1.6x at 400).
+export const POPULARITY = { happy: 3, content: 1, unhappy: -1, stormOut: -5, arrivalPer: 0.0015, arrivalMax: 0.6 };
 // Fans needed for each level (fans are the game's XP). Level L needs
 // first + step*(L-1) + curve*(L-1)^2 more to reach the next one, so each
 // level takes longer: 120 for level 2 (a few minutes), level 5 at 1,512,
@@ -234,7 +241,7 @@ export const SAVE_KEY = 'clubNovaSave_v2'; // v2: the finer grid (v1 saves don't
 // its own save so the real club is never touched.
 export const TEST_MODE = typeof location !== 'undefined'
   && (/\/test\/(index\.html)?$/.test(location.pathname) || new URLSearchParams(location.search).has('test'));
-export const TEST = { saveKey: 'clubNovaSave_v2_test', cash: 10000000 };
+export const TEST = { saveKey: 'clubNovaSave_v2_test', cash: 10000000, popularity: 400 };
 
 // Fraction of a prop's fixed cost refunded when you right-click to sell it
 // back (see sellProp()).
@@ -353,7 +360,7 @@ export const GOALS = [
   { id: 'buy10', text: 'Buy 10 things for your club', stat: 'bought', target: 10, cash: 120, xp: 25 },
   { id: 'bonus10', text: 'Catch 10 high fives', stat: 'bonuses', target: 10, cash: 150, xp: 25 },
   { id: 'dance8', text: 'Get 8 guests dancing at once', stat: 'dancersAtOnce', target: 8, cash: 150, xp: 30 },
-  { id: 'cap12', text: 'Make room for 12 guests', stat: 'capacity', target: 12, cash: 200, xp: 30 },
+  { id: 'cap12', text: 'Get popular enough to fit 12 guests', stat: 'capacity', target: 12, cash: 200, xp: 30 },
   { id: 'drinks100', text: 'Serve 100 drinks', stat: 'drinks', target: 100, cash: 250, xp: 40 },
   { id: 'parties3', text: 'Throw 3 parties', stat: 'parties', target: 3, cash: 200, xp: 40 },
   { id: 'hire2', text: 'Hire a second bartender', stat: 'hired', target: 1, cash: 150, xp: 25 },
@@ -362,7 +369,7 @@ export const GOALS = [
   { id: 'rating4', text: 'Earn a 4-star club rating', stat: 'rating', target: 4, cash: 300, xp: 50 },
   { id: 'happy100', text: 'Send 100 guests home happy', stat: 'happyGuests', target: 100, cash: 400, xp: 60 },
   { id: 'drinks250', text: 'Serve 250 drinks', stat: 'drinks', target: 250, cash: 500, xp: 80 },
-  { id: 'cap16', text: 'Make room for 16 guests', stat: 'capacity', target: 16, cash: 500, xp: 80 },
+  { id: 'cap16', text: 'Get popular enough to fit 16 guests', stat: 'capacity', target: 16, cash: 500, xp: 80 },
   { id: 'celebs5', text: 'Have 5 celebrity visits', stat: 'celebs', target: 5, cash: 600, xp: 100 },
   { id: 'level8', text: 'Reach level 8', stat: 'level', target: 8, cash: 800, xp: 0 },
   { id: 'parties10', text: 'Throw 10 parties', stat: 'parties', target: 10, cash: 800, xp: 120 },

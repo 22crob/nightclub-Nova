@@ -494,10 +494,14 @@ export const VIP_BOOTHS = new Set(['vipLounge', 'blackBooth', 'goldBooth',
 // perTile for each tile in it, plus perTileGrowth more per tile for every
 // row the wall already has past the starting size.
 export const EXPANSION = {
+  // One more row per wall every couple of levels, so a club can't outgrow
+  // its level by saving up (the owner asked for that).
   limits: [
-    { level: 1, size: 10 }, { level: 2, size: 12 }, { level: 3, size: 14 }, { level: 5, size: 16 },
-    { level: 7, size: 18 }, { level: 9, size: 20 }, { level: 12, size: 22 }, { level: 15, size: 24 },
-    { level: 19, size: 26 }, { level: 24, size: 28 }, { level: 29, size: 30 }, { level: 35, size: 32 },
+    { level: 1, size: 10 }, { level: 3, size: 11 }, { level: 5, size: 12 }, { level: 7, size: 13 },
+    { level: 9, size: 14 }, { level: 11, size: 15 }, { level: 13, size: 16 }, { level: 15, size: 17 },
+    { level: 17, size: 18 }, { level: 19, size: 19 }, { level: 22, size: 20 }, { level: 25, size: 21 },
+    { level: 28, size: 22 }, { level: 31, size: 23 }, { level: 34, size: 24 }, { level: 37, size: 25 },
+    { level: 40, size: 26 },
   ],
   perTile: 10,
   perTileGrowth: 6,

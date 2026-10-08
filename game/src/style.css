@@ -173,7 +173,7 @@ body { font-family: var(--ui-font); color: var(--ink); }
 /* row under them, the same width. The stat meters bounce on the beat.   */
 #hudRight {
   position: fixed; top: calc(8px + env(safe-area-inset-top, 0px)); right: 10px; z-index: 10;
-  display: flex; flex-direction: column; gap: 8px; width: 228px;
+  display: flex; flex-direction: column; gap: 8px; width: 270px;
 }
 #hudStats {
   display: flex; padding: 5px 4px; border-radius: 14px;
@@ -215,7 +215,7 @@ body { font-family: var(--ui-font); color: var(--ink); }
 /* The party banner while a party is on (see parties.js). */
 .partyBanner {
   display: none; position: fixed; top: calc(140px + env(safe-area-inset-top, 0px)); right: 10px; z-index: 10;
-  width: 228px; padding: 6px 12px 8px; border-radius: 14px; text-align: right; box-sizing: border-box;
+  width: 270px; padding: 6px 12px 8px; border-radius: 14px; text-align: right; box-sizing: border-box;
   background: var(--shine), linear-gradient(180deg, #ff6fe0 0%, #b81f9c 55%, #5e0b50 100%);
   box-shadow: 0 0 0 3px #fff, 0 0 0 5px var(--edge), 0 0 20px var(--pink); text-shadow: var(--outline);
 }
