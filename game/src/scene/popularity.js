@@ -27,7 +27,7 @@ export class PopularityMixin {
   patronCapacity() {
     const byFame = CAPACITY.base + Math.floor(CAPACITY.perRootPopularity * Math.sqrt(this.popularity || 0));
     const byRoom = Math.max(CAPACITY.base, Math.floor((this.gridW * this.gridH) / CAPACITY.tilesPerGuest));
-    return Math.min(byFame, byRoom);
+    return Math.min(byFame, byRoom, CAPACITY.max);
   }
 
   // Guests arrive faster the more popular the club is (1 = normal).

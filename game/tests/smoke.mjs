@@ -694,7 +694,7 @@ const capacity = await page.evaluate(() => {
   s.patronCapacity = cap;
   return out;
 });
-check('8 guests fit a new club; more as popularity grows (expanding alone adds none), up to what the room holds; happy visits raise popularity and storm-outs lower it', capacity.base === 8 && capacity.expandedOnly === 8 && capacity.popular === 20 && capacity.roomLimit === 25 && capacity.happyUp === 3 && capacity.stormDown === -5 && capacity.faster && capacity.matches && capacity.popShown && capacity.fullBlocks, JSON.stringify(capacity));
+check('8 guests fit a new club; more as popularity grows (expanding alone adds none), up to what the room holds; happy visits raise popularity and storm-outs lower it', capacity.base === 8 && capacity.expandedOnly === 8 && capacity.popular === 18 && capacity.roomLimit === 20 && capacity.happyUp === 3 && capacity.stormDown === -5 && capacity.faster && capacity.matches && capacity.popShown && capacity.fullBlocks, JSON.stringify(capacity));
 
 // A club can only grow a row per wall every couple of levels.
 const growth = await page.evaluate(() => {

@@ -112,7 +112,7 @@ export class UpgradesMixin {
   // --- Drink stock -----------------------------------------------------------
 
   maxDrinkStock() {
-    return DRINK_STOCK.base + DRINK_STOCK.perBarUnit * this.hireableRecords().length;
+    return DRINK_STOCK.base + DRINK_STOCK.perGuest * this.patronCapacity();
   }
 
   // Drinks left (a new club, or a save from before stock, starts full).

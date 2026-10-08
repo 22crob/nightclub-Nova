@@ -90,10 +90,12 @@ export const FACINGS = [0, 90, 180, 270];
 // this.
 // ---------------------------------------------------------------------
 // How many guests fit (see patronCapacity() in popularity.js): `base`, plus
-// perRootPopularity x the square root of the club's popularity (8 at 0, 14 at
-// 25, 20 at 100, 32 at 400), but never more than one per tilesPerGuest floor
-// tiles (25 in the first 10x10 room), so a bigger room still matters later.
-export const CAPACITY = { base: 8, perRootPopularity: 1.2, tilesPerGuest: 4 };
+// perRootPopularity x the square root of the club's popularity (8 at 0, 13 at
+// 25, 18 at 100, 28 at 400), but never more than one per tilesPerGuest floor
+// tiles (20 in the first 10x10 room), so a bigger room still matters later,
+// and never more than `max` (a crowd that size is plenty, and phones cope).
+// Balance-checked with a simulated club (October 2026).
+export const CAPACITY = { base: 8, perRootPopularity: 1.0, tilesPerGuest: 5, max: 80 };
 // Popularity (see popularity.js): the club's reputation. Each guest's visit
 // moves it: leaving happy (mood 70+) +happy, content (40+) +content, unhappy
 // +unhappy, storming out +stormOut. It sets how many guests fit
@@ -170,7 +172,7 @@ export const PATRON_POI_LINGER = [3500, 7000];
 // How guests pay, like Nightclub City: a cover charge once at the door, then
 // each drink (its price plus a tip of drinkTip x the price), and now and
 // then a tip while they're dancing (every danceTipEvery ms, $danceTip).
-export const MONEY = { cover: 5, drinkTip: [0.2, 0.5], danceTip: [2, 5], danceTipEvery: [15000, 25000] };
+export const MONEY = { cover: 5, drinkTip: [0.2, 0.5], danceTip: [1, 3], danceTipEvery: [20000, 35000] };
 export const PATRON_TIP_INTERVAL = MONEY.danceTipEvery; // ms between a dancer's tips
 // Each patron token gets its own skin tone, outfit color, and hair (color +
 // style, or none at all) picked independently at spawn — see
@@ -339,7 +341,7 @@ export const REACTIONS = {
 // minMood) offers a high five or fist bump about every everyMs; clicking it
 // within lifeMs collects `amount`. size: the high five / fist bump badge,
 // tipSize: a decoration tip coin, in px.
-export const BONUS = { amount: 88, everyMs: [30000, 60000], lifeMs: 8000, minMood: 70, size: 60, tipSize: 30 };
+export const BONUS = { amount: 88, everyMs: [45000, 75000], lifeMs: 8000, minMood: 70, size: 60, tipSize: 30 };
 
 // Hovering and selecting (see selection.js): the outline glow round
 // whatever's under the cursor (colour, strength), round a selected piece,
@@ -480,8 +482,10 @@ export const BAR_TRICKS = { durationMs: 30 * 1000, cooldownMs: 120 * 1000, tipMu
 export const BAR_TRAINING = { costs: [400, 1200, 3000], levels: [3, 8, 15], speedPer: 0.2 };
 // Drink stock (Staff panel): every drink served uses one; the bars hold
 // base + perBarUnit per bar unit. Restocking costs costPerDrink a drink. At
-// lowShare the bartender warns, and with none left they can't serve.
-export const DRINK_STOCK = { base: 40, perBarUnit: 20, costPerDrink: 2, lowShare: 0.2, warnEveryMs: 60 * 1000 };
+// lowShare the bartender warns, and with none left they can't serve. The
+// bars hold base + perGuest per guest the club fits: about 12-20 minutes
+// of drinks at any size (balance-checked with a simulated club).
+export const DRINK_STOCK = { base: 30, perGuest: 6, costPerDrink: 2, lowShare: 0.2, warnEveryMs: 60 * 1000 };
 // VIP booths: a high roller, VIP guest or celebrity who sits at one pays a
 // reservation of feeShare of the booth's price (at least feeMin).
 export const VIP_BOOTH = { feeShare: 0.1, feeMin: 20 };
