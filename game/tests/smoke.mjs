@@ -2588,6 +2588,27 @@ check('a better DJ booth entertains more; Song Dedication cheers a guest up, the
 check('Bar Tricks makes a bar\'s tips 1.5x for a while; training makes bartenders 20% faster (more at higher levels)', upgrades.tricks && upgrades.trained && upgrades.notYet, JSON.stringify(upgrades));
 check('drinks run out (nobody can order) and restocking from Staff fills the bars for $2 a drink; big spenders pay once to sit at a VIP booth', upgrades.cantOrderWhenOut && upgrades.restocked && upgrades.fee >= 20 && upgrades.feeOnce && upgrades.regularNoFee, JSON.stringify(upgrades));
 
+// Parties have their own look: guests dress up (masks at the Masquerade)
+// and the room gets effects (neon lights flying round at Neon Night); it
+// all goes when the party ends.
+const partyLook = await page.evaluate(() => {
+  const s = window.__clubNova.scene.getScene('club');
+  const out = {};
+  s.trySpawnPatron();
+  const inside = () => s.patrons.filter((p) => !p.gone && !p.celeb);
+  s.startPartyFx({ key: 'masquerade' });
+  out.masked = inside().length > 0 && inside().every((p) => !!p.container.partyCostume);
+  s.trySpawnPatron();
+  out.newcomerDressed = inside().every((p) => !!p.container.partyCostume);
+  s.startPartyFx({ key: 'neon' });
+  out.lights = s.partyFx.objects.filter((o) => o.active).length >= 5 && s.partyFx.key === 'neon';
+  const objs = [...s.partyFx.objects];
+  s.stopPartyFx();
+  out.cleared = !s.partyFx && objs.every((o) => !o.active) && inside().every((p) => !p.container.partyCostume);
+  return out;
+});
+check('parties have their own look: guests dress up (masks, glasses, hats) and the room gets effects (flying neon lights), all gone when it ends', partyLook.masked && partyLook.newcomerDressed && partyLook.lights && partyLook.cleared, JSON.stringify(partyLook));
+
 // Staff: the Staff panel shows people (bartenders per bar, bouncers) with
 // pictures; more bouncers unlock with levels. Troublemakers bother the guests
 // near them; a bouncer walks over and walks them out the door, for 5 XP.

@@ -90,6 +90,7 @@ export class PatronsMixin {
     };
     this.startVisit(patron); // their visit length and personality (see activities.js)
     this.fans += XP.enter; // XP for every guest who comes in
+    if (this.partyFx) this.dressGuest(patron); // in costume for the party (partyFx.js)
     // Walk in off the doorway to a clear spot first, then decide what to do.
     const inside = this.entrySpot();
     if (inside) {
