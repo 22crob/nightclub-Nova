@@ -19,6 +19,13 @@ import boothProSprite from './assets/sprites/dj_pro.json';
 import boothClubSprite from './assets/sprites/dj_club.json';
 import boothNeonSprite from './assets/sprites/dj_neon.json';
 import boothIceSprite from './assets/sprites/dj_ice.json';
+import boothCrateSprite from './assets/sprites/dj_crate.json';
+import boothBrickSprite from './assets/sprites/dj_brick.json';
+import boothTheatreSprite from './assets/sprites/dj_theatre.json';
+import boothTrussSprite from './assets/sprites/dj_truss.json';
+import boothScreenSprite from './assets/sprites/dj_screen.json';
+import boothDecoSprite from './assets/sprites/dj_deco.json';
+import boothHoloSprite from './assets/sprites/dj_holo.json';
 import seat_woodStool from './assets/sprites/seat_woodStool.json';
 import seat_couch from './assets/sprites/seat_couch.json';
 import seat_candleTable from './assets/sprites/seat_candleTable.json';
@@ -294,10 +301,17 @@ export const PROP_TYPES = {
   marbleBar: barTier('marbleBar', 'Marble Lounge Bar', 750, 36, 'bar_marble', bar_marbleSprite),
   cyberBar: barTier('cyberBar', 'Cyber Bar', 900, 39, 'bar_cyber', bar_cyberSprite),
   woodBooth: boothTier('woodBooth', 'Wood Booth', 180, 1, 'dj_wood', boothWoodSprite),
+  crateBooth: boothTier('crateBooth', 'Crate Booth', 195, 3, 'dj_crate', boothCrateSprite),
   proBooth: boothTier('proBooth', 'Pro Booth', 215, 7, 'dj_pro', boothProSprite),
+  brickBooth: boothTier('brickBooth', 'Brick Booth', 230, 10, 'dj_brick', boothBrickSprite),
   dj: boothTier('dj', 'Club Booth', 250, 13, 'dj_club', boothClubSprite),
+  theatreBooth: boothTier('theatreBooth', 'Theatre Booth', 300, 16, 'dj_theatre', boothTheatreSprite),
   neonBooth: boothTier('neonBooth', 'Neon Booth', 380, 21, 'dj_neon', boothNeonSprite),
+  trussBooth: boothTier('trussBooth', 'Truss Booth', 440, 24, 'dj_truss', boothTrussSprite),
+  screenBooth: boothTier('screenBooth', 'LED Screen Booth', 500, 27, 'dj_screen', boothScreenSprite),
   iceBooth: boothTier('iceBooth', 'Ice Booth', 550, 29, 'dj_ice', boothIceSprite),
+  decoBooth: boothTier('decoBooth', 'Art Deco Booth', 650, 33, 'dj_deco', boothDecoSprite),
+  holoBooth: boothTier('holoBooth', 'Holo Booth', 800, 38, 'dj_holo', boothHoloSprite),
   // Floors take turns unlocking, one a level: a regular floor on odd
   // levels and a dance floor on even ones (the last two are both dance
   // floors), simple to fancy, so they sit side by side in the shop. Level 1
@@ -433,6 +447,8 @@ const PROP_LIGHTS = {
   speakerTower: [0x30e0ff, 0.9], neonSpeaker: [0xc040ff, 1.3], discoBall: [0xc8c8ff, 1.2], spotlight: [0xfff0c0, 1.6],
   trophy: [0xffc040, 0.9], table: [0xffa040, 1.0], vipLounge: [0xffa040, 1.3], blackBooth: [0xffa040, 1.3],
   goldBooth: [0xffc060, 1.8],
+  theatreBooth: [0xffc060, 1.2], trussBooth: [0xfff0c0, 1.5], screenBooth: [0x80c0ff, 1.8], decoBooth: [0xffc060, 1.3],
+  holoBooth: [0xff80ff, 2.0],
 };
 for (const [key, light] of Object.entries(PROP_LIGHTS)) PROP_TYPES[key].light = light;
 

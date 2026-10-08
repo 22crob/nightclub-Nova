@@ -239,12 +239,13 @@ const tiers = await page.evaluate(() => {
     layered: !!rec.frontObject && rec.frontObject.depth > rec.gameObject.depth,
     bars: ['starterBar', 'woodBar', 'bar', 'neonBar', 'iceBar', 'tikiBar', 'surfBar', 'dinerBar', 'gardenBar', 'breweryBar',
       'speakeasyBar', 'discoBar', 'candyBar', 'marbleBar', 'cyberBar'].filter((k) => s.hasLayerSprites(k)).length,
-    booths: ['woodBooth', 'proBooth', 'dj', 'neonBooth', 'iceBooth'].filter((k) => s.hasAnySprite(k)).length,
+    booths: ['woodBooth', 'crateBooth', 'proBooth', 'brickBooth', 'dj', 'theatreBooth', 'neonBooth', 'trussBooth', 'screenBooth',
+      'iceBooth', 'decoBooth', 'holoBooth'].filter((k) => s.hasAnySprite(k)).length,
   };
 });
 check('all fifteen bars load, each in two layers', tiers.bars === 15, `${tiers.bars} of 15`);
 check('a bar facing the camera draws its counter in front', tiers.layered);
-check('all five DJ booth tiers load', tiers.booths === 5, `${tiers.booths} of 5`);
+check('all twelve DJ booth tiers load', tiers.booths === 12, `${tiers.booths} of 12`);
 
 // Placing on an occupied tile is refused.
 await clickTile(2, 5);
