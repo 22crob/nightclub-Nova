@@ -51,3 +51,4 @@ The visual and gameplay reference for everything is **Nightclub City** (2010): i
 - Next: (owner to choose)
 - Then: a bouncer at the door
 - Back burner (owner): lights pulsing to the beat; the owner felt it could be overstimulating and distracting.
+- Where it runs (owner agreed, October 2026): keep building in the browser while the game changes daily (every push is live within minutes). When it's ready to share widely, first wrap the same game as a phone app (Capacitor or similar; App Store needs Apple's $99/year developer account and review). Only move to a real engine (Godot is the best fit for a 2D game like this; Unity is heavier) if the browser can't do something we need. The art (furniture, guests, floors, sounds) carries over to any engine as ordinary image and sound files; the code would be rewritten.
