@@ -20,39 +20,39 @@
 |---|---|
 | 1 | Bar: Starter Bar; DJ booth: Wood Booth; Dance floor: Basic Floor; Floor: Concrete; Wallpaper: Paint; Seat/booth: Wood Stool; Seat/booth: Standing Table; Decoration: Beer Crates; Decoration: Potted Fern; Party: House Party; Drink: Beer |
 | 2 | Floor: NEW Plain Tile; Wallpaper: Old Brick; Seat/booth: Fabric Couch; Decoration: Wood Speaker |
-| 3 | DJ booth: NEW Crate Booth; Bar: Wood Bar; Dance floor: Plain Floor; Decoration: Velvet Rope; Drink: Cocktail |
+| 3 | DJ booth: NEW Crate Booth; Bar: Wood Bar; Dance floor: Plain Floor; Decoration: Velvet Rope; Drink: Cocktail; Wallpaper: NEW Cinder Block |
 | 4 | Dance floor: Checker Floor; Floor: Stone Tiles; Wallpaper: Brick; Seat/booth: Candle Table; Decoration: NEW Oak Barrel |
 | 5 | Dance floor: NEW Soft Glow (slow white pulse); Wallpaper: Stripes; Seat/booth: Beer Hall Bench; Decoration: Palm Tree; Party: Hip Hop Night; Bartender: +1 bartender |
-| 6 | Bar: Pub Bar; Dance floor: Wood Floor; Decoration: Disco Ball; Drink: Shots |
+| 6 | Bar: Pub Bar; Dance floor: Wood Floor; Decoration: Disco Ball; Drink: Shots; Wallpaper: NEW Subway Tile |
 | 7 | DJ booth: Pro Booth; Dance floor: NEW Blue Pulse; Floor: Wood Planks; Seat/booth: Chrome Bar Stool; Decoration: NEW Street Lamp |
 | 8 | Dance floor: NEW Pink Pulse; Wallpaper: Wood Panel; Seat/booth: Leather Couch; Decoration: Lava Lamp; Celebrity: Rico Diamond |
-| 9 | Bar: Brewery Bar; Seat/booth: Red Velvet Booth (first VIP booth); Decoration: Speaker Tower |
+| 9 | Bar: Brewery Bar; Seat/booth: Red Velvet Booth (first VIP booth); Decoration: Speaker Tower; Wallpaper: NEW Wood Planks |
 | 10 | DJ booth: NEW Brick Booth; Floor: Red Carpet; Wallpaper: Retro Dots; Seat/booth: Chesterfield; Drink: Mojito; Bartender: +1; Decoration: NEW Globe Lamp |
 | 11 | Bar: Retro Diner Bar; Dance floor: NEW Two-Tone Blink; Seat/booth: Cruiser Car Seat; Decoration: Neon Sign |
 | 12 | Wallpaper: Velvet; Seat/booth: Wood Lounge; Party: Neon Night; Decoration: NEW Crystal Column |
 | 13 | DJ booth: Club Booth; Floor: Purple Carpet; Seat/booth: Art Deco Sofa; Decoration: Glow Tube; Celebrity: Max Volt |
-| 14 | Bar: Garden Bar; Dance floor: Glow Floor; Seat/booth: Black Leather Booth; Decoration: NEW Glow Plinth |
+| 14 | Bar: Garden Bar; Dance floor: Glow Floor; Seat/booth: Black Leather Booth; Decoration: NEW Glow Plinth; Wallpaper: NEW Theatre Red |
 | 15 | Wallpaper: Neon Strip; Seat/booth: Tiki Hut; Decoration: Pool Table |
 | 16 | DJ booth: NEW Theatre Booth; Bar: Surf Shack Bar; Seat/booth: Bathtub Sofa; Drink: Martini; Bartender: +1; Decoration: NEW Pink Globe Lamp |
-| 17 | Dance floor: Light-Up Floor; Floor: Marble; Seat/booth: Kiss Sofa; Decoration: NEW Speaker Stack |
+| 17 | Dance floor: Light-Up Floor; Floor: Marble; Seat/booth: Kiss Sofa; Decoration: NEW Speaker Stack; Wallpaper: NEW Speaker Wall |
 | 18 | Seat/booth: Tulip Lounge; Decoration: Spotlight; Celebrity: DJ Kai Blaze |
 | 19 | Bar: Tiki Bar; Wallpaper: Equalizer; Seat/booth: LED Cube Bench |
 | 20 | Dance floor: Neon Rings; Seat/booth: Gold VIP Booth; Party: VIP Gala; Decoration: NEW Pink Crystal Column |
-| 21 | DJ booth: Neon Booth; Seat/booth: Fire Pit Sectional; Decoration: NEW Glass Screen |
+| 21 | DJ booth: Neon Booth; Seat/booth: Fire Pit Sectional; Decoration: NEW Glass Screen; Wallpaper: NEW Black Arches |
 | 22 | Bar: Speakeasy Bar; Seat/booth: Peacock Love Seat; Decoration: Aquarium |
 | 23 | Floor: Black Gloss; Wallpaper: Mirror Tiles; Seat/booth: Glow Lounge; Bartender: +1 |
 | 24 | DJ booth: NEW Truss Booth; Dance floor: Color Wave; Seat/booth: Garden Gazebo; Celebrity: Leo Lux; Drink: Champagne; Decoration: NEW Purple Liquid Tank |
-| 25 | Bar: Neon Bar; Seat/booth: Igloo; Decoration: NEW Gargoyle |
+| 25 | Bar: Neon Bar; Seat/booth: Igloo; Decoration: NEW Gargoyle; Wallpaper: NEW Bottle Shelf |
 | 26 | Seat/booth: Donut Lounge; Decoration: Neon Speaker; Party: NEW Glow Party |
 | 27 | DJ booth: NEW LED Screen Booth; Bar: Candy Bar; Wallpaper: Neon Chevron; Decoration: NEW Purple Speaker Stack |
 | 28 | Dance floor: Rainbow Flow; Seat/booth: Birdcage; Decoration: NEW Retro Robot |
-| 29 | DJ booth: Ice Booth; Floor: Gold Marble |
+| 29 | DJ booth: Ice Booth; Floor: Gold Marble; Wallpaper: NEW Purple Glow |
 | 30 | Bar: Ice Bar; Seat/booth: Giant Clam; Celebrity: Tony Fame; Bartender: +1; Decoration: NEW Cat Statue |
 | 31 | Wallpaper: LED Wall; Decoration: Gold Trophy |
 | 32 | Dance floor: Step Floor; Seat/booth: Cloud Nine Bed |
-| 33 | DJ booth: NEW Art Deco Booth; Bar: Disco Bar; Party: NEW Masquerade; Decoration: NEW Glass Waterfall |
+| 33 | DJ booth: NEW Art Deco Booth; Bar: Disco Bar; Party: NEW Masquerade; Decoration: NEW Glass Waterfall; Wallpaper: NEW Ice Panels |
 | 34 | Seat/booth: Disco Stage; Drink: Nova Neon; Decoration: NEW Blue Liquid Tank |
-| 35 | Floor: NEW Starry Glass (twinkles); Decoration: Lucky Cat |
+| 35 | Floor: NEW Starry Glass (twinkles); Decoration: Lucky Cat; Wallpaper: NEW LED Lights |
 | 36 | Bar: Marble Lounge Bar; Seat/booth: Galaxy Egg Pods |
 | 37 | Dance floor: NEW Galaxy Swirl; Celebrity: Jett Starr |
 | 38 | DJ booth: NEW Holo Booth; Wallpaper: NEW Holo Wall; Decoration: NEW Pagoda Statue |

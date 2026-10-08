@@ -760,5 +760,98 @@ export function bareFloorCanvas(w, h = w) {
     ctx.fillStyle = r() < 0.5 ? `rgba(255,255,255,${a})` : `rgba(0,0,0,${a})`;
     ctx.fillRect(r() * W, r() * H, 2, 1);
   }
+  beatUpFloor(ctx, w, h, r);
   return c;
+}
+
+// The wear on a new club's floor: old saw-cut joints, poured patches,
+// cracks, chipped holes, spill rings and specks. Drawn in floor space (one
+// unit = one tile; the transform lays it flat on the isometric floor).
+function beatUpFloor(ctx, w, h, r) {
+  const area = w * h;
+  ctx.save();
+  ctx.setTransform(FLOOR_TEX_W / 2, FLOOR_TEX_H / 2, -FLOOR_TEX_W / 2, FLOOR_TEX_H / 2, h * FLOOR_TEX_W / 2, 0);
+  // Saw-cut joints every few tiles, half filled with grime.
+  ctx.strokeStyle = 'rgba(12,10,10,0.35)';
+  ctx.lineWidth = 0.035;
+  for (let x = 4; x < w; x += 4) { ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x, h); ctx.stroke(); }
+  for (let y = 4; y < h; y += 4) { ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(w, y); ctx.stroke(); }
+  // Poured repair patches in a different grey, with dark seams.
+  for (let i = 0; i < Math.max(2, area * 0.025); i++) {
+    const pw = 0.8 + r() * 1.8, ph = 0.6 + r() * 1.4, px = r() * (w - pw), py = r() * (h - ph);
+    const tone = r() < 0.5 ? 'rgba(120,116,108,0.35)' : 'rgba(20,18,18,0.3)';
+    ctx.fillStyle = tone;
+    ctx.fillRect(px, py, pw, ph);
+    ctx.strokeStyle = 'rgba(10,8,8,0.45)';
+    ctx.lineWidth = 0.03;
+    ctx.strokeRect(px, py, pw, ph);
+  }
+  // Spill rings and sticky stains (circles here, flat ellipses on screen).
+  for (let i = 0; i < area * 0.06; i++) {
+    const x = r() * w, y = r() * h, rad = 0.12 + r() * 0.45;
+    const tint = r() < 0.4 ? '60,36,12' : '14,12,12';
+    ctx.fillStyle = `rgba(${tint},${0.12 + r() * 0.14})`;
+    ctx.beginPath();
+    ctx.ellipse(x, y, rad, rad * (0.7 + r() * 0.3), r() * Math.PI, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.strokeStyle = `rgba(${tint},${0.18 + r() * 0.15})`;
+    ctx.lineWidth = 0.02;
+    ctx.stroke();
+  }
+  // Cracks: jagged lines that wander, now and then forking; each drawn
+  // twice, a light broken edge and the dark gap on top.
+  const crackPaths = [];
+  const crack = (x, y, ang, len, width) => {
+    const pts = [[x, y]];
+    for (let k = 0; k < len; k++) {
+      ang += (r() - 0.5) * 1.1;
+      x += Math.cos(ang) * 0.18;
+      y += Math.sin(ang) * 0.18;
+      pts.push([x, y]);
+      if (r() < 0.08 && width > 0.015) crack(x, y, ang + (r() < 0.5 ? 0.9 : -0.9), (len - k) / 2, width * 0.6);
+    }
+    crackPaths.push({ pts, width });
+  };
+  for (let i = 0; i < area * 0.05; i++) crack(r() * w, r() * h, r() * Math.PI * 2, 6 + r() * 18, 0.045);
+  for (const [color, dx, grow] of [['rgba(205,198,186,0.16)', 0.03, 1.6], ['rgba(8,6,6,0.8)', 0, 1]]) {
+    ctx.strokeStyle = color;
+    for (const { pts, width } of crackPaths) {
+      ctx.lineWidth = width * grow;
+      ctx.beginPath();
+      pts.forEach(([x, y], k) => (k ? ctx.lineTo(x + dx, y + dx) : ctx.moveTo(x + dx, y + dx)));
+      ctx.stroke();
+    }
+  }
+  // Chipped holes showing the stones in the concrete.
+  for (let i = 0; i < area * 0.035; i++) {
+    const cx = r() * w, cy = r() * h, rad = 0.06 + r() * 0.14;
+    ctx.beginPath();
+    for (let a = 0; a < 7; a++) {
+      const t = (a / 7) * Math.PI * 2, d = rad * (0.6 + r() * 0.6);
+      if (a === 0) ctx.moveTo(cx + Math.cos(t) * d, cy + Math.sin(t) * d);
+      else ctx.lineTo(cx + Math.cos(t) * d, cy + Math.sin(t) * d);
+    }
+    ctx.closePath();
+    ctx.fillStyle = 'rgba(22,19,18,0.8)';
+    ctx.fill();
+    ctx.strokeStyle = 'rgba(170,164,152,0.35)';
+    ctx.lineWidth = 0.015;
+    ctx.stroke();
+    for (let k = 0; k < 3; k++) {
+      ctx.fillStyle = 'rgba(140,132,120,0.6)';
+      ctx.fillRect(cx + (r() - 0.5) * rad, cy + (r() - 0.5) * rad, 0.025, 0.025);
+    }
+  }
+  // Gum, paint flecks and old tape marks.
+  for (let i = 0; i < area * 0.25; i++) {
+    ctx.fillStyle = r() < 0.6 ? 'rgba(15,12,12,0.55)' : 'rgba(200,196,186,0.3)';
+    ctx.beginPath();
+    ctx.arc(r() * w, r() * h, 0.015 + r() * 0.03, 0, Math.PI * 2);
+    ctx.fill();
+  }
+  for (let i = 0; i < area * 0.01; i++) {
+    ctx.fillStyle = r() < 0.5 ? 'rgba(210,190,60,0.22)' : 'rgba(200,200,200,0.16)';
+    ctx.fillRect(r() * w, r() * h, 0.5 + r() * 0.8, 0.07);
+  }
+  ctx.restore();
 }

@@ -2460,6 +2460,19 @@ check('a guest sitting with a sofa back between them and the camera is hidden by
   server.close();
 }
 
+// The October 2026 wallpapers: each paints a wall section at level 40.
+const newWalls = await page.evaluate(() => {
+  const s = window.__clubNova.scene.getScene('club');
+  const fans = s.fans, cash = s.cash, held = s.selectedProp, before = s.wallpaper.R0;
+  s.fans = Math.max(s.fans, s.fansForLevel(40));
+  const types = ['wpCinder', 'wpSubway', 'wpPlanks', 'wpTheatre', 'wpSpeakers', 'wpArches', 'wpBottles', 'wpPurpleGlow', 'wpIce', 'wpLedDots'];
+  const painted = types.filter((t) => { s.cash = 1e6; s.selectedProp = t; s.paintWall('R0'); return s.wallpaper.R0 === t; });
+  s.selectedProp = held; s.fans = fans; s.cash = cash;
+  if (before) { s.wallpaper.R0 = before; s.drawWallSection('R0', before); } else { delete s.wallpaper.R0; s.wallImages.R0?.destroy(); delete s.wallImages.R0; }
+  return { painted: painted.length, of: types.length };
+});
+check('the ten new wallpapers each paint a wall', newWalls.painted === newWalls.of, JSON.stringify(newWalls));
+
 // Phones: on a touch screen a tap on a guest opens their card, a tap
 // collects a high five (a little off the badge still counts), two fingers
 // pinch to zoom, and the HUD's top panels don't overlap.
