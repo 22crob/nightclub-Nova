@@ -5,7 +5,7 @@
 **How each category grows:**
 - **Dance floors:** plain and still until level 5 (Soft Glow, a slow white pulse), then simple single-colour pulses (Blue at 7, Pink at 8), a two-tone blink at 11. The creative animated floors start at level 14 and get fancier up to 37.
 - **Bars:** from plain (Starter, Wood, Pub) through rustic and retro, to the themed bars (Tiki at 19), then the glowing ones (Neon 25, Ice 30, Disco 33) and the fanciest last (Marble 36, Cyber 39).
-- **Seats and booths:** stools, a couch and tables early; the first VIP booth at 9 (in time for the first celebrity at 8); the wild themed booths from the mid-20s; Royal Thrones as the level 40 prize.
+- **Seats and booths:** stools, a couch and tables early; the first VIP booth (Red Velvet) at 10; the wild themed booths from the mid-20s. (Royal Thrones were taken out of the game in October 2026.)
 - **Decorations:** crates, plants and speakers early; the Disco Ball moves from level 1 to 6; spotlights, aquarium and gold pieces later. The October 2026 batch from the main reference screenshots fills the gaps: a barrel and street lamp early, globe lamps, crystal columns and a glow plinth in the teens, then speaker stacks, a glass screen, liquid tanks, a gargoyle, a robot, a cat statue, a glass waterfall and a pagoda, some in two colours.
 - **Wallpaper and floors:** plain paint, brick and concrete early; neon, mirrors, marble and LED late.
 - **Celebrities, drinks, parties, extra bartenders:** spread across all 40 levels.
@@ -23,11 +23,11 @@
 | 3 | DJ booth: NEW Crate Booth; Bar: Wood Bar; Dance floor: Plain Floor; Decoration: Velvet Rope; Drink: Cocktail; Wallpaper: NEW Cinder Block |
 | 4 | Dance floor: Checker Floor; Floor: Stone Tiles; Wallpaper: Brick; Seat/booth: Candle Table; Decoration: NEW Oak Barrel |
 | 5 | Dance floor: NEW Soft Glow (slow white pulse); Wallpaper: Stripes; Seat/booth: Beer Hall Bench; Decoration: Palm Tree; Party: Hip Hop Night; Bartender: +1 bartender |
-| 6 | Bar: Pub Bar; Dance floor: Wood Floor; Decoration: Disco Ball; Drink: Shots; Wallpaper: NEW Subway Tile |
+| 6 | Bar: Brewery Bar; Dance floor: Wood Floor; Decoration: Disco Ball; Drink: Shots; Wallpaper: NEW Subway Tile |
 | 7 | DJ booth: Pro Booth; Dance floor: NEW Blue Pulse; Floor: Wood Planks; Seat/booth: Chrome Bar Stool; Decoration: NEW Street Lamp |
-| 8 | Dance floor: NEW Pink Pulse; Wallpaper: Wood Panel; Seat/booth: Leather Couch; Decoration: Lava Lamp; Celebrity: Rico Diamond |
-| 9 | Bar: Brewery Bar; Seat/booth: Red Velvet Booth (first VIP booth); Decoration: Speaker Tower; Wallpaper: NEW Wood Planks |
-| 10 | DJ booth: NEW Brick Booth; Floor: Red Carpet; Wallpaper: Retro Dots; Seat/booth: Chesterfield; Drink: Mojito; Bartender: +1; Decoration: NEW Globe Lamp |
+| 8 | Dance floor: NEW Pink Pulse; Wallpaper: Wood Panel; Seat/booth: Chesterfield; Decoration: Lava Lamp; Celebrity: Rico Diamond |
+| 9 | Bar: Pub Bar; Seat/booth: Leather Couch; Decoration: Speaker Tower; Wallpaper: NEW Wood Planks |
+| 10 | DJ booth: NEW Brick Booth; Floor: Red Carpet; Wallpaper: Retro Dots; Seat/booth: Red Velvet Booth (first VIP booth); Drink: Mojito; Bartender: +1; Decoration: NEW Globe Lamp |
 | 11 | Bar: Retro Diner Bar; Dance floor: NEW Two-Tone Blink; Seat/booth: Cruiser Car Seat; Decoration: Neon Sign |
 | 12 | Wallpaper: Velvet; Seat/booth: Wood Lounge; Party: Neon Night; Decoration: NEW Crystal Column |
 | 13 | DJ booth: Club Booth; Floor: Purple Carpet; Seat/booth: Art Deco Sofa; Decoration: Glow Tube; Celebrity: Max Volt |
@@ -57,7 +57,7 @@
 | 37 | Dance floor: NEW Galaxy Swirl; Celebrity: Jett Starr |
 | 38 | DJ booth: NEW Holo Booth; Wallpaper: NEW Holo Wall; Decoration: NEW Pagoda Statue |
 | 39 | Bar: Cyber Bar; Party: NEW Neon Rave |
-| 40 | Seat/booth: Royal Thrones |
+| 40 | (nothing new: the top level) |
 *Expanding the club will also continue past level 9 (bigger walls up to level 40), and the late levels get more new furniture in a later batch made in Blender.*
 
 **Walls (expansion limits)** now grow to level 35: 10 tiles at level 1, 12 at 2, 14 at 3, 16 at 5, 18 at 7, 20 at 9, 22 at 12, 24 at 15, 26 at 19, 28 at 24, 30 at 29, 32 at 35 (`EXPANSION.limits` in catalog.js). Bigger clubs already built keep their size.

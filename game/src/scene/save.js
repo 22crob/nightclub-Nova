@@ -1,6 +1,6 @@
 // ClubScene methods: Saving and loading the club to localStorage.
 // Mixed into ClubScene (see ClubScene.js); `this` is the scene.
-import { PROP_TYPES } from '../catalog.js';
+import { PROP_TYPES, REMOVED_ITEMS } from '../catalog.js';
 import { cleanClubName } from './clubName.js';
 import { BASE_GRID_SIZE, SAVE_KEY as REAL_SAVE_KEY, TEST, TEST_MODE } from '../config.js';
 
@@ -189,6 +189,7 @@ export class SaveMixin {
       const isBooth = (e) => (e && PROP_TYPES[e.type] && PROP_TYPES[e.type].staff === 'dj' ? 1 : 0);
       const entries = [...data.placed].sort((a, b) => isBooth(a) - isBooth(b));
       for (const entry of entries) {
+        if (entry && REMOVED_ITEMS[entry.type]) { this.cash += REMOVED_ITEMS[entry.type]; continue; }
         if (!entry || !PROP_TYPES[entry.type] || !Array.isArray(entry.anchor)) continue;
         let rec = this.restoreProp(entry.type, entry.facing, entry.anchor);
         // A DJ booth saved against the wall, from before the DJ had their
@@ -207,7 +208,10 @@ export class SaveMixin {
     // nightOver and bestNightProfit; they're no longer used.)
     if (data.inventory && typeof data.inventory === 'object') {
       this.inventory = {};
-      for (const [type, n] of Object.entries(data.inventory)) if (PROP_TYPES[type] && n > 0) this.inventory[type] = Math.floor(n);
+      for (const [type, n] of Object.entries(data.inventory)) {
+        if (REMOVED_ITEMS[type] && n > 0) this.cash += REMOVED_ITEMS[type] * Math.floor(n);
+        else if (PROP_TYPES[type] && n > 0) this.inventory[type] = Math.floor(n);
+      }
     }
     if (Array.isArray(data.goalsDone)) this.goalsDone = data.goalsDone.filter((id) => typeof id === 'string');
     // What each celebrity thinks of the club (see celebrities.js).

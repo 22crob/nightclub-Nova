@@ -132,7 +132,8 @@ body { font-family: var(--ui-font); color: var(--ink); }
 #tipsButton { --c: #43e04a; }
 #restartButton { --c: #ff4f6a; }
 #backupButton { --c: #2fb8ff; }
-#hudTools { display: grid; grid-template-columns: 24px; grid-auto-rows: 24px; gap: 3px; }
+#renameButton { --c: #ff8a1f; }
+#hudTools { display: grid; grid-template-columns: 24px 24px; grid-auto-rows: 24px; gap: 3px; }
 /* Save backup (save.js): the code to copy and a box to paste one. */
 #backupBox textarea {
   display: block; width: 100%; height: 58px; box-sizing: border-box; padding: 8px 10px; border-radius: 12px; resize: none;

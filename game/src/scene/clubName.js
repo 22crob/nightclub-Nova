@@ -123,6 +123,8 @@ export class ClubNameMixin {
     input.addEventListener('keydown', (e) => { if (e.key === 'Enter') this.confirmClubName(); });
     document.getElementById('clubNameOk')?.addEventListener('click', () => this.confirmClubName());
     document.getElementById('clubNameCancel')?.addEventListener('click', () => box.classList.remove('open'));
+    // Renaming is from the player panel's pencil button (the sign itself isn't clickable).
+    document.getElementById('renameButton')?.addEventListener('click', () => { SFX.unlock(); this.promptClubName(false); });
     this.drawClubSign();
     if (!this.clubName) this.promptClubName(true);
   }
@@ -180,8 +182,6 @@ export class ClubNameMixin {
     const [sx, sy] = this.gridPoint(start, gy, WALL_HEIGHT);
     // Its bottom-left corner (the back end, at the foot of the posts) sits on the wall top.
     const img = this.add.image(sx, sy + 2, 'clubSign_on').setOrigin(0, footY / tex.height).setScale(scale);
-    img.setInteractive({ pixelPerfect: true, useHandCursor: true });
-    img.on('pointerup', (p) => { if (!this.selectedProp && !p.event.defaultPrevented) this.promptClubName(false); });
     this.wallLayer.add(img);
     this.clubSign = img;
     // The bulbs chase.

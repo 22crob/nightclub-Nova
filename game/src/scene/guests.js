@@ -144,9 +144,10 @@ export class GuestsMixin {
     const waiting = this.barGroupQueue(rec).length;
     set('infoName', rec.staff.name);
     set('infoRole', `Bartender · ${waiting} waiting for a drink`);
-    set('infoQuote', waiting >= 3 ? '"The bar is slammed!"' : (waiting ? '"Coming right up!"' : '"Who\'s thirsty?"'));
+    set('infoQuote', this.bartenderSpeed(rec.staff) > 1 ? '"Bottoms up!"' : waiting >= 3 ? '"The bar is slammed!"' : (waiting ? '"Coming right up!"' : '"Who\'s thirsty?"'));
     const ready = this.bottomsUpReady(rec);
-    action('bottomsUp', !ready ? 'recovering' : (waiting ? null : 'nobody is waiting'), 'Bottoms Up! Serve everyone in this bartender\'s line at once');
+    const fast = this.bartenderSpeed(rec.staff) > 1;
+    action('bottomsUp', fast ? 'working twice as fast now' : (!ready ? 'recovering' : null), 'Bottoms Up! This bartender works twice as fast for 30 seconds.');
     set('bottomsUpTimer', ready ? '' : `${Math.ceil((rec.staff.bottomsUpAt - this.time.now) / 1000)}s`);
     show('infoGuestStats', false);
     show('infoGuestActions', false);
@@ -267,31 +268,54 @@ export class GuestsMixin {
     return !!rec.staff && this.time.now >= (rec.staff.bottomsUpAt || 0);
   }
 
-  // The bartender serves everyone in line at once.
+  // Bottoms Up!: the bartender works at BOTTOMS_UP.speed for durationMs
+  // (mixing and walking along the bar), then recovers for cooldownMs.
   bottomsUp(rec) {
-    if (!rec || !rec.staff || !this.bottomsUpReady(rec) || !this.clubOpen()) { SFX.denied(); return 0; }
-    // Everyone in this bar's line gets served at once: at the counter,
-    // walking up to it, or waiting in the rows behind. The bar is cleared.
-    const line = this.barGroupQueue(rec).filter((p) => !p.gone && !p.leaving);
-    if (line.length === 0) {
-      SFX.denied();
-      this.showToast('🍹 Nobody is waiting for a drink right now.');
-      return 0;
-    }
-    for (const p of line) {
-      const unit = p.queue || rec;
-      this.leaveBarQueue(p);
-      this.serveDrink(unit, p);
-    }
-    rec.staff.bottomsUpAt = this.time.now + BOTTOMS_UP.cooldownMs;
-    const { x, y } = rec.staff.container;
-    this.floatText(x, y - CHARACTER_DISPLAY_HEIGHT * 1.1, 'SERVED!!', '#ff7ae0');
+    if (!rec || !rec.staff || !this.bottomsUpReady(rec) || !this.clubOpen()) { SFX.denied(); return false; }
+    const b = rec.staff;
+    const now = this.time.now;
+    b.fastUntil = now + BOTTOMS_UP.durationMs;
+    b.bottomsUpAt = now + BOTTOMS_UP.durationMs + BOTTOMS_UP.cooldownMs;
+    if (b.task && b.task.phase === 'serve') b.task.until = now + (b.task.until - now) / BOTTOMS_UP.speed;
+    const { x, y } = b.container;
+    this.floatText(x, y - CHARACTER_DISPLAY_HEIGHT * 1.1, 'Bottoms Up! x2', '#ff7ae0');
     SFX.levelUp();
     this.refreshInfoCard();
-    return line.length;
+    return true;
   }
 
-  // Suggests Bottoms Up when a bar's line gets long (once in a while).
+  // How fast a bartender works right now: BOTTOMS_UP.speed during Bottoms Up!, else 1.
+  bartenderSpeed(b) {
+    return b && this.time.now < (b.fastUntil || 0) ? BOTTOMS_UP.speed : 1;
+  }
+
+  // A bartender says something in a speech bubble over their head.
+  staffSay(b, text, ms = BOTTOMS_UP.sayMs) {
+    if (!b || !b.container) return;
+    if (b.speech) b.speech.destroy();
+    const c = b.container;
+    const label = this.add.text(0, 0, text, {
+      fontFamily: 'Arial', fontStyle: 'bold', fontSize: '12px', color: '#2a1440',
+      align: 'center', wordWrap: { width: 150 },
+    }).setOrigin(0.5).setResolution(2);
+    const w = label.width + 16, h = label.height + 10;
+    const g = this.add.graphics();
+    g.fillStyle(0xffffff, 1).lineStyle(2, 0x2a1440, 1);
+    g.fillRoundedRect(-w / 2, -h / 2, w, h, 9).strokeRoundedRect(-w / 2, -h / 2, w, h, 9);
+    g.fillTriangle(-6, h / 2 - 1, 6, h / 2 - 1, 0, h / 2 + 8);
+    g.lineBetween(-6, h / 2, 0, h / 2 + 8).lineBetween(6, h / 2, 0, h / 2 + 8);
+    const bubble = this.add.container(c.x, c.y - CHARACTER_DISPLAY_HEIGHT * 1.15 - h / 2, [g, label]);
+    bubble.setDepth(1e6);
+    this.world.add(bubble);
+    b.speech = bubble;
+    const lift = CHARACTER_DISPLAY_HEIGHT * 1.15 + h / 2;
+    const follow = () => { if (bubble.active) bubble.setPosition(c.x, c.y - lift); };
+    this.events.on('update', follow);
+    bubble.once('destroy', () => this.events.off('update', follow));
+    this.time.delayedCall(ms, () => { if (b.speech === bubble) b.speech = null; bubble.destroy(); });
+  }
+
+  // When a bar's line gets long, its bartender suggests Bottoms Up (once in a while).
   checkSlammedBars() {
     const now = this.time.now;
     if (now < (this.slammedHintAt || 0)) return;
@@ -299,7 +323,7 @@ export class GuestsMixin {
       && this.barGroupQueue(rec).length >= BOTTOMS_UP.slammedLine && this.bottomsUpReady(rec));
     if (!slammed) return;
     this.slammedHintAt = now + BOTTOMS_UP.hintEveryMs;
-    this.showToast('🍹 Bottoms Up! The bar is slammed: click your bartender to serve everyone at once.', 5000);
+    this.staffSay(slammed.staff, "We're slammed! Click me for Bottoms Up!");
   }
 
   // Wires up the card (see index.html) and its refresh.

@@ -56,7 +56,6 @@ import seat_shellBooth from './assets/sprites/seat_shellBooth.json';
 import seat_cloudBed from './assets/sprites/seat_cloudBed.json';
 import seat_discoStage from './assets/sprites/seat_discoStage.json';
 import seat_galaxyPods from './assets/sprites/seat_galaxyPods.json';
-import seat_throneBooth from './assets/sprites/seat_throneBooth.json';
 import decor_fern from './assets/sprites/decor_fern.json';
 import decor_palm from './assets/sprites/decor_palm.json';
 import decor_crates from './assets/sprites/decor_crates.json';
@@ -227,7 +226,6 @@ const SEAT_SPRITES = {
   cloudBed: seat_cloudBed,
   discoStage: seat_discoStage,
   galaxyPods: seat_galaxyPods,
-  throneBooth: seat_throneBooth,
 };
 const SQUARE_3X3 = [[0, 0], [1, 0], [2, 0], [0, 1], [1, 1], [2, 1], [0, 2], [1, 2], [2, 2]];
 const BOOTH_3X3 = { 0: SQUARE_3X3, 90: SQUARE_3X3, 180: SQUARE_3X3, 270: SQUARE_3X3 };
@@ -286,7 +284,7 @@ function barTier(key, label, cost, unlockLevel, spriteBase, meta) {
 export const PROP_TYPES = {
   starterBar: barTier('starterBar', 'Starter Bar', 100, 1, 'bar_starter', barStarterSprite),
   woodBar: barTier('woodBar', 'Wood Bar', 130, 3, 'bar_wood', barWoodSprite),
-  bar: barTier('bar', 'Pub Bar', 150, 6, 'bar', barSprite),
+  bar: barTier('bar', 'Pub Bar', 150, 9, 'bar', barSprite),
   neonBar: barTier('neonBar', 'Neon Bar', 260, 25, 'bar_neon', barNeonSprite),
   iceBar: barTier('iceBar', 'Ice Bar', 400, 30, 'bar_ice', barIceSprite),
   // The ten themed bars (art/blender/bar_designs.py).
@@ -294,7 +292,7 @@ export const PROP_TYPES = {
   surfBar: barTier('surfBar', 'Surf Shack Bar', 300, 16, 'bar_surf', bar_surfSprite),
   dinerBar: barTier('dinerBar', 'Retro Diner Bar', 340, 11, 'bar_diner', bar_dinerSprite),
   gardenBar: barTier('gardenBar', 'Garden Bar', 380, 14, 'bar_garden', bar_gardenSprite),
-  breweryBar: barTier('breweryBar', 'Brewery Bar', 420, 9, 'bar_warehouse', bar_warehouseSprite),
+  breweryBar: barTier('breweryBar', 'Brewery Bar', 420, 6, 'bar_warehouse', bar_warehouseSprite),
   speakeasyBar: barTier('speakeasyBar', 'Speakeasy Bar', 500, 22, 'bar_speakeasy', bar_speakeasySprite),
   discoBar: barTier('discoBar', 'Disco Bar', 560, 33, 'bar_disco', bar_discoSprite),
   candyBar: barTier('candyBar', 'Candy Bar', 620, 27, 'bar_candy', bar_candySprite),
@@ -355,13 +353,13 @@ export const PROP_TYPES = {
   standingTable: seatTier('standingTable', 'Standing Table', 50, 1, 'standingTable', 0.1),
   table: seatTier('table', 'Candle Table', 60, 4, 'candleTable', 0.2),
   barStool: seatTier('barStool', 'Chrome Bar Stool', 70, 7, 'stool', 0.2),
-  leatherCouch: seatTier('leatherCouch', 'Leather Couch', 160, 8, 'leatherCouch', 0.3, BOOTH_FOOTPRINT),
-  vipLounge: seatTier('vipLounge', 'Red Velvet Booth', 280, 9, 'velvetBooth', 0.5, BOOTH_3X3),
+  leatherCouch: seatTier('leatherCouch', 'Leather Couch', 160, 9, 'leatherCouch', 0.3, BOOTH_FOOTPRINT),
+  vipLounge: seatTier('vipLounge', 'Red Velvet Booth', 280, 10, 'velvetBooth', 0.5, BOOTH_3X3),
   blackBooth: seatTier('blackBooth', 'Black Leather Booth', 360, 14, 'blackBooth', 0.6, BOOTH_3X3),
   goldBooth: seatTier('goldBooth', 'Gold VIP Booth', 500, 20, 'goldBooth', 0.8, BOOTH_3X3),
   // More booths and sofas, each its own shape, a couple a level up to 20.
   beerBench: seatTier('beerBench', 'Beer Hall Bench', 120, 5, 'beerBench', 0.25, BOOTH_FOOTPRINT),
-  chesterfield: seatTier('chesterfield', 'Chesterfield', 180, 10, 'chesterfield', 0.3, BOOTH_FOOTPRINT),
+  chesterfield: seatTier('chesterfield', 'Chesterfield', 180, 8, 'chesterfield', 0.3, BOOTH_FOOTPRINT),
   cruiserSofa: seatTier('cruiserSofa', 'Cruiser Car Seat', 220, 11, 'cruiserSofa', 0.35, BOOTH_FOOTPRINT),
   woodLounge: seatTier('woodLounge', 'Wood Lounge', 300, 12, 'woodLounge', 0.45, LOUNGE_3X2),
   tikiHut: seatTier('tikiHut', 'Tiki Hut', 380, 15, 'tikiHut', 0.5, BOOTH_3X3),
@@ -381,7 +379,6 @@ export const PROP_TYPES = {
   cloudBed: seatTier('cloudBed', 'Cloud Nine Bed', 1000, 32, 'cloudBed', 0.95, BOOTH_3X3),
   discoStage: seatTier('discoStage', 'Disco Stage', 1200, 34, 'discoStage', 1.0, BOOTH_3X3),
   galaxyPods: seatTier('galaxyPods', 'Galaxy Egg Pods', 1350, 36, 'galaxyPods', 1.1, BOOTH_3X3),
-  throneBooth: seatTier('throneBooth', 'Royal Thrones', 1500, 40, 'throneBooth', 1.2, BOOTH_3X3),
   // Decorations, simple to fancy. 'plant', 'discoBall' and 'neonSign' are
   // the keys of the original placeholder decorations, kept for old saves.
   crates: decorTier('crates', 'Beer Crates', 40, 1, 'crates', 0.15),
@@ -489,7 +486,7 @@ export const STAFF_TYPES = {
 // The VIP booths: the only seats you can show a guest to from their card
 // (see seatGuest() in scene/guests.js), like Nightclub City's booths.
 export const VIP_BOOTHS = new Set(['vipLounge', 'blackBooth', 'goldBooth',
-  'woodLounge', 'tikiHut', 'tulipLounge', 'glowLounge', 'fireSectional', 'gardenGazebo', 'iglooBooth', 'donutLounge', 'birdcageBooth', 'shellBooth', 'cloudBed', 'discoStage', 'galaxyPods', 'throneBooth']);
+  'woodLounge', 'tikiHut', 'tulipLounge', 'glowLounge', 'fireSectional', 'gardenGazebo', 'iglooBooth', 'donutLounge', 'birdcageBooth', 'shellBooth', 'cloudBed', 'discoStage', 'galaxyPods']);
 
 // Expanding adds one row of floor along one of the room's two open edges at
 // a time (see expandClub()). How long a wall can get depends on your level:
@@ -520,3 +517,7 @@ export function fameStars(cost) {
 
 // Dance floor tiles: flat on the ground, patrons dance on them.
 export const FLOOR_DECAL_PROPS = new Set(Object.keys(PROP_TYPES).filter((k) => PROP_TYPES[k].floorStyle));
+
+// Items taken out of the game: a save that still has one gets this much
+// cash back for each, placed or in the inventory (see loadSaveData()).
+export const REMOVED_ITEMS = { throneBooth: 1500 };

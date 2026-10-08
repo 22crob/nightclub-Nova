@@ -271,7 +271,7 @@ export class BarsMixin {
       b.task.phase = 'serve';
       // What they ordered; fancier drinks take longer to mix (drinks.js).
       patron.order = this.pickDrink(patron).key;
-      b.task.until = this.time.now + BAR.serveMs * this.drinkOf(patron.order).mix;
+      b.task.until = this.time.now + BAR.serveMs * this.drinkOf(patron.order).mix / this.bartenderSpeed(b);
       const c = b.container;
       this.floatText(c.x, c.y - CHARACTER_DISPLAY_HEIGHT * 0.95, '🍸', '#ffffff');
     });
@@ -299,7 +299,7 @@ export class BarsMixin {
     this.propLayer.sort('depth');
     this.tweens.killTweensOf(c);
     this.tweens.add({
-      targets: c, x: sx, y: sy, duration: Math.abs(to - from) * BAR.walkMsPerUnit, ease: 'Linear',
+      targets: c, x: sx, y: sy, duration: Math.abs(to - from) * BAR.walkMsPerUnit / this.bartenderSpeed(b), ease: 'Linear',
       onComplete: () => {
         b.atUnit = unit;
         c.setDepth(unit.gameObject.baseDepth + (unit.frontObject ? 0.001 : 0.003));

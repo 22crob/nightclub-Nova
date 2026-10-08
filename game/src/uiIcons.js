@@ -60,6 +60,9 @@ const ICONS = {
     <path d="M15.5 9.2l5.6 5.6M21.1 9.2l-5.6 5.6" stroke="#ff6f7f" stroke-width="2.4" stroke-linecap="round"/>`,
   restart: `<path d="M18.4 8.2A7.6 7.6 0 1 0 19.6 13" fill="none" stroke="${W}" stroke-width="2.6" stroke-linecap="round"/>
     <path d="M20.6 3.4 20.4 9.6 14.4 8.6Z" fill="${W}"/>`,
+  // Rename the club: a pencil.
+  rename: `<path d="M5 16.2 15.6 5.6l2.8 2.8L7.8 19H5Z" fill="${W}"/><path d="M16.6 4.6l1.2-1.2a1.4 1.4 0 0 1 2 0l.8.8a1.4 1.4 0 0 1 0 2l-1.2 1.2Z" fill="${W}"/>
+    <path d="M5 19h3.2L5 15.8Z" fill="${INK}"/>`,
   // Save backup: a floppy disk.
   backup: `<path d="M4 3.5h12.5L20.5 7.5V19a1.5 1.5 0 0 1-1.5 1.5H5A1.5 1.5 0 0 1 3.5 19V5A1.5 1.5 0 0 1 4 3.5Z" fill="${W}"/>
     <rect x="7" y="3.5" width="9" height="5.5" rx="0.8" fill="${INK}"/><rect x="12.6" y="4.5" width="2" height="3.4" fill="${W}"/>

@@ -88,14 +88,15 @@ await page.waitForFunction(() => { const s = window.__clubNova && window.__clubN
 const renamed = await page.evaluate(() => {
   const s = window.__clubNova.scene.getScene('club');
   const out = { kept: s.clubName === 'The Velvet Room', notAsked: !document.getElementById('namePrompt').classList.contains('open') };
-  s.promptClubName(false);
+  out.signNotClickable = !s.clubSign.input || !s.clubSign.input.enabled;
+  document.getElementById('renameButton').click();
   out.cancelShown = getComputedStyle(document.getElementById('clubNameCancel')).display !== 'none';
   document.getElementById('clubNameInput').value = 'Club Nova';
   document.getElementById('clubNameOk').click();
   out.name = s.clubName;
   return out;
 });
-check('the name is kept on reload and the sign can rename the club', renamed.kept && renamed.notAsked && renamed.cancelShown && renamed.name === 'Club Nova', JSON.stringify(renamed));
+check('the name is kept on reload; the club is renamed from the pencil in the profile, not by clicking the sign', renamed.kept && renamed.notAsked && renamed.signNotClickable && renamed.cancelShown && renamed.name === 'Club Nova', JSON.stringify(renamed));
 await page.evaluate(() => localStorage.clear());
 await page.reload();
 await waitForScene();
@@ -1159,7 +1160,7 @@ check('selling or turning seating gets everyone up', seating.freed);
 // takes 3 x 2 tiles.
 const moreSeats = await page.evaluate(() => {
   const s = window.__clubNova.scene.getScene('club');
-  const keys = ['tikiHut', 'iglooBooth', 'glowLounge', 'woodLounge', 'tulipLounge', 'birdcageBooth', 'discoStage', 'throneBooth',
+  const keys = ['tikiHut', 'iglooBooth', 'glowLounge', 'woodLounge', 'tulipLounge', 'birdcageBooth', 'discoStage',
     'shellBooth', 'galaxyPods', 'donutLounge', 'gardenGazebo', 'fireSectional', 'cloudBed', 'kissSofa', 'bathtubSofa',
     'cruiserSofa', 'decoSofa', 'chesterfield', 'beerBench', 'cubeBench', 'rattanSeat'];
   const missing = keys.filter((k) => !s.hasLayerSprites(k));
@@ -1170,7 +1171,7 @@ const moreSeats = await page.evaluate(() => {
   for (const rec of [lounge, wood]) if (rec) s.removeProp(rec);
   return out;
 });
-check('all 22 new booths and sofas have their art', moreSeats.missing.length === 0, moreSeats.missing.join(', ') || '22 of 22');
+check('all 21 new booths and sofas have their art', moreSeats.missing.length === 0, moreSeats.missing.join(', ') || '21 of 21');
 check('a booth\'s seats can face each other (Glow Lounge)', moreSeats.fronts && moreSeats.fronts[0][0] === -moreSeats.fronts[1][0] && moreSeats.fronts[0][1] === -moreSeats.fronts[1][1] && (moreSeats.fronts[0][0] !== 0 || moreSeats.fronts[0][1] !== 0), JSON.stringify(moreSeats.fronts));
 check('the Wood Lounge takes 3 x 2 tiles', moreSeats.woodTiles === 6, String(moreSeats.woodTiles));
 
@@ -1233,8 +1234,8 @@ const street = await page.evaluate(() => {
 check('the line stands behind the left wall facing the door, with a bouncer and lamps; the front goes in', street.inLine > 0 && street.after === street.inLine - 1 && street.bouncer && street.lamps && street.outside, JSON.stringify(street));
 
 // Guests have names; clicking one opens their card, and they have no
-// lasting thought bubbles. Clicking a bartender shows Bottoms Up!, which serves the
-// whole line at once and then needs to recover. Luxury grows with what you
+// lasting thought bubbles. Clicking a bartender shows Bottoms Up!, which doubles their
+// speed for a while and then needs to recover. Luxury grows with what you
 // place and raises tips.
 const people = await page.evaluate(() => {
   const s = window.__clubNova.scene.getScene('club');
@@ -1270,20 +1271,17 @@ const people = await page.evaluate(() => {
   const line = s.patrons.filter((q) => !q.leaving && !q.gone).slice(0, 3);
   for (const q of s.patrons) if (q.queue) s.leaveBarQueue(q);
   for (const q of line) s.joinBarQueue(q);
-  // Bottoms Up! serves the whole line: those at the counter, anyone still
-  // on their way, and those waiting behind. The bar is left empty.
-  const first = line[0];
-  if (first.atSpot) { [first.gx, first.gy] = [first.targetGx, first.targetGy]; first.moving = false; }
-  const inLine = s.barGroupQueue(bar).length;
-  out.someNotAtCounter = line.some((q) => !s.atServiceSpot(q));
-  const drinks0 = s.drinksSold || 0;
-  const cash0 = s.cash;
+  // A long line: the bartender says so in a speech bubble (not a banner).
+  s.slammedHintAt = 0;
+  s.checkSlammedBars();
+  out.said = !!bar.staff.speech && s.barGroupQueue(bar).length >= 3;
+  // Bottoms Up! doubles the bartender's speed for a while, then recovers.
+  const before = s.bartenderSpeed(bar.staff);
   document.getElementById('bottomsUp').click();
-  out.served = (s.drinksSold || 0) - drinks0;
-  out.inLine = inLine;
-  out.paid = s.cash - cash0;
-  out.lineEmpty = line.every((q) => !q.queue) && s.barGroupQueue(bar).length === 0;
-  out.cooling = !s.bottomsUpReady(bar) && s.bottomsUp(bar) === 0;
+  out.fast = before === 1 && s.bartenderSpeed(bar.staff) === 2;
+  out.cooling = !s.bottomsUpReady(bar) && s.bottomsUp(bar) === false;
+  bar.staff.fastUntil = s.time.now - 1;
+  out.backToNormal = s.bartenderSpeed(bar.staff) === 1;
   s.closeInfoCard();
   const lux0 = s.luxury();
   const tip0 = s.luxuryTipFactor();
@@ -1297,7 +1295,7 @@ const people = await page.evaluate(() => {
 });
 check('guests have names, and clicking one opens their card', people.named && people.clickedGuest && people.card && people.quote.length > 2, JSON.stringify(people));
 check('guests have no lasting thought bubbles over their heads', people.bubble, JSON.stringify(people));
-check('Bottoms Up serves the whole line at once (at the counter, on their way and waiting behind), then recovers', people.clickedBar && people.barCard && people.served >= 2 && people.served === people.inLine && people.someNotAtCounter && people.paid > 0 && people.lineEmpty && people.cooling, JSON.stringify(people));
+check('a slammed bartender suggests Bottoms Up in a speech bubble; Bottoms Up doubles their speed for a while, then recovers', people.clickedBar && people.barCard && people.said && people.fast && people.cooling && people.backToNormal, JSON.stringify(people));
 check('Luxury grows with what you place, shows in the top bar and raises tips', people.luxuryUp > 0 && people.tipsUp && people.luxuryShown, JSON.stringify(people));
 
 // From the owner's screenshots, part two: the DJ's song box (Change, Like),
@@ -2045,7 +2043,7 @@ check('each dock pad lights up for its own panels: Staff, Club (Edit, Expand, re
   && shopUi.expand.tab === 'expand' && shopUi.expand.lit === 'navClub' && shopUi.expand.cards === 2 && shopUi.clubRemembers && shopUi.bars.tab === 'decor' && shopUi.bars.lit === 'navBuild'
   && shopUi.edit.tab === 'edit' && shopUi.edit.lit === 'navClub', JSON.stringify(shopUi));
 check('Edit has Move, Turn, Put away, Sell and Clear Club', shopUi.tools === 'move,rotate,store,sell,clear', JSON.stringify(shopUi));
-check('NEW lists what the last two levels unlocked, each tagged NEW, and the tags show in other categories too', shopUi.newCount > 3 && shopUi.allTagged && /Pub Bar/.test(shopUi.barTags) && !/Wood Bar/.test(shopUi.barTags), JSON.stringify(shopUi));
+check('NEW lists what the last two levels unlocked, each tagged NEW, and the tags show in other categories too', shopUi.newCount > 3 && shopUi.allTagged && /Brewery Bar/.test(shopUi.barTags) && !/Wood Bar/.test(shopUi.barTags), JSON.stringify(shopUi));
 check('the Inventory button shows how many things are in it', shopUi.badge === '3' && shopUi.badgeEmpty === '', JSON.stringify(shopUi));
 check('Clear Club asks first, then puts everything but the DJ booth and bars into the inventory', shopUi.asked && shopUi.toolKept && shopUi.cleared && shopUi.plantStored && shopUi.closedAsk, JSON.stringify(shopUi));
 
@@ -2231,7 +2229,7 @@ check('money pops up big over guests, with "+1.5x Tip!" while tips are boosted (
 const held = await page.evaluate(() => {
   const s = window.__clubNova.scene.getScene('club');
   const real = s.levelInfo.bind(s);
-  s.levelInfo = () => ({ ...real(), level: 9 });
+  s.levelInfo = () => ({ ...real(), level: 10 });
   s.deselectProp();
   s.selectProp('vipLounge');
   const at = (gx, gy) => {
@@ -2472,6 +2470,20 @@ const newWalls = await page.evaluate(() => {
   return { painted: painted.length, of: types.length };
 });
 check('the ten new wallpapers each paint a wall', newWalls.painted === newWalls.of, JSON.stringify(newWalls));
+
+// An old save with the Royal Thrones (taken out of the game) gets its price
+// back for each one, placed or stored.
+{
+  const ctx = await browser.newContext({ viewport: { width: 1280, height: 800 } });
+  const tp = await ctx.newPage();
+  await tp.goto(gameUrl);
+  await tp.evaluate(() => localStorage.setItem('clubNovaSave_v2', JSON.stringify({ cash: 100, fans: 0, clubName: 'Old Club', placed: [{ type: 'throneBooth', anchor: [5, 5], facing: 0 }], inventory: { throneBooth: 1 } })));
+  await tp.reload();
+  await tp.waitForFunction(() => { const s = window.__clubNova && window.__clubNova.scene.getScene('club'); return s && s.world && s.sys.settings.status >= 5; });
+  const old = await tp.evaluate(() => { const s = window.__clubNova.scene.getScene('club'); return { cash: s.cash, placed: Object.values(s.placed).some((r) => r.type === 'throneBooth'), stored: !!(s.inventory || {}).throneBooth }; });
+  check('an old save\'s Royal Thrones (removed) are refunded, placed or stored', old.cash >= 3100 && !old.placed && !old.stored, JSON.stringify(old));
+  await ctx.close();
+}
 
 // Phones: on a touch screen a tap on a guest opens their card, a tap
 // collects a high five (a little off the badge still counts), two fingers

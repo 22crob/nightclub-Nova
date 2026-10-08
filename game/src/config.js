@@ -422,10 +422,11 @@ export const PARTIES = [
   { key: 'rave', label: 'Neon Rave', emoji: '🌈', cost: 1800, unlockLevel: 39, arrivals: 2.7, tips: 2.7, thirst: 1.8, fans: 2.7, shade: 0x0a062e, crowd: 22, leaveOverMs: [10000, 70000],
     blurb: 'The biggest night of the year: lasers, bass and a line round the block.' },
 ];
-// A bartender's Bottoms Up! (see scene/guests.js): serves their whole line
-// at once, then needs cooldownMs to recover. The game suggests it when a
-// line reaches slammedLine, at most every hintEveryMs.
-export const BOTTOMS_UP = { cooldownMs: 60 * 1000, slammedLine: 3, hintEveryMs: 60 * 1000 };
+// A bartender's Bottoms Up! (see scene/guests.js): for durationMs they mix
+// and walk `speed` times as fast, then need cooldownMs to recover. When a
+// line reaches slammedLine the bartender says so in a speech bubble (at
+// most every hintEveryMs), suggesting it.
+export const BOTTOMS_UP = { durationMs: 30 * 1000, speed: 2, cooldownMs: 90 * 1000, slammedLine: 3, hintEveryMs: 60 * 1000, sayMs: 4500 };
 // Luxury (see luxury() in economy.js): a tenth of what everything placed,
 // painted and papered cost. Each point raises tips by luxuryTipPerPoint,
 // up to luxuryTipMax extra.
