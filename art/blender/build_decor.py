@@ -770,6 +770,9 @@ DECOR = {
     'pagoda': build_pagoda,
 }
 
+import decor_batch2  # noqa: E402  (the owner's October 2026 drafts)
+DECOR.update(decor_batch2.DESIGNS)
+
 
 def build(name, preview_dir=None):
     scene = iso_rig.reset_scene()

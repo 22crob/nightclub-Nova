@@ -474,6 +474,9 @@ TIERS = {
     'holo': build_holo,
 }
 
+import booth_batch2  # noqa: E402  (the owner's October 2026 drafts)
+TIERS.update(booth_batch2.DESIGNS)
+
 
 def build_tier(name):
     scene = iso_rig.reset_scene()

@@ -105,10 +105,11 @@ const BAR_FOOTPRINT = {
 };
 // The DJ booth line-up (art/blender/build_booths.py), paired with the bars:
 // same 2x1 footprint and gameplay, only the look, price and unlock level
-// differ. Every club has exactly one booth, with its DJ always playing: a
-// new club starts with a free Wood Booth, and the others are upgrades that
-// swap it in place (see upgradeClubBooth()). The key 'dj' stays on the
-// tier-3 Club Booth so older saves keep their booth.
+// differ. They're shop items like any other (the owner's rule): bought,
+// placed, moved, put away and sold, each with its own DJ playing; a club
+// always keeps at least one (a new club starts with a free Wood Booth, see
+// ensureClubBooth()). The key 'dj' stays on the tier-3 Club Booth so older
+// saves keep their booth.
 const BOOTH_FOOTPRINT = {
   0: [[0, 0], [1, 0], [2, 0]],
   90: [[0, 0], [0, 1], [0, 2]],

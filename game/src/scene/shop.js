@@ -1,7 +1,7 @@
 // ClubScene methods: The shop panel, item selection, unlocks and prices.
 // Mixed into ClubScene (see ClubScene.js); `this` is the scene.
 import { FLOOR_DECAL_PROPS, PROP_TYPES } from '../catalog.js';
-import { LUXURY, SELL_REFUND_RATIO } from '../config.js';
+import { LUXURY } from '../config.js';
 import { realSpriteIconFor, renderIsoIcon } from '../icons.js';
 import { SFX } from '../sfx.js';
 import { hideTip } from '../tooltips.js';
@@ -21,7 +21,7 @@ const CATEGORIES = {
   Floors: { icon: 'floors', text: 'Dance floors, where guests dance, and regular floors, painted tile by tile.', includes: ['Dance Floors', 'Floors'] },
   Wallpaper: { label: 'Walls', icon: 'roller', text: 'Paper the walls, section by section.' },
   Decorations: { label: 'Decor', icon: 'lamp', text: 'Plants, lights and statues to make the club fancier.' },
-  'DJ Booths': { label: 'DJ', icon: 'turntable', text: 'Upgrade your DJ booth. A better booth earns more XP.' },
+  'DJ Booths': { label: 'DJ', icon: 'turntable', text: 'DJ booths, each with a DJ playing. A better booth gets the dance floor going.' },
 };
 // The Club panel's keys, each its own panel.
 const CLUB_KEYS = {
@@ -266,14 +266,7 @@ export class ShopMixin {
         tag.textContent = 'NEW';
         slot.appendChild(tag);
       }
-      slot.addEventListener('click', () => {
-        // DJ booths aren't placed: buying one swaps the club's booth.
-        if (def.category === 'DJ Booths') {
-          this.upgradeClubBooth(key);
-          return;
-        }
-        this.selectProp(key);
-      });
+      slot.addEventListener('click', () => this.selectProp(key));
       this.shopItemsEl.appendChild(slot);
       this.shopButtons[key] = button;
       this.shopCosts[key] = cost;
@@ -357,19 +350,10 @@ export class ShopMixin {
       for (const key in this.shopButtons) {
         const unlocked = this.isUnlocked(key);
         const cost = this.currentCost(key);
-        // DJ booths are upgrades for the club's one booth: the current one is
-        // marked, and the others show what the swap costs.
-        const booth = PROP_TYPES[key].category === 'DJ Booths' ? this.clubBooth() : null;
-        const current = !!booth && booth.type === key;
-        const swapCost = booth ? cost - Math.round(PROP_TYPES[booth.type].cost * SELL_REFUND_RATIO) : cost;
-        this.shopButtons[key].classList.toggle('selected', unlocked && (booth ? current : key === this.selectedProp && !this.holdingFromInventory));
-        this.shopButtons[key].classList.toggle('unaffordable', unlocked && !current && this.cash < swapCost);
+        this.shopButtons[key].classList.toggle('selected', unlocked && key === this.selectedProp && !this.holdingFromInventory);
+        this.shopButtons[key].classList.toggle('unaffordable', unlocked && this.cash < cost);
         this.shopButtons[key].classList.toggle('locked', !unlocked);
-        if (this.shopCosts[key]) {
-          let text = unlocked ? `$${cost}` : `🔒 Lv ${PROP_TYPES[key].unlockLevel || 1}`;
-          if (unlocked && booth) text = current ? '🎧 Playing' : `⬆ $${Math.max(0, swapCost)}`;
-          this.shopCosts[key].textContent = text;
-        }
+        if (this.shopCosts[key]) this.shopCosts[key].textContent = unlocked ? `$${cost}` : `🔒 Lv ${PROP_TYPES[key].unlockLevel || 1}`;
       }
     }
     // NEW pulses while there's something new; Inventory shows how many

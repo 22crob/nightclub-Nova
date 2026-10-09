@@ -45,15 +45,15 @@ export class InventoryMixin {
   // Takes a placed item out of the club into the inventory. Returns its
   // record's bartender kind (so a moved bar can keep its bartender), or
   // false if it can't be picked up.
-  // The DJ booth can only be picked up to move it (the club always has
-  // one): pass `moving`.
+  // The club's last DJ booth can only be picked up to move it (a club
+  // always has one): pass `moving`.
   pickUpProp(rec, moving = false) {
-    if (PROP_TYPES[rec.type].staff === 'dj' && !moving) {
+    if (PROP_TYPES[rec.type].staff === 'dj' && !moving && this.lastBooth(rec)) {
       SFX.denied();
-      this.showToast('🎧 Your DJ booth stays in the club! You can move it or turn it.');
+      this.showToast('🎧 The club needs a DJ booth! Place another one before putting this one away.');
       return false;
     }
-    if (PROP_TYPES[rec.type].staff === 'dj') {
+    if (PROP_TYPES[rec.type].staff === 'dj' && moving) {
       // Remember where it was, to put it back if the move is called off.
       this.movingBooth = { type: rec.type, facing: rec.facing, anchor: [...rec.anchor] };
       this.removeProp(rec);

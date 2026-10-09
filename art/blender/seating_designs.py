@@ -605,7 +605,51 @@ def rattan_love_seat():
     return SOFA
 
 
+def facet_booth():
+    """The owner's Booth 7 sketch: an L of two sofas in faceted gloss shells
+    (like cut gems), white leather cushions, round a white octagon table."""
+    def faceted(name, x0, x1, y0, y1, z0, z1, m, cut):
+        o = box(name, x0, x1, y0, y1, z0, z1, m, bevel=0)
+        mod = o.modifiers.new('Facet', 'BEVEL')
+        mod.width = cut
+        mod.segments = 1
+        mod.limit_method = 'NONE'
+        return o
+    shell = principled('FacetShell', srgb('#2a1838'), rough=0.12)
+    leather = principled('FacetLeather', srgb('#f4eef0'), rough=0.35)
+    seam = principled('FacetSeam', srgb('#d8ccd4'), rough=0.4)
+    glow = neon('FacetGlow', (1.0, 0.25, 0.7), 6)
+    # Shells: the back sofa and the left sofa, each with chunky faceted ends.
+    faceted('FrameBack', -0.45, 1.02, 0.36, 1.0, 0, 0.36, shell, 0.08)
+    faceted('FrameLeft', -1.02, -0.42, -1.0, 1.0, 0, 0.36, shell, 0.08)
+    faceted('BackRestBack', -0.45, 1.02, 0.8, 1.0, 0.3, 0.95, shell, 0.07)
+    faceted('BackRestLeft', -1.02, -0.82, -1.0, 1.0, 0.3, 0.95, shell, 0.07)
+    faceted('ArmRight', 0.84, 1.04, 0.36, 1.0, 0.3, 0.66, shell, 0.06)
+    faceted('ArmFront', -1.02, -0.4, -1.04, -0.84, 0.3, 0.66, shell, 0.06)
+    box('BaseGlowBack', -0.42, 0.98, 0.35, 0.36, 0.04, 0.07, glow, bevel=0)
+    box('BaseGlowLeft', -0.43, -0.42, -0.98, 0.34, 0.04, 0.07, glow, bevel=0)
+    # White leather seat cushions and back pads, in tufted panels.
+    for i, (x0, x1) in enumerate([(-0.42, 0.2), (0.2, 0.82)]):
+        box(f'SeatBack{i}', x0 + 0.01, x1 - 0.01, 0.4, 0.8, 0.34, 0.46, leather, bevel=0.05)
+        box(f'BackPadBack{i}', x0 + 0.01, x1 - 0.01, 0.7, 0.8, 0.46, 0.88, leather, bevel=0.05)
+    for i, (y0, y1) in enumerate([(-0.82, -0.2), (-0.2, 0.4)]):
+        box(f'SeatLeft{i}', -0.82, -0.44, y0 + 0.01, y1 - 0.01, 0.34, 0.46, leather, bevel=0.05)
+        box(f'BackPadLeft{i}', -0.82, -0.72, y0 + 0.01, y1 - 0.01, 0.46, 0.88, leather, bevel=0.05)
+    box('SeatSeam', -0.42, 0.82, 0.395, 0.4, 0.36, 0.44, seam, bevel=0)
+    # A white octagon table on a chrome stem.
+    cylinder('TableFoot', 0.22, -0.3, 0, 0.04, 0.22, principled('FacetChrome', srgb('#c8ccd6'), rough=0.2), verts=8)
+    cylinder('TableStem', 0.22, -0.3, 0.04, 0.42, 0.06, principled('FacetChrome2', srgb('#c8ccd6'), rough=0.2), verts=16)
+    top = cylinder('TableTop', 0.22, -0.3, 0.42, 0.48, 0.4, principled('FacetTop', srgb('#f6f4f8'), rough=0.15), verts=8)
+    top.rotation_euler = (0, 0, math.radians(22.5))
+    cylinder('TableGlow', 0.22, -0.3, 0.405, 0.42, 0.38, glow, verts=8).rotation_euler = (0, 0, math.radians(22.5))
+    candle('Candle', 0.22, -0.3, 0.48)
+    for i, (x, y, c) in enumerate([(0.05, -0.18, '#ff4dcf'), (0.4, -0.42, '#7dd8ff')]):
+        cone(f'Glass{i}', x, y, 0.48, 0.6, 0.03, 0.045, mat(c, rough=0.1, glow=0.6, alpha=0.85), verts=12)
+    return seats((-0.1, 0.6, 0), (0.52, 0.6, 0), (-0.63, -0.5, 90), (-0.63, 0.1, 90))
+
+
 DESIGNS = {
+    'facetBooth': facet_booth,
     'tikiHut': tiki_hut,
     'iglooBooth': igloo_booth,
     'glowLounge': glow_lounge,

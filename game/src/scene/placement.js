@@ -316,6 +316,7 @@ export class PlacementMixin {
     this.updateGhost();
     this.updateUI();
     this.saveGame();
+    if (def.staff === 'dj' && !record.staff) this.attachStaff(record); // every booth comes with its DJ
     const staffKind = def.staff && STAFF_TYPES[def.staff];
     if (staffKind && !this.isWorked(record)) this.showToast(`Now hire a ${staffKind.label.toLowerCase()} for it in the Staff tab.`, 3500);
   }
@@ -327,10 +328,10 @@ export class PlacementMixin {
     const key = `${gx},${gy}`;
     const placed = this.placed[key];
     if (!placed) return; // nothing here to sell
-    if (PROP_TYPES[placed.type].staff === 'dj') {
-      // The club's DJ booth stays; it can only be swapped for another tier.
+    if (PROP_TYPES[placed.type].staff === 'dj' && this.lastBooth(placed)) {
+      // The club always keeps one DJ booth.
       SFX.denied();
-      this.showToast('🎧 Your DJ booth stays! Upgrade it from the DJ Booths tab.');
+      this.showToast('🎧 The club needs a DJ booth! Place another one before selling this one.');
       return;
     }
 

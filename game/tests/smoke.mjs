@@ -383,24 +383,44 @@ check('save restores after reload', restored.placed === restored.savedPlaced && 
 const djAfterReload = await page.evaluate(() => { const b = window.__clubNova.scene.getScene('club').clubBooth(); return !!b && !!b.staff && b.anchor.join(',') === '6,1'; });
 check('the DJ booth and its DJ come back after reload', djAfterReload);
 
-// The DJ booth can't be sold, only upgraded in place (paying the new price
-// less half the old one's).
+// DJ booths are shop items: the club's last one can't be sold, but buying
+// and placing another brings its own DJ, and then the old one can go.
 const upgrade = await page.evaluate(() => {
   const s = window.__clubNova.scene.getScene('club');
   const fans = s.fans;
   s.fans = Math.max(s.fans, s.fansForLevel(7)); // level 7, for the Pro Booth
   const c0 = s.cash;
-  s.sellProp(6, 0);
-  const kept = !!s.clubBooth() && s.cash === c0;
+  const first = s.clubBooth();
+  s.sellProp(first.anchor[0], first.anchor[1]);
+  const kept = s.clubBooths().length === 1 && s.cash === c0;
   s.cash = 1000;
-  const ok = s.upgradeClubBooth('proBooth');
-  const b = s.clubBooth();
-  const result = { kept, ok, type: b.type, anchor: b.anchor.join(','), dj: !!b.staff, paid: 1000 - s.cash, booths: s.staffableRecords().filter((r) => r.staff && r.staff.kind === 'dj').length };
+  s.selectProp('proBooth');
+  let spot = null;
+  for (let gy = 2; gy < s.gridH - 1 && !spot; gy++) for (let gx = 1; gx < s.gridW - 2 && !spot; gx++) {
+    if (s.footprintValid(s.getFootprint('proBooth', 0, gx, gy), 'proBooth')) spot = [gx, gy];
+  }
+  s.currentFacing = 0;
+  s.placeProp(spot[0], spot[1]);
+  s.deselectProp();
+  const pro = s.placed[`${spot[0]},${spot[1]}`];
+  const result = { kept, placed: pro?.type, dj: !!pro?.staff, paid: 1000 - s.cash, booths: s.clubBooths().length, main: s.clubBooth()?.type };
+  const c1 = s.cash;
+  s.sellProp(first.anchor[0], first.anchor[1]);
+  result.soldOld = s.clubBooths().length === 1 && s.cash > c1;
+  // ...and put the club back the way it was, for the checks after this.
+  s.sellProp(spot[0], spot[1]);
+  result.lastKept = s.clubBooths().length === 1;
+  s.restoreProp(first.type, first.facing, first.anchor);
+  s.ensureClubBooth();
+  const proRec = s.clubBooths().find((r) => r.type === 'proBooth');
+  if (proRec) s.removeProp(proRec);
+  s.cash = 1000;
+  result.restored = s.clubBooths().length === 1 && s.clubBooth().type === first.type && !!s.clubBooth().staff;
   s.fans = fans;
   return result;
 });
-check('the DJ booth can\'t be sold', upgrade.kept, JSON.stringify(upgrade));
-check('upgrading the booth swaps it in place ($215 - $90)', upgrade.ok && upgrade.type === 'proBooth' && upgrade.anchor === '6,1' && upgrade.dj && upgrade.paid === 125 && upgrade.booths === 1, JSON.stringify(upgrade));
+check('the club\'s last DJ booth can\'t be sold', upgrade.kept && upgrade.lastKept, JSON.stringify(upgrade));
+check('DJ booths are bought and placed like other items, each with its own DJ, and an extra one can be sold', upgrade.placed === 'proBooth' && upgrade.dj && upgrade.paid === 215 && upgrade.booths === 2 && upgrade.main === 'proBooth' && upgrade.soldOld && upgrade.restored, JSON.stringify(upgrade));
 
 // Bass Boost and Drink Rush: each runs for a while, then needs to recharge.
 // Starting one sends a share of the crowd off (one by one) to dance or to
@@ -1871,8 +1891,9 @@ const inv = await page.evaluate(() => {
   s.placeProp(spot[0], spot[1]);
   out.lockedPlaced = s.placed[`${spot[0]},${spot[1]}`]?.type === 'stepFloor' && s.cash === lockedCash && !s.isUnlocked('stepFloor');
   s.sellProp(spot[0], spot[1]);
-  // The DJ booth can't be put away, but it can be moved: picked up with
-  // its DJ, put back if the move is called off, or set down somewhere new.
+  // The club's last DJ booth can't be put away, but it can be moved: picked
+  // up with its DJ, put back if the move is called off, or set down
+  // somewhere new.
   const booth = s.clubBooth();
   const home = [...booth.anchor];
   s.editTool = 'store';
@@ -1906,7 +1927,7 @@ check('Edit has Move, Turn, Put away, Sell and Clear Club', inv.tools === 'move,
 check('Move picks an item up and it goes back down for free', inv.moved && inv.placedFree, JSON.stringify(inv));
 check('Put away sends an item to the saved inventory, and it places from there for free', inv.stored && inv.saved && inv.listed && inv.fromInventory, JSON.stringify(inv));
 check('things in the inventory place even if they unlock at a later level', inv.lockedPlaced, JSON.stringify(inv));
-check('the DJ booth cannot be put away, but it moves with its DJ', inv.boothStays && inv.boothLifted && inv.savedWhileMoving && inv.boothBack && inv.boothMoved && inv.boothHome, JSON.stringify(inv));
+check('the last DJ booth cannot be put away, but it moves with its DJ', inv.boothStays && inv.boothLifted && inv.savedWhileMoving && inv.boothBack && inv.boothMoved && inv.boothHome, JSON.stringify(inv));
 
 // With something in hand, clicking where a guest stands places it rather
 // than opening the guest's card.

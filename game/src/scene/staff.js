@@ -2,7 +2,7 @@
 // Mixed into ClubScene (see ClubScene.js); `this` is the scene.
 import { PATRON_META, PATRON_SHEETS, patronMetaOf } from '../assets.js';
 import { PROP_TYPES, STAFF_TYPES } from '../catalog.js';
-import { BAR_QUEUE_LENGTH, BARTENDERS, BOOST, DRINK_FUN_MOOD, XP, CHARACTER_DISPLAY_HEIGHT, MONEY, THIRST_INTERVAL, PATRON_POPUP_Y, PROP_SCALE, SELL_REFUND_RATIO, BOUNCERS, BAR_TRAINING, DRINK_STOCK } from '../config.js';
+import { BAR_QUEUE_LENGTH, BARTENDERS, BOOST, DRINK_FUN_MOOD, XP, CHARACTER_DISPLAY_HEIGHT, MONEY, THIRST_INTERVAL, PATRON_POPUP_Y, PROP_SCALE, BOUNCERS, BAR_TRAINING, DRINK_STOCK } from '../config.js';
 import { SFX } from '../sfx.js';
 import { randRange } from '../util.js';
 import { MOOD } from './mood.js';
@@ -396,26 +396,31 @@ export class StaffMixin {
     return holder;
   }
 
-  // --- The club's DJ booth -------------------------------------------------
+  // --- DJ booths -------------------------------------------------------------
 
-  // The club's one DJ booth.
-  clubBooth() {
-    return this.staffableRecords().find((rec) => PROP_TYPES[rec.type].staff === 'dj') || null;
+  // Every DJ booth in the club (shop items like any other, each with a DJ).
+  clubBooths() {
+    return this.staffableRecords().filter((rec) => PROP_TYPES[rec.type].staff === 'dj');
   }
 
-  // Makes sure the club has exactly one DJ booth with its DJ playing. A new
-  // club gets a free Wood Booth against the back wall; a save with no
-  // booth gets one too, and a save from before this rule with several
-  // keeps the first and is refunded the rest in full.
+  // The club's main booth: the best one (the priciest), whose DJ talks.
+  clubBooth() {
+    const booths = this.clubBooths();
+    return booths.reduce((best, rec) => (!best || (PROP_TYPES[rec.type].cost || 0) > (PROP_TYPES[best.type].cost || 0) ? rec : best), null);
+  }
+
+  // True if `rec` is the club's only DJ booth (it can't be sold or put away).
+  lastBooth(rec) {
+    const booths = this.clubBooths();
+    return booths.length <= 1 && (!booths.length || booths[0] === rec);
+  }
+
+  // Makes sure the club has a DJ booth, every booth with its DJ playing. A
+  // new club, or a save with none, gets a free Wood Booth against the back
+  // wall.
   ensureClubBooth() {
-    const booths = this.staffableRecords().filter((rec) => PROP_TYPES[rec.type].staff === 'dj');
-    for (const extra of booths.slice(1)) {
-      const before = this.cash;
-      this.removeProp(extra);
-      this.cash = before + PROP_TYPES[extra.type].cost;
-    }
-    let booth = booths[0];
-    if (!booth) {
+    let booths = this.clubBooths();
+    if (!booths.length) {
       const mid = Math.floor((this.gridW - 3) / 2);
       const spots = [];
       for (let gy = 0; gy < this.gridH; gy++) {
@@ -424,11 +429,11 @@ export class StaffMixin {
         }
       }
       for (const [gx, gy] of spots) {
-        booth = this.restoreProp('woodBooth', 0, [gx, gy]);
-        if (booth) break;
+        const booth = this.restoreProp('woodBooth', 0, [gx, gy]);
+        if (booth) { booths = [booth]; break; }
       }
     }
-    if (booth && !booth.staff) this.attachStaff(booth);
+    for (const booth of booths) if (!booth.staff) this.attachStaff(booth);
   }
 
   // A brand-new club opens like Nightclub City's starter room: the DJ booth
@@ -447,30 +452,6 @@ export class StaffMixin {
     const bar = this.restoreProp('starterBar', 0, [this.gridW - 4, 0]);
     if (bar) this.attachStaff(bar);
     this.restoreProp('standingTable', 0, [this.gridW - 1, 0]);
-  }
-
-  // Swaps the club's booth for another tier, in the same spot and facing.
-  // Costs the new booth's price, less half the old one's (like selling it).
-  upgradeClubBooth(type) {
-    const old = this.clubBooth();
-    const def = PROP_TYPES[type];
-    if (!old || old.type === type) { SFX.denied(); return false; }
-    if (!this.isUnlocked(type)) { SFX.denied(); return false; }
-    const refund = Math.round(PROP_TYPES[old.type].cost * SELL_REFUND_RATIO);
-    if (this.cash + refund < def.cost) { SFX.denied(); return false; }
-    const { facing, anchor } = old;
-    this.revokePurchaseXp(old.xp); // the old booth is traded in
-    this.removeProp(old);
-    const rec = this.restoreProp(type, facing, anchor);
-    this.attachStaff(rec);
-    this.cash += refund - def.cost;
-    const at = this.footprintCenter(rec.tiles);
-    rec.xp = this.awardPurchaseXp(def.cost, at.sx, at.sy - 80, type, true);
-    SFX.levelUp();
-    this.showToast(`🎧 Your DJ moved into the ${def.label}!`);
-    this.updateUI();
-    this.saveGame();
-    return true;
   }
 
   // --- Shop tab -----------------------------------------------------------
