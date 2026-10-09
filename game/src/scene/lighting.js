@@ -232,9 +232,13 @@ export class LightingMixin {
       parts.push(obj);
       return obj;
     };
+    // The beams reach out over the crowd: drawn over the guests they cross
+    // (added light, so whoever's in the beam lights up), unless the lamps
+    // face away.
+    const overCrowd = rec.facing === 0 || rec.facing === 90 ? 5000 : depth;
     cfg.lamps.forEach((lamp, i) => {
-      const pool = add(this.add.image(0, 0, POOL_KEY).setTint(lamp.color).setAlpha(cfg.poolAlpha));
-      const beam = add(this.add.image(0, 0, SWEEP_KEY).setOrigin(0, 0.5).setTint(lamp.color).setAlpha(cfg.beamAlpha));
+      const pool = add(this.add.image(0, 0, POOL_KEY).setTint(lamp.color).setAlpha(cfg.poolAlpha)).setDepth(overCrowd);
+      const beam = add(this.add.image(0, 0, SWEEP_KEY).setOrigin(0, 0.5).setTint(lamp.color).setAlpha(cfg.beamAlpha)).setDepth(overCrowd);
       const glint = add(this.add.image(0, 0, POOL_KEY).setTint(0xffffff).setDisplaySize(10, 10).setAlpha(0.9));
       const from = this.modelPoint(rec, ...lamp.lens);
       glint.setPosition(from.x, from.y);
