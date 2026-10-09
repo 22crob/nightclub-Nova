@@ -28,6 +28,28 @@ import boothDecoSprite from './assets/sprites/dj_deco.json';
 import boothHoloSprite from './assets/sprites/dj_holo.json';
 import seat_woodStool from './assets/sprites/seat_woodStool.json';
 import seat_couch from './assets/sprites/seat_couch.json';
+import decor_bottleShelf from './assets/sprites/decor_bottleShelf.json';
+import decor_trussLights from './assets/sprites/decor_trussLights.json';
+import decor_glassDivider from './assets/sprites/decor_glassDivider.json';
+import decor_bubbleColumn from './assets/sprites/decor_bubbleColumn.json';
+import decor_ribbon from './assets/sprites/decor_ribbon.json';
+import decor_tankTube from './assets/sprites/decor_tankTube.json';
+import decor_popStar from './assets/sprites/decor_popStar.json';
+import decor_cubeStack from './assets/sprites/decor_cubeStack.json';
+import decor_tankCabinet from './assets/sprites/decor_tankCabinet.json';
+import decor_rapper from './assets/sprites/decor_rapper.json';
+import decor_tankHex from './assets/sprites/decor_tankHex.json';
+import decor_tankLong from './assets/sprites/decor_tankLong.json';
+import decor_rocker from './assets/sprites/decor_rocker.json';
+import decor_jellyBowl from './assets/sprites/decor_jellyBowl.json';
+import decor_tankArch from './assets/sprites/decor_tankArch.json';
+import dj_rack from './assets/sprites/dj_rack.json';
+import dj_glowFront from './assets/sprites/dj_glowFront.json';
+import dj_facet from './assets/sprites/dj_facet.json';
+import dj_curve from './assets/sprites/dj_curve.json';
+import dj_capsule from './assets/sprites/dj_capsule.json';
+import dj_glass from './assets/sprites/dj_glass.json';
+import seat_facetBooth from './assets/sprites/seat_facetBooth.json';
 import seat_candleTable from './assets/sprites/seat_candleTable.json';
 import seat_standingTable from './assets/sprites/seat_standingTable.json';
 import seat_stool from './assets/sprites/seat_stool.json';
@@ -124,6 +146,8 @@ const DJ_FOOTPRINT = {
   180: [[0, 0], [1, 0]],
   270: [[0, 0], [0, 1]],
 };
+// Two-tile decorations (the wide aquariums, the glass divider).
+const WIDE_2X1 = DJ_FOOTPRINT;
 // The DJ's own tiles, behind the desk (the opposite side from the crowd,
 // which faces +gy at 0, +gx at 90, -gy at 180, -gx at 270): part of the
 // booth's footprint, so nobody walks or builds there, but not part of the
@@ -182,6 +206,22 @@ const DECOR_SPRITES = {
   catStatue: decor_catStatue,
   waterfall: decor_waterfall,
   pagoda: decor_pagoda,
+  // The owner's own sketches (October 2026, art/blender/decor_batch2.py).
+  bottleShelf: decor_bottleShelf,
+  trussLights: decor_trussLights,
+  glassDivider: decor_glassDivider,
+  bubbleColumn: decor_bubbleColumn,
+  ribbon: decor_ribbon,
+  tankTube: decor_tankTube,
+  popStar: decor_popStar,
+  cubeStack: decor_cubeStack,
+  tankCabinet: decor_tankCabinet,
+  rapper: decor_rapper,
+  tankHex: decor_tankHex,
+  tankLong: decor_tankLong,
+  rocker: decor_rocker,
+  jellyBowl: decor_jellyBowl,
+  tankArch: decor_tankArch,
 };
 function decorTier(key, label, cost, unlockLevel, model, fanRate, extra = {}) {
   const meta = DECOR_SPRITES[model];
@@ -227,6 +267,7 @@ const SEAT_SPRITES = {
   cloudBed: seat_cloudBed,
   discoStage: seat_discoStage,
   galaxyPods: seat_galaxyPods,
+  facetBooth: seat_facetBooth,
 };
 const SQUARE_3X3 = [[0, 0], [1, 0], [2, 0], [0, 1], [1, 1], [2, 1], [0, 2], [1, 2], [2, 2]];
 const BOOTH_3X3 = { 0: SQUARE_3X3, 90: SQUARE_3X3, 180: SQUARE_3X3, 270: SQUARE_3X3 };
@@ -311,6 +352,13 @@ export const PROP_TYPES = {
   iceBooth: boothTier('iceBooth', 'Ice Booth', 550, 29, 'dj_ice', boothIceSprite),
   decoBooth: boothTier('decoBooth', 'Art Deco Booth', 650, 33, 'dj_deco', boothDecoSprite),
   holoBooth: boothTier('holoBooth', 'Holo Booth', 800, 38, 'dj_holo', boothHoloSprite),
+  // The owner's sketched DJ sets (art/blender/booth_batch2.py), the fanciest.
+  rackBooth: boothTier('rackBooth', 'Steel Rack Booth', 900, 41, 'dj_rack', dj_rack),
+  glowPanelBooth: boothTier('glowPanelBooth', 'Glow Panel Booth', 1000, 44, 'dj_glowFront', dj_glowFront),
+  facetBooth: boothTier('facetBooth', 'Faceted Booth', 1100, 47, 'dj_facet', dj_facet),
+  curveBooth: boothTier('curveBooth', 'Curve Booth', 1200, 50, 'dj_curve', dj_curve),
+  capsuleBooth: boothTier('capsuleBooth', 'Capsule Booth', 1350, 53, 'dj_capsule', dj_capsule),
+  glassBooth: boothTier('glassBooth', 'Glass Booth', 1500, 56, 'dj_glass', dj_glass),
   // Floors take turns unlocking, one a level: a regular floor on odd
   // levels and a dance floor on even ones (the last two are both dance
   // floors), simple to fancy, so they sit side by side in the shop. Level 1
@@ -379,6 +427,7 @@ export const PROP_TYPES = {
   shellBooth: seatTier('shellBooth', 'Giant Clam', 900, 30, 'shellBooth', 0.9, BOOTH_3X3),
   cloudBed: seatTier('cloudBed', 'Cloud Nine Bed', 1000, 32, 'cloudBed', 0.95, BOOTH_3X3),
   discoStage: seatTier('discoStage', 'Disco Stage', 1200, 34, 'discoStage', 1.0, BOOTH_3X3),
+  gemLounge: seatTier('gemLounge', 'Gem Lounge', 1450, 39, 'facetBooth', 1.15, BOOTH_3X3), // the owner's Booth 7 sketch
   galaxyPods: seatTier('galaxyPods', 'Galaxy Egg Pods', 1350, 36, 'galaxyPods', 1.1, BOOTH_3X3),
   // Decorations, simple to fancy. 'plant', 'discoBall' and 'neonSign' are
   // the keys of the original placeholder decorations, kept for old saves.
@@ -417,6 +466,23 @@ export const PROP_TYPES = {
   waterfall: decorTier('waterfall', 'Glass Waterfall', 560, 33, 'waterfall', 1.0),
   liquidTankBlue: decorTier('liquidTankBlue', 'Blue Liquid Tank', 520, 34, 'tankBlue', 0.95),
   pagoda: decorTier('pagoda', 'Pagoda Statue', 650, 38, 'pagoda', 1.1),
+  // The owner's own sketches (October 2026): one every two levels past the
+  // rest (there's no level cap).
+  bottleCabinet: decorTier('bottleCabinet', 'Bottle Cabinet', 800, 40, 'bottleShelf', 1.12, { footprint: WIDE_2X1 }),
+  trussLights: decorTier('trussLights', 'Truss Spotlights', 850, 42, 'trussLights', 1.14, { footprint: BOOTH_FOOTPRINT }),
+  glassDivider: decorTier('glassDivider', 'Glass Divider', 900, 44, 'glassDivider', 1.16, { footprint: WIDE_2X1 }),
+  bubbleColumn: decorTier('bubbleColumn', 'Bubble Column', 950, 46, 'bubbleColumn', 1.18),
+  ribbon: decorTier('ribbon', 'Ribbon Sculpture', 1000, 48, 'ribbon', 1.2),
+  tubeAquarium: decorTier('tubeAquarium', 'Tube Aquarium', 1050, 50, 'tankTube', 1.22),
+  popStar: decorTier('popStar', 'Pop Star Statue', 1100, 52, 'popStar', 1.24),
+  glowCubes: decorTier('glowCubes', 'Glow Cubes', 1150, 54, 'cubeStack', 1.26),
+  cabinetAquarium: decorTier('cabinetAquarium', 'Cabinet Aquarium', 1200, 56, 'tankCabinet', 1.28, { footprint: WIDE_2X1 }),
+  rapperStatue: decorTier('rapperStatue', 'Rapper Statue', 1250, 58, 'rapper', 1.3),
+  hexAquarium: decorTier('hexAquarium', 'Hex Aquarium', 1300, 60, 'tankHex', 1.32),
+  longAquarium: decorTier('longAquarium', 'Long Aquarium', 1350, 62, 'tankLong', 1.34, { footprint: BOOTH_FOOTPRINT }),
+  rockStar: decorTier('rockStar', 'Rock Star Statue', 1400, 64, 'rocker', 1.36),
+  jellyTank: decorTier('jellyTank', 'Jellyfish Tank', 1500, 66, 'jellyBowl', 1.38, { footprint: WIDE_2X1 }),
+  archAquarium: decorTier('archAquarium', 'Arch Aquarium', 1600, 68, 'tankArch', 1.4, { footprint: WIDE_2X1 }),
   // Wallpaper (src/walls.js, drawn in code): simple to fancy across the
   // first ten levels.
   wpPaint: wallTier('wpPaint', 'Paint', 8, 1, 'paint'),
@@ -457,6 +523,24 @@ const PROP_LIGHTS = {
   goldBooth: [0xffc060, 1.8],
   theatreBooth: [0xffc060, 1.2], trussBooth: [0xfff0c0, 1.5], screenBooth: [0x80c0ff, 1.8], decoBooth: [0xffc060, 1.3],
   holoBooth: [0xff80ff, 2.0],
+  trussLights: [0xff80c0, 1.8],
+  bubbleColumn: [0x6a7cff, 1.4],
+  glowCubes: [0x30e0ff, 1.2],
+  bottleCabinet: [0xffd8a0, 1.2],
+  glassDivider: [0xff60c0, 1.1],
+  cabinetAquarium: [0x3080ff, 1.5],
+  tubeAquarium: [0x30e0c0, 1.4],
+  hexAquarium: [0xa060ff, 1.4],
+  longAquarium: [0x30c0ff, 1.7],
+  jellyTank: [0xc060ff, 1.6],
+  archAquarium: [0xff60c0, 1.6],
+  glowPanelBooth: [0xb07aff, 1.8],
+  curveBooth: [0xff40a0, 1.6],
+  facetBooth: [0xffc060, 1.2],
+  rackBooth: [0x50d8ff, 1.2],
+  capsuleBooth: [0x40d8ff, 1.8],
+  glassBooth: [0x80c8ff, 1.9],
+  gemLounge: [0xff50b0, 1.3],
 };
 for (const [key, light] of Object.entries(PROP_LIGHTS)) PROP_TYPES[key].light = light;
 
@@ -487,7 +571,7 @@ export const STAFF_TYPES = {
 // The VIP booths: the only seats you can show a guest to from their card
 // (see seatGuest() in scene/guests.js), like Nightclub City's booths.
 export const VIP_BOOTHS = new Set(['vipLounge', 'blackBooth', 'goldBooth',
-  'woodLounge', 'tikiHut', 'tulipLounge', 'glowLounge', 'fireSectional', 'gardenGazebo', 'iglooBooth', 'donutLounge', 'birdcageBooth', 'shellBooth', 'cloudBed', 'discoStage', 'galaxyPods']);
+  'woodLounge', 'tikiHut', 'tulipLounge', 'glowLounge', 'fireSectional', 'gardenGazebo', 'iglooBooth', 'donutLounge', 'birdcageBooth', 'shellBooth', 'cloudBed', 'discoStage', 'galaxyPods', 'gemLounge']);
 
 // Expanding adds one row of floor along one of the room's two open edges at
 // a time (see expandClub()). How long a wall can get depends on your level:
