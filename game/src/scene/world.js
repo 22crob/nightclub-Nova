@@ -94,6 +94,8 @@ export class WorldMixin {
     if (!this.groundGraphics) {
       this.groundGraphics = this.add.graphics();
       this.tileLayer.addAt(this.groundGraphics, 0); // under the floor tiles
+      this.buildingLayer = this.add.container(0, 0); // the buildings across the street (street.js)
+      this.tileLayer.addAt(this.buildingLayer, 1);
       this.wallGraphics = this.add.graphics();
       this.wallLayer.add(this.wallGraphics);
       // The bare brick, then wallpaper on top of it; the door and corner
@@ -101,7 +103,7 @@ export class WorldMixin {
       this.bareWallLayer = this.add.container(0, 0);
       this.wallLayer.add(this.bareWallLayer);
       this.bareFloor = this.add.image(0, 0, '__DEFAULT').setOrigin(0, 0);
-      this.tileLayer.addAt(this.bareFloor, 1); // over the ground, under the tiles
+      this.tileLayer.addAt(this.bareFloor, 2); // over the ground, under the tiles
       this.wallpaperLayer = this.add.container(0, 0);
       this.wallLayer.add(this.wallpaperLayer);
       this.wallShade = this.add.graphics(); // mood lighting (see drawMoodShade())

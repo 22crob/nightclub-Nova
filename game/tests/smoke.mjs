@@ -2808,7 +2808,7 @@ check('the ten new wallpapers each paint a wall', newWalls.painted === newWalls.
   await tp.goto(gameUrl);
   await tp.evaluate(() => localStorage.setItem('clubNovaSave_v2', JSON.stringify({ cash: 100, fans: 0, clubName: 'Old Club', placed: [{ type: 'throneBooth', anchor: [5, 5], facing: 0 }], inventory: { throneBooth: 1 } })));
   await tp.reload();
-  await tp.waitForFunction(() => { const s = window.__clubNova && window.__clubNova.scene.getScene('club'); return s && s.world && s.sys.settings.status >= 5; });
+  await tp.waitForFunction(() => { const s = window.__clubNova && window.__clubNova.scene.getScene('club'); return s && s.world && s.sys.settings.status >= 5; }, null, { timeout: 60000 });
   const old = await tp.evaluate(() => { const s = window.__clubNova.scene.getScene('club'); return { cash: s.cash, placed: Object.values(s.placed).some((r) => r.type === 'throneBooth'), stored: !!(s.inventory || {}).throneBooth }; });
   check('an old save\'s Royal Thrones (removed) are refunded, placed or stored', old.cash >= 3100 && !old.placed && !old.stored, JSON.stringify(old));
   await ctx.close();

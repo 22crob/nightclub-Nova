@@ -60,7 +60,12 @@ export const STREET = {
   lampPost: 0x2a2a33, lampGlow: 0xffd77a, lampEvery: 6,
   buildings: [0x2a2438, 0x262a3a, 0x30283a, 0x232433], windowLit: 0xf2c75c, windowDark: 0x16141e,
   lineOut: 3.1, lineLength: 6, startInLine: 3, bouncerCharacter: 4,
-  msPerTile: 420, admitEveryMs: 1500, partyAdmitMs: 3000, passerEveryMs: [1200, 3200],
+  msPerTile: 420, admitEveryMs: 1500, partyAdmitMs: 3000, passerEveryMs: [700, 1800],
+  // A livelier street: some passers-by walk in twos and threes, and small
+  // groups stand chatting on the sidewalk, breaking up now and then.
+  // The buildings along each back road, in order (art/blender/build_buildings.py).
+  buildingRow: ['hotel', 'cocktail', 'walkup', 'noodles', 'karaoke', 'walkupDark', 'liquor', 'diner', 'tattoo', 'laundromat'],
+  groupChance: 0.35, streetFolkShare: 0.75, hangouts: 3, hangoutMs: [25000, 50000],
 };
 
 // The floor tiles are invisible (the seamless bare floor shows through, see

@@ -97,6 +97,9 @@ export class ClubScene extends Phaser.Scene {
       }
     }
 
+    // The buildings across the street (street.js).
+    for (const key of Object.keys(SPRITE_URLS)) if (key.startsWith('bldg_')) this.load.image(key, SPRITE_URLS[key]);
+
     // Patrons: one spritesheet per character, each with its own frame grid.
     PATRON_SHEETS.forEach((url, i) => {
       const meta = patronMetaOf(i);

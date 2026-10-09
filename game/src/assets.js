@@ -12,6 +12,14 @@ export const SPRITE_URLS = Object.fromEntries(
   Object.entries(spriteFiles).map(([path, url]) => [path.split('/').pop().replace(/\.png$/, ''), url]),
 );
 
+// The buildings across the street (art/blender/build_buildings.py): for
+// each, its width along the road and, per facing, the picture's size and
+// where the building's centre on the ground lands in it.
+const buildingMetas = import.meta.glob('./assets/sprites/bldg_*.json', { eager: true, import: 'default' });
+export const BUILDING_META = Object.fromEntries(
+  Object.entries(buildingMetas).map(([path, meta]) => [path.split('/').pop().replace(/^bldg_|\.json$/g, ''), meta]),
+);
+
 // Patrons: one spritesheet per character. The drawn ones
 // (patron_00..11.png, art/sprites_from_art.py) share one frame grid,
 // patrons.json: idle / walk / dance / sit rows facing front and back. The
@@ -19,16 +27,18 @@ export const SPRITE_URLS = Object.fromEntries(
 // art/blender/build_patron_model1.py) come after them, each with its own
 // grid in a JSON beside it and two more clips: drink and sittalk. The
 // Neon Cartoon guys (patron_neon<NN>.png, drawn in code as a cut-out puppet
-// by art/characters/neon/neon_rig.py) come last, also with a JSON grid.
+// by art/characters/neon/neon_rig.py) come next, also with a JSON grid, and
+// the street people (patron_st<NN>.png) last.
 // patronMetaOf(i) gives any character's grid in one shape: frame size,
 // anchor between the feet, standing height, and for each clip_facing its
 // first frame (`starts`), with frame counts and speeds per clip.
 const patronSheets = import.meta.glob('./assets/sprites/patrons/patron_*.png', { eager: true, import: 'default' });
-const patronSheetMetas = import.meta.glob(['./assets/sprites/patrons/patron_3d_*.json', './assets/sprites/patrons/patron_neon*.json'], { eager: true, import: 'default' });
+const patronSheetMetas = import.meta.glob(['./assets/sprites/patrons/patron_3d_*.json', './assets/sprites/patrons/patron_neon*.json', './assets/sprites/patrons/patron_st*.json'], { eager: true, import: 'default' });
 const drawnKeys = Object.keys(patronSheets).filter((k) => /patron_\d+\.png$/.test(k)).sort();
 const modelKeys = Object.keys(patronSheets).filter((k) => /patron_3d_\w+\.png$/.test(k)).sort();
 const neonKeys = Object.keys(patronSheets).filter((k) => /patron_neon\w+\.png$/.test(k)).sort();
-export const PATRON_SHEETS = [...drawnKeys, ...modelKeys, ...neonKeys].map((k) => patronSheets[k]);
+const streetKeys = Object.keys(patronSheets).filter((k) => /patron_st\d+\.png$/.test(k)).sort();
+export const PATRON_SHEETS = [...drawnKeys, ...modelKeys, ...neonKeys, ...streetKeys].map((k) => patronSheets[k]);
 export const PATRON_META = patronMeta;
 const drawnMeta = {
   ...patronMeta,
@@ -38,6 +48,7 @@ const PATRON_METAS = [
   ...drawnKeys.map(() => drawnMeta),
   ...modelKeys.map((k) => patronSheetMetas[k.replace(/\.png$/, '.json')]),
   ...neonKeys.map((k) => patronSheetMetas[k.replace(/\.png$/, '.json')]),
+  ...streetKeys.map((k) => patronSheetMetas[k.replace(/\.png$/, '.json')]),
 ];
 // The characters made from the owner's 3D model.
 export const MODEL_PATRONS = modelKeys.map((_, i) => drawnKeys.length + i);
@@ -46,6 +57,9 @@ export const MODEL_PATRONS = modelKeys.map((_, i) => drawnKeys.length + i);
 export const PAINTED_PATRONS = Object.fromEntries(modelKeys.map((k, i) => [k.match(/patron_3d_(\w+)\.png$/)[1], drawnKeys.length + i]));
 // The Neon Cartoon characters (art/characters/neon).
 export const NEON_PATRONS = neonKeys.map((_, i) => drawnKeys.length + modelKeys.length + i);
+// The people on the street outside (art/characters/street): drawn by
+// ChatGPT, they walk and stand (other clips stand still).
+export const STREET_PATRONS = streetKeys.map((_, i) => drawnKeys.length + modelKeys.length + neonKeys.length + i);
 export function patronMetaOf(character) {
   return PATRON_METAS[character] || drawnMeta;
 }

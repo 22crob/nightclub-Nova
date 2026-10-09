@@ -13,7 +13,9 @@
 // back sidewalk, just behind the right wall, are on streetBackLayer, under
 // the walls. Street people aren't in this.patrons until they go in.
 // Mixed into ClubScene (see ClubScene.js); `this` is the scene.
+import Phaser from 'phaser';
 import { FLOOR_SLAB_DEPTH as DROP, STREET, WALL_THICKNESS } from '../config.js';
+import { BUILDING_META, STREET_PATRONS } from '../assets.js';
 
 const randRange = (min, max) => min + Math.random() * (max - min);
 
@@ -79,7 +81,7 @@ export class StreetMixin {
     const R = STREET.road + STREET.sidewalk; // road's outer edge, from the walls
     const S = STREET.sidewalk;
 
-    this.drawStreetBuildings(g, P, t, nx, ny, drop, R);
+    if (!this.placeStreetBuildings(t, nx, ny, drop, R)) this.drawStreetBuildings(g, P, t, nx, ny, drop, R);
     quad(STREET.asphalt, t - R, t - R, nx + R, ny + R);
     quad(STREET.curb, t - S - 0.25, t - S - 0.25, nx + S + 0.25, ny + S + 0.25);
     quad(STREET.pavement, t - S, t - S, nx + S, ny + S);
@@ -123,6 +125,37 @@ export class StreetMixin {
     for (let k = t + 1; k <= nx + 2; k += STREET.lampEvery) spots.push([k, ny + STREET.sidewalk - 0.4]);
     for (let k = t + 1; k <= ny + 2; k += STREET.lampEvery) spots.push([nx + STREET.sidewalk - 0.4, k]);
     return spots;
+  }
+
+  // The modelled buildings along each back road (BUILDING_META, from
+  // art/blender/build_buildings.py): facing 0 behind the right wall,
+  // facing 90 behind the left wall, in STREET.buildingRow order (the left
+  // road starts a few along so the corners differ), far ones drawn first.
+  // False if the pictures aren't there (then the plain blocks are drawn).
+  placeStreetBuildings(t, nx, ny, drop, R) {
+    const row = STREET.buildingRow.filter((n) => BUILDING_META[n] && this.textures.exists(`bldg_${n}_0`));
+    if (!row.length || !this.buildingLayer) return false;
+    this.buildingLayer.removeAll(true);
+    const far = t - R;
+    const items = [];
+    for (const [facing, end, start] of [[0, nx + R, 0], [90, ny + R, 3]]) {
+      let i = start;
+      for (let k = far; k < end; i++) {
+        const name = row[i % row.length];
+        const meta = BUILDING_META[name];
+        const c = k + meta.width / 2, d = far - meta.depth / 2;
+        items.push(facing === 0 ? { name, facing, gx: c, gy: d } : { name, facing, gx: d, gy: c });
+        k += meta.width;
+      }
+    }
+    items.sort((a, b) => (a.gx + a.gy) - (b.gx + b.gy));
+    for (const it of items) {
+      const f = BUILDING_META[it.name].facings[it.facing];
+      const [x, y] = this.gridPoint(it.gx, it.gy, -drop);
+      const img = this.add.image(x, y, `bldg_${it.name}_${it.facing}`).setOrigin(f.ox / f.w, f.oy / f.h);
+      this.buildingLayer.add(img);
+    }
+    return true;
   }
 
   // A row of dark buildings with lit windows across each back road. Only
@@ -244,6 +277,86 @@ export class StreetMixin {
       this.time.delayedCall(randRange(...STREET.passerEveryMs), passBy);
     };
     this.time.delayedCall(randRange(...STREET.passerEveryMs), passBy);
+    this.startHangouts();
+  }
+
+  // Who's out on the street: mostly the street people (STREET_PATRONS),
+  // sometimes an ordinary guest look.
+  streetCharacter() {
+    if (STREET_PATRONS.length && Math.random() < STREET.streetFolkShare) return Phaser.Utils.Array.GetRandom(STREET_PATRONS);
+    return undefined;
+  }
+
+  // Spots on the club's own sidewalks (front and right, clear of the line
+  // and the lamps) where friends stand around chatting.
+  hangoutSpots() {
+    const sp = this.streetSpots();
+    const y = sp.ny + STREET.sidewalk / 2 + 0.2;
+    const x = sp.nx + STREET.sidewalk / 2 + 0.2;
+    const spots = [];
+    for (let k = sp.t + 2.5; k < sp.nx - 1; k += 4.5) spots.push({ gx: k, gy: y });
+    for (let k = sp.t + 2.5; k < sp.ny - 1; k += 4.5) spots.push({ gx: x, gy: k });
+    return spots;
+  }
+
+  // Keeps a few groups standing about; now and then one breaks up and
+  // walks off, and a new one gathers somewhere else.
+  startHangouts() {
+    this.hangouts = [];
+    for (let i = 0; i < STREET.hangouts; i++) this.formHangout(true);
+    const cycle = () => {
+      const g = Phaser.Utils.Array.GetRandom(this.hangouts);
+      if (g) this.breakHangout(g);
+      this.time.delayedCall(2500, () => this.formHangout(false));
+      this.time.delayedCall(randRange(...STREET.hangoutMs), cycle);
+    };
+    this.time.delayedCall(randRange(...STREET.hangoutMs), cycle);
+  }
+
+  formHangout(already) {
+    if (!this.hasCharacterSprites()) return;
+    const taken = new Set(this.hangouts.map((g) => g.spotKey));
+    const free = this.hangoutSpots().filter((s) => !taken.has(`${s.gx},${s.gy}`));
+    if (!free.length) return;
+    const spot = Phaser.Utils.Array.GetRandom(free);
+    const n = 2 + Math.floor(Math.random() * 2);
+    const g = { spotKey: `${spot.gx},${spot.gy}`, people: [] };
+    const sp = this.streetSpots();
+    const onFront = spot.gy > sp.ny;
+    const { sx: cx, sy: cy } = this.gridToScreen(spot.gx, spot.gy);
+    for (let i = 0; i < n; i++) {
+      const a = (i / n) * Math.PI * 2 + Math.random() * 0.6;
+      const at = { gx: spot.gx + Math.cos(a) * 0.55, gy: spot.gy + Math.sin(a) * 0.55 };
+      const from = onFront ? { gx: Math.random() < 0.5 ? sp.laneEnds[0] : sp.nx + STREET.sidewalk + 1, gy: at.gy }
+        : { gx: at.gx, gy: Math.random() < 0.5 ? sp.laneEnds[0] : sp.ny + STREET.sidewalk + 1 };
+      const person = this.makeStreetPerson(already ? at : from, this.streetPassLayer, this.streetCharacter());
+      person.hangout = g;
+      g.people.push(person);
+      this.streetWalkers.push(person);
+      const settle = () => this.faceToward(person, cx, cy + DROP);
+      if (already) settle();
+      else {
+        person.container.setAlpha(0);
+        this.tweens.add({ targets: person.container, alpha: 1, duration: 500 });
+        this.streetWalkTo(person, [at], settle);
+      }
+    }
+    this.hangouts.push(g);
+  }
+
+  breakHangout(g) {
+    this.hangouts = this.hangouts.filter((h) => h !== g);
+    const sp = this.streetSpots();
+    g.people.forEach((person, i) => {
+      if (!person.container.active) return;
+      this.time.delayedCall(i * 600, () => {
+        if (!person.container.active) return;
+        const onFront = person.gy > sp.ny;
+        const end = onFront ? { gx: Math.random() < 0.5 ? sp.laneEnds[0] : sp.nx + STREET.sidewalk + 1, gy: person.gy }
+          : { gx: person.gx, gy: Math.random() < 0.5 ? sp.laneEnds[0] : sp.ny + STREET.sidewalk + 1 };
+        this.walkAndVanish(person, [end]);
+      });
+    });
   }
 
   // Someone walks up the street to join the line, if it isn't full. With
@@ -407,11 +520,19 @@ export class StreetMixin {
     const [a, b] = Math.random() < 0.5 ? [r.from, r.to] : [r.to, r.from];
     const wobble = randRange(-0.3, 0.3);
     const off = a[0] === b[0] ? [wobble, 0] : [0, wobble];
-    const person = this.makeStreetPerson({ gx: a[0] + off[0], gy: a[1] + off[1] }, r.front ? this.streetPassLayer : this.streetBackPassLayer);
-    this.streetWalkers.push(person);
-    person.container.setAlpha(0);
-    this.tweens.add({ targets: person.container, alpha: 1, duration: 600 });
-    this.walkAndVanish(person, [{ gx: b[0] + off[0], gy: b[1] + off[1] }]);
+    // Some walk in twos or threes, side by side, a step apart.
+    const n = Math.random() < STREET.groupChance ? 2 + (Math.random() < 0.3 ? 1 : 0) : 1;
+    const along = a[0] === b[0] ? [0, Math.sign(b[1] - a[1])] : [Math.sign(b[0] - a[0]), 0];
+    const side = a[0] === b[0] ? [1, 0] : [0, 1];
+    for (let i = 0; i < n; i++) {
+      const lag = i * 0.35, sideOff = (i - (n - 1) / 2) * 0.55;
+      const o = [off[0] + side[0] * sideOff - along[0] * lag, off[1] + side[1] * sideOff - along[1] * lag];
+      const person = this.makeStreetPerson({ gx: a[0] + o[0], gy: a[1] + o[1] }, r.front ? this.streetPassLayer : this.streetBackPassLayer, this.streetCharacter());
+      this.streetWalkers.push(person);
+      person.container.setAlpha(0);
+      this.tweens.add({ targets: person.container, alpha: 1, duration: 600 });
+      this.walkAndVanish(person, [{ gx: b[0] + o[0], gy: b[1] + o[1] }]);
+    }
   }
 
   // Walks a street person along `points`, fading them out as they reach
