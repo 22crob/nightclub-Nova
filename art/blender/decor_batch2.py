@@ -296,8 +296,8 @@ def truss_beam(prefix, x0, x1, y0, y1, z0, z1, m, rungs=10):
 
 
 def build_truss_lights():
-    """3 (3 x 1): a truss gantry with two spotlights hanging from it,
-    throwing pink and blue beams down in front."""
+    """3 (3 x 1): a truss gantry with two moving spotlights hanging from it
+    (their pink and blue beams are drawn sweeping round in the game)."""
     steel = mat('#2a2a32', rough=0.35)
     silver = mat('#b8bcc8', rough=0.25)
     for x in (-1.0, 1.0):
@@ -310,17 +310,7 @@ def build_truss_lights():
         can = tube(f'Can{i}', (x, 0.06, 1.16), (x, -0.12, 1.02), 0.09, mat('#1a1a20', rough=0.3), verts=20)
         lens = neon(f'Lens{i}', rgb, 12)
         tube(f'Lens{i}', (x, -0.12, 1.02), (x, -0.135, 1.01), 0.075, lens, verts=20)
-        # A soft see-through beam down to the floor in front.
-        beam = principled(f'Beam{i}', rgb, rough=0.0, emission=rgb, emission_strength=1.6, alpha=0.16)
-        bpy.ops.mesh.primitive_cone_add(vertices=24, radius1=0.07, radius2=0.32, depth=1.0)
-        o = bpy.context.active_object
-        o.name = f'Beam{i}'
-        a, b = Vector((x, -0.14, 1.0)), Vector((x, -0.5, 0.02))
-        o.location = (a + b) / 2
-        o.scale = (1, 1, (b - a).length)
-        o.rotation_mode = 'QUATERNION'
-        o.rotation_quaternion = Vector((0, 0, -1)).rotation_difference((b - a).normalized())
-        bb._finish(o, beam, 0)
+        # The beams are drawn moving in the game (createSweepBeams() in lighting.js).
 
 
 def build_bubble_column():

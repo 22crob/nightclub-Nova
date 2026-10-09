@@ -53,6 +53,20 @@ export const ROOM_COLORS = {
 // out from the walls. The line stands lineOut tiles out from the left wall,
 // from the door toward the front, where the wall hides about the bottom half
 // of each person (like Nightclub City's line).
+// Moving spotlights (createSweepBeams() in lighting.js): each lamp's lens
+// and the spot on the floor its beam circles round, in the model's own units
+// (art/blender/decor_batch2.py, front facing -Y); how far and how fast the
+// spot wanders, the beam's width where it lands and its floor pool.
+export const TRUSS_BEAMS = {
+  truss: {
+    lamps: [
+      { lens: [-0.45, -0.14, 1.0], aim: [-0.5, -0.95], color: 0xff5ab8 },
+      { lens: [0.45, -0.14, 1.0], aim: [0.5, -0.95], color: 0x5aa8ff },
+    ],
+    sweep: [0.5, 0.35], speed: [0.55, 0.85], width: 40, pool: [52, 26], beamAlpha: 0.75, poolAlpha: 0.55,
+  },
+};
+
 // Live aquariums (tankFx.js): for each tank, its water as a box in the
 // model's own units (as in art/blender/decor_batch2.py, front glass at y0),
 // how many fish swim in it and their colours, and bubbles in a few streams.

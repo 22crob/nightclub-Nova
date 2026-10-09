@@ -59,7 +59,7 @@ export class TankFxMixin {
   // Where a point of the model (in its own units, front facing -Y) lands in
   // the world, for the piece as placed: turned to its facing, centred on
   // its sprite's origin.
-  tankPoint(rec, x, y, z) {
+  modelPoint(rec, x, y, z) {
     const go = rec.gameObject;
     const a = (rec.facing || 0) * Math.PI / 180;
     const rx = x * Math.cos(a) - y * Math.sin(a);
@@ -113,10 +113,10 @@ export class TankFxMixin {
       const speed = rand(0.08, 0.16); // of the tank's length a second
       const place = () => {
         const x = x0 + 0.1 + (x1 - x0 - 0.2) * path.t;
-        const p = this.tankPoint(rec, x, y, z + Math.sin(path.bob) * (tank.jelly ? 0.12 : 0.025));
+        const p = this.modelPoint(rec, x, y, z + Math.sin(path.bob) * (tank.jelly ? 0.12 : 0.025));
         fish.setPosition(p.x, p.y);
         // Facing its way along the screen: down-right is +x on screen.
-        const ahead = this.tankPoint(rec, x + 0.1 * path.dir, y, z);
+        const ahead = this.modelPoint(rec, x + 0.1 * path.dir, y, z);
         if (tank.jelly) fish.setScale(0.5 * (tank.fishScale || 1) * (1 + Math.sin(path.bob * 2) * 0.06), 0.5 * (tank.fishScale || 1) * (1 - Math.sin(path.bob * 2) * 0.08)); // the bell pulses
         else fish.setFlipX(ahead.x < p.x);
       };
@@ -147,7 +147,7 @@ export class TankFxMixin {
         onRepeat: () => { bx = x0 + 0.1 + (x1 - x0 - 0.2) * stream + rand(-0.04, 0.04); },
         onUpdate: (tw) => {
           const k = tw.progress;
-          const p = this.tankPoint(rec, bx + Math.sin(k * 9 + i) * 0.015, by, state.z);
+          const p = this.modelPoint(rec, bx + Math.sin(k * 9 + i) * 0.015, by, state.z);
           b.setPosition(p.x, p.y).setScale(0.35 + k * 0.4).setAlpha(k > 0.92 ? (1 - k) * 10 : 0.9);
         },
       }));
@@ -163,8 +163,8 @@ export class TankFxMixin {
   tankWaterOutline(rec, box) {
     const { x0, x1, y0, y1, z0, z1 } = box;
     const foot = [[x0, y0], [x1, y0], [x1, y1], [x0, y1]].map(([x, y]) => {
-      const lo = this.tankPoint(rec, x, y, z0);
-      const hi = this.tankPoint(rec, x, y, z1);
+      const lo = this.modelPoint(rec, x, y, z0);
+      const hi = this.modelPoint(rec, x, y, z1);
       return { lo, hi, depth: lo.y }; // nearer the camera = lower on screen
     });
     foot.sort((a, b) => a.depth - b.depth);

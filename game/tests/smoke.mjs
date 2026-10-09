@@ -299,6 +299,22 @@ const tanksLive = await page.evaluate(() => {
   return out;
 });
 check('every aquarium, liquid tank and the Bubble Column comes alive', Object.values(tanksLive).every((n) => n >= 4), JSON.stringify(tanksLive));
+const sweep = await page.evaluate(async () => {
+  const s = window.__clubNova.scene.getScene('club');
+  let spot = null;
+  for (let gy = 2; gy < s.gridH - 1 && !spot; gy++) for (let gx = 1; gx < s.gridW - 3 && !spot; gx++) {
+    if (s.footprintValid(s.getFootprint('trussLights', 0, gx, gy), 'trussLights')) spot = [gx, gy];
+  }
+  const rec = s.restoreProp('trussLights', 0, spot);
+  const beam = rec.sweepFx && rec.sweepFx.parts.find((p) => p.texture.key === 'sweepBeam');
+  const before = beam && beam.rotation;
+  for (let k = 0; k < 20; k++) rec.sweepFx.tweens.forEach((t) => t.callback && t.callback());
+  const out = { beams: rec.sweepFx ? rec.sweepFx.parts.filter((p) => p.texture.key === 'sweepBeam').length : 0, moved: !!beam && beam.rotation !== before };
+  s.removeProp(rec);
+  out.cleaned = !beam || !beam.active;
+  return out;
+});
+check('the Truss Spotlights throw two beams that sweep round the floor', sweep.beams === 2 && sweep.moved && sweep.cleaned, JSON.stringify(sweep));
 
 // Placing on an occupied tile is refused.
 await clickTile(2, 5);

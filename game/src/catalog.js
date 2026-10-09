@@ -469,7 +469,7 @@ export const PROP_TYPES = {
   // The owner's own sketches (October 2026): one every two levels past the
   // rest (there's no level cap).
   bottleCabinet: decorTier('bottleCabinet', 'Bottle Cabinet', 800, 40, 'bottleShelf', 1.12, { footprint: WIDE_2X1 }),
-  trussLights: decorTier('trussLights', 'Truss Spotlights', 850, 42, 'trussLights', 1.14, { footprint: BOOTH_FOOTPRINT }),
+  trussLights: decorTier('trussLights', 'Truss Spotlights', 850, 42, 'trussLights', 1.14, { footprint: BOOTH_FOOTPRINT, sweepBeams: 'truss' }),
   glassDivider: decorTier('glassDivider', 'Glass Divider', 900, 44, 'glassDivider', 1.16, { footprint: WIDE_2X1 }),
   bubbleColumn: decorTier('bubbleColumn', 'Bubble Column', 950, 46, 'bubbleColumn', 1.18, { tankFx: 'column' }),
   ribbon: decorTier('ribbon', 'Ribbon Sculpture', 1000, 48, 'ribbon', 1.2),

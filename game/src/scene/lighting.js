@@ -6,11 +6,12 @@
 // Mixed into ClubScene (see ClubScene.js); `this` is the scene.
 import Phaser from 'phaser';
 import { PROP_TYPES } from '../catalog.js';
-import { MOOD_LIGHTING, TILE_H, TILE_W, WALL_HEIGHT } from '../config.js';
+import { MOOD_LIGHTING, TILE_H, TILE_W, TRUSS_BEAMS, WALL_HEIGHT } from '../config.js';
 
 const POOL_KEY = 'lightPool';
 const BEAM_KEY = 'spotBeam';
 const SPARKLE_KEY = 'sparkle';
+const SWEEP_KEY = 'sweepBeam';
 
 // The disco ball's glow (see createDiscoGlow()): the ball's centre and
 // radius on its sprite (px in the rendered image, measured from
@@ -182,6 +183,80 @@ export class LightingMixin {
   }
 
 
+  // --- Moving spotlights (the Truss Spotlights) ------------------------------
+
+  // A cone of light, thin at the left end (the lamp) and wide at the right
+  // (the floor), soft at its edges, a touch brighter near the lamp.
+  registerSweepTexture() {
+    if (this.textures.exists(SWEEP_KEY)) return;
+    const w = 256;
+    const h = 128;
+    const canvas = document.createElement('canvas');
+    canvas.width = w;
+    canvas.height = h;
+    const ctx = canvas.getContext('2d');
+    for (const [spread, alpha] of [[1, 0.12], [0.8, 0.16], [0.6, 0.2], [0.38, 0.26]]) {
+      const grad = ctx.createLinearGradient(0, 0, w, 0);
+      grad.addColorStop(0, `rgba(255,255,255,${alpha * 1.4})`);
+      grad.addColorStop(1, `rgba(255,255,255,${alpha * 0.7})`);
+      ctx.fillStyle = grad;
+      ctx.beginPath();
+      ctx.moveTo(0, h / 2 - 2);
+      ctx.lineTo(w, h / 2 - (h / 2) * spread);
+      ctx.lineTo(w, h / 2 + (h / 2) * spread);
+      ctx.lineTo(0, h / 2 + 2);
+      ctx.closePath();
+      ctx.fill();
+    }
+    this.textures.addCanvas(SWEEP_KEY, canvas);
+  }
+
+  // Beams from a piece's moving lamps (`sweepBeams` in TRUSS_BEAMS): each
+  // starts thin at its lens and widens to a pool of light on the floor,
+  // and the spot on the floor wanders slowly round in a loop, the lamps out
+  // of step, like moving-head lights. Points are in the model's own units
+  // (art/blender/decor_batch2.py), placed with modelPoint().
+  createSweepBeams(rec) {
+    const cfg = TRUSS_BEAMS[PROP_TYPES[rec.type].sweepBeams];
+    const go = rec.gameObject;
+    if (!cfg || !go) return null;
+    this.registerLightTexture();
+    this.registerSweepTexture();
+    // Facing away, the beams fall behind the frame.
+    const depth = go.baseDepth + (rec.facing === 0 || rec.facing === 90 ? 0.004 : -0.0005);
+    const parts = [];
+    const tweens = [];
+    const add = (obj) => {
+      obj.setBlendMode(Phaser.BlendModes.ADD).setDepth(depth);
+      this.propLayer.add(obj);
+      parts.push(obj);
+      return obj;
+    };
+    cfg.lamps.forEach((lamp, i) => {
+      const pool = add(this.add.image(0, 0, POOL_KEY).setTint(lamp.color).setAlpha(cfg.poolAlpha));
+      const beam = add(this.add.image(0, 0, SWEEP_KEY).setOrigin(0, 0.5).setTint(lamp.color).setAlpha(cfg.beamAlpha));
+      const glint = add(this.add.image(0, 0, POOL_KEY).setTint(0xffffff).setDisplaySize(10, 10).setAlpha(0.9));
+      const from = this.modelPoint(rec, ...lamp.lens);
+      glint.setPosition(from.x, from.y);
+      const state = { t: Math.random() * 10 };
+      const place = () => {
+        const t = state.t;
+        // A slow wandering loop round the lamp's home spot on the floor.
+        const x = lamp.aim[0] + cfg.sweep[0] * Math.sin(t * cfg.speed[0] + i * 2.1);
+        const y = lamp.aim[1] + cfg.sweep[1] * Math.sin(t * cfg.speed[1] + i * 1.3);
+        const to = this.modelPoint(rec, x, y, 0);
+        const dist = Math.hypot(to.x - from.x, to.y - from.y);
+        beam.setPosition(from.x, from.y).setRotation(Math.atan2(to.y - from.y, to.x - from.x))
+          .setDisplaySize(dist, cfg.width);
+        pool.setPosition(to.x, to.y).setDisplaySize(cfg.pool[0], cfg.pool[1]);
+      };
+      place();
+      tweens.push(this.time.addEvent({ delay: 40, loop: true, callback: () => { state.t += 0.04; place(); } }));
+    });
+    this.propLayer.sort('depth');
+    return { parts, tweens };
+  }
+
   // --- The disco ball's glow --------------------------------------------------
 
   // A four-pointed twinkle.
@@ -268,7 +343,7 @@ export class LightingMixin {
 
   // Removes the spotlight's beam or the disco ball's glow.
   destroyGlowFx(rec) {
-    for (const key of ['spotBeam', 'discoGlow', 'speakerFx', 'tankFx']) {
+    for (const key of ['spotBeam', 'discoGlow', 'speakerFx', 'tankFx', 'sweepFx']) {
       const fx = rec[key];
       if (!fx) continue;
       fx.tweens.forEach((t) => (t.remove ? t.remove() : t.destroy()));
@@ -284,5 +359,6 @@ export class LightingMixin {
     if (def.discoGlow) rec.discoGlow = this.createDiscoGlow(rec);
     if (def.speakerCones) rec.speakerFx = this.createSpeakerFx(rec);
     if (def.tankFx) rec.tankFx = this.createTankFx(rec); // fish and bubbles (tankFx.js)
+    if (def.sweepBeams) rec.sweepFx = this.createSweepBeams(rec); // moving spotlights
   }
 }
