@@ -2791,12 +2791,14 @@ check('a troublemaker upsets guests near them; a bouncer spots them and walks th
 // street people walk by in groups and stand chatting in small groups.
 const streetLook = await page.evaluate(() => {
   const s = window.__clubNova.scene.getScene('club');
-  const imgs = s.buildingLayer ? s.buildingLayer.list : [];
+  const imgs = s.buildingLayer ? s.buildingLayer.list.filter((o) => o.type === 'Image') : [];
+  const lights = s.streetStrings && s.buildingLayer.list.includes(s.streetStrings) && s.streetStrings.commandBuffer.length > 100;
   const keys = imgs.map((i) => i.texture.key);
   return {
     buildings: imgs.length,
     both: keys.some((k) => k.endsWith('_0')) && keys.some((k) => k.endsWith('_90')),
     kinds: new Set(keys.map((k) => k.replace(/^bldg_|_\d+$/g, ''))).size,
+    lights,
     hangouts: (s.hangouts || []).length,
     hangoutPeople: (s.hangouts || []).reduce((n, h) => n + h.people.length, 0),
   };
@@ -2808,7 +2810,7 @@ const groupWalk = await page.evaluate(() => {
   try { s.spawnPasserBy(); } finally { Math.random = r; }
   return s.streetWalkers.length - n0;
 });
-check('the street: modelled buildings line both back roads, groups chat on the sidewalk, and people walk by in groups', streetLook.buildings >= 10 && streetLook.both && streetLook.kinds >= 8 && streetLook.hangouts >= 2 && streetLook.hangoutPeople >= 4 && groupWalk >= 2, JSON.stringify({ ...streetLook, groupWalk }));
+check('the street: modelled buildings line both back roads, strings of bulbs hang across them, groups chat on the sidewalk, and people walk by in groups', streetLook.buildings >= 10 && streetLook.lights && streetLook.both && streetLook.kinds >= 8 && streetLook.hangouts >= 2 && streetLook.hangoutPeople >= 4 && groupWalk >= 2, JSON.stringify({ ...streetLook, groupWalk }));
 
 // The October 2026 wallpapers: each paints a wall section at level 40.
 const newWalls = await page.evaluate(() => {

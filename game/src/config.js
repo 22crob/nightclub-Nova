@@ -66,6 +66,10 @@ export const STREET = {
   // The buildings along each back road, in order (art/blender/build_buildings.py).
   buildingRow: ['hotel', 'cocktail', 'walkup', 'noodles', 'karaoke', 'walkupDark', 'liquor', 'diner', 'tattoo', 'laundromat'],
   groupChance: 0.35, hangouts: 3, hangoutMs: [25000, 50000],
+  // Strings of bulbs across the back roads (drawStringLights()): ends every
+  // `every` tiles, hung `height` px up the buildings, sagging `sag` px, a
+  // bulb every `spacing` tiles.
+  stringLights: { every: 3, height: 150, sag: 26, spacing: 0.75, wire: 0x15131b, bulb: 0xfff1c2, glow: 0xffc96a },
 };
 
 // The floor tiles are invisible (the seamless bare floor shows through, see
