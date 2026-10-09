@@ -47,6 +47,7 @@ import { TutorialMixin } from './tutorial.js';
 import { AchievementsMixin } from './achievements.js';
 import { TouchPlaceMixin } from './touchPlace.js';
 import { AppUpdateMixin } from './appUpdate.js';
+import { TankFxMixin } from './tankFx.js';
 import { Music } from '../music.js';
 import { applyMixins } from './applyMixins.js';
 
@@ -453,4 +454,5 @@ applyMixins(ClubScene, [
   DailyMixin,
   DrinksMixin,
   TestModeMixin,
+  TankFxMixin,
 ]);

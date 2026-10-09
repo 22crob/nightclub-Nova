@@ -268,10 +268,10 @@ export class LightingMixin {
 
   // Removes the spotlight's beam or the disco ball's glow.
   destroyGlowFx(rec) {
-    for (const key of ['spotBeam', 'discoGlow', 'speakerFx']) {
+    for (const key of ['spotBeam', 'discoGlow', 'speakerFx', 'tankFx']) {
       const fx = rec[key];
       if (!fx) continue;
-      fx.tweens.forEach((t) => t.remove());
+      fx.tweens.forEach((t) => (t.remove ? t.remove() : t.destroy()));
       fx.parts.forEach((p) => { this.tweens.killTweensOf(p); p.destroy(); });
       rec[key] = null;
     }
@@ -283,5 +283,6 @@ export class LightingMixin {
     if (def.spotBeam) rec.spotBeam = this.createSpotBeam(rec);
     if (def.discoGlow) rec.discoGlow = this.createDiscoGlow(rec);
     if (def.speakerCones) rec.speakerFx = this.createSpeakerFx(rec);
+    if (def.tankFx) rec.tankFx = this.createTankFx(rec); // fish and bubbles (tankFx.js)
   }
 }

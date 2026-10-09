@@ -53,6 +53,17 @@ export const ROOM_COLORS = {
 // out from the walls. The line stands lineOut tiles out from the left wall,
 // from the door toward the front, where the wall hides about the bottom half
 // of each person (like Nightclub City's line).
+// Live aquariums (tankFx.js): for each tank, its water as a box in the
+// model's own units (as in art/blender/decor_batch2.py, front glass at y0),
+// how many fish swim in it and their colours, and bubbles in a few streams.
+export const TANKS = {
+  cabinet: {
+    water: { x0: -0.66, x1: 0.66, y0: -0.2, y1: -0.02, z0: 0.56, z1: 1.18 },
+    swim: [0.7, 1.02], // the heights fish keep to, clear of the gravel and the lid
+    fish: 5, fishScale: 0.8, colors: [0xff8a1f, 0xffe03a, 0xff4a8a, 0x5af0ff], bubbles: 6, streams: 2,
+  },
+};
+
 export const STREET = {
   sidewalk: 4.5, road: 7,
   pavement: 0x55535f, grout: 0x46444f, curb: 0x7a7884, asphalt: 0x1d1b24, laneLine: 0xc9a640,

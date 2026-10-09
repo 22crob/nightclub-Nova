@@ -476,7 +476,7 @@ export const PROP_TYPES = {
   tubeAquarium: decorTier('tubeAquarium', 'Tube Aquarium', 1050, 50, 'tankTube', 1.22),
   popStar: decorTier('popStar', 'Pop Star Statue', 1100, 52, 'popStar', 1.24),
   glowCubes: decorTier('glowCubes', 'Glow Cubes', 1150, 54, 'cubeStack', 1.26),
-  cabinetAquarium: decorTier('cabinetAquarium', 'Cabinet Aquarium', 1200, 56, 'tankCabinet', 1.28, { footprint: WIDE_2X1 }),
+  cabinetAquarium: decorTier('cabinetAquarium', 'Cabinet Aquarium', 1200, 56, 'tankCabinet', 1.28, { footprint: WIDE_2X1, tankFx: 'cabinet' }),
   rapperStatue: decorTier('rapperStatue', 'Rapper Statue', 1250, 58, 'rapper', 1.3),
   hexAquarium: decorTier('hexAquarium', 'Hex Aquarium', 1300, 60, 'tankHex', 1.32),
   longAquarium: decorTier('longAquarium', 'Long Aquarium', 1350, 62, 'tankLong', 1.34, { footprint: BOOTH_FOOTPRINT }),

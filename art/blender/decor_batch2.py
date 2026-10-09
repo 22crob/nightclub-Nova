@@ -444,7 +444,9 @@ def build_cube_stack():
 FISH = ['#ff8a1f', '#ffe03a', '#ff4a8a', '#5af0ff']
 
 
-def tank_life(prefix, x0, x1, y0, y1, z0, z1, seed, plants='#2bd46a', fish=FISH, count=None, jelly=False):
+def tank_life(prefix, x0, x1, y0, y1, z0, z1, seed, plants='#2bd46a', fish=FISH, count=None, jelly=False, live=False):
+    """`live`: leave out the fish and bubbles, which the game draws moving
+    (src/scene/tankFx.js)."""
     import random
     rnd = random.Random(seed)
     w = x1 - x0
@@ -464,7 +466,7 @@ def tank_life(prefix, x0, x1, y0, y1, z0, z1, seed, plants='#2bd46a', fish=FISH,
             o = sphere(f'{prefix}Leaf{i}{k}', 0, 0, 0, 1.0, leaf, scale=(0.035, 0.012, hk / 2), segments=10)
             o.location = (x + math.sin(a) * hk / 2, y, z0 + 0.05 + math.cos(a) * hk / 2)
             o.rotation_euler = (0, a, math.radians(rnd.uniform(0, 180)))
-    n = count or max(2, int(w * 5))
+    n = 0 if live else (count or max(2, int(w * 5)))
     for i in range(n):
         x = rnd.uniform(x0 + 0.08, x1 - 0.08)
         y = rnd.uniform(y0 + 0.05, y1 - 0.05)
@@ -482,6 +484,8 @@ def tank_life(prefix, x0, x1, y0, y1, z0, z1, seed, plants='#2bd46a', fish=FISH,
         flip = rnd.choice((-1, 1))
         sphere(f'{prefix}Fish{i}', x, y, z, 0.035, m, scale=(1.6, 0.55, 0.9), segments=12)
         cone(f'{prefix}Tail{i}', x - 0.06 * flip, y, z - 0.025, z + 0.025, 0.0, 0.03, m, verts=6)
+    if live:
+        return
     bubble = principled(f'{prefix}Bubble', (0.95, 0.98, 1.0), rough=0.0, emission=(0.85, 0.95, 1.0), emission_strength=1.6)
     bx = rnd.uniform(x0 + 0.05, x1 - 0.05)
     for i in range(5):
@@ -499,7 +503,7 @@ def build_tank_cabinet():
     for x in (-0.36, 0.36):
         box(f'Door{x}', x - 0.33, x + 0.33, -0.31, -0.3, 0.06, 0.44, mat('#1e1c26', rough=0.25), bevel=0.004)
         box(f'DoorGlow{x}', x - 0.25, x + 0.25, -0.315, -0.31, 0.08, 0.1, neon('CabGlow', (0.4, 0.8, 1.0), 6), bevel=0)
-    tank_life('T', -0.68, 0.68, -0.26, 0.26, 0.5, 1.2, 33)
+    tank_life('T', -0.68, 0.68, -0.26, 0.26, 0.5, 1.2, 33, live=True)
     box('BackWall', -0.69, 0.69, 0.255, 0.27, 0.5, 1.2, mat('#0c2a6a', rough=0.6, glow=0.5), bevel=0)
     box('Water', -0.7, 0.7, -0.28, 0.28, 0.5, 1.2, water('TWater', '#3a8aff'), bevel=0.01)
     box('Lid', -0.72, 0.72, -0.3, 0.3, 1.2, 1.26, cab, bevel=0.01)

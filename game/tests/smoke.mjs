@@ -262,6 +262,27 @@ check('a bar facing the camera draws its counter in front', tiers.layered);
 check('all eighteen DJ booth tiers load', tiers.booths === 18, `${tiers.booths} of 18`);
 check('the owner\'s sketched decorations and Gem Lounge load, wide ones on their wide footprints', tiers.sketched === 16 && tiers.wide, JSON.stringify(tiers));
 
+// A live aquarium: fish and bubbles drawn over the Cabinet Aquarium,
+// only while its front glass faces the camera, gone when it's removed.
+const tankLive = await page.evaluate(() => {
+  const s = window.__clubNova.scene.getScene('club');
+  let spot = null;
+  for (let gy = 1; gy < s.gridH - 1 && !spot; gy++) for (let gx = 1; gx < s.gridW - 2 && !spot; gx++) {
+    if (s.footprintValid(s.getFootprint('cabinetAquarium', 0, gx, gy), 'cabinetAquarium')) spot = [gx, gy];
+  }
+  const rec = s.restoreProp('cabinetAquarium', 0, spot);
+  const parts = rec.tankFx ? rec.tankFx.parts : [];
+  const out = { fish: parts.filter((p) => p.texture.key === 'tankFish').length, bubbles: parts.filter((p) => p.texture.key === 'tankBubble').length };
+  s.rotatePlacedProp(`${spot[0]},${spot[1]}`);
+  s.rotatePlacedProp(`${spot[0]},${spot[1]}`);
+  const turned = s.placed[`${spot[0]},${spot[1]}`];
+  out.awayHidden = turned.facing === 180 && !turned.tankFx;
+  s.removeProp(turned);
+  out.cleaned = parts.every((p) => !p.active);
+  return out;
+});
+check('the Cabinet Aquarium has live fish and bubbles, only shown through its front glass', tankLive.fish === 5 && tankLive.bubbles === 6 && tankLive.awayHidden && tankLive.cleaned, JSON.stringify(tankLive));
+
 // Placing on an occupied tile is refused.
 await clickTile(2, 5);
 st = await state();
