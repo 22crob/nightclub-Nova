@@ -561,7 +561,8 @@ def build(name, preview_dir=None):
     scene.collection.objects.link(root)
     bb.ROOT = root
     BUILDINGS[name](WIDTHS[name])
-    iso_rig.add_outlines(scene, root)
+    # No edge lines: on dark night-time walls they read as grey wireframes,
+    # and the buildings are background (the furniture keeps its lines).
     out_dir = preview_dir or bb.SPRITE_DIR
     os.makedirs(out_dir, exist_ok=True)
     facings = (0,) if preview_dir and not os.environ.get('BOTH') else (0, 90)

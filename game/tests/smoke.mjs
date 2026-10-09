@@ -2787,6 +2787,29 @@ const security = await page.evaluate(() => {
 check('the Staff panel is grouped (Bar, Bartenders, Bouncers) with headshots; a second bouncer can be hired at level 8 (saved), a third not until 18', security.people >= 2 && security.portraits && security.groups === 'Bar,Bartenders,Bouncers' && security.headshots && security.hireCard && security.hired && security.cantThird && security.saved && security.fired, JSON.stringify(security));
 check('a troublemaker upsets guests near them; a bouncer spots them and walks them out the door, for 5 XP', security.annoyed && security.spotted && security.out, JSON.stringify(security));
 
+// The street: modelled buildings line both back roads (both facings), the
+// street people walk by in groups and stand chatting in small groups.
+const streetLook = await page.evaluate(() => {
+  const s = window.__clubNova.scene.getScene('club');
+  const imgs = s.buildingLayer ? s.buildingLayer.list : [];
+  const keys = imgs.map((i) => i.texture.key);
+  return {
+    buildings: imgs.length,
+    both: keys.some((k) => k.endsWith('_0')) && keys.some((k) => k.endsWith('_90')),
+    kinds: new Set(keys.map((k) => k.replace(/^bldg_|_\d+$/g, ''))).size,
+    hangouts: (s.hangouts || []).length,
+    hangoutPeople: (s.hangouts || []).reduce((n, h) => n + h.people.length, 0),
+  };
+});
+const groupWalk = await page.evaluate(() => {
+  const s = window.__clubNova.scene.getScene('club');
+  const n0 = s.streetWalkers.length;
+  const r = Math.random; Math.random = () => 0.01;   // a group, of three
+  try { s.spawnPasserBy(); } finally { Math.random = r; }
+  return s.streetWalkers.length - n0;
+});
+check('the street: modelled buildings line both back roads, groups chat on the sidewalk, and people walk by in groups', streetLook.buildings >= 10 && streetLook.both && streetLook.kinds >= 8 && streetLook.hangouts >= 2 && streetLook.hangoutPeople >= 4 && groupWalk >= 2, JSON.stringify({ ...streetLook, groupWalk }));
+
 // The October 2026 wallpapers: each paints a wall section at level 40.
 const newWalls = await page.evaluate(() => {
   const s = window.__clubNova.scene.getScene('club');
