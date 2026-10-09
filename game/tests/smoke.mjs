@@ -272,7 +272,8 @@ const tankLive = await page.evaluate(() => {
   }
   const rec = s.restoreProp('cabinetAquarium', 0, spot);
   const parts = rec.tankFx ? rec.tankFx.parts : [];
-  const out = { fish: parts.filter((p) => p.texture.key === 'tankFish').length, bubbles: parts.filter((p) => p.texture.key === 'tankBubble').length };
+  const items = rec.tankFx ? rec.tankFx.items : [];
+  const out = { fish: items.filter((p) => p.texture.key === 'tankFish').length, bubbles: items.filter((p) => p.texture.key === 'tankBubble').length, clipped: !!(parts[0] && parts[0].mask) };
   s.rotatePlacedProp(`${spot[0]},${spot[1]}`);
   s.rotatePlacedProp(`${spot[0]},${spot[1]}`);
   const turned = s.placed[`${spot[0]},${spot[1]}`];
@@ -281,7 +282,7 @@ const tankLive = await page.evaluate(() => {
   out.cleaned = parts.every((p) => !p.active);
   return out;
 });
-check('the Cabinet Aquarium has live fish and bubbles, only shown through its front glass', tankLive.fish === 5 && tankLive.bubbles === 6 && tankLive.awayHidden && tankLive.cleaned, JSON.stringify(tankLive));
+check('the Cabinet Aquarium has live fish and bubbles, kept inside its water, only shown through its front glass', tankLive.fish === 5 && tankLive.bubbles === 6 && tankLive.clipped && tankLive.awayHidden && tankLive.cleaned, JSON.stringify(tankLive));
 const tanksLive = await page.evaluate(() => {
   const s = window.__clubNova.scene.getScene('club');
   const keys = ['aquarium', 'liquidTank', 'liquidTankBlue', 'bubbleColumn', 'tubeAquarium', 'cabinetAquarium', 'hexAquarium', 'longAquarium', 'jellyTank', 'archAquarium'];
@@ -292,7 +293,7 @@ const tanksLive = await page.evaluate(() => {
       if (s.footprintValid(s.getFootprint(key, 0, gx, gy), key)) spot = [gx, gy];
     }
     const rec = spot && s.restoreProp(key, 0, spot);
-    out[key] = rec && rec.tankFx ? rec.tankFx.parts.length : 0;
+    out[key] = rec && rec.tankFx ? rec.tankFx.items.length : 0;
     if (rec) s.removeProp(rec);
   }
   return out;

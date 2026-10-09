@@ -80,13 +80,22 @@ export class TankFxMixin {
     const go = rec.gameObject;
     if (!tank || !go || !(tank.allSides || rec.facing === 0 || rec.facing === 90)) return null;
     this.registerTankTextures();
-    const parts = [];
     const tweens = [];
-    const depth = go.baseDepth + 0.003;
+    // Everything lives in one holder at the tank's depth, clipped to the
+    // tank's water as the camera sees it, so a fish or bubble at the edge
+    // goes behind the frame and lid instead of over them.
+    const holder = this.add.container(0, 0).setDepth(go.baseDepth + 0.003);
+    this.propLayer.add(holder);
+    const shape = this.make.graphics({ add: false });
+    shape.fillStyle(0xffffff, 1);
+    shape.fillPoints(this.tankWaterOutline(rec, tank.glass || tank.water), true);
+    holder.setMask(shape.createGeometryMask());
+    this.watchTankMask(shape);
+    const items = [];
+    const parts = [holder, shape];
     const add = (obj) => {
-      obj.setDepth(depth);
-      this.propLayer.add(obj);
-      parts.push(obj);
+      holder.add(obj);
+      items.push(obj);
       return obj;
     };
     const { x0, x1, y0, y1, z0, z1 } = tank.water;
@@ -133,7 +142,7 @@ export class TankFxMixin {
       let bx = x0 + 0.1 + (x1 - x0 - 0.2) * stream;
       const by = y0;
       tweens.push(this.tweens.add({
-        targets: state, z: { from: z0 + 0.05, to: z1 - 0.03 }, duration: rand(2200, 3200), delay: i * 420,
+        targets: state, z: { from: z0 + 0.05, to: z1 - 0.07 }, duration: rand(2200, 3200), delay: i * 420,
         repeat: -1,
         onRepeat: () => { bx = x0 + 0.1 + (x1 - x0 - 0.2) * stream + rand(-0.04, 0.04); },
         onUpdate: (tw) => {
@@ -144,6 +153,39 @@ export class TankFxMixin {
       }));
     }
     this.propLayer.sort('depth');
-    return { parts, tweens };
+    return { parts, tweens, items };
+  }
+
+  // The outline of the sides of a box (in the model's units) that face the
+  // camera, in world coordinates: its near bottom corner and the two beside
+  // it, and the same three along the top. The top face is left out: the
+  // lid sits there.
+  tankWaterOutline(rec, box) {
+    const { x0, x1, y0, y1, z0, z1 } = box;
+    const foot = [[x0, y0], [x1, y0], [x1, y1], [x0, y1]].map(([x, y]) => {
+      const lo = this.tankPoint(rec, x, y, z0);
+      const hi = this.tankPoint(rec, x, y, z1);
+      return { lo, hi, depth: lo.y }; // nearer the camera = lower on screen
+    });
+    foot.sort((a, b) => a.depth - b.depth);
+    const [, side1, side2, near] = foot; // drop the far corner
+    const [left, right] = side1.lo.x < side2.lo.x ? [side1, side2] : [side2, side1];
+    return [left.hi, near.hi, right.hi, right.lo, near.lo, left.lo];
+  }
+
+  // A mask shape isn't moved by the world container it clips, so every
+  // tank's follows the world's pan and zoom (like syncLightMask()).
+  watchTankMask(shape) {
+    if (!this.tankMasks) {
+      this.tankMasks = new Set();
+      this.events.on('update', () => {
+        for (const m of this.tankMasks) {
+          if (!m.scene) { this.tankMasks.delete(m); continue; }
+          m.setPosition(this.world.x, this.world.y).setScale(this.world.scaleX, this.world.scaleY);
+        }
+      });
+    }
+    shape.setPosition(this.world.x, this.world.y).setScale(this.world.scaleX, this.world.scaleY);
+    this.tankMasks.add(shape);
   }
 }
