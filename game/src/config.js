@@ -65,7 +65,7 @@ export const STREET = {
   // groups stand chatting on the sidewalk, breaking up now and then.
   // The buildings along each back road, in order (art/blender/build_buildings.py).
   buildingRow: ['hotel', 'cocktail', 'walkup', 'noodles', 'karaoke', 'walkupDark', 'liquor', 'diner', 'tattoo', 'laundromat'],
-  groupChance: 0.35, streetFolkShare: 0.75, hangouts: 3, hangoutMs: [25000, 50000],
+  groupChance: 0.35, hangouts: 3, hangoutMs: [25000, 50000],
 };
 
 // The floor tiles are invisible (the seamless bare floor shows through, see

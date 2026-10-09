@@ -15,7 +15,7 @@
 // Mixed into ClubScene (see ClubScene.js); `this` is the scene.
 import Phaser from 'phaser';
 import { FLOOR_SLAB_DEPTH as DROP, STREET, WALL_THICKNESS } from '../config.js';
-import { BUILDING_META, STREET_PATRONS } from '../assets.js';
+import { BUILDING_META } from '../assets.js';
 
 const randRange = (min, max) => min + Math.random() * (max - min);
 
@@ -280,10 +280,8 @@ export class StreetMixin {
     this.startHangouts();
   }
 
-  // Who's out on the street: mostly the street people (STREET_PATRONS),
-  // sometimes an ordinary guest look.
+  // Who's out on the street: an ordinary guest look (undefined picks one).
   streetCharacter() {
-    if (STREET_PATRONS.length && Math.random() < STREET.streetFolkShare) return Phaser.Utils.Array.GetRandom(STREET_PATRONS);
     return undefined;
   }
 
