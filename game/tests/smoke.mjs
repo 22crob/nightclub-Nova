@@ -248,12 +248,19 @@ const tiers = await page.evaluate(() => {
     bars: ['starterBar', 'woodBar', 'bar', 'neonBar', 'iceBar', 'tikiBar', 'surfBar', 'dinerBar', 'gardenBar', 'breweryBar',
       'speakeasyBar', 'discoBar', 'candyBar', 'marbleBar', 'cyberBar'].filter((k) => s.hasLayerSprites(k)).length,
     booths: ['woodBooth', 'crateBooth', 'proBooth', 'brickBooth', 'dj', 'theatreBooth', 'neonBooth', 'trussBooth', 'screenBooth',
-      'iceBooth', 'decoBooth', 'holoBooth'].filter((k) => s.hasAnySprite(k)).length,
+      'iceBooth', 'decoBooth', 'holoBooth', 'glowPanelBooth', 'curveBooth', 'facetBooth', 'rackBooth', 'capsuleBooth', 'glassBooth'].filter((k) => s.hasAnySprite(k)).length,
+    // The owner's sketched decorations and Booth 7 (October 2026), with
+    // their wide footprints.
+    sketched: ['trussLights', 'bubbleColumn', 'ribbon', 'glassDivider', 'bottleCabinet', 'glowCubes', 'popStar', 'rapperStatue', 'rockStar',
+      'cabinetAquarium', 'tubeAquarium', 'hexAquarium', 'longAquarium', 'jellyTank', 'archAquarium', 'gemLounge'].filter((k) => s.hasAnySprite(k)).length,
+    wide: [['trussLights', 3], ['glassDivider', 2], ['longAquarium', 3], ['archAquarium', 2], ['popStar', 1], ['gemLounge', 9]]
+      .every(([k, n]) => s.getFootprint(k, 0, 0, 0).length === n),
   };
 });
 check('all fifteen bars load, each in two layers', tiers.bars === 15, `${tiers.bars} of 15`);
 check('a bar facing the camera draws its counter in front', tiers.layered);
-check('all twelve DJ booth tiers load', tiers.booths === 12, `${tiers.booths} of 12`);
+check('all eighteen DJ booth tiers load', tiers.booths === 18, `${tiers.booths} of 18`);
+check('the owner\'s sketched decorations and Gem Lounge load, wide ones on their wide footprints', tiers.sketched === 16 && tiers.wide, JSON.stringify(tiers));
 
 // Placing on an occupied tile is refused.
 await clickTile(2, 5);

@@ -190,8 +190,8 @@ def build_pop_star():
     # Long high ponytail swinging out behind.
     p.append((j['head'] + Vector((0, 0.04, 0.03)), None, 0.2))     # hair over the back of the head
     crown = j['head'] + Vector((0.0, 0.08, 0.13))
-    tail = [crown, crown + Vector((0.06, 0.14, 0.05)), crown + Vector((0.16, 0.2, -0.06)),
-            crown + Vector((0.22, 0.2, -0.24)), crown + Vector((0.2, 0.16, -0.42))]
+    tail = [crown, crown + Vector((0.02, 0.12, 0.02)), crown + Vector((0.05, 0.2, -0.12)),
+            crown + Vector((0.07, 0.22, -0.3)), crown + Vector((0.06, 0.2, -0.46))]
     for k in range(len(tail) - 1):
         p.append((tail[k], tail[k + 1], 0.06 - k * 0.01))
     figure('Star', p, gold)
