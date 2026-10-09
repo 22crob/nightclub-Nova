@@ -60,10 +60,10 @@ export const ROOM_COLORS = {
 export const TRUSS_BEAMS = {
   truss: {
     lamps: [
-      { lens: [-0.45, -0.14, 1.0], aim: [-0.5, -0.95], color: 0xff5ab8 },
-      { lens: [0.45, -0.14, 1.0], aim: [0.5, -0.95], color: 0x5aa8ff },
+      { lens: [-0.6, -0.14, 1.8], aim: [-0.55, -0.45], color: 0xff5ab8 },
+      { lens: [0.6, -0.14, 1.8], aim: [0.55, -0.45], color: 0x5aa8ff },
     ],
-    sweep: [0.5, 0.35], speed: [0.55, 0.85], width: 40, pool: [52, 26], beamAlpha: 0.75, poolAlpha: 0.55,
+    sweep: [0.65, 0.5], speed: [0.55, 0.85], width: 40, pool: [52, 26], beamAlpha: 0.75, poolAlpha: 0.55,
   },
 };
 

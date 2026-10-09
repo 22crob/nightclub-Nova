@@ -272,6 +272,17 @@ export class PropVisualsMixin {
   // staff: the counter is nearer at facings 0 and 90, the back bar at 180
   // and 270.
   setPropDepth(gameObject, type, allTiles, frontObject = null, facing = 0) {
+    if (PROP_TYPES[type].straddle && frontObject) {
+      // Something standing over other things (the Truss Spotlights): its
+      // far leg goes behind whatever stands between its legs, and its near
+      // leg, top bar and lamps in front of it.
+      const depths = allTiles.map(([tx, ty]) => tx + ty + tx / 1000);
+      gameObject.setDepth(Math.min(...depths));
+      frontObject.setDepth(Math.max(...depths) + 0.4);
+      gameObject.baseDepth = Math.max(...depths) + 0.4;
+      this.propLayer.sort('depth');
+      return;
+    }
     const tiles = this.deskTiles(allTiles);
     const nearness = tiles.reduce((sum, [tx, ty]) => sum + tx + ty, 0) / tiles.length;
     const tieBreak = tiles.reduce((sum, [tx]) => sum + tx, 0) / tiles.length / 1000;

@@ -253,7 +253,7 @@ const tiers = await page.evaluate(() => {
     // their wide footprints.
     sketched: ['trussLights', 'bubbleColumn', 'ribbon', 'glassDivider', 'bottleCabinet', 'glowCubes', 'popStar', 'rapperStatue', 'rockStar',
       'cabinetAquarium', 'tubeAquarium', 'hexAquarium', 'longAquarium', 'jellyTank', 'archAquarium', 'gemLounge'].filter((k) => s.hasAnySprite(k)).length,
-    wide: [['trussLights', 3], ['glassDivider', 2], ['longAquarium', 3], ['archAquarium', 2], ['popStar', 1], ['gemLounge', 9]]
+    wide: [['trussLights', 2], ['glassDivider', 2], ['longAquarium', 3], ['archAquarium', 2], ['popStar', 1], ['gemLounge', 9]]
       .every(([k, n]) => s.getFootprint(k, 0, 0, 0).length === n),
   };
 });
@@ -315,6 +315,31 @@ const sweep = await page.evaluate(async () => {
   return out;
 });
 check('the Truss Spotlights throw two beams that sweep round the floor', sweep.beams === 2 && sweep.moved && sweep.cleaned, JSON.stringify(sweep));
+// The Truss Spotlights stand over things: only their legs take floor, so
+// a DJ set fits between them, and the far leg draws behind it, the rest in
+// front.
+const straddle = await page.evaluate(() => {
+  const s = window.__clubNova.scene.getScene('club');
+  let spot = null;
+  for (let gy = 3; gy < s.gridH - 1 && !spot; gy++) for (let gx = 1; gx < s.gridW - 5 && !spot; gx++) {
+    if (s.footprintValid(s.getFootprint('trussLights', 0, gx, gy), 'trussLights')
+      && s.footprintValid(s.getFootprint('proBooth', 0, gx + 1, gy), 'proBooth')) spot = [gx, gy];
+  }
+  if (!spot) return { error: 'no room' };
+  const truss = s.restoreProp('trussLights', 0, spot);
+  const booth = s.restoreProp('proBooth', 0, [spot[0] + 1, spot[1]]);
+  if (booth) s.attachStaff(booth);
+  const out = {
+    legs: truss.tiles.length,
+    boothFits: !!booth,
+    farBehind: !!booth && truss.gameObject.depth < booth.gameObject.depth,
+    barInFront: !!booth && truss.frontObject.depth > booth.gameObject.depth && truss.frontObject.depth > booth.staff.container.depth,
+  };
+  if (booth) s.removeProp(booth);
+  s.removeProp(truss);
+  return out;
+});
+check('the Truss Spotlights stand over a DJ set: only their two legs take floor', straddle.legs === 2 && straddle.boothFits && straddle.farBehind && straddle.barInFront, JSON.stringify(straddle));
 
 // Placing on an occupied tile is refused.
 await clickTile(2, 5);

@@ -295,22 +295,45 @@ def truss_beam(prefix, x0, x1, y0, y1, z0, z1, m, rungs=10):
             tube(f'{prefix}Brace{k}{i}', a, b, 0.009, m, verts=6)
 
 
+LEG_X = 1.5        # the truss legs stand 4 game tiles apart (1.5 units each side after MODEL_SCALE)
+TRUSS_TOP = 2.1    # tall enough to stand over a DJ set or a seating area
+
+
 def build_truss_lights():
-    """3 (3 x 1): a truss gantry with two moving spotlights hanging from it
-    (their pink and blue beams are drawn sweeping round in the game)."""
+    """3: a tall truss gantry that stands over things: only its two legs
+    take floor (tiles 0 and 4 of a row, three free tiles between), with two
+    moving spotlights hanging from it (their pink and blue beams are drawn
+    sweeping round in the game, createSweepBeams() in lighting.js). Renders
+    in two layers, the far leg behind and the rest in front (TRUSS_LAYERS)."""
     steel = mat('#2a2a32', rough=0.35)
     silver = mat('#b8bcc8', rough=0.25)
-    for x in (-1.0, 1.0):
+    for x in (-LEG_X, LEG_X):
         box(f'Foot{x}', x - 0.16, x + 0.16, -0.18, 0.18, 0, 0.05, steel, bevel=0.01)
-        truss_column(f'Col{x}', x - 0.08, x + 0.08, -0.08, 0.08, 0.05, 1.3, silver, rungs=4)
-    truss_beam('Beam', -1.08, 1.08, -0.08, 0.08, 1.3, 1.46, silver)
-    for i, (x, rgb) in enumerate([(-0.45, (1.0, 0.25, 0.7)), (0.45, (0.25, 0.6, 1.0))]):
-        tube(f'Clamp{i}', (x, 0, 1.3), (x, 0, 1.2), 0.02, steel)
-        tube(f'Yoke{i}', (x - 0.1, 0, 1.2), (x + 0.1, 0, 1.2), 0.015, steel)
-        can = tube(f'Can{i}', (x, 0.06, 1.16), (x, -0.12, 1.02), 0.09, mat('#1a1a20', rough=0.3), verts=20)
+        truss_column(f'Col{x}', x - 0.08, x + 0.08, -0.08, 0.08, 0.05, TRUSS_TOP, silver, rungs=6)
+    truss_beam('Beam', -LEG_X - 0.08, LEG_X + 0.08, -0.08, 0.08, TRUSS_TOP, TRUSS_TOP + 0.16, silver, rungs=14)
+    for i, (x, rgb) in enumerate([(-0.6, (1.0, 0.25, 0.7)), (0.6, (0.25, 0.6, 1.0))]):
+        top = TRUSS_TOP
+        tube(f'Clamp{i}', (x, 0, top), (x, 0, top - 0.1), 0.02, steel)
+        tube(f'Yoke{i}', (x - 0.1, 0, top - 0.1), (x + 0.1, 0, top - 0.1), 0.015, steel)
+        tube(f'Can{i}', (x, 0.06, top - 0.14), (x, -0.12, top - 0.28), 0.09, mat('#1a1a20', rough=0.3), verts=20)
         lens = neon(f'Lens{i}', rgb, 12)
-        tube(f'Lens{i}', (x, -0.12, 1.02), (x, -0.135, 1.01), 0.075, lens, verts=20)
-        # The beams are drawn moving in the game (createSweepBeams() in lighting.js).
+        tube(f'Lens{i}', (x, -0.12, top - 0.28), (x, -0.135, top - 0.29), 0.075, lens, verts=20)
+
+
+def truss_layers(root):
+    """Per facing: the leg farther from the camera on its own ('back'), so
+    things standing under the gantry draw in front of it, and everything
+    else ('front'), drawn over them."""
+    import math as _m
+    parts = list(root.children_recursive)
+
+    def at(facing):
+        a = _m.radians(facing)
+        # Game nearness (gx + gy) of the +X leg: x cos a - x sin a.
+        far = -LEG_X if (_m.cos(a) - _m.sin(a)) > 0 else LEG_X
+        back = [o for o in parts if o.name.startswith((f'Foot{far}', f'Col{far}'))]
+        return {'back': back, 'front': [o for o in parts if o not in back]}
+    return at
 
 
 def build_bubble_column():
@@ -587,6 +610,9 @@ def build_tank_arch():
     bpy.ops.object.mode_set(mode='OBJECT')
     bb._finish(o, w, 0)
 
+
+# Decorations drawn in two layers (see build_decor.build()).
+LAYERS = {'trussLights': truss_layers}
 
 DESIGNS = {
     'trussLights': build_truss_lights,

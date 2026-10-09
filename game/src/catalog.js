@@ -146,6 +146,14 @@ const DJ_FOOTPRINT = {
   180: [[0, 0], [1, 0]],
   270: [[0, 0], [0, 1]],
 };
+// The Truss Spotlights stand over things: only their two legs take floor,
+// four tiles apart, with three free tiles between for a DJ set or a booth.
+const STRADDLE_5 = {
+  0: [[0, 0], [4, 0]],
+  90: [[0, 0], [0, 4]],
+  180: [[0, 0], [4, 0]],
+  270: [[0, 0], [0, 4]],
+};
 // Two-tile decorations (the wide aquariums, the glass divider).
 const WIDE_2X1 = DJ_FOOTPRINT;
 // The DJ's own tiles, behind the desk (the opposite side from the crowd,
@@ -229,6 +237,9 @@ function decorTier(key, label, cost, unlockLevel, model, fanRate, extra = {}) {
   return {
     key, label, cost, unlockLevel, category: 'Decorations', fanRate, rotatable: true,
     sprites: { 0: `${base}_0`, 90: `${base}_90`, 180: `${base}_180`, 270: `${base}_270` },
+    // A few render in two layers (the Truss Spotlights: far leg / the rest).
+    layerSprites: meta.layers ? Object.fromEntries(meta.layers.map((layer) => [layer,
+      Object.fromEntries([0, 90, 180, 270].map((f) => [f, `${base}_${layer}_${f}`]))])) : null,
     displayWidth: meta.displayWidth, originX: meta.originX, originY: meta.originY,
     ...extra,
   };
@@ -469,7 +480,7 @@ export const PROP_TYPES = {
   // The owner's own sketches (October 2026): one every two levels past the
   // rest (there's no level cap).
   bottleCabinet: decorTier('bottleCabinet', 'Bottle Cabinet', 800, 40, 'bottleShelf', 1.12, { footprint: WIDE_2X1 }),
-  trussLights: decorTier('trussLights', 'Truss Spotlights', 850, 42, 'trussLights', 1.14, { footprint: BOOTH_FOOTPRINT, sweepBeams: 'truss' }),
+  trussLights: decorTier('trussLights', 'Truss Spotlights', 850, 42, 'trussLights', 1.14, { footprint: STRADDLE_5, straddle: true, sweepBeams: 'truss' }),
   glassDivider: decorTier('glassDivider', 'Glass Divider', 900, 44, 'glassDivider', 1.16, { footprint: WIDE_2X1 }),
   bubbleColumn: decorTier('bubbleColumn', 'Bubble Column', 950, 46, 'bubbleColumn', 1.18, { tankFx: 'column' }),
   ribbon: decorTier('ribbon', 'Ribbon Sculpture', 1000, 48, 'ribbon', 1.2),

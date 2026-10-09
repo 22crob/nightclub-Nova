@@ -786,7 +786,8 @@ def build(name, preview_dir=None):
         print(f'decor_{name} origin_px:', origin, flush=True)
         return
     bpy.ops.wm.save_as_mainfile(filepath=os.path.join(HERE, f'decor_{name}.blend'))
-    meta = iso_rig.render_facings(scene, cam, root, f'decor_{name}', bb.SPRITE_DIR)
+    layers = decor_batch2.LAYERS.get(name)
+    meta = iso_rig.render_facings(scene, cam, root, f'decor_{name}', bb.SPRITE_DIR, layers=layers(root) if layers else None)
     print(f'decor_{name}:', meta, flush=True)
 
 
