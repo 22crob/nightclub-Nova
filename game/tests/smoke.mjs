@@ -282,6 +282,22 @@ const tankLive = await page.evaluate(() => {
   return out;
 });
 check('the Cabinet Aquarium has live fish and bubbles, only shown through its front glass', tankLive.fish === 5 && tankLive.bubbles === 6 && tankLive.awayHidden && tankLive.cleaned, JSON.stringify(tankLive));
+const tanksLive = await page.evaluate(() => {
+  const s = window.__clubNova.scene.getScene('club');
+  const keys = ['aquarium', 'liquidTank', 'liquidTankBlue', 'bubbleColumn', 'tubeAquarium', 'cabinetAquarium', 'hexAquarium', 'longAquarium', 'jellyTank', 'archAquarium'];
+  const out = {};
+  for (const key of keys) {
+    let spot = null;
+    for (let gy = 1; gy < s.gridH - 1 && !spot; gy++) for (let gx = 1; gx < s.gridW - 3 && !spot; gx++) {
+      if (s.footprintValid(s.getFootprint(key, 0, gx, gy), key)) spot = [gx, gy];
+    }
+    const rec = spot && s.restoreProp(key, 0, spot);
+    out[key] = rec && rec.tankFx ? rec.tankFx.parts.length : 0;
+    if (rec) s.removeProp(rec);
+  }
+  return out;
+});
+check('every aquarium, liquid tank and the Bubble Column comes alive', Object.values(tanksLive).every((n) => n >= 4), JSON.stringify(tanksLive));
 
 // Placing on an occupied tile is refused.
 await clickTile(2, 5);

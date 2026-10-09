@@ -10,6 +10,7 @@ import { TANKS, TILE_W, TILE_H } from '../config.js';
 
 const FISH_KEY = 'tankFish';
 const BUBBLE_KEY = 'tankBubble';
+const JELLY_KEY = 'tankJelly';
 const MODEL_SCALE = 64 / TILE_W;         // a model unit is this many game tiles (art/blender/iso_rig.py)
 const PX_UP = (TILE_W / 2 / Math.SQRT1_2) * Math.cos(Math.PI / 6); // screen px per tile of height (30 degree camera)
 
@@ -35,6 +36,23 @@ export class TankFxMixin {
     g.fillStyle(0xffffff, 0.9);
     g.fillCircle(3, 3, 0.9);
     g.generateTexture(BUBBLE_KEY, 8, 8);
+    // A jellyfish: a soft domed bell and wavy trailing tentacles.
+    g.clear();
+    g.fillStyle(0xffffff, 0.35);
+    g.fillEllipse(8, 7, 14, 12);
+    g.fillStyle(0xffffff, 0.85);
+    g.slice(8, 8, 6, Math.PI, 0, false);
+    g.fillPath();
+    g.fillStyle(0xffffff, 1);
+    g.fillEllipse(6, 5, 3, 2);
+    g.lineStyle(1, 0xffffff, 0.75);
+    for (const x of [4.5, 7, 9.5, 12]) {
+      g.beginPath();
+      g.moveTo(x, 8);
+      for (let k = 1; k <= 4; k++) g.lineTo(x + (k % 2 ? 0.9 : -0.9), 8 + k * 2.2);
+      g.strokePath();
+    }
+    g.generateTexture(JELLY_KEY, 16, 18);
     g.destroy();
   }
 
@@ -60,7 +78,7 @@ export class TankFxMixin {
   createTankFx(rec) {
     const tank = TANKS[PROP_TYPES[rec.type].tankFx];
     const go = rec.gameObject;
-    if (!tank || !go || !(rec.facing === 0 || rec.facing === 90)) return null;
+    if (!tank || !go || !(tank.allSides || rec.facing === 0 || rec.facing === 90)) return null;
     this.registerTankTextures();
     const parts = [];
     const tweens = [];
@@ -77,7 +95,8 @@ export class TankFxMixin {
     // length of it and back, turning at the ends, bobbing a little.
     for (let i = 0; i < tank.fish; i++) {
       const color = tank.colors[i % tank.colors.length];
-      const fish = add(this.add.image(0, 0, FISH_KEY).setScale(0.5 * (tank.fishScale || 1)).setTint(color));
+      const fish = add(this.add.image(0, 0, tank.jelly ? JELLY_KEY : FISH_KEY).setScale(0.5 * (tank.fishScale || 1)).setTint(color));
+      if (tank.jelly) fish.setBlendMode(Phaser.BlendModes.ADD);
       const y = rand(y0, y1);
       const [zLo, zHi] = tank.swim || [z0 + (z1 - z0) * 0.25, z1 - (z1 - z0) * 0.3];
       const z = rand(zLo, zHi);
@@ -85,18 +104,19 @@ export class TankFxMixin {
       const speed = rand(0.08, 0.16); // of the tank's length a second
       const place = () => {
         const x = x0 + 0.1 + (x1 - x0 - 0.2) * path.t;
-        const p = this.tankPoint(rec, x, y, z + Math.sin(path.bob) * 0.025);
+        const p = this.tankPoint(rec, x, y, z + Math.sin(path.bob) * (tank.jelly ? 0.12 : 0.025));
         fish.setPosition(p.x, p.y);
         // Facing its way along the screen: down-right is +x on screen.
         const ahead = this.tankPoint(rec, x + 0.1 * path.dir, y, z);
-        fish.setFlipX(ahead.x < p.x);
+        if (tank.jelly) fish.setScale(0.5 * (tank.fishScale || 1) * (1 + Math.sin(path.bob * 2) * 0.06), 0.5 * (tank.fishScale || 1) * (1 - Math.sin(path.bob * 2) * 0.08)); // the bell pulses
+        else fish.setFlipX(ahead.x < p.x);
       };
       place();
       tweens.push(this.time.addEvent({
         delay: 50, loop: true,
         callback: () => {
-          path.t += path.dir * speed * 0.05;
-          path.bob += 0.15;
+          path.t += path.dir * speed * 0.05 * (tank.jelly ? 0.3 : 1); // jellies drift slowly
+          path.bob += tank.jelly ? 0.05 : 0.15;
           if (path.t > 1) { path.t = 1; path.dir = -1; }
           if (path.t < 0) { path.t = 0; path.dir = 1; }
           if (Math.random() < 0.004) path.dir *= -1; // now and then a fish turns round

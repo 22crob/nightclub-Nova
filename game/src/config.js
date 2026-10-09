@@ -62,6 +62,42 @@ export const TANKS = {
     swim: [0.7, 1.02], // the heights fish keep to, clear of the gravel and the lid
     fish: 5, fishScale: 0.8, colors: [0xff8a1f, 0xffe03a, 0xff4a8a, 0x5af0ff], bubbles: 6, streams: 2,
   },
+  // `allSides`: glass all round, so they show from every side.
+  tube: {
+    water: { x0: -0.17, x1: 0.17, y0: -0.13, y1: 0.0, z0: 0.4, z1: 1.72 }, swim: [0.62, 1.5], allSides: true,
+    fish: 3, fishScale: 0.75, colors: [0xffe03a, 0xff8a1f, 0xff4a8a], bubbles: 5, streams: 2,
+  },
+  hex: {
+    water: { x0: -0.24, x1: 0.24, y0: -0.18, y1: -0.02, z0: 0.54, z1: 1.23 }, swim: [0.7, 1.08], allSides: true,
+    fish: 3, fishScale: 0.75, colors: [0xff4a8a, 0xffe03a, 0x5af0ff], bubbles: 4, streams: 2,
+  },
+  long: {
+    water: { x0: -1.0, x1: 1.0, y0: -0.18, y1: -0.02, z0: 0.36, z1: 0.86 }, swim: [0.48, 0.74],
+    fish: 7, fishScale: 0.8, colors: [0xff8a1f, 0xffe03a, 0xff4a8a, 0x5af0ff, 0x8aff6a], bubbles: 6, streams: 3,
+  },
+  // Jellyfish bob up and down as they drift.
+  jelly: {
+    water: { x0: -0.5, x1: 0.5, y0: -0.16, y1: 0.04, z0: 0.22, z1: 1.02 }, swim: [0.45, 0.8], allSides: true, jelly: true,
+    fish: 5, fishScale: 0.9, colors: [0xff7ae0, 0xc07aff, 0x7ae0ff], bubbles: 4, streams: 2,
+  },
+  arch: {
+    water: { x0: -0.54, x1: 0.54, y0: -0.16, y1: 0.0, z0: 0.22, z1: 1.45 }, swim: [0.45, 1.05], allSides: true,
+    fish: 5, fishScale: 0.8, colors: [0xff8a1f, 0xffe03a, 0xff4a8a, 0x5af0ff], bubbles: 5, streams: 2,
+  },
+  // The older Aquarium, built 1.25 times taller (heights here include that).
+  aquarium: {
+    water: { x0: -0.38, x1: 0.38, y0: -0.32, y1: -0.1, z0: 0.86, z1: 2.08 }, swim: [1.15, 1.85],
+    fish: 3, fishScale: 1.0, colors: [0xff8a1f, 0xffe03a, 0xff8a1f], bubbles: 4, streams: 1,
+  },
+  // Bubbles only.
+  liquid: {
+    water: { x0: -0.26, x1: 0.26, y0: -0.3, y1: -0.2, z0: 0.24, z1: 1.7 }, allSides: true,
+    fish: 0, colors: [], bubbles: 7, streams: 3,
+  },
+  column: {
+    water: { x0: -0.1, x1: 0.1, y0: -0.12, y1: -0.05, z0: 0.28, z1: 1.76 }, allSides: true,
+    fish: 0, colors: [], bubbles: 10, streams: 3,
+  },
 };
 
 export const STREET = {

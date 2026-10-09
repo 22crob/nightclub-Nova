@@ -332,12 +332,7 @@ def build_bubble_column():
     cylinder('BaseGlow', 0, 0, 0.24, 0.27, 0.215, neon('ColRing', (0.5, 0.6, 1.0), 6), verts=40)
     cylinder('Water', 0, 0, 0.26, 1.78, 0.18, water, verts=36)
     cylinder('Cap', 0, 0, 1.78, 1.92, 0.22, dark, verts=40)
-    import random
-    rnd = random.Random(7)
-    for i in range(26):
-        a = rnd.uniform(0, math.tau)
-        r = rnd.uniform(0, 0.12)
-        sphere(f'Bubble{i}', math.cos(a) * r, math.sin(a) * r - 0.03, rnd.uniform(0.32, 1.72), rnd.uniform(0.018, 0.045), bubble, segments=10)
+    # Bubbles rise in the game (src/scene/tankFx.js).
 
 
 def build_ribbon():
@@ -523,10 +518,7 @@ def build_tank_tube():
         o = sphere(f'Leaf{k}', 0, 0, 0, 1.0, leaf, scale=(0.05, 0.015, h / 2), segments=12)
         o.location = (math.cos(a) * 0.065, 0.02 + math.sin(a) * 0.05, 0.36 + h / 2)
         o.rotation_euler = (-math.sin(a) * tilt, math.cos(a) * tilt, a + math.pi / 2)
-    for i, (x, y, z, c) in enumerate([(-0.1, -0.12, 0.8, '#ffe03a'), (0.12, -0.1, 1.15, '#ff8a1f'), (0.0, -0.18, 1.45, '#ff4a8a')]):
-        m = principled(f'TFish{i}', srgb(c), rough=0.3, emission=srgb(c), emission_strength=1.6)
-        sphere(f'Fish{i}', x, y, z, 0.035, m, scale=(1.6, 0.55, 0.9), segments=12)
-        cone(f'Tail{i}', x - 0.06, y, z - 0.025, z + 0.025, 0.0, 0.03, m, verts=6)
+    # Fish swim in the game (src/scene/tankFx.js).
     cylinder('Water', 0, 0, 0.3, 1.75, 0.27, water('TubeWater', '#2ad0c0', 0.45), verts=40)
     cylinder('Cap', 0, 0, 1.75, 1.86, 0.3, dark, verts=40)
     cylinder('CapGlow', 0, 0, 1.75, 1.77, 0.305, neon('TubeGlow2', (0.3, 1.0, 0.8), 6), verts=40)
@@ -541,7 +533,7 @@ def build_tank_hex():
         return o
     hexa('Cabinet', 0, 0.48, 0.36, dark)
     hexa('CabGlow', 0.08, 0.11, 0.365, neon('HexGlow', (0.75, 0.35, 1.0), 6))
-    tank_life('H', -0.22, 0.22, -0.2, 0.2, 0.48, 1.25, 35, plants='#40e070', count=4)
+    tank_life('H', -0.22, 0.22, -0.2, 0.2, 0.48, 1.25, 35, plants='#40e070', count=4, live=True)
     hexa('Water', 0.48, 1.25, 0.34, water('HexWater', '#8a5aff', 0.5))
     hexa('Lid', 1.25, 1.36, 0.37, dark)
 
@@ -551,7 +543,7 @@ def build_tank_long():
     cab = mat('#16141c', rough=0.3)
     box('Stand', -1.08, 1.08, -0.24, 0.24, 0.0, 0.3, cab, bevel=0.02)
     box('StandGlow', -1.0, 1.0, -0.245, -0.24, 0.12, 0.15, neon('LongGlow', (0.2, 0.9, 1.0), 6), bevel=0)
-    tank_life('L', -1.03, 1.03, -0.2, 0.2, 0.3, 0.86, 36)
+    tank_life('L', -1.03, 1.03, -0.2, 0.2, 0.3, 0.86, 36, live=True)
     box('BackWall', -1.04, 1.04, 0.195, 0.21, 0.3, 0.86, mat('#0a3a5a', rough=0.6, glow=0.5), bevel=0)
     box('Water', -1.05, 1.05, -0.22, 0.22, 0.3, 0.86, water('LongWater', '#30c0ff'), bevel=0.01)
     box('Lid', -1.08, 1.08, -0.24, 0.24, 0.86, 0.92, cab, bevel=0.01)
@@ -562,7 +554,7 @@ def build_jelly_bowl():
     dark = mat('#16141c', rough=0.25)
     rounded_box('Base', -0.7, 0.7, -0.3, 0.3, 0, 0.16, dark, 0.06)
     box('BaseGlow', -0.62, 0.62, -0.305, -0.3, 0.06, 0.09, neon('JellyGlow', (1.0, 0.35, 0.9), 7), bevel=0)
-    tank_life('J', -0.5, 0.5, -0.16, 0.16, 0.16, 1.0, 37, plants='#7a40ff', fish=['#ff7ae0', '#c07aff', '#7ae0ff'], count=5, jelly=True)
+    tank_life('J', -0.5, 0.5, -0.16, 0.16, 0.16, 1.0, 37, plants='#7a40ff', fish=['#ff7ae0', '#c07aff', '#7ae0ff'], count=5, jelly=True, live=True)
     rounded_box('Water', -0.66, 0.66, -0.27, 0.27, 0.16, 1.06, water('JellyWater', '#5a2aaa', 0.6), 0.22, segments=8)
     rounded_box('Lid', -0.42, 0.42, -0.16, 0.16, 1.04, 1.12, dark, 0.05)
 
@@ -587,7 +579,7 @@ def build_tank_arch():
     for o in [o for o in bb.ROOT.children if o.name.startswith('ArchGlow')]:
         o.rotation_euler = (math.radians(90), 0, 0)
         o.location = (0, -0.245, 1.0)
-    tank_life('A', -0.56, 0.56, -0.18, 0.18, 0.16, 1.4, 40, plants='#30e080')
+    tank_life('A', -0.56, 0.56, -0.18, 0.18, 0.16, 1.4, 40, plants='#30e080', live=True)
     # Water: a box to the arch's spring line and a half cylinder over it.
     w = water('ArchWater', '#2a9ae0', 0.5)
     box('Water', -0.58, 0.58, -0.2, 0.2, 0.16, 1.0, w, bevel=0)

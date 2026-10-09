@@ -146,13 +146,7 @@ def build_aquarium():
     box('LidLamp', -0.36, 0.36, -0.42, -0.41, 1.7, 1.73, lamp, bevel=0)
     for i, (x, y, h) in enumerate([(-0.25, 0.18, 0.55), (-0.15, 0.25, 0.75), (0.22, 0.2, 0.62), (0.28, 0.05, 0.4)]):
         cone(f'Plant{i}', x, y, 0.68, 0.68 + h, 0.07, 0.01, plant, verts=10)
-    for i, (x, y, z, m) in enumerate([(-0.08, -0.05, 1.1, fish_o), (0.15, -0.12, 1.35, fish_y), (-0.2, -0.15, 1.45, fish_o)]):
-        sphere(f'Fish{i}', x, y, z, 0.07, m, scale=(1.5, 0.55, 0.85), segments=16)
-        cone(f'Tail{i}', x - 0.13, y, z - 0.045, z + 0.045, 0.0, 0.05, m, verts=8)
-    # Bubbles.
-    bubble = principled('AquaBubble', (0.9, 0.97, 1.0), rough=0.0, emission=(0.8, 0.95, 1.0), emission_strength=1.5)
-    for i, z in enumerate((0.85, 1.05, 1.25, 1.48)):
-        sphere(f'Bubble{i}', 0.3, -0.2, z, 0.022 + i * 0.004, bubble, segments=10)
+    # Fish and bubbles move in the game (src/scene/tankFx.js).
 
 
 # --------------------------------------------------------------------------
@@ -596,9 +590,7 @@ def liquid_tank(liquid_hex):
         box('Lid', -0.4, 0.4, -0.4, 0.4, 1.78, 1.86, steel, bevel=0.015)
         cylinder('Pipe', 0, 0, 1.86, 2.08, 0.06, steel, verts=16)
         cylinder('Valve', 0, 0, 2.02, 2.06, 0.11, dark, verts=16)
-        for i, (x, y, z) in enumerate([(0.1, -0.2, 0.45), (-0.12, -0.25, 0.7), (0.15, -0.28, 0.98), (-0.05, -0.3, 1.2),
-                                        (0.08, -0.22, 1.45), (-0.16, -0.18, 1.58)]):
-            sphere(f'Bubble{i}', x, y, z, 0.035 + (i % 3) * 0.012, bubble, segments=10)
+        # Bubbles rise in the game (src/scene/tankFx.js).
     return build
 
 
