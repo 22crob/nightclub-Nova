@@ -1,4 +1,4 @@
-# A rough model of a club played for 40 hours, minute by minute, to check the
+# A rough model of a club played up to level 61 (or 150 hours), minute by minute, to check the
 # game's pacing: when each level comes, how popularity and the guest limit
 # grow, how often the bars need restocking, and where the money goes. It is a
 # model (averages, not the real game), used for tuning config.js.
@@ -7,7 +7,7 @@ import math, sys
 # --- tunables under test ---
 P = dict(danceTipMin=5.25, bonusMin=117, capMax=80, stockPerGuest=0, happy=3, content=1, unhappy=-1, storm=-5, capBase=8, capRoot=1.2, tilesPerGuest=4,
          stockBase=40, stockPerUnit=20, costPerDrink=2,
-         lvFirst=200, lvStep=220, lvCurve=30, passiveShare=0.05)
+         lvFirst=200, lvStep=180, lvCurve=6, passiveShare=0.05, hours=150, top=61)
 for a in sys.argv[1:]:
     k,v=a.split('='); P[k]=float(v)
 def need(l): k=l-1; return P['lvFirst']+P['lvStep']*k+P['lvCurve']*k*k
@@ -16,7 +16,7 @@ def maxwall(l): return max(s for lv,s in EXP if lv<=l)
 xp=0; level=1; into=0; cash=700; pop=0; W=H=10; fanRate=4.9; barUnits=1; bartenders=1
 stock=60; restocks=0; price=8; drinksTotal=0
 log=[]; t=0; lastLevelT={1:0}
-while t < 60*40 and level<40:
+while t < 60*P['hours'] and level<P['top']:
     t+=1
     cap=min(P['capMax'], P['capBase']+int(P['capRoot']*math.sqrt(pop)), max(P['capBase'], W*H//P['tilesPerGuest']))
     guests=cap*0.9
@@ -57,5 +57,5 @@ while t < 60*40 and level<40:
     if t%60==0 or t in (5,10,20,30):
         log.append((t, level, int(cash), int(pop), cap, W, H, restocks, int(stock)))
 for r in log[:40]: print('min %4d  L%-2d cash %7d pop %5d cap %3d room %dx%d restocks %3d stock %d'%r)
-print('level reached times (min):', {k:v for k,v in lastLevelT.items() if k in (2,3,5,8,10,15,20,25,30,40)})
+print('level reached times (min):', {k:v for k,v in lastLevelT.items() if k in (2,3,5,8,10,15,20,25,30,40,50,61)})
 print('drinks/restock ~', round(drinksTotal/max(1,restocks),1), 'restocks/hour', round(restocks/(t/60),1))

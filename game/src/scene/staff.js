@@ -438,7 +438,7 @@ export class StaffMixin {
 
   // A brand-new club opens like Nightclub City's starter room: the DJ booth
   // against the left wall, toward the front, facing into the room, with a
-  // small 3x3 Basic Floor in front of it, one Starter Bar with a bartender
+  // small 3x3 Basic Floor in front of it, one Wood Bar with a bartender
   // against the right wall, serving into the room, and a Standing Table in
   // the corner at the front end of the right wall. (ensureClubBooth() then
   // gives the booth its DJ.)
@@ -449,7 +449,7 @@ export class StaffMixin {
     for (let gx = 2; gx <= 4; gx++) {
       for (let gy = n - 5; gy <= n - 3; gy++) this.restoreProp('basicFloor', 0, [gx, gy]);
     }
-    const bar = this.restoreProp('starterBar', 0, [this.gridW - 4, 0]);
+    const bar = this.restoreProp('woodBar', 0, [this.gridW - 4, 0]);
     if (bar) this.attachStaff(bar);
     this.restoreProp('standingTable', 0, [this.gridW - 1, 0]);
   }

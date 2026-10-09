@@ -114,7 +114,7 @@ let st = await state();
 const opening = await page.evaluate(() => {
   const s = window.__clubNova.scene.getScene('club');
   const booth = s.clubBooth();
-  const units = s.hireableRecords().filter((rec) => rec.type === 'starterBar');
+  const units = s.hireableRecords().filter((rec) => rec.type === 'woodBar');
   const bar = units.find((rec) => rec.staff);
   const floor = Object.keys(s.placed).filter((k) => s.placed[k].type === 'basicFloor').sort();
   const table = Object.values(s.placed).find((r) => r.type === 'standingTable');
@@ -156,9 +156,9 @@ await page.click('.storeTab[data-tip-name="Floors"]');
 const floorTips = await page.$$eval('#shopItems .propSlot', (els) => els.map((e) => e.dataset.tipText));
 check('dance floors and regular floors share one category, and the tip says which', floorTips.some((t) => /^Dance floor/.test(t)) && floorTips.some((t) => /^Regular floor/.test(t)) && floorTips.every((t) => /Luxury: \d+/.test(t)), floorTips.length + ' floors');
 // Floors are listed in the order they unlock (LEVEL_PLAN.md): a mix of
-// regular and dance floors spread over levels 1-37.
+// regular and dance floors spread over levels 1-59.
 const floorOrder = await page.$$eval('#shopItems .propSlot', (els) => els.map((e) => /^Dance/.test(e.dataset.tipText) ? 'D' : 'R').join(''));
-check('regular and dance floors unlock mixed together, in the order of the level plan', floorOrder === 'RDRDRDDDRDDRDRDRDDRDDRDRD', floorOrder);
+check('regular and dance floors unlock mixed together, in the order of the level plan', floorOrder === 'RDDRDRDDRDRDDRDDRDRDDRDRD', floorOrder);
 // Clicking a card picks the item up; clicking it again puts it down.
 await page.click('.storeTab[data-tip-name="Seating"]');
 await page.locator('.propSlot').first().click();
@@ -178,7 +178,7 @@ const unlockAll = () => page.evaluate(() => {
   const s = window.__clubNova.scene.getScene('club');
   const real = s.levelInfo.bind(s);
   s.__realLevelInfo = real;
-  s.levelInfo = () => ({ ...real(), level: 40 });
+  s.levelInfo = () => ({ ...real(), level: s.topUnlockLevel() });
   s.__cash = s.cash;
   s.cash = 99999;
   s.shopItemsEl.dataset.rendered = '';
@@ -208,12 +208,12 @@ check('the Expand tab has a card for each side, with its price', expandCard.card
 check('picking a side shows the new row in green sizeBefore you buy it', hovered === 'left' && picked2.pending === 'left' && picked2.preview === 'left' && picked2.strip === sizeBefore[0] && picked2.grid.join() === sizeBefore.join() && picked2.confirm, JSON.stringify({ hovered, picked2 }));
 check('confirming adds just one row on that side', bought.grid[0] === sizeBefore[0] && bought.grid[1] === sizeBefore[1] + 1 && bought.spent > 0 && bought.tile && bought.saved.join() === bought.grid.join() && !bought.preview && !bought.confirm, JSON.stringify({ sizeBefore, bought }));
 await page.click('#navBuild');
-await page.evaluate(() => window.__clubNova.scene.getScene('club').selectProp('starterBar'));
+await page.evaluate(() => window.__clubNova.scene.getScene('club').selectProp('woodBar'));
 
-// Place the Starter Bar (selected by default, $100).
+// Place a Wood Bar ($130).
 await clickTile(2, 5);
 st = await state();
-check('placing a Starter Bar costs $100', st.cash === 600 && st.placed === 2, `cash ${st.cash}`);
+check('placing a Wood Bar costs $130', st.cash === 570 && st.placed === 2, `cash ${st.cash}`);
 
 // The bar sprite spans exactly its 1x3 footprint: 4 half-tiles across,
 // plus the render script's small crop margin.
@@ -233,7 +233,7 @@ const order = await page.evaluate(() => {
   const behind = s.placed['3,1'].gameObject;
   const front = s.placed['2,5'].gameObject;
   const ok = s.propLayer.getIndex(behind) < s.propLayer.getIndex(front);
-  s.sellProp(3, 1); s.cash = cashBefore; s.selectedProp = 'starterBar';
+  s.sellProp(3, 1); s.cash = cashBefore; s.selectedProp = 'woodBar';
   return ok;
 });
 check('props draw back to front', order);
@@ -245,22 +245,21 @@ const tiers = await page.evaluate(() => {
   const rec = s.placed['2,5'];
   return {
     layered: !!rec.frontObject && rec.frontObject.depth > rec.gameObject.depth,
-    bars: ['starterBar', 'woodBar', 'bar', 'neonBar', 'iceBar', 'tikiBar', 'surfBar', 'dinerBar', 'gardenBar', 'breweryBar',
-      'speakeasyBar', 'discoBar', 'candyBar', 'marbleBar', 'cyberBar'].filter((k) => s.hasLayerSprites(k)).length,
-    booths: ['woodBooth', 'crateBooth', 'proBooth', 'brickBooth', 'dj', 'theatreBooth', 'neonBooth', 'trussBooth', 'screenBooth',
+    bars: ['woodBar', 'bar', 'neonBar', 'iceBar', 'speakeasyBar', 'discoBar', 'marbleBar', 'cyberBar'].filter((k) => s.hasLayerSprites(k)).length,
+    booths: ['woodBooth', 'proBooth', 'brickBooth', 'dj', 'neonBooth', 'trussBooth', 'screenBooth',
       'iceBooth', 'decoBooth', 'holoBooth', 'glowPanelBooth', 'curveBooth', 'facetBooth', 'rackBooth', 'capsuleBooth', 'glassBooth'].filter((k) => s.hasAnySprite(k)).length,
     // The owner's sketched decorations and Booth 7 (October 2026), with
     // their wide footprints.
-    sketched: ['trussLights', 'bubbleColumn', 'ribbon', 'glassDivider', 'bottleCabinet', 'glowCubes', 'popStar', 'rapperStatue', 'rockStar',
+    sketched: ['trussLights', 'bubbleColumn', 'ribbon', 'glassDivider', 'bottleCabinet', 'glowCubes', 'popStar', 'rapperStatue',
       'cabinetAquarium', 'tubeAquarium', 'hexAquarium', 'longAquarium', 'jellyTank', 'archAquarium', 'gemLounge'].filter((k) => s.hasAnySprite(k)).length,
     wide: [['trussLights', 2], ['glassDivider', 2], ['longAquarium', 3], ['archAquarium', 2], ['popStar', 1], ['gemLounge', 9]]
       .every(([k, n]) => s.getFootprint(k, 0, 0, 0).length === n),
   };
 });
-check('all fifteen bars load, each in two layers', tiers.bars === 15, `${tiers.bars} of 15`);
+check('all eight bars load, each in two layers', tiers.bars === 8, `${tiers.bars} of 8`);
 check('a bar facing the camera draws its counter in front', tiers.layered);
-check('all eighteen DJ booth tiers load', tiers.booths === 18, `${tiers.booths} of 18`);
-check('the owner\'s sketched decorations and Gem Lounge load, wide ones on their wide footprints', tiers.sketched === 16 && tiers.wide, JSON.stringify(tiers));
+check('all sixteen DJ booth tiers load', tiers.booths === 16, `${tiers.booths} of 16`);
+check('the owner\'s sketched decorations and Gem Lounge load, wide ones on their wide footprints', tiers.sketched === 15 && tiers.wide, JSON.stringify(tiers));
 
 // A live aquarium: fish and bubbles drawn over the Cabinet Aquarium,
 // only while its front glass faces the camera, gone when it's removed.
@@ -344,7 +343,7 @@ check('the Truss Spotlights stand over a DJ set: only their two legs take floor'
 // Placing on an occupied tile is refused.
 await clickTile(2, 5);
 st = await state();
-check('occupied tile is refused', st.cash === 600 && st.placed === 2, JSON.stringify({ cash: st.cash, placed: st.placed }));
+check('occupied tile is refused', st.cash === 570 && st.placed === 2, JSON.stringify({ cash: st.cash, placed: st.placed }));
 
 // Rotate the DJ booth (hover + R).
 const moved = await page.evaluate(() => { const b = window.__clubNova.scene.getScene('club').clubBooth(); return b && b.anchor.join(','); });
@@ -370,7 +369,7 @@ const staffed = await page.evaluate(() => {
   const s = window.__clubNova.scene.getScene('club');
   return { cash: s.cash, music: s.musicPlaying(), bartenders: s.hireableRecords().filter((r) => r.staff).length };
 });
-check('hiring a bartender costs $50', staffed.cash === 550 && staffed.bartenders === 1 && staffed.music, JSON.stringify(staffed));
+check('hiring a bartender costs $50', staffed.cash === 520 && staffed.bartenders === 1 && staffed.music, JSON.stringify(staffed));
 await page.evaluate(() => { const s = window.__clubNova.scene.getScene('club'); delete s.collectPatronTip; delete s.chargeCover; });
 
 // Patrons arrive, get thirsty, buy drinks, earn fans and tip.
@@ -1292,43 +1291,37 @@ check('sitting cheers a patron up', seating.funUp);
 check('a seated patron plays the sit animation', seating.sitAnim);
 check('selling or turning seating gets everyone up', seating.freed);
 
-// The newer booths and sofas: every one has its art; a seat can face its
-// own way (the Glow Lounge's two benches face each other); the Wood Lounge
+// The newer booths and sofas: every one has its art; the Wood Lounge
 // takes 3 x 2 tiles.
 const moreSeats = await page.evaluate(() => {
   const s = window.__clubNova.scene.getScene('club');
-  const keys = ['tikiHut', 'iglooBooth', 'glowLounge', 'woodLounge', 'tulipLounge', 'birdcageBooth', 'discoStage',
-    'shellBooth', 'galaxyPods', 'donutLounge', 'gardenGazebo', 'fireSectional', 'cloudBed', 'kissSofa', 'bathtubSofa',
-    'cruiserSofa', 'decoSofa', 'chesterfield', 'beerBench', 'cubeBench', 'rattanSeat'];
+  const keys = ['woodLounge', 'tulipLounge', 'galaxyPods', 'chesterfield', 'cubeBench', 'gemLounge'];
   const missing = keys.filter((k) => !s.hasLayerSprites(k));
-  const lounge = s.restoreProp('glowLounge', 90, [12, 1]);
-  const fronts = lounge ? [0, 2].map((i) => s.seatSpot(lounge, i).front) : null;
   const wood = s.restoreProp('woodLounge', 0, [1, 13]);
-  const out = { missing, fronts, woodTiles: wood ? wood.tiles.length : 0 };
-  for (const rec of [lounge, wood]) if (rec) s.removeProp(rec);
+  const out = { missing, woodTiles: wood ? wood.tiles.length : 0 };
+  if (wood) s.removeProp(wood);
   return out;
 });
-check('all 21 new booths and sofas have their art', moreSeats.missing.length === 0, moreSeats.missing.join(', ') || '21 of 21');
-check('a booth\'s seats can face each other (Glow Lounge)', moreSeats.fronts && moreSeats.fronts[0][0] === -moreSeats.fronts[1][0] && moreSeats.fronts[0][1] === -moreSeats.fronts[1][1] && (moreSeats.fronts[0][0] !== 0 || moreSeats.fronts[0][1] !== 0), JSON.stringify(moreSeats.fronts));
+check('the newer booths and sofas all have their art', moreSeats.missing.length === 0, moreSeats.missing.join(', ') || 'all there');
 check('the Wood Lounge takes 3 x 2 tiles', moreSeats.woodTiles === 6, String(moreSeats.woodTiles));
 
-// Decorations: all sixteen have their sprites, and one can be placed and
+// Decorations: the first ones have their sprites, and one can be placed and
 // rotated like any other prop.
 const decor = await page.evaluate(() => {
   const s = window.__clubNova.scene.getScene('club');
-  const keys = ['crates', 'plant', 'woodSpeaker', 'discoBall', 'velvetRope', 'palm', 'lavaLamp', 'speakerTower',
+  const keys = ['plant', 'woodSpeaker', 'discoBall', 'velvetRope', 'lavaLamp', 'speakerTower',
     'neonSign', 'glowTube', 'poolTable', 'spotlight', 'aquarium', 'neonSpeaker', 'trophy', 'luckyCat'];
   const missing = keys.filter((k) => !s.hasAnySprite(k));
   const pool = s.restoreProp('poolTable', 90, [10, 2]);
   return { missing, poolTiles: pool ? pool.tiles.length : 0, poolTex: pool && pool.gameObject.texture.key };
 });
-check('all sixteen decorations have their art', decor.missing.length === 0, decor.missing.join(', ') || '16 of 16');
+check('the first decorations all have their art', decor.missing.length === 0, decor.missing.join(', ') || 'all there');
 check('the pool table takes three tiles', decor.poolTiles === 3 && decor.poolTex === 'decor_pool_90', `${decor.poolTiles} tiles, ${decor.poolTex}`);
 // The October 2026 decorations: each has all four pictures, places, and
 // the speaker stacks get bumping cones.
 const newDecor = await page.evaluate(() => {
   const s = window.__clubNova.scene.getScene('club');
-  const models = ['barrel', 'streetLamp', 'globeLamp', 'globeLampPink', 'crystal', 'crystalPink', 'glowPlinth', 'stack', 'stackPurple', 'partition', 'tank', 'tankBlue', 'gargoyle', 'robot', 'catStatue', 'waterfall', 'pagoda'];
+  const models = ['globeLamp', 'globeLampPink', 'crystal', 'crystalPink', 'glowPlinth', 'stack', 'stackPurple', 'partition', 'tank', 'tankBlue', 'robot', 'waterfall', 'pagoda'];
   const missing = models.filter((m) => [0, 90, 180, 270].some((f) => !s.textures.exists(`decor_${m}_${f}`)));
   let spot = null;
   for (let gy = 1; gy < s.gridH - 1 && !spot; gy++) for (let gx = 1; gx < s.gridW - 1 && !spot; gx++) {
@@ -1339,7 +1332,7 @@ const newDecor = await page.evaluate(() => {
   if (rec) s.removeProp(rec);
   return { missing, cones };
 });
-check('the new decorations (barrel to pagoda) all have their pictures, and the speaker stack bumps four cones', newDecor.missing.length === 0 && newDecor.cones === 4, JSON.stringify(newDecor));
+check('the new decorations (globe lamp to pagoda) all have their pictures, and the speaker stack bumps four cones', newDecor.missing.length === 0 && newDecor.cones === 4, JSON.stringify(newDecor));
 
 // The street outside: people line up at the rope and go in one by one.
 const street = await page.evaluate(() => {
@@ -2052,7 +2045,7 @@ const lvl = await page.evaluate(() => {
   out.closed = !document.getElementById('levelUp').classList.contains('open');
   return out;
 });
-check('levelling up shows a menu of everything unlocked, each with a picture', lvl.open && lvl.title === 'Level 5!' && lvl.names.includes('Soft Glow') && lvl.names.includes('Stripes') && lvl.names.includes('Hip Hop Night') && lvl.celeb && lvl.names.some((n) => /Walls up to/.test(n)) && lvl.pictures && lvl.closed && lvl.bartender, JSON.stringify(lvl));
+check('levelling up shows a menu of everything unlocked, each with a picture', lvl.open && lvl.title === 'Level 5!' && lvl.names.includes('Plain Tile') && lvl.names.includes('Disco Ball') && lvl.names.includes('Hip Hop Night') && lvl.celeb && lvl.names.some((n) => /Walls up to/.test(n)) && lvl.pictures && lvl.closed && lvl.bartender, JSON.stringify(lvl));
 
 // A new club's walls are beaten-up torn wallpaper; brick is a level 5 wallpaper.
 const walls = await page.evaluate(() => {
@@ -2153,7 +2146,7 @@ const shopUi = await page.evaluate(() => {
   s.levelInfo = real;
   // Inventory count.
   const before = { ...(s.inventory || {}) };
-  s.inventory = { palm: 2, plant: 1 };
+  s.inventory = { lavaLamp: 2, plant: 1 };
   s.updateShopUI();
   out.badge = document.getElementById('inventoryBadge').textContent;
   s.inventory = {};
@@ -2181,7 +2174,7 @@ check('each dock pad lights up for its own panels: Staff, Club (Edit, Expand, re
   && shopUi.expand.tab === 'expand' && shopUi.expand.lit === 'navClub' && shopUi.expand.cards === 2 && shopUi.clubRemembers && shopUi.bars.tab === 'decor' && shopUi.bars.lit === 'navBuild'
   && shopUi.edit.tab === 'edit' && shopUi.edit.lit === 'navClub', JSON.stringify(shopUi));
 check('Edit has Move, Turn, Put away, Sell and Clear Club', shopUi.tools === 'move,rotate,store,sell,clear', JSON.stringify(shopUi));
-check('NEW lists what the last two levels unlocked, each tagged NEW, and the tags show in other categories too', shopUi.newCount > 3 && shopUi.allTagged && /Brewery Bar/.test(shopUi.barTags) && !/Wood Bar/.test(shopUi.barTags), JSON.stringify(shopUi));
+check('NEW lists what the last two levels unlocked, each tagged NEW, and the tags show in other categories too', shopUi.newCount > 3 && shopUi.allTagged && /Pub Bar/.test(shopUi.barTags) && !/Wood Bar/.test(shopUi.barTags), JSON.stringify(shopUi));
 check('the Inventory button shows how many things are in it', shopUi.badge === '3' && shopUi.badgeEmpty === '', JSON.stringify(shopUi));
 check('Clear Club asks first, then puts everything but the DJ booth and bars into the inventory', shopUi.asked && shopUi.toolKept && shopUi.cleared && shopUi.plantStored && shopUi.closedAsk, JSON.stringify(shopUi));
 
@@ -2367,7 +2360,7 @@ check('money pops up big over guests, with "+1.5x Tip!" while tips are boosted (
 const held = await page.evaluate(() => {
   const s = window.__clubNova.scene.getScene('club');
   const real = s.levelInfo.bind(s);
-  s.levelInfo = () => ({ ...real(), level: 10 });
+  s.levelInfo = () => ({ ...real(), level: s.topUnlockLevel() });
   s.deselectProp();
   s.selectProp('vipLounge');
   const at = (gx, gy) => {
@@ -2523,15 +2516,15 @@ const testMode = await page.evaluate((realSave) => {
 check('test mode starts at the top level with lots of cash, on its own save', testMode.level >= testMode.top && testMode.cash >= 10000000 && testMode.tag && testMode.test && testMode.realKept,
   JSON.stringify({ level: testMode.level, top: testMode.top, cash: testMode.cash, tag: testMode.tag, test: testMode.test, realKept: testMode.realKept }));
 
-// Seated guests and the furniture in front of them: on the Fire Pit
-// Sectional turned away from the camera, a guest gets the cut-out of the
+// Seated guests and the furniture in front of them: on the Black Leather
+// Booth turned away from the camera, a guest gets the cut-out of the
 // part of the sofa in front of their seat drawn just over them (so the
 // backrest hides them), and it goes when they get up.
 const occl = await page.evaluate(() => {
   const s = window.__clubNova.scene.getScene('club');
   let rec = null;
   for (let gy = 1; gy < s.gridH - 3 && !rec; gy++) for (let gx = 1; gx < s.gridW - 3 && !rec; gx++) {
-    if (s.footprintValid(s.getFootprint('fireSectional', 180, gx, gy), 'fireSectional')) rec = s.restoreProp('fireSectional', 180, [gx, gy]);
+    if (s.footprintValid(s.getFootprint('blackBooth', 180, gx, gy), 'blackBooth')) rec = s.restoreProp('blackBooth', 180, [gx, gy]);
   }
   if (!rec) return { placed: false };
   s.trySpawnPatron();
@@ -2548,7 +2541,7 @@ const occl = await page.evaluate(() => {
   return out;
 });
 check('a guest sitting with a sofa back between them and the camera is hidden by it (its cut-out over them), and it goes when they get up',
-  occl.occluder === 'seat_fireSectional_occ0_180' && occl.above && occl.overPiece && occl.gone, JSON.stringify(occl));
+  occl.occluder === 'seat_blackBooth_occ0_180' && occl.above && occl.overPiece && occl.gone, JSON.stringify(occl));
 
 // Real songs, the way the play link serves the game: the page from a web
 // server, the MP3s as separate files next to it (dist/music/), each
@@ -2919,30 +2912,30 @@ const groupWalk = await page.evaluate(() => {
 });
 check('the street: modelled buildings line both back roads, strings of bulbs hang across them, groups chat on the sidewalk, and people walk by in groups', streetLook.buildings >= 10 && streetLook.lights && streetLook.both && streetLook.kinds >= 8 && streetLook.hangouts >= 2 && streetLook.hangoutPeople >= 4 && groupWalk >= 2, JSON.stringify({ ...streetLook, groupWalk }));
 
-// The October 2026 wallpapers: each paints a wall section at level 40.
+// The October 2026 wallpapers: each paints a wall section at the top level.
 const newWalls = await page.evaluate(() => {
   const s = window.__clubNova.scene.getScene('club');
   const fans = s.fans, cash = s.cash, held = s.selectedProp, before = s.wallpaper.R0;
-  s.fans = Math.max(s.fans, s.fansForLevel(40));
-  const types = ['wpCinder', 'wpSubway', 'wpPlanks', 'wpTheatre', 'wpSpeakers', 'wpArches', 'wpBottles', 'wpPurpleGlow', 'wpIce', 'wpLedDots'];
+  s.fans = Math.max(s.fans, s.fansForLevel(s.topUnlockLevel()));
+  const types = ['wpCinder', 'wpSubway', 'wpPlanks', 'wpSpeakers', 'wpArches', 'wpBottles', 'wpPurpleGlow', 'wpIce', 'wpLedDots'];
   const painted = types.filter((t) => { s.cash = 1e6; s.selectedProp = t; s.paintWall('R0'); return s.wallpaper.R0 === t; });
   s.selectedProp = held; s.fans = fans; s.cash = cash;
   if (before) { s.wallpaper.R0 = before; s.drawWallSection('R0', before); } else { delete s.wallpaper.R0; s.wallImages.R0?.destroy(); delete s.wallImages.R0; }
   return { painted: painted.length, of: types.length };
 });
-check('the ten new wallpapers each paint a wall', newWalls.painted === newWalls.of, JSON.stringify(newWalls));
+check('the nine new wallpapers each paint a wall', newWalls.painted === newWalls.of, JSON.stringify(newWalls));
 
-// An old save with the Royal Thrones (taken out of the game) gets its price
-// back for each one, placed or stored.
+// An old save with items taken out of the game (the Royal Thrones, the
+// October 2026 review's cuts) gets their price back, placed, stored or on a wall.
 {
   const ctx = await browser.newContext({ viewport: { width: 1280, height: 800 } });
   const tp = await ctx.newPage();
   await tp.goto(gameUrl);
-  await tp.evaluate(() => localStorage.setItem('clubNovaSave_v2', JSON.stringify({ cash: 100, fans: 0, clubName: 'Old Club', placed: [{ type: 'throneBooth', anchor: [5, 5], facing: 0 }], inventory: { throneBooth: 1 } })));
+  await tp.evaluate(() => localStorage.setItem('clubNovaSave_v2', JSON.stringify({ cash: 100, fans: 0, clubName: 'Old Club', placed: [{ type: 'throneBooth', anchor: [5, 5], facing: 0 }, { type: 'tikiBar', anchor: [2, 2], facing: 0 }], inventory: { throneBooth: 1, gargoyle: 2 }, wallpaper: { R1: 'wpTheatre' } })));
   await tp.reload();
   await tp.waitForFunction(() => { const s = window.__clubNova && window.__clubNova.scene.getScene('club'); return s && s.world && s.sys.settings.status >= 5; }, null, { timeout: 60000 });
-  const old = await tp.evaluate(() => { const s = window.__clubNova.scene.getScene('club'); return { cash: s.cash, placed: Object.values(s.placed).some((r) => r.type === 'throneBooth'), stored: !!(s.inventory || {}).throneBooth }; });
-  check('an old save\'s Royal Thrones (removed) are refunded, placed or stored', old.cash >= 3100 && !old.placed && !old.stored, JSON.stringify(old));
+  const old = await tp.evaluate(() => { const s = window.__clubNova.scene.getScene('club'); return { cash: s.cash, placed: Object.values(s.placed).some((r) => r.type === 'throneBooth' || r.type === 'tikiBar'), stored: !!(s.inventory || {}).throneBooth || !!(s.inventory || {}).gargoyle, wall: s.wallpaper.R1 || null }; });
+  check('an old save\'s removed items (Royal Thrones, the review\'s cuts) are refunded, placed, stored or on the wall', old.cash >= 4154 && !old.placed && !old.stored && !old.wall, JSON.stringify(old));
   await ctx.close();
 }
 

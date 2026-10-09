@@ -1,19 +1,12 @@
 # Club Nova: level plan (agreed by the owner; applied to the game in October 2026)
 
-> **Coming rewrite (owner, October 2026):** a new bar, floor or booth at nearly every level is too much, and a lot of the designs don't fit a club vibe. The plan is to cut the off-vibe items and rewrite the unlock pacing so levels give fewer, better unlocks. Until that's done, don't add more bars, floors or booths to fill levels, and bring any new item to the owner first. Removed items go in `REMOVED_ITEMS` (catalog.js) so saves that own them get their money back.
+**The idea:** start plain, earn the cool stuff. Each level gives a small mix of unlocks from different categories (usually two items) instead of something from every category. Simple looks come first; animations, themes and showpieces come later, so there's always an upgrade to plan and save for. There's no level cap: items run out to level 61 (the owner's rule: no cap, a new thing every level or so).
 
-**The idea:** start plain, earn the cool stuff. Each level gives a small mix of unlocks across different categories instead of something from every category. Simple looks come first; animations, themes and showpieces come later, so there's always an upgrade to plan and save for. The top level goes from 20 to **40**.
+**The October 2026 review.** The owner went through every item on a review page and cut 33 that didn't fit a nightclub vibe ("design off this vibe"): the Starter, Brewery, Retro Diner, Garden, Surf Shack, Tiki and Candy bars; the Crate and Theatre DJ booths; sixteen booths and sofas (Beer Hall Bench, Cruiser Car Seat, Art Deco Sofa, Tiki Hut, Bathtub Sofa, Kiss Sofa, Fire Pit Sectional, Peacock Love Seat, Glow Lounge, Garden Gazebo, Igloo, Donut Lounge, Birdcage, Giant Clam, Cloud Nine Bed, Disco Stage); the Theatre Red wallpaper; and the Beer Crates, Oak Barrel, Palm Tree, Street Lamp, Gargoyle, Cat Statue and Rock Star Statue. They're in `REMOVED_ITEMS` (catalog.js): a save that has one, placed, stored or on a wall, gets its full price back. New clubs start with a Wood Bar instead of the Starter Bar. Bring any new item to the owner first, and design it to the nightclub vibe.
 
-**How each category grows:**
-- **Dance floors:** plain and still until level 5 (Soft Glow, a slow white pulse), then simple single-colour pulses (Blue at 7, Pink at 8), a two-tone blink at 11. The creative animated floors start at level 14 and get fancier up to 37.
-- **Bars:** from plain (Starter, Wood, Pub) through rustic and retro, to the themed bars (Tiki at 19), then the glowing ones (Neon 25, Ice 30, Disco 33) and the fanciest last (Marble 36, Cyber 39).
-- **Seats and booths:** stools, a couch and tables early; the first VIP booth (Red Velvet) at 10; the wild themed booths from the mid-20s. (Royal Thrones were taken out of the game in October 2026.)
-- **Decorations:** crates, plants and speakers early; the Disco Ball moves from level 1 to 6; spotlights, aquarium and gold pieces later. The October 2026 batch from the main reference screenshots fills the gaps: a barrel and street lamp early, globe lamps, crystal columns and a glow plinth in the teens, then speaker stacks, a glass screen, liquid tanks, a gargoyle, a robot, a cat statue, a glass waterfall and a pagoda, some in two colours.
-- **The owner's own sketches (October 2026):** there's no level cap, so they continue each ladder past 40, one every few levels (the owner will cut the selection down later). Decorations every two levels: Bottle Cabinet 40, Truss Spotlights 42, Glass Divider 44, Bubble Column 46, Ribbon Sculpture 48, Tube Aquarium 50, Pop Star Statue 52, Glow Cubes 54, Cabinet Aquarium 56, Rapper Statue 58, Hex Aquarium 60, Long Aquarium 62, Rock Star Statue 64, Jellyfish Tank 66, Arch Aquarium 68. The Gem Lounge (Booth 7) at 39. DJ sets every three levels: Steel Rack 41, Glow Panel 44, Faceted 47, Curve 50, Capsule 53, Glass 56. DJ booths are shop items now: bought, placed, moved and sold like anything else.
-- **Wallpaper and floors:** plain paint, brick and concrete early; neon, mirrors, marble and LED late.
-- **Celebrities, drinks, parties, extra bartenders:** spread across all 40 levels.
+**The ladder.** The 127 kept items were laid out by the owner's approved plan: level 1 is the starter set, then about two items a level from different categories, each category climbing from plain to fancy, out to the Arch Aquarium alone at 61. Celebrities, drinks, parties and extra staff stay where they were (1-40).
 
-**New simple designs to add (drawn in code, quick):** Soft Glow, Blue Pulse, Pink Pulse and Two-Tone Blink dance floors; a Galaxy Swirl dance floor (late); a Plain Tile floor; a Starry Glass floor (late); a Holo Wall wallpaper (late); three new parties (Glow Party, Masquerade, Neon Rave).
+**Levelling** was sped up at the owner's request ("don't make the jump so big, we don't want them to get bored or feel stuck"): `LEVEL_FANS` is 200 + 180 x (L-1) + 6 x (L-1)^2 XP per level (was 200 + 220k + 30k^2). By the balance sim: level 10 in about 1h40, 20 in about 5 hours, 30 in about 10, 40 in about 19, 61 in about 47. Saves keep their XP, so players move up a few levels on load.
 
 **Your current club keeps everything it has.** Things already placed or in storage stay yours, even if they now unlock later.
 
@@ -21,46 +14,66 @@
 
 | Level | Unlocks |
 |---|---|
-| 1 | Bar: Starter Bar; DJ booth: Wood Booth; Dance floor: Basic Floor; Floor: Concrete; Wallpaper: Paint; Seat/booth: Wood Stool; Seat/booth: Standing Table; Decoration: Beer Crates; Decoration: Potted Fern; Party: House Party; Drink: Beer |
-| 2 | Floor: NEW Plain Tile; Wallpaper: Old Brick; Seat/booth: Fabric Couch; Decoration: Wood Speaker |
-| 3 | DJ booth: NEW Crate Booth; Bar: Wood Bar; Dance floor: Plain Floor; Decoration: Velvet Rope; Drink: Cocktail; Wallpaper: NEW Cinder Block |
-| 4 | Dance floor: Checker Floor; Floor: Stone Tiles; Wallpaper: Brick; Seat/booth: Candle Table; Decoration: NEW Oak Barrel |
-| 5 | Dance floor: NEW Soft Glow (slow white pulse); Wallpaper: Stripes; Seat/booth: Beer Hall Bench; Decoration: Palm Tree; Party: Hip Hop Night; Bartender: +1 bartender |
-| 6 | Bar: Brewery Bar; Dance floor: Wood Floor; Decoration: Disco Ball; Drink: Shots; Wallpaper: NEW Subway Tile |
-| 7 | DJ booth: Pro Booth; Dance floor: NEW Blue Pulse; Floor: Wood Planks; Seat/booth: Chrome Bar Stool; Decoration: NEW Street Lamp |
-| 8 | Dance floor: NEW Pink Pulse; Wallpaper: Wood Panel; Seat/booth: Chesterfield; Decoration: Lava Lamp; Celebrity: Rico Diamond; Bouncer: +1 |
-| 9 | Bar: Pub Bar; Seat/booth: Leather Couch; Decoration: Speaker Tower; Wallpaper: NEW Wood Planks |
-| 10 | DJ booth: NEW Brick Booth; Floor: Red Carpet; Wallpaper: Retro Dots; Seat/booth: Red Velvet Booth (first VIP booth); Drink: Mojito; Bartender: +1; Decoration: NEW Globe Lamp |
-| 11 | Bar: Retro Diner Bar; Dance floor: NEW Two-Tone Blink; Seat/booth: Cruiser Car Seat; Decoration: Neon Sign |
-| 12 | Wallpaper: Velvet; Seat/booth: Wood Lounge; Party: Neon Night; Decoration: NEW Crystal Column |
-| 13 | DJ booth: Club Booth; Floor: Purple Carpet; Seat/booth: Art Deco Sofa; Decoration: Glow Tube; Celebrity: Max Volt |
-| 14 | Bar: Garden Bar; Dance floor: Glow Floor; Seat/booth: Black Leather Booth; Decoration: NEW Glow Plinth; Wallpaper: NEW Theatre Red |
-| 15 | Wallpaper: Neon Strip; Seat/booth: Tiki Hut; Decoration: Pool Table |
-| 16 | DJ booth: NEW Theatre Booth; Bar: Surf Shack Bar; Seat/booth: Bathtub Sofa; Drink: Martini; Bartender: +1; Decoration: NEW Pink Globe Lamp |
-| 17 | Dance floor: Light-Up Floor; Floor: Marble; Seat/booth: Kiss Sofa; Decoration: NEW Speaker Stack; Wallpaper: NEW Speaker Wall |
-| 18 | Seat/booth: Tulip Lounge; Decoration: Spotlight; Celebrity: DJ Kai Blaze; Bouncer: +1 |
-| 19 | Bar: Tiki Bar; Wallpaper: Equalizer; Seat/booth: LED Cube Bench |
-| 20 | Dance floor: Neon Rings; Seat/booth: Gold VIP Booth; Party: VIP Gala; Decoration: NEW Pink Crystal Column |
-| 21 | DJ booth: Neon Booth; Seat/booth: Fire Pit Sectional; Decoration: NEW Glass Screen; Wallpaper: NEW Black Arches |
-| 22 | Bar: Speakeasy Bar; Seat/booth: Peacock Love Seat; Decoration: Aquarium |
-| 23 | Floor: Black Gloss; Wallpaper: Mirror Tiles; Seat/booth: Glow Lounge; Bartender: +1 |
-| 24 | DJ booth: NEW Truss Booth; Dance floor: Color Wave; Seat/booth: Garden Gazebo; Celebrity: Leo Lux; Drink: Champagne; Decoration: NEW Purple Liquid Tank |
-| 25 | Bar: Neon Bar; Seat/booth: Igloo; Decoration: NEW Gargoyle; Wallpaper: NEW Bottle Shelf |
-| 26 | Seat/booth: Donut Lounge; Decoration: Neon Speaker; Party: NEW Glow Party |
-| 27 | DJ booth: NEW LED Screen Booth; Bar: Candy Bar; Wallpaper: Neon Chevron; Decoration: NEW Purple Speaker Stack |
-| 28 | Dance floor: Rainbow Flow; Seat/booth: Birdcage; Decoration: NEW Retro Robot |
-| 29 | DJ booth: Ice Booth; Floor: Gold Marble; Wallpaper: NEW Purple Glow |
-| 30 | Bar: Ice Bar; Seat/booth: Giant Clam; Celebrity: Tony Fame; Bartender: +1; Decoration: NEW Cat Statue; Bouncer: +1 |
-| 31 | Wallpaper: LED Wall; Decoration: Gold Trophy |
-| 32 | Dance floor: Step Floor; Seat/booth: Cloud Nine Bed |
-| 33 | DJ booth: NEW Art Deco Booth; Bar: Disco Bar; Party: NEW Masquerade; Decoration: NEW Glass Waterfall; Wallpaper: NEW Ice Panels |
-| 34 | Seat/booth: Disco Stage; Drink: Nova Neon; Decoration: NEW Blue Liquid Tank |
-| 35 | Floor: NEW Starry Glass (twinkles); Decoration: Lucky Cat; Wallpaper: NEW LED Lights |
-| 36 | Bar: Marble Lounge Bar; Seat/booth: Galaxy Egg Pods |
-| 37 | Dance floor: NEW Galaxy Swirl; Celebrity: Jett Starr |
-| 38 | DJ booth: NEW Holo Booth; Wallpaper: NEW Holo Wall; Decoration: NEW Pagoda Statue |
-| 39 | Bar: Cyber Bar; Party: NEW Neon Rave |
-| 40 | (nothing new: the top level) |
-*Expanding the club will also continue past level 9 (bigger walls up to level 40), and the late levels get more new furniture in a later batch made in Blender.*
+| 1 | Bar: Wood Bar; DJ booth: Wood Booth; Floor: Concrete; Dance floor: Basic Floor; Seat/booth: Wood Stool; Seat/booth: Standing Table; Decoration: Potted Fern; Wallpaper: Paint; Drink: Beer; Party: House Party |
+| 2 | Decoration: Wood Speaker; Wallpaper: Old Brick |
+| 3 | DJ booth: Pro Booth; Dance floor: Plain Floor; Drink: Cocktail |
+| 4 | Seat/booth: Fabric Couch; Decoration: Velvet Rope |
+| 5 | Floor: Plain Tile; Decoration: Disco Ball; Party: Hip Hop Night; Bartender: +1 |
+| 6 | Bar: Pub Bar; Wallpaper: Cinder Block; Drink: Shots |
+| 7 | DJ booth: Brick Booth; Decoration: Lava Lamp |
+| 8 | Dance floor: Checker Floor; Decoration: Speaker Tower; Celebrity: Rico Diamond; Bouncer: +1 |
+| 9 | Seat/booth: Candle Table; Wallpaper: Brick |
+| 10 | DJ booth: Club Booth; Decoration: Globe Lamp; Drink: Mojito; Bartender: +1 |
+| 11 | Floor: Stone Tiles; Decoration: Neon Sign |
+| 12 | Dance floor: Soft Glow; Wallpaper: Stripes; Party: Neon Night |
+| 13 | Seat/booth: Chrome Bar Stool; Decoration: Crystal Column; Celebrity: Max Volt |
+| 14 | Bar: Speakeasy Bar; Decoration: Glow Tube |
+| 15 | DJ booth: Neon Booth; Wallpaper: Subway Tile |
+| 16 | Dance floor: Wood Floor; Decoration: Glow Plinth; Drink: Martini; Bartender: +1 |
+| 17 | Decoration: Pool Table; Wallpaper: Wood Panel |
+| 18 | Floor: Wood Planks; Seat/booth: Chesterfield; Celebrity: DJ Kai Blaze; Bouncer: +1 |
+| 19 | DJ booth: Truss Booth; Decoration: Pink Globe Lamp |
+| 20 | Decoration: Speaker Stack; Wallpaper: Wood Planks; Party: VIP Gala |
+| 21 | Dance floor: Blue Pulse; Decoration: Spotlight |
+| 22 | Bar: Neon Bar; Seat/booth: Leather Couch |
+| 23 | Decoration: Pink Crystal Column; Wallpaper: Retro Dots; Bartender: +1 |
+| 24 | DJ booth: LED Screen Booth; Decoration: Glass Screen; Celebrity: Leo Lux; Drink: Champagne |
+| 25 | Floor: Red Carpet; Dance floor: Pink Pulse |
+| 26 | Decoration: Aquarium; Wallpaper: Velvet; Party: Glow Party |
+| 27 | DJ booth: Ice Booth; Seat/booth: Red Velvet Booth |
+| 28 | Decoration: Purple Liquid Tank; Wallpaper: Neon Strip |
+| 29 | Dance floor: Two-Tone Blink; Decoration: Neon Speaker |
+| 30 | Bar: Ice Bar; Decoration: Purple Speaker Stack; Celebrity: Tony Fame; Bartender: +1; Bouncer: +1 |
+| 31 | DJ booth: Art Deco Booth; Floor: Purple Carpet |
+| 32 | Seat/booth: Wood Lounge; Wallpaper: Speaker Wall |
+| 33 | Dance floor: Glow Floor; Decoration: Retro Robot; Party: Masquerade Ball |
+| 34 | Decoration: Gold Trophy; Wallpaper: Equalizer; Drink: Nova Neon |
+| 35 | DJ booth: Holo Booth; Decoration: Glass Waterfall |
+| 36 | Seat/booth: Black Leather Booth; Decoration: Blue Liquid Tank |
+| 37 | Dance floor: Light-Up Floor; Wallpaper: Black Arches; Celebrity: Jett Starr |
+| 38 | Floor: Marble; Decoration: Lucky Cat |
+| 39 | DJ booth: Steel Rack Booth; Decoration: Pagoda Statue; Party: Neon Rave |
+| 40 | Bar: Disco Bar; Wallpaper: Mirror Tiles |
+| 41 | Seat/booth: Tulip Lounge; Decoration: Bottle Cabinet |
+| 42 | Dance floor: Neon Rings; Decoration: Truss Spotlights |
+| 43 | DJ booth: Glow Panel Booth; Wallpaper: Bottle Shelf |
+| 44 | Floor: Black Gloss; Decoration: Glass Divider |
+| 45 | Seat/booth: LED Cube Bench; Decoration: Bubble Column |
+| 46 | Dance floor: Color Wave; Wallpaper: Neon Chevron |
+| 47 | DJ booth: Faceted Booth; Decoration: Ribbon Sculpture |
+| 48 | Bar: Marble Lounge Bar; Wallpaper: Purple Glow |
+| 49 | Seat/booth: Gold VIP Booth; Decoration: Tube Aquarium |
+| 50 | Dance floor: Rainbow Flow; Decoration: Pop Star Statue |
+| 51 | DJ booth: Curve Booth; Floor: Gold Marble |
+| 52 | Decoration: Glow Cubes; Wallpaper: LED Wall |
+| 53 | Decoration: Cabinet Aquarium; Wallpaper: Ice Panels |
+| 54 | Seat/booth: Galaxy Egg Pods; Decoration: Rapper Statue |
+| 55 | DJ booth: Capsule Booth; Dance floor: Step Floor |
+| 56 | Bar: Cyber Bar; Decoration: Hex Aquarium |
+| 57 | Decoration: Long Aquarium; Wallpaper: LED Lights |
+| 58 | Floor: Starry Glass; Seat/booth: Gem Lounge |
+| 59 | Dance floor: Galaxy Swirl; Decoration: Jellyfish Tank |
+| 60 | DJ booth: Glass Booth; Wallpaper: Holo Wall |
+| 61 | Decoration: Arch Aquarium |
 
-**Walls (expansion limits)** now grow to level 35: 10 tiles at level 1, 12 at 2, 14 at 3, 16 at 5, 18 at 7, 20 at 9, 22 at 12, 24 at 15, 26 at 19, 28 at 24, 30 at 29, 32 at 35 (`EXPANSION.limits` in catalog.js). Bigger clubs already built keep their size.
+**Walls (expansion limits)** grow to 26 tiles by level 40 (`EXPANSION.limits` in catalog.js). Bigger clubs already built keep their size.

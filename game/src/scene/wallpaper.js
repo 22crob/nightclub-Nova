@@ -6,7 +6,7 @@
 // of the right wall (along gx), 'L<i>' section i of the left wall (along
 // gy), counted from the corner. this.wallpaper maps a section to the
 // wallpaper type painted on it; unpainted sections show the plain wall.
-import { PROP_TYPES } from '../catalog.js';
+import { PROP_TYPES, REMOVED_ITEMS } from '../catalog.js';
 import { TILE_H, TILE_W, WALL_HEIGHT } from '../config.js';
 import { SFX } from '../sfx.js';
 import { WALL_STYLES, WALL_TEX_H, WALL_TEX_W, wallFrameCanvas, wallFrameFor, wallTextureKey } from '../walls.js';
@@ -131,6 +131,7 @@ export class WallpaperMixin {
   restoreWallpaper(saved) {
     if (!saved || typeof saved !== 'object') return;
     for (const [section, type] of Object.entries(saved)) {
+      if (REMOVED_ITEMS[type]) { this.cash += REMOVED_ITEMS[type]; continue; } // a wallpaper taken out of the game
       if (!/^[RL]\d+$/.test(section) || !PROP_TYPES[type] || !PROP_TYPES[type].wallStyle) continue;
       if (Number(section.slice(1)) >= (section[0] === 'R' ? this.gridW : this.gridH)) continue;
       this.wallpaper[section] = type;

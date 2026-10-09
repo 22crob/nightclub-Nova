@@ -183,11 +183,12 @@ export const CAPACITY = { base: 8, perRootPopularity: 1.0, tilesPerGuest: 5, max
 export const POPULARITY = { happy: 3, content: 1, unhappy: -1, stormOut: -5, arrivalPer: 0.0015, arrivalMax: 0.6 };
 // Fans needed for each level (fans are the game's XP). Level L needs
 // first + step*(L-1) + curve*(L-1)^2 more to reach the next one, so each
-// level takes longer: 120 for level 2 (a few minutes), level 5 at 1,512,
-// level 10 at 9,432. Tuned against a simulated club (about 25-30 XP a
-// minute from guests, plus purchase XP): level 2 in about 3 minutes, level
-// 5 in about 40, level 10 in about 4 hours of play.
-export const LEVEL_FANS = { first: 200, step: 220, curve: 30 };
+// level takes a little longer than the last, but gently (the owner asked
+// that the jumps not get so big that players feel stuck). Tuned against a
+// simulated club (tools/balance_sim.py): level 2 in about 6 minutes, 10 in
+// about 1h40, 20 in about 5 hours, 30 in about 10, 40 in about 19, and the
+// last unlock (61) in about 47.
+export const LEVEL_FANS = { first: 200, step: 180, curve: 6 };
 // Where XP (the save calls it fans) comes from: mostly good service,
 // satisfied visits and successful parties, not guests just moving between
 // activities; and buying things: perDollar XP for each $ spent on
