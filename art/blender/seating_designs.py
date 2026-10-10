@@ -794,7 +794,7 @@ def stripe_booth():
     box('UnderGlow', -1.125, 1.125, -0.43, -0.42, 0.03, 0.06, glow, bevel=0)
     box('Seat', -1.125, 1.125, -0.42, 0.22, 0.1, 0.42, black, bevel=0.0)
     box('SeatEdge', -1.125, 1.125, -0.43, -0.4, 0.38, 0.42, trim, bevel=0)
-    n = 12  # stripes run straight across, so neighbouring sections line up
+    n = 13  # odd, so both end stripes are black (no pink showing on the sides); straight across, so sections line up
     w = 2.25 / n
     for k in range(n):
         x0 = -1.125 + k * w

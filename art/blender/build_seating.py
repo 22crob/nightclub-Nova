@@ -185,51 +185,51 @@ def build_stool():
 
 
 # --------------------------------------------------------------------------
-# Red velvet booth: 2 x 2 tiles, a curved sofa around a round table.
+# Velvet, black leather and gold VIP booths: 3 x 3 tiles, a square U.
 # --------------------------------------------------------------------------
 
-def booth(seat_mat, back_mat, trim, table_top, seat_angles, extras=None):
-    """A curved booth around a round table, open toward -Y."""
-    a0, a1 = -25, 205
-    arc_block('Plinth', 0, 0.05, 0.5, 0.92, a0, a1, 0, 0.1, plain('#1e161a', rough=0.6), bevel=0.01)
-    # Seat, backrest and base share one outside edge (0.92) so the back sits
-    # flush instead of overhanging (the owner noticed it sticking out).
-    arc_block('Seat', 0, 0.05, 0.5, 0.92, a0, a1, 0.1, 0.42, seat_mat, bevel=0.04)
-    # The backrest is made of a few pieces so each can go in front of or
-    # behind the patrons on its own (see layers_at()); the joins read as
-    # upholstery panels.
-    n = 5
-    for k in range(n):
-        b0, b1 = a0 + (a1 - a0) * k / n, a0 + (a1 - a0) * (k + 1) / n
-        arc_block(f'BackRest{k}', 0, 0.05, 0.76, 0.92, b0, b1, 0.42, 1.0, back_mat, bevel=0.0)
-        arc_block(f'BackPiping{k}', 0, 0.05, 0.755, 0.925, b0, b1, 0.98, 1.02, trim, bevel=0.0)
-    for k in range(9):
-        a = math.radians(a0 + 10 + k * (a1 - a0 - 20) / 8)
-        for z in (0.6, 0.82):
-            sphere(f'BackButton{k}{z}', 0.755 * math.cos(a), 0.05 + 0.755 * math.sin(a), z, 0.018, trim, segments=8)
-    # Filled back corners: the back of the booth is square to the tile edges,
-    # so it sits snug against walls and neighbours with no gaps (the owner
-    # asked for that). Corner blocks fill between the round back and the
-    # square, in the backrest's colour, plinth below.
+def booth(seat_mat, back_mat, trim, table_top, seat_angles=None, extras=None):
+    """A square U booth: a sofa along the back and one down each side, the
+    front open, round a square table. (They were round horseshoes, then
+    round with their back corners filled square; the owner liked the square
+    look and asked for the circle to go, October 2026.) Tufted buttons and
+    piping in the trim colour, in panels so each backrest can go in front
+    of or behind the guests on its own (see layers_at())."""
+    base = plain('#1e161a', rough=0.6)
+    box('PlinthBack', -1.05, 1.05, 0.4, 1.05, 0, 0.1, base, bevel=0.01)
+    for x0, x1 in ((-1.05, -0.42), (0.42, 1.05)):
+        box(f'PlinthSide{x0}', x0, x1, -1.0, 0.4, 0, 0.1, base, bevel=0.01)
+    box('SeatBack', -1.03, 1.03, 0.42, 1.03, 0.1, 0.42, seat_mat, bevel=0.04)
+    for x0, x1 in ((-1.03, -0.44), (0.44, 1.03)):
+        box(f'SeatSide{x0}', x0, x1, -0.98, 0.42, 0.1, 0.42, seat_mat, bevel=0.04)
+    for k, (x0, x1) in enumerate(((-1.05, -0.35), (-0.35, 0.35), (0.35, 1.05))):
+        box(f'BackRestB{k}', x0, x1, 0.87, 1.05, 0.42, 1.0, back_mat, bevel=0.02)
+        box(f'BackPipingB{k}', x0, x1, 0.865, 1.055, 1.0, 1.03, trim, bevel=0)
+        for j in range(3):
+            bx = x0 + (x1 - x0) * (j + 0.5) / 3
+            for z in (0.6, 0.82):
+                sphere(f'BackButtonB{k}{j}{z}', bx, 0.865, z, 0.018, trim, segments=8)
     for side in (-1, 1):
-        x_in, x_out = side * 0.55, side * 1.05
-        xs = (min(x_in, x_out), max(x_in, x_out))
-        box(f'CornerPlinth{side}', xs[0], xs[1], 0.4, 1.05, 0, 0.1, plain('#1e161a', rough=0.6), bevel=0.0)
-        box(f'BackCorner{side}', xs[0], xs[1], 0.62, 1.05, 0.1, 1.0, back_mat, bevel=0.0)
-        box(f'BackCornerSide{side}', side * 0.86 if side > 0 else -1.05, 1.05 if side > 0 else -0.86, 0.05, 0.62, 0.1, 1.0, back_mat, bevel=0.0)
-    box('BackSquare', -0.55, 0.55, 0.9, 1.05, 0.1, 1.0, back_mat, bevel=0.0)
-    cylinder('TableFoot', 0, -0.1, 0, 0.04, 0.2, trim, verts=24)
-    cylinder('TableStem', 0, -0.1, 0.04, 0.52, 0.035, trim, verts=12)
-    cylinder('Table', 0, -0.1, 0.52, 0.56, 0.32, table_top, verts=40)
-    cylinder('TableRim', 0, -0.1, 0.515, 0.525, 0.325, trim, verts=40)
+        x0, x1 = (-1.05, -0.87) if side < 0 else (0.87, 1.05)
+        face = x1 + 0.005 if side < 0 else x0 - 0.005
+        for k, (y0, y1) in enumerate(((-1.0, -0.3), (-0.3, 0.87))):
+            box(f'BackRestS{side}{k}', x0, x1, y0, y1, 0.42, 1.0, back_mat, bevel=0.02)
+            box(f'BackPipingS{side}{k}', x0 - 0.005, x1 + 0.005, y0, y1, 1.0, 1.03, trim, bevel=0)
+            for j in range(2):
+                by = y0 + (y1 - y0) * (j + 0.5) / 2
+                for z in (0.6, 0.82):
+                    sphere(f'BackButtonS{side}{k}{j}{z}', face, by, z, 0.018, trim, segments=8)
+    cylinder('TableFoot', 0, -0.2, 0, 0.04, 0.2, trim, verts=24)
+    cylinder('TableStem', 0, -0.2, 0.04, 0.52, 0.035, trim, verts=12)
+    box('Table', -0.32, 0.32, -0.5, 0.1, 0.52, 0.56, table_top, bevel=0.02)
+    box('TableRim', -0.33, 0.33, -0.51, 0.11, 0.51, 0.525, trim, bevel=0.005)
     if extras:
         extras()
-    seats = [[0.64 * math.cos(math.radians(a)), 0.05 + 0.64 * math.sin(math.radians(a))] for a in seat_angles]
-    return {'seats': [[round(x, 3), round(y, 3)] for x, y in seats], 'sitLift': 0.0}
+    return {'seats': [[-0.42, 0.66, 0], [0.42, 0.66, 0], [-0.7, -0.35, 90], [0.7, -0.35, 270]], 'sitLift': 0.0}
 
 
 def drinks(colors):
-    spots = [(-0.16, -0.02), (0.15, -0.2), (0.12, 0.04), (-0.1, -0.24)]
+    spots = [(-0.18, -0.08), (0.17, -0.32), (0.15, -0.05), (-0.14, -0.36)]
     for i, ((x, y), c) in enumerate(zip(spots, colors)):
         drink = principled(f'Drink{i}', srgb(c), rough=0.1, emission=srgb(c), emission_strength=0.6, alpha=0.85)
         cone(f'Glass{i}', x, y, 0.56, 0.68, 0.03, 0.045, drink, verts=12)
@@ -237,7 +237,7 @@ def drinks(colors):
 
 def build_velvet_booth():
     def extras():
-        candle('Candle', 0.0, -0.1, 0.56)
+        candle('Candle', 0.0, -0.2, 0.56)
         drinks(['#ff4d8d', '#3de0ff'])
     return booth(principled('Velvet', srgb('#b0102a'), rough=0.85), principled('VelvetDark', srgb('#7c0a1e'), rough=0.85),
                  principled('BoothGold', srgb('#e2b23a'), rough=0.25), principled('TableTop', srgb('#1a1418'), rough=0.15),
@@ -246,7 +246,7 @@ def build_velvet_booth():
 
 def build_black_booth():
     def extras():
-        candle('Candle', 0.0, -0.1, 0.56)
+        candle('Candle', 0.0, -0.2, 0.56)
         drinks(['#ffd23d', '#ff4d8d', '#7dff9a'])
     return booth(principled('BlackLeather', srgb('#26232a'), rough=0.3), principled('BlackLeatherBack', srgb('#1a181e'), rough=0.3),
                  plain('#c9ccd6', rough=0.2), principled('GlassTop', srgb('#10141c'), rough=0.05),
@@ -258,11 +258,16 @@ def build_gold_booth():
 
     def extras():
         # Champagne in an ice bucket, flutes, and a warm glow under the seat.
-        cylinder('Bucket', 0.0, -0.08, 0.56, 0.72, 0.075, plain('#d8dbe4', rough=0.2), verts=20)
-        cylinder('Bottle', 0.0, -0.08, 0.6, 0.86, 0.03, principled('Champagne', srgb('#1f4a2a'), rough=0.15), verts=12)
-        cylinder('Foil', 0.0, -0.08, 0.86, 0.9, 0.018, gold, verts=10)
+        cylinder('Bucket', 0.0, -0.18, 0.56, 0.72, 0.075, plain('#d8dbe4', rough=0.2), verts=20)
+        cylinder('Bottle', 0.0, -0.18, 0.6, 0.86, 0.03, principled('Champagne', srgb('#1f4a2a'), rough=0.15), verts=12)
+        cylinder('Foil', 0.0, -0.18, 0.86, 0.9, 0.018, gold, verts=10)
         drinks(['#ffe9a8', '#ffe9a8', '#ffe9a8'])
-        arc_block('UnderGlow', 0, 0.05, 0.9, 0.93, -25, 205, 0.02, 0.05, neon('VipGlow', (1.0, 0.75, 0.3), 6), bevel=0)
+        glow = neon('VipGlow', (1.0, 0.75, 0.3), 6)
+        box('UnderGlowB', -1.06, 1.06, 1.05, 1.06, 0.02, 0.05, glow, bevel=0)
+        for x0, x1 in ((-1.06, -1.05), (1.05, 1.06)):
+            box(f'UnderGlowS{x0}', x0, x1, -1.0, 1.06, 0.02, 0.05, glow, bevel=0)
+        box('UnderGlowF', -1.06, -0.42, -1.01, -1.0, 0.02, 0.05, glow, bevel=0)
+        box('UnderGlowF2', 0.42, 1.06, -1.01, -1.0, 0.02, 0.05, glow, bevel=0)
     return booth(principled('Cream', srgb('#f2e6d0'), rough=0.35), principled('CreamBack', srgb('#e6d6b8'), rough=0.35),
                  gold, principled('VipTop', srgb('#f8f4ec'), rough=0.15), (160, 115, 65, 20), extras)
 
