@@ -790,16 +790,18 @@ def stripe_booth():
     pink = principled('StripePink', srgb('#e0207a'), rough=0.7)
     trim = principled('StripeTrim', srgb('#0c0a0e'), rough=0.3)
     glow = neon('StripeGlow', (1.0, 0.15, 0.55), 5)
-    box('Base', -1.125, 1.125, -0.42, 0.4, 0, 0.1, trim, bevel=0.0)
+    box('Base', -1.125, 1.125, -0.42, 0.16, 0, 0.1, trim, bevel=0.0)
     box('UnderGlow', -1.125, 1.125, -0.43, -0.42, 0.03, 0.06, glow, bevel=0)
-    box('Seat', -1.125, 1.125, -0.42, 0.22, 0.1, 0.42, black, bevel=0.0)
+    box('Seat', -1.125, 1.125, -0.42, 0.16, 0.1, 0.42, black, bevel=0.0)
     box('SeatEdge', -1.125, 1.125, -0.43, -0.4, 0.38, 0.42, trim, bevel=0)
     n = 13  # odd, so both end stripes are black (no pink showing on the sides); straight across, so sections line up
     w = 2.25 / n
     for k in range(n):
         x0 = -1.125 + k * w
-        box(f'BackStripe{k}', x0, x0 + w, 0.22, 0.4, 0.42, 1.0, (black, pink)[k % 2], bevel=0.0)
-    box('BackPipe', -1.125, 1.125, 0.21, 0.41, 1.0, 1.04, trim, bevel=0.0)
+        # The back runs straight down to the floor behind the seat, a full
+        # solid back (the owner found it looked cut off at seat level).
+        box(f'BackStripe{k}', x0, x0 + w, 0.16, 0.4, 0.0, 1.0, (black, pink)[k % 2], bevel=0.0)
+    box('BackPipe', -1.125, 1.125, 0.15, 0.41, 1.0, 1.04, trim, bevel=0.0)
     return {'seats': [[-0.56, -0.08], [0.0, -0.08], [0.56, -0.08]], 'sitLift': 0.0}
 
 
