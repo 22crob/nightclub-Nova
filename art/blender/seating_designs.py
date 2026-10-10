@@ -661,32 +661,55 @@ def ice_bucket(x, y, z, gold):
     cylinder('BucketFoil', x, y, z + 0.3, z + 0.34, 0.018, gold, verts=10)
 
 
+def u_booth(seat_mat, back_mat, plinth_mat, glow, top_glow=None, channel=None):
+    """A square U booth: a sofa along the back and one down each side, the
+    front left open (the owner preferred this to a round horseshoe)."""
+    box('PlinthBack', -1.04, 1.04, 0.4, 1.04, 0, 0.1, plinth_mat, bevel=0.01)
+    for x0, x1 in ((-1.04, -0.42), (0.42, 1.04)):
+        box(f'PlinthSide{x0}', x0, x1, -1.0, 0.4, 0, 0.1, plinth_mat, bevel=0.01)
+    box('GlowBack', -0.42, 0.42, 0.39, 0.4, 0.03, 0.06, glow, bevel=0)
+    for x in (-0.42, 0.42):
+        box(f'GlowSide{x}', x - 0.005, x + 0.005, -1.0, 0.4, 0.03, 0.06, glow, bevel=0)
+    box('GlowFront', -1.04, -0.42, -1.01, -1.0, 0.03, 0.06, glow, bevel=0)
+    box('GlowFront2', 0.42, 1.04, -1.01, -1.0, 0.03, 0.06, glow, bevel=0)
+    box('SeatBack', -1.02, 1.02, 0.42, 1.02, 0.1, 0.42, seat_mat, bevel=0.04)
+    for x0, x1 in ((-1.02, -0.44), (0.44, 1.02)):
+        box(f'SeatSide{x0}', x0, x1, -0.98, 0.42, 0.1, 0.42, seat_mat, bevel=0.04)
+    # Backrests in panels so each can go in front of or behind the guests.
+    for k, (x0, x1) in enumerate(((-1.04, -0.35), (-0.35, 0.35), (0.35, 1.04))):
+        box(f'BackRestB{k}', x0, x1, 0.86, 1.04, 0.42, 1.12, back_mat, bevel=0.03)
+        if top_glow:
+            box(f'BackGlowB{k}', x0, x1, 0.855, 1.045, 1.12, 1.15, top_glow, bevel=0)
+        if channel:
+            for j in range(3):
+                cx = x0 + (x1 - x0) * (j + 0.5) / 3
+                box(f'BackChanB{k}{j}', cx - 0.004, cx + 0.004, 0.855, 0.86, 0.5, 1.06, channel, bevel=0)
+    for side in (-1, 1):
+        x0, x1 = (-1.04, -0.86) if side < 0 else (0.86, 1.04)
+        for k, (y0, y1) in enumerate(((-1.0, -0.3), (-0.3, 0.86))):
+            box(f'BackRestS{side}{k}', x0, x1, y0, y1, 0.42, 1.12 if k else 0.86, back_mat, bevel=0.03)
+            if top_glow:
+                box(f'BackGlowS{side}{k}', x0 - 0.005, x1 + 0.005, y0, y1, 1.12 if k else 0.86, (1.12 if k else 0.86) + 0.03, top_glow, bevel=0)
+    return seats((-0.42, 0.66, 0), (0.42, 0.66, 0), (-0.7, -0.35, 90), (0.7, -0.35, 270))
+
+
 def onyx_booth():
-    """A tall black leather horseshoe with a gold light line round its top
-    and base, round a gold-rimmed black table (reference club 4)."""
+    """A tall black leather U with a gold light line along its top and
+    base, round a gold-rimmed black table (reference club 4)."""
     leather = principled('OnyxLeather', srgb('#1c1a20'), rough=0.28)
     leather2 = principled('OnyxLeather2', srgb('#26232c'), rough=0.28)
     gold = principled('OnyxGold', srgb('#f0c24a'), rough=0.2)
-    glow = neon('OnyxGlow', (1.0, 0.72, 0.2), 6)
-    a0, a1 = -30, 210
-    arc_block('Plinth', 0, 0.05, 0.48, 1.02, a0, a1, 0, 0.1, mat('#0e0c10', rough=0.4), bevel=0.01)
-    arc_block('PlinthGlow', 0, 0.05, 1.02, 1.035, a0, a1, 0.03, 0.06, glow, bevel=0)
-    arc_block('Seat', 0, 0.05, 0.48, 1.02, a0, a1, 0.1, 0.42, leather2, bevel=0.04)
-    n = 6
-    for k in range(n):
-        b0, b1 = a0 + (a1 - a0) * k / n, a0 + (a1 - a0) * (k + 1) / n
-        arc_block(f'BackRest{k}', 0, 0.05, 0.84, 1.02, b0, b1, 0.42, 1.18, leather, bevel=0.0)
-        arc_block(f'BackGlow{k}', 0, 0.05, 0.835, 1.025, b0, b1, 1.18, 1.21, glow, bevel=0.0)
-        arc_block(f'BackChannel{k}', 0, 0.05, 0.835, 0.845, b0 + 1, b1 - 1, 0.5, 1.1, leather2, bevel=0.0)
-    cylinder('TableFoot', 0, -0.12, 0, 0.04, 0.22, gold, verts=24)
-    cylinder('TableStem', 0, -0.12, 0.04, 0.52, 0.04, gold, verts=12)
-    cylinder('Table', 0, -0.12, 0.52, 0.57, 0.36, principled('OnyxTop', srgb('#0c0a0e'), rough=0.05), verts=40)
-    cylinder('TableRim', 0, -0.12, 0.515, 0.575, 0.37, gold, verts=40)
-    cylinder('TableGlow', 0, -0.12, 0.505, 0.515, 0.36, glow, verts=40)
-    ice_bucket(0.08, -0.08, 0.57, gold)
-    candle('Candle', -0.14, -0.22, 0.57)
-    drinks(['#ffe9a8', '#ffe9a8'])
-    return seats(*[(round(0.68 * math.cos(math.radians(a)), 3), round(0.05 + 0.68 * math.sin(math.radians(a)), 3)) for a in (165, 120, 60, 15)])
+    glow = neon('OnyxGlow', (1.0, 0.62, 0.12), 2.5)
+    out = u_booth(leather2, leather, mat('#0e0c10', rough=0.4), glow, top_glow=glow, channel=leather2)
+    cylinder('TableFoot', 0, -0.2, 0, 0.04, 0.22, gold, verts=24)
+    cylinder('TableStem', 0, -0.2, 0.04, 0.52, 0.04, gold, verts=12)
+    box('Table', -0.34, 0.34, -0.5, 0.1, 0.52, 0.57, principled('OnyxTop', srgb('#0c0a0e'), rough=0.05), bevel=0.02)
+    box('TableRim', -0.35, 0.35, -0.51, 0.11, 0.51, 0.53, gold, bevel=0.005)
+    ice_bucket(0.1, -0.15, 0.57, gold)
+    candle('Candle', -0.14, -0.28, 0.57)
+    for i, (x, y) in enumerate([(-0.18, -0.05), (0.2, -0.38)]):
+        cone(f'Glass{i}', x, y, 0.57, 0.69, 0.03, 0.045, mat('#ffe9a8', rough=0.1, glow=0.6, alpha=0.85), verts=12)
+    return out
 
 
 def crystal_booth():
@@ -738,38 +761,34 @@ def crystal_booth():
 
 
 def ring_booth():
-    """A round black sofa open at the front, under a pink neon ring held up
-    on a chrome arm, round a glowing round table."""
+    """A plum and black U booth under a pink neon ring held up on a chrome
+    arm, round a glowing table."""
     leather = principled('RingLeather', srgb('#201a24'), rough=0.3)
     plum = principled('RingPlum', srgb('#5a1a4a'), rough=0.6)
     chrome = mat('#d0d6e0', rough=0.12)
     pink = neon('RingPink', (1.0, 0.25, 0.75), 7)
-    a0, a1 = -20, 200
-    arc_block('Plinth', 0, 0.0, 0.5, 1.0, a0, a1, 0, 0.1, mat('#0e0c10', rough=0.4), bevel=0.01)
-    arc_block('Seat', 0, 0.0, 0.5, 1.0, a0, a1, 0.1, 0.42, plum, bevel=0.04)
-    n = 5
-    for k in range(n):
-        b0, b1 = a0 + (a1 - a0) * k / n, a0 + (a1 - a0) * (k + 1) / n
-        arc_block(f'BackRest{k}', 0, 0.0, 0.82, 1.0, b0, b1, 0.42, 0.98, leather, bevel=0.0)
-    arc_block('UnderGlow', 0, 0.0, 1.0, 1.015, a0, a1, 0.03, 0.06, pink, bevel=0)
-    # The ring overhead on a chrome arm from the back.
-    tube('CanopyArm', (0, 0.98, 0.98), (0, 0.98, 2.2), 0.03, chrome)
-    tube('CanopyArmTop', (0, 0.98, 2.2), (0, 0.55, 2.2), 0.025, chrome)
-    torus('CanopyRing', 0, 0.0, 2.18, 0.6, 0.035, pink)
-    torus('CanopyRingInner', 0, 0.0, 2.18, 0.48, 0.018, neon('RingWhite', (1.0, 0.75, 0.95), 5))
-    cylinder('TableFoot', 0, -0.05, 0, 0.04, 0.2, chrome, verts=24)
-    cylinder('TableStem', 0, -0.05, 0.04, 0.5, 0.035, chrome, verts=12)
-    cylinder('Table', 0, -0.05, 0.5, 0.55, 0.32, principled('RingTop', srgb('#ffffff'), rough=0.2, emission=srgb('#ff9ad8'), emission_strength=0.8), verts=40)
-    drinks(['#ff4dcf', '#7dd8ff', '#ffe36f'])
-    return seats(*[(round(0.7 * math.cos(math.radians(a)), 3), round(0.7 * math.sin(math.radians(a)), 3)) for a in (160, 115, 65, 20)])
+    out = u_booth(plum, leather, mat('#0e0c10', rough=0.4), pink)
+    tube('CanopyArm', (0, 1.0, 1.1), (0, 1.0, 2.25), 0.03, chrome)
+    tube('CanopyArmTop', (0, 1.0, 2.25), (0, 0.55, 2.25), 0.025, chrome)
+    torus('CanopyRing', 0, -0.05, 2.22, 0.62, 0.035, pink)
+    torus('CanopyRingInner', 0, -0.05, 2.22, 0.5, 0.018, neon('RingWhite', (1.0, 0.75, 0.95), 5))
+    cylinder('TableFoot', 0, -0.2, 0, 0.04, 0.2, chrome, verts=24)
+    cylinder('TableStem', 0, -0.2, 0.04, 0.5, 0.035, chrome, verts=12)
+    cylinder('Table', 0, -0.2, 0.5, 0.55, 0.32, principled('RingTop', srgb('#ffffff'), rough=0.2, emission=srgb('#ff9ad8'), emission_strength=0.8), verts=40)
+    for i, (x, y, c) in enumerate([(-0.12, -0.12, '#ff4dcf'), (0.14, -0.3, '#7dd8ff'), (0.05, -0.05, '#ffe36f')]):
+        cone(f'Glass{i}', x, y, 0.55, 0.67, 0.03, 0.045, mat(c, rough=0.1, glow=0.6, alpha=0.85), verts=12)
+    return out
 
 
 def stripe_booth():
-    """Blue and white striped velvet sofas in an L round a little glass
-    table with candles (reference club 5)."""
-    blue = principled('StripeBlue', srgb('#2a5aa8'), rough=0.8)
-    white = principled('StripeWhite', srgb('#eaf0fa'), rough=0.8)
-    navy = principled('StripeNavy', srgb('#18284a'), rough=0.5)
+    """Black and hot pink striped velvet sofas in an L round a little glass
+    table with candles, a pink glow underneath (the stripes of reference
+    club 5, in nightclub colours)."""
+    blue = principled('StripeBlack', srgb('#1a1620'), rough=0.6)
+    white = principled('StripePink', srgb('#e0207a'), rough=0.7)
+    navy = principled('StripeTrim', srgb('#0c0a0e'), rough=0.3)
+    box('UnderGlow', -1.01, 1.01, 0.33, 1.01, 0.03, 0.06, neon('StripeGlow', (1.0, 0.15, 0.55), 5), bevel=0)
+    box('UnderGlowL', -1.01, -0.39, -1.01, 0.33, 0.03, 0.06, neon('StripeGlow', (1.0, 0.15, 0.55), 5), bevel=0)
     glass = principled('StripeGlass', srgb('#cfe8ff'), rough=0.05, transmission=0.8)
     box('BaseBack', -1.0, 1.0, 0.34, 1.0, 0, 0.1, navy, bevel=0.01)
     box('BaseLeft', -1.0, -0.4, -1.0, 0.34, 0, 0.1, navy, bevel=0.01)
@@ -813,6 +832,7 @@ def bottle_sectional():
         box(f'BackStitchB{i}', x0 + 0.05, x1 - 0.05, 0.775, 0.78, 0.68, 0.69, red, bevel=0)
     for i, (y0, y1) in enumerate([(-1.0, -0.36), (-0.36, 0.36)]):
         box(f'SeatRight{i}', 0.44, 1.0, y0 + 0.01, y1 - 0.01, 0.1, 0.42, leather2, bevel=0.05)
+    for i, (y0, y1) in enumerate([(-1.0, -0.36), (-0.36, 0.2), (0.2, 0.78)]):
         box(f'BackPadR{i}', 0.8, 1.0, y0 + 0.01, y1 - 0.01, 0.42, 0.95, leather, bevel=0.06)
         box(f'BackStitchR{i}', 0.795, 0.8, y0 + 0.05, y1 - 0.05, 0.68, 0.69, red, bevel=0)
     box('ArmLeft', -1.04, -0.9, 0.36, 0.98, 0.42, 0.62, leather, bevel=0.04)
@@ -827,45 +847,20 @@ def bottle_sectional():
     return seats((-0.68, 0.62, 0), (-0.03, 0.62, 0), (0.62, -0.68, 270), (0.62, -0.02, 270))
 
 
-def velvet_sofa():
-    """3 x 1: a plum velvet sofa in tall vertical channels, gold legs and a
-    soft pink light underneath."""
-    velvet = principled('PlumVelvet', srgb('#6a1a5a'), rough=0.85)
-    velvet2 = principled('PlumVelvet2', srgb('#7e2470'), rough=0.85)
-    gold = principled('SofaGold', srgb('#f0c24a'), rough=0.2)
-    for x in (-0.86, 0.86):
-        for y in (-0.34, 0.3):
-            cone(f'Leg{x}{y}', x, y, 0, 0.1, 0.02, 0.035, gold, verts=10)
-    box('UnderGlow', -0.88, 0.88, -0.36, 0.34, 0.05, 0.08, neon('SofaPink', (1.0, 0.3, 0.75), 4), bevel=0)
-    box('Base', -0.94, 0.94, -0.4, 0.38, 0.1, 0.3, velvet, bevel=0.05)
-    for i, x in enumerate((-0.42, 0.42)):
-        box(f'Seat{i}', x - 0.4, x + 0.4, -0.42, 0.2, 0.3, 0.42, velvet2, bevel=0.06)
-    for k in range(9):            # tall channels, the outer ones lower
-        x0 = -0.94 + k * (1.88 / 9)
-        top = 1.0 - 0.06 * abs(k - 4) ** 1.3
-        box(f'BackChannel{k}', x0 + 0.005, x0 + 1.88 / 9 - 0.005, 0.2, 0.4, 0.3, top, (velvet, velvet2)[k % 2], bevel=0.05)
-    for side in (-1, 1):
-        box(f'Arm{side}', side * 0.94 - 0.1, side * 0.94 + 0.04 if side < 0 else side * 0.94 + 0.1, -0.42, 0.4, 0.3, 0.6, velvet, bevel=0.05)
-    return SOFA
-
-
-def cube_lounge():
-    """3 x 1: a row of white leather cube seats on glowing purple bases
-    against a low white back (reference club 4)."""
-    white = principled('CubeWhite', srgb('#f6f4f8'), rough=0.3)
-    white2 = principled('CubeWhite2', srgb('#e8e4ee'), rough=0.3)
-    purple = principled('CubePurple', srgb('#7a20e0'), rough=0.3, emission=srgb('#7a20e0'), emission_strength=1.2)
-    for i, x in enumerate((-0.62, -0.21, 0.21, 0.62)):
-        box(f'Glow{i}', x - 0.18, x + 0.18, -0.34, 0.16, 0, 0.16, purple, bevel=0.02)
-        box(f'Seat{i}', x - 0.19, x + 0.19, -0.36, 0.18, 0.16, 0.42, white, bevel=0.05)
-        box(f'Top{i}', x - 0.17, x + 0.17, -0.34, 0.16, 0.42, 0.45, white2, bevel=0.03)
-    box('BackPanel', -0.84, 0.84, 0.2, 0.32, 0.0, 0.82, white2, bevel=0.04)
-    box('BackGlow', -0.82, 0.82, 0.19, 0.2, 0.0, 0.16, purple, bevel=0)
-    for k, x in enumerate((-0.42, 0.0, 0.42)):
-        box(f'BackPad{k}', x - 0.2, x + 0.2, 0.18, 0.2, 0.46, 0.76, white, bevel=0.03)
-    return SOFA
-
-
+def bean_bags():
+    """3 x 1: two glossy vinyl bean bags, hot pink and black, slumped round
+    a little glowing cube table (instead of the Cube Lounge)."""
+    vinyl = [principled('BeanPink', srgb('#e8207a'), rough=0.15), principled('BeanBlack', srgb('#1c1a22'), rough=0.15)]
+    for i, x in enumerate((-0.62, 0.62)):
+        # The bag: a squashed ball for the seat and a lump behind for the back.
+        sphere(f'Bean{i}', x, -0.02, 0.2, 1.0, vinyl[i], scale=(0.36, 0.34, 0.22), segments=32)
+        sphere(f'BackBean{i}', x, 0.2, 0.42, 1.0, vinyl[i], scale=(0.33, 0.16, 0.3), segments=32)
+        sphere(f'BeanSeam{i}', x, -0.02, 0.36, 1.0, vinyl[i], scale=(0.24, 0.22, 0.06), segments=24)
+    box('Cube', -0.17, 0.17, -0.2, 0.14, 0, 0.32, principled('BeanCube', srgb('#f4eefc'), rough=0.3,
+        emission=srgb('#b060ff'), emission_strength=1.2), bevel=0.03)
+    for i, (x, y, c) in enumerate([(-0.06, -0.08, '#ff4dcf'), (0.07, 0.02, '#7dd8ff')]):
+        cone(f'Glass{i}', x, y, 0.32, 0.44, 0.03, 0.045, mat(c, rough=0.1, glow=0.6, alpha=0.85), verts=12)
+    return {'seats': [[-0.62, -0.02], [0.62, -0.02]], 'sitLift': -0.04}
 
 DESIGNS = {
     'facetBooth': facet_booth,
@@ -874,8 +869,7 @@ DESIGNS = {
     'ringBooth': ring_booth,
     'stripeBooth': stripe_booth,
     'bottleSectional': bottle_sectional,
-    'velvetSofa': velvet_sofa,
-    'cubeLounge': cube_lounge,
+    'beanBags': bean_bags,
     'tikiHut': tiki_hut,
     'iglooBooth': igloo_booth,
     'glowLounge': glow_lounge,
