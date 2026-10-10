@@ -207,6 +207,17 @@ def booth(seat_mat, back_mat, trim, table_top, seat_angles, extras=None):
         a = math.radians(a0 + 10 + k * (a1 - a0 - 20) / 8)
         for z in (0.6, 0.82):
             sphere(f'BackButton{k}{z}', 0.755 * math.cos(a), 0.05 + 0.755 * math.sin(a), z, 0.018, trim, segments=8)
+    # Filled back corners: the back of the booth is square to the tile edges,
+    # so it sits snug against walls and neighbours with no gaps (the owner
+    # asked for that). Corner blocks fill between the round back and the
+    # square, in the backrest's colour, plinth below.
+    for side in (-1, 1):
+        x_in, x_out = side * 0.55, side * 1.05
+        xs = (min(x_in, x_out), max(x_in, x_out))
+        box(f'CornerPlinth{side}', xs[0], xs[1], 0.4, 1.05, 0, 0.1, plain('#1e161a', rough=0.6), bevel=0.0)
+        box(f'BackCorner{side}', xs[0], xs[1], 0.62, 1.05, 0.1, 1.0, back_mat, bevel=0.0)
+        box(f'BackCornerSide{side}', side * 0.86 if side > 0 else -1.05, 1.05 if side > 0 else -0.86, 0.05, 0.62, 0.1, 1.0, back_mat, bevel=0.0)
+    box('BackSquare', -0.55, 0.55, 0.9, 1.05, 0.1, 1.0, back_mat, bevel=0.0)
     cylinder('TableFoot', 0, -0.1, 0, 0.04, 0.2, trim, verts=24)
     cylinder('TableStem', 0, -0.1, 0.04, 0.52, 0.035, trim, verts=12)
     cylinder('Table', 0, -0.1, 0.52, 0.56, 0.32, table_top, verts=40)

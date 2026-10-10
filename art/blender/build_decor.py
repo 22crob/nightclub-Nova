@@ -342,13 +342,13 @@ def build_neon_sign():
     box('StarPost', -0.012, 0.012, -0.03, 0.0, 1.56, 1.6, frame, bevel=0)
     bpy.ops.object.text_add(location=(0, -0.06, 1.12), rotation=(math.radians(90), 0, 0))
     txt = bpy.context.active_object
-    txt.data.body = 'NOVA'
+    txt.data.body = 'LIT'  # the owner's pick (was NOVA)
     txt.data.align_x = 'CENTER'
-    txt.data.size = 0.3
+    txt.data.size = 0.38
     txt.data.extrude = 0.012
     bpy.ops.object.convert(target='MESH')
     bb._finish(bpy.context.active_object, pink, 0)
-    # A cyan star above the name.
+    # A cyan star above the word.
     pts = []
     for k in range(11):
         a = math.pi / 2 + k * math.pi / 5
@@ -574,23 +574,27 @@ def build_glass_partition():
 
 
 def liquid_tank(liquid_hex):
-    """A glass tank of glowing liquid with bubbles, in a steel frame with a
-    pipe on top (the ice club's row of tanks)."""
+    """A tall glass cylinder of glowing liquid in one chrome casing: a round
+    base with a lit ring, a clear outer shell, a domed cap and two slim
+    chrome bands up the back holding it together (the owner wanted one
+    casing round it, October 2026). Bubbles rise in the game (tankFx.js)."""
     def build():
-        steel = plain('#9aa0ae', rough=0.3)
-        dark = plain('#2a2a32', rough=0.4)
+        chrome = principled('TankChrome', srgb('#c8ced8'), rough=0.15)
+        dark = principled('TankDark', srgb('#1a1a22'), rough=0.3)
         g = srgb(liquid_hex)
-        liquid = principled(f'Liquid{liquid_hex}', g, rough=0.05, emission=g, emission_strength=1.4, alpha=0.75)
-        bubble = principled('TankBubble', (0.95, 0.95, 1.0), rough=0.0, emission=(0.9, 0.9, 1.0), emission_strength=2.0)
-        box('Base', -0.4, 0.4, -0.4, 0.4, 0, 0.22, dark, bevel=0.02)
-        box('Liquid', -0.34, 0.34, -0.34, 0.34, 0.22, 1.72, liquid, bevel=0.02)
-        for x in (-0.37, 0.37):
-            for y in (-0.37, 0.37):
-                box(f'Post{x}{y}', x - 0.04, x + 0.04, y - 0.04, y + 0.04, 0.22, 1.78, steel, bevel=0.01)
-        box('Lid', -0.4, 0.4, -0.4, 0.4, 1.78, 1.86, steel, bevel=0.015)
-        cylinder('Pipe', 0, 0, 1.86, 2.08, 0.06, steel, verts=16)
-        cylinder('Valve', 0, 0, 2.02, 2.06, 0.11, dark, verts=16)
-        # Bubbles rise in the game (src/scene/tankFx.js).
+        liquid = principled(f'Liquid{liquid_hex}', g, rough=0.05, emission=g, emission_strength=2.6, alpha=0.95)
+        shell = principled('TankShell', (0.85, 0.92, 1.0), rough=0.02, transmission=0.9, alpha=0.1)
+        ring = neon(f'TankRing{liquid_hex}', g, 5)
+        cylinder('Base', 0, 0, 0, 0.26, 0.4, dark, verts=40)
+        cylinder('BaseTrim', 0, 0, 0.22, 0.28, 0.41, chrome, verts=40)
+        cylinder('BaseRing', 0, 0, 0.08, 0.12, 0.405, ring, verts=40)
+        cylinder('Liquid', 0, 0, 0.28, 1.72, 0.3, liquid, verts=40)
+        cylinder('Shell', 0, 0, 0.28, 1.74, 0.345, shell, verts=40)
+        cylinder('Cap', 0, 0, 1.74, 1.84, 0.41, chrome, verts=40)
+        sphere('Dome', 0, 0, 1.84, 0.3, chrome, scale=(1, 1, 0.35), segments=32)
+        cylinder('CapRing', 0, 0, 1.76, 1.79, 0.415, ring, verts=40)
+        for x in (-0.25, 0.25):  # slim bands up the back, joining base and cap
+            box(f'Band{x}', x - 0.025, x + 0.025, 0.24, 0.3, 0.26, 1.76, chrome, bevel=0.008)
     return build
 
 
@@ -724,7 +728,10 @@ def build_pagoda():
 
 
 # Some models are built small and scaled up as a whole.
-SCALE = {'lava': (1.15, 1.15, 1.2), 'aquarium': (1.0, 1.0, 1.25)}
+# Stretched taller: the Aquarium, and the sketched tanks the owner found
+# too low (October 2026; TANKS in config.js has the same heights).
+SCALE = {'lava': (1.15, 1.15, 1.2), 'aquarium': (1.0, 1.0, 1.25),
+         'tankCabinet': (1, 1, 1.4), 'tankHex': (1, 1, 1.35), 'tankLong': (1, 1, 1.7), 'jellyBowl': (1, 1, 1.6), 'tankArch': (1, 1, 1.6)}
 
 DECOR = {
     'fern': build_fern,
@@ -764,6 +771,8 @@ DECOR = {
 
 import decor_batch2  # noqa: E402  (the owner's October 2026 drafts)
 DECOR.update(decor_batch2.DESIGNS)
+import decor_batch3  # noqa: E402  (plants, black pool table, 3D wall decorations)
+DECOR.update(decor_batch3.DESIGNS)
 
 
 def build(name, preview_dir=None):
