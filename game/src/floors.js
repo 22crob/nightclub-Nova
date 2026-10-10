@@ -204,6 +204,7 @@ export const FLOOR_STYLES = {
   softGlow: pulseFloor([255, 255, 255], 16, 3),
   bluePulse: pulseFloor([60, 150, 255], 12, 2),
   pinkPulse: pulseFloor([255, 70, 180], 12, 2),
+  redPulse: pulseFloor([255, 30, 50], 12, 2),
 
   // A checkerboard of pink and blue that swaps colours on the beat.
   twoTone: {
@@ -592,18 +593,80 @@ export const FLOOR_PAINTS = {
     },
   },
 
-  // Glossy black tiles.
+  // Glossy black tiles, as black as black gets (the owner asked for a
+  // deep, space-dark black): just the faintest sheen and seams.
   blackGloss: {
     frames: 1,
     draw(ctx, S) {
-      ctx.fillStyle = '#16141b';
+      ctx.fillStyle = '#000000';
       ctx.fillRect(0, 0, S, S);
       const g = ctx.createLinearGradient(0, 0, S, S);
-      g.addColorStop(0, 'rgba(255,255,255,0.16)');
-      g.addColorStop(0.4, 'rgba(255,255,255,0)');
+      g.addColorStop(0, 'rgba(255,255,255,0.06)');
+      g.addColorStop(0.35, 'rgba(255,255,255,0)');
       ctx.fillStyle = g;
       ctx.fillRect(0, 0, S, S);
-      seam(ctx, S, 'rgba(90,85,105,0.7)');
+      seam(ctx, S, 'rgba(40,38,48,0.6)');
+    },
+  },
+
+  // Glossy red tiles with a wet-look shine.
+  redGloss: {
+    frames: 1,
+    draw(ctx, S) {
+      ctx.fillStyle = '#a80c1c';
+      ctx.fillRect(0, 0, S, S);
+      const deep = ctx.createLinearGradient(S, S, 0, 0);
+      deep.addColorStop(0, 'rgba(60,0,8,0.45)');
+      deep.addColorStop(0.6, 'rgba(60,0,8,0)');
+      ctx.fillStyle = deep;
+      ctx.fillRect(0, 0, S, S);
+      const g = ctx.createLinearGradient(0, 0, S, S);
+      g.addColorStop(0, 'rgba(255,255,255,0.32)');
+      g.addColorStop(0.35, 'rgba(255,255,255,0.04)');
+      g.addColorStop(0.5, 'rgba(255,255,255,0)');
+      ctx.fillStyle = g;
+      ctx.fillRect(0, 0, S, S);
+      seam(ctx, S, 'rgba(70,0,10,0.75)');
+    },
+  },
+
+  // Leopard print: rosettes of dark spots round tawny centres on a golden
+  // ground, wrapping across the tile edges so neighbours join up.
+  leopard: {
+    frames: 1,
+    draw(ctx, S) {
+      ctx.fillStyle = '#d8a24e';
+      ctx.fillRect(0, 0, S, S);
+      const r = rng(17);
+      const spots = [];
+      for (let k = 0; k < 9; k++) spots.push([r() * S, r() * S, 6 + r() * 5, r() * Math.PI * 2]);
+      for (const [x0, y0, rad, turn] of spots) {
+        for (const dx of [-S, 0, S]) {
+          for (const dy of [-S, 0, S]) {
+            const x = x0 + dx, y = y0 + dy;
+            if (x < -20 || x > S + 20 || y < -20 || y > S + 20) continue;
+            ctx.fillStyle = '#b06a22'; // the tawny centre
+            ctx.beginPath();
+            ctx.ellipse(x, y, rad * 0.8, rad * 0.65, turn, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.fillStyle = '#2a1608'; // broken dark ring round it
+            for (let a = 0; a < 5; a++) {
+              const t = turn + a * 1.26 + 0.3;
+              ctx.beginPath();
+              ctx.ellipse(x + Math.cos(t) * rad, y + Math.sin(t) * rad * 0.85, rad * 0.42, rad * 0.26, t + 1.57, 0, Math.PI * 2);
+              ctx.fill();
+            }
+          }
+        }
+      }
+      for (let k = 0; k < 14; k++) { // small dots between
+        const x = r() * S, y = r() * S;
+        ctx.fillStyle = '#2a1608';
+        ctx.beginPath();
+        ctx.arc(x, y, 1.5 + r() * 1.8, 0, Math.PI * 2);
+        ctx.fill();
+      }
+      fuzz(ctx, S, 23);
     },
   },
 

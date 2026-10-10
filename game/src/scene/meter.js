@@ -1,76 +1,63 @@
-// ClubScene methods: the drink meter, a little glass cylinder on the right
-// edge (see #drinkMeter in index.html). Purple liquid fills it as drinks
-// are served, tips come in and bonuses are clicked (METER in config.js,
-// fed by noteIncome() in rating.js). When it's full, drinks cost double
-// for METER.doubleMs while it drains, then it starts again from empty.
+// ClubScene methods: the stock meter, a little glass cylinder on the right
+// edge (see #drinkMeter in index.html). It shows how much drink the bars
+// have left (drinkStockLeft() / maxDrinkStock(), upgrades.js): full when
+// they're fully stocked, going down a step with every drink served. Click
+// it to restock (restockBar()): the liquid rises to the top, then drains
+// again as drinks are bought. It glows red when stock runs low.
+// (It used to fill with income and double drink prices; the owner turned
+// it into the refill meter in October 2026.)
 // Mixed into ClubScene (see ClubScene.js); `this` is the scene.
-import { METER } from '../config.js';
+import { DRINK_STOCK } from '../config.js';
 import { SFX } from '../sfx.js';
+import { formatMoney } from '../util.js';
 
 export class MeterMixin {
-  // Something filled the meter a little (ignored while drinks are doubled).
-  fillMeter(points) {
-    if (this.drinksDoubled()) return;
-    this.meterLevel = Math.min(METER.full, (this.meterLevel || 0) + points);
-    if (this.meterLevel >= METER.full) this.startDoubleDrinks();
-    this.renderMeter();
-  }
-
-  // Which money moves fill it, and by how much.
-  meterIncome(kind, amount) {
-    if (!(amount > 0)) return;
-    if (kind === 'drinkMoney') this.fillMeter(METER.perDrink);
-    else if (kind === 'tips') this.fillMeter(METER.perTip);
-    else if (kind === 'bonuses') this.fillMeter(METER.perBonus);
-  }
-
-  drinksDoubled() {
-    return this.time.now < (this.doubleDrinksUntil || 0);
-  }
-
-  // What a drink's price is multiplied by right now.
+  // Drink prices aren't changed by the meter any more (kept for serveDrink()).
   drinkPriceFactor() {
-    return this.drinksDoubled() ? METER.priceMultiplier : 1;
+    return 1;
   }
 
-  startDoubleDrinks() {
-    this.doubleDrinksUntil = this.time.now + METER.doubleMs;
-    this.meterLevel = METER.full;
-    SFX.levelUp();
-    this.showBigPopup('Double Drinks!', `Every drink costs ${METER.priceMultiplier}x for ${Math.round(METER.doubleMs / 1000)} seconds`, 'rush');
-    this.highlightBars?.();
-    this.renderMeter();
-  }
-
-  // Runs every second: drains the meter while drinks are doubled, and
-  // empties it when that's over.
-  tickMeter() {
-    if (this.doubleDrinksUntil && !this.drinksDoubled()) {
-      this.doubleDrinksUntil = 0;
-      this.meterLevel = 0;
+  // A click on the meter: restock the bars, with the liquid rising to the top.
+  clickMeter() {
+    SFX.unlock();
+    if (this.restockCost() <= 0) { this.showToast('🍾 The bars are already fully stocked.'); return false; }
+    if (this.cash < this.restockCost()) {
+      SFX.denied();
+      this.showToast(`🍾 Restocking costs ${formatMoney(this.restockCost())}: not enough cash yet.`);
+      return false;
     }
+    const el = this.meterEl || document.getElementById('drinkMeter');
+    el?.classList.add('refilling');
+    clearTimeout(this.refillTimer);
+    this.refillTimer = setTimeout(() => el?.classList.remove('refilling'), 1700);
+    const done = this.restockBar();
+    this.renderMeter();
+    return done;
+  }
+
+  // Runs every second, and after every drink and restock.
+  tickMeter() {
     this.renderMeter();
   }
 
   renderMeter() {
     const el = this.meterEl || (this.meterEl = document.getElementById('drinkMeter'));
-    if (!el) return;
-    const doubled = this.drinksDoubled();
-    const share = doubled
-      ? Math.max(0, (this.doubleDrinksUntil - this.time.now) / METER.doubleMs)
-      : (this.meterLevel || 0) / METER.full;
+    if (!el || !this.maxDrinkStock) return;
+    const max = this.maxDrinkStock();
+    const left = this.drinkStockLeft();
+    const share = max > 0 ? left / max : 0;
     el.style.setProperty('--fill', `${(share * 100).toFixed(1)}%`);
-    el.classList.toggle('doubled', doubled);
-    const label = doubled ? `${Math.ceil((this.doubleDrinksUntil - this.time.now) / 1000)}s` : '';
-    const timer = el.querySelector('.meterTimer');
-    if (timer && timer.textContent !== label) timer.textContent = label;
-    el.dataset.tipText = doubled
-      ? `Double Drinks! Every drink costs ${METER.priceMultiplier}x for ${label} more.`
-      : `Fills up as guests buy drinks, tip and give bonuses. When it's full, drinks cost ${METER.priceMultiplier}x for ${Math.round(METER.doubleMs / 1000)} seconds. ${Math.floor(share * 100)}% full.`;
+    el.classList.toggle('low', share <= DRINK_STOCK.lowShare);
+    el.classList.toggle('empty', left <= 0);
+    const cost = this.restockCost();
+    el.dataset.tipText = cost > 0
+      ? `${left} of ${max} drinks left. Click to restock for ${formatMoney(cost)}.`
+      : `Fully stocked: ${max} drinks. It goes down as guests buy drinks; click it to restock.`;
   }
 
   setupMeter() {
-    this.meterLevel = this.meterLevel || 0;
+    const el = document.getElementById('drinkMeter');
+    el?.addEventListener('click', () => this.clickMeter());
     this.renderMeter();
   }
 }

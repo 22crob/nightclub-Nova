@@ -202,6 +202,21 @@ export class ClubScene extends Phaser.Scene {
         if (this.hoverTile) this.paintFloor(this.hoverTile.gx, this.hoverTile.gy);
         return;
       }
+      // Wallpaper and dance floors are laid the same way: hold and drag
+      // across the walls or the floor (the owner asked for this). On a
+      // phone a dance floor still waits on its spot for ✓ (touchPlace.js).
+      if (holding && holding.wallStyle && p.button === 0) {
+        this.paintingWall = true;
+        dragStart = null;
+        if (this.hoverWall) this.paintWall(this.hoverWall);
+        return;
+      }
+      if (holding && holding.floorStyle && p.button === 0 && !(p.wasTouch && this.touchPlacing())) {
+        this.layingFloor = true;
+        dragStart = null;
+        this.layFloorTile();
+        return;
+      }
       // A bonus badge under the pointer takes the click (see pointerup).
       if (this.bonusAt(p.x, p.y, p.wasTouch)) { dragStart = null; return; }
       dragStart = { x: p.x, y: p.y, wx: this.world.x, wy: this.world.y };
@@ -222,6 +237,8 @@ export class ClubScene extends Phaser.Scene {
       this.updateHoverFromPointer(p);
       if (!this.isDragging) this.updateHoverObject(p); // outline glow (selection.js)
       if (this.paintingFloor && this.hoverTile) this.paintFloor(this.hoverTile.gx, this.hoverTile.gy);
+      if (this.paintingWall && this.hoverWall) this.paintWall(this.hoverWall);
+      if (this.layingFloor) this.layFloorTile();
     });
 
     this.input.on('pointerup', (p) => {
@@ -232,8 +249,8 @@ export class ClubScene extends Phaser.Scene {
         this.isDragging = false;
         return;
       }
-      if (this.paintingFloor) {
-        this.paintingFloor = false;
+      if (this.paintingFloor || this.paintingWall || this.layingFloor) {
+        this.paintingFloor = this.paintingWall = this.layingFloor = false;
         this.saveGame();
         return;
       }

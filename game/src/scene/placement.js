@@ -267,6 +267,18 @@ export class PlacementMixin {
     // the pointer never seems to vanish while something is held.
   }
 
+  // Lays the held dance floor on the hovered tile, if it's free (a drag lays
+  // a stroke of them; already covered tiles are skipped quietly).
+  layFloorTile() {
+    const def = PROP_TYPES[this.selectedProp];
+    if (!def || !def.floorStyle || !this.hoverTile) return;
+    const { gx, gy } = this.hoverTile;
+    if (!this.footprintValid(this.getFootprint(this.selectedProp, this.currentFacing, gx, gy))) return;
+    const fromInventory = this.holdingFromInventory && this.inventoryCount(this.selectedProp) > 0;
+    if (!fromInventory && this.cash < this.currentCost(this.selectedProp)) return;
+    this.placeProp(gx, gy);
+  }
+
   placeProp(gx, gy) {
     if (!this.selectedProp) return; // nothing selected (see deselectProp()) — an empty-handed click does nothing
     const def = PROP_TYPES[this.selectedProp];

@@ -124,6 +124,7 @@ export class UpgradesMixin {
   useDrinkStock() {
     this.drinkStock = Math.max(0, this.drinkStockLeft() - 1);
     this.warnDrinkStock();
+    this.renderMeter?.(); // the stock meter drains a step (meter.js)
   }
 
   restockCost() {
@@ -136,6 +137,7 @@ export class UpgradesMixin {
     this.cash -= cost;
     this.noteIncome('restock', cost);
     this.drinkStock = this.maxDrinkStock();
+    this.renderMeter?.();
     SFX.clink();
     this.showToast('📦 The bars are fully stocked!');
     this.updateUI();
@@ -151,7 +153,7 @@ export class UpgradesMixin {
     if (now < (this.stockWarnAt || 0)) return;
     this.stockWarnAt = now + DRINK_STOCK.warnEveryMs;
     const rec = this.hireableRecords().find((r) => r.staff);
-    if (rec) this.staffSay(rec.staff, left === 0 ? "We're out of drinks! Restock in Staff." : 'Running low on drinks! Restock in Staff.');
+    if (rec) this.staffSay(rec.staff, left === 0 ? "We're out of drinks! Tap the stock meter to restock." : 'Running low on drinks! Tap the stock meter to restock.');
   }
 
   // --- VIP booths ------------------------------------------------------------

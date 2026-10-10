@@ -156,7 +156,7 @@ check('dance floors and regular floors share one category, and the tip says whic
 // Floors are listed in the order they unlock (LEVEL_PLAN.md): a mix of
 // regular and dance floors spread over levels 1-59.
 const floorOrder = await page.$$eval('#shopItems .propSlot', (els) => els.map((e) => /^Dance/.test(e.dataset.tipText) ? 'D' : 'R').join(''));
-check('regular and dance floors unlock mixed together, in the order of the level plan', floorOrder === 'RDDRDRDDRDRDDRDDRDRDDRDRD', floorOrder);
+check('regular and dance floors unlock mixed together, in the order of the level plan', floorOrder === 'RDDRDRDDRDDRDDRDRDRRDRDDRDRD', floorOrder);
 // Clicking a card picks the item up; clicking it again puts it down.
 await page.click('.storeTab[data-tip-name="Seating"]');
 await page.locator('.propSlot').first().click();
@@ -1299,6 +1299,25 @@ const paint = await page.evaluate(() => {
   return r;
 });
 check('dragging paints a stroke of floor ($3 a tile)', paint.a === 'fpConcrete' && paint.b === 'fpConcrete' && paint.costs.length >= 2 && paint.costs.every((c) => c === 3), JSON.stringify(paint));
+// Dance floors are laid the same way: hold and drag lays a stroke of tiles.
+await page.evaluate(() => { const s = window.__clubNova.scene.getScene('club'); s.cash += 500; s.selectProp('basicFloor'); });
+{
+  const a = await tileXY(6, 8);
+  const b = await tileXY(8, 8);
+  await page.mouse.move(a.x, a.y); await page.mouse.move(a.x + 1, a.y);
+  await page.mouse.down();
+  await page.mouse.move(b.x, b.y, { steps: 10 });
+  await page.mouse.up();
+  await page.waitForTimeout(150);
+}
+const danceDrag = await page.evaluate(() => {
+  const s = window.__clubNova.scene.getScene('club');
+  const laid = ['6,8', '7,8', '8,8'].filter((k) => s.placed[k] && s.placed[k].type === 'basicFloor');
+  for (const k of laid) s.removeProp(s.placed[k]);
+  s.deselectProp();
+  return { laid: laid.length };
+});
+check('holding a dance floor, dragging lays a stroke of tiles', danceDrag.laid >= 2, JSON.stringify(danceDrag));
 check('painted floor is saved, and isn\'t a dance floor', paint.saved === 'fpConcrete' && !paint.dance, JSON.stringify(paint));
 
 // Seating: every piece has its art, and a patron can sit on a couch (drawn
@@ -2363,42 +2382,38 @@ const model3d = await page.evaluate(() => {
 });
 check('guests made from the owner\'s 3D model load with drink and sit-and-talk clips; drawn guests fall back to standing and sitting', model3d.found && model3d.drawnFallback && ( model3d.drinking === `patron_${model3d.idx}_drink_front` && model3d.talking === `patron_${model3d.idx}_sittalk_front` && model3d.sameScale), JSON.stringify(model3d));
 
-// The drink meter on the right edge fills with drinks, tips and bonuses;
-// full, drinks cost double for 30 seconds while it drains, then it empties.
+// The stock meter on the right edge shows the drinks left: full when
+// stocked, a step lower with every drink served, red when low; clicking it
+// restocks and the liquid rises back to the top.
 const meter = await page.evaluate(() => {
   const s = window.__clubNova.scene.getScene('club');
   const out = {};
   const el = document.getElementById('drinkMeter');
-  s.doubleDrinksUntil = 0;
-  s.meterLevel = 0;
-  s.noteIncome('drinkMoney', 10);
-  out.afterDrink = s.meterLevel;
-  s.noteIncome('tips', 3);
-  out.afterTip = s.meterLevel;
-  s.noteIncome('bonuses', 88);
-  out.afterBonus = s.meterLevel;
-  s.noteIncome('wages', 50);
-  out.wagesIgnored = s.meterLevel === out.afterBonus;
-  out.fillShown = el.style.getPropertyValue('--fill');
+  s.drinkStock = s.maxDrinkStock();
+  s.renderMeter();
+  out.full = el.style.getPropertyValue('--fill');
   const bar = Object.values(s.placed).find((r) => r.type && /Bar/i.test(r.type));
   if (!s.patrons.some((p) => !p.gone)) { s.patronCapacity = () => 99; s.trySpawnPatron(); }
   const guest = s.patrons.find((p) => !p.gone);
-  out.found = [!!bar, !!guest];
   if (guest) guest.order = 'cocktail';
-  out.normalPrice = bar && guest ? s.serveDrink(bar, guest) : null;
-  s.fillMeter(1000);
-  out.doubled = s.drinksDoubled() && el.classList.contains('doubled');
-  if (guest) guest.order = 'cocktail';
-  out.doublePrice = bar && guest ? s.serveDrink(bar, guest) : null;
-  out.frozen = (() => { const l = s.meterLevel; s.fillMeter(5); return s.meterLevel === l; })();
-  s.doubleDrinksUntil = s.time.now - 1;
-  s.tickMeter();
-  out.over = !s.drinksDoubled() && s.meterLevel === 0 && !el.classList.contains('doubled');
+  const price = bar && guest ? s.serveDrink(bar, guest) : null;
+  out.priced = price > 0;
+  out.oneLess = s.drinkStockLeft() === s.maxDrinkStock() - 1 && el.style.getPropertyValue('--fill') !== out.full;
+  s.drinkStock = 1;
+  s.renderMeter();
+  out.low = el.classList.contains('low');
+  const cash = s.cash;
+  s.cash = 100000;
+  el.click();
+  out.refilling = el.classList.contains('refilling');
+  out.restocked = s.drinkStockLeft() === s.maxDrinkStock() && el.style.getPropertyValue('--fill') === '100.0%' && !el.classList.contains('low');
+  out.paid = s.cash < 100000;
+  s.cash = cash;
   out.noZoom = !document.getElementById('zoomSlider') && !document.getElementById('zoomIn');
   return out;
 });
-check('the drink meter fills with drinks, tips and bonuses (not wages) and shows it', meter.afterDrink === 2 && meter.afterTip === 3 && meter.afterBonus === 8 && meter.wagesIgnored && meter.fillShown === '8.0%' && meter.noZoom, JSON.stringify(meter));
-check('a full drink meter doubles drink prices for a while, then empties', meter.doubled && meter.normalPrice > 0 && meter.doublePrice === meter.normalPrice * 2 && meter.frozen && meter.over, JSON.stringify(meter));
+check('the stock meter is full when stocked and drops with each drink served, glowing red when low', meter.full === '100.0%' && meter.priced && meter.oneLess && meter.low && meter.noZoom, JSON.stringify(meter));
+check('clicking the stock meter restocks the bars, the liquid rising back to the top', meter.refilling && meter.restocked && meter.paid, JSON.stringify(meter));
 
 // Money pops up over guests in big outlined letters; while a boost
 // multiplies tips, "+1.5x Tip!" rides above the amount.

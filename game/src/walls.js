@@ -689,37 +689,65 @@ export const WALL_STYLES = {
 
   // Backlit white shelves full of bottles, as behind the best bars.
   bottleShelf: {
+    // A built-in back-bar shelf at head height: two backlit rows of bottles
+    // set into a dark wall, a little ledge under them and dark panelling
+    // below (the owner found the old floor-to-ceiling shelves too much).
     frames: 1,
     draw(ctx, W, H) {
-      ctx.fillStyle = '#16121c';
+      ctx.fillStyle = '#141018';
       ctx.fillRect(0, 0, W, H);
+      const top = Math.round(H * 0.2), bottom = Math.round(H * 0.62); // head height down to chest height
+      const rows = 2, rh = (bottom - top) / rows;
+      // Panelling below the ledge.
+      ctx.fillStyle = '#1c1520';
+      ctx.fillRect(0, bottom, W, H - bottom);
+      ctx.fillStyle = 'rgba(255,255,255,0.05)';
+      ctx.fillRect(W / 2 - 1, bottom + 10, 2, H - bottom - BASEBOARD - 16);
+      // The recess, lit warm from behind.
       const r = rng(73);
-      const shelves = 5, sh = (H - BASEBOARD - 8) / shelves;
       const colors = ['#2f8a3a', '#7a3a12', '#c8d4dc', '#3a5ab8', '#a01a3a', '#d8a030', '#5a2a78'];
-      for (let row = 0; row < shelves; row++) {
-        const y = 6 + row * sh;
-        // Glow behind the bottles.
-        const g = ctx.createLinearGradient(0, y, 0, y + sh);
-        g.addColorStop(0, 'rgba(255,250,235,0.25)');
-        g.addColorStop(1, 'rgba(255,250,235,0.85)');
+      for (let row = 0; row < rows; row++) {
+        const y = top + row * rh;
+        const g = ctx.createLinearGradient(0, y, 0, y + rh);
+        g.addColorStop(0, '#5a3418');
+        g.addColorStop(1, '#ffc070');
         ctx.fillStyle = g;
-        ctx.fillRect(3, y, W - 6, sh - 4);
-        // Bottles standing on the shelf.
-        let x = 6;
-        while (x < W - 10) {
-          const bw = 6 + r() * 3, bh2 = sh * (0.55 + r() * 0.3);
+        ctx.fillRect(0, y, W, rh);
+        // A few chunky bottles with rounded shoulders, gaps between.
+        let x = 4 + r() * 4;
+        while (x < W - 12) {
+          const bw = 8 + r() * 3, bh2 = rh * (0.55 + r() * 0.25);
+          const by = y + rh - 3 - bh2;
+          const body = by + bh2 * 0.38;
           ctx.fillStyle = colors[(r() * colors.length) | 0];
-          const by = y + sh - 4 - bh2;
-          ctx.fillRect(x, by + bh2 * 0.35, bw, bh2 * 0.65);
-          ctx.fillRect(x + bw / 2 - 1.5, by, 3, bh2 * 0.4);
-          ctx.fillStyle = 'rgba(255,255,255,0.35)';
-          ctx.fillRect(x + 1, by + bh2 * 0.4, 1.5, bh2 * 0.5);
-          x += bw + 2 + r() * 2;
+          ctx.fillRect(x, body, bw, y + rh - 3 - body);
+          ctx.beginPath();
+          ctx.ellipse(x + bw / 2, body, bw / 2, bh2 * 0.12, 0, Math.PI, 0);
+          ctx.fill();
+          ctx.fillRect(x + bw / 2 - 1.5, by, 3, bh2 * 0.32);
+          ctx.fillStyle = 'rgba(255,255,255,0.5)';
+          ctx.fillRect(x + 1.5, body + 2, 1.5, (y + rh - 3 - body) * 0.7);
+          ctx.fillStyle = 'rgba(255,240,200,0.75)'; // label
+          ctx.fillRect(x + 1, body + (y + rh - 3 - body) * 0.4, bw - 2, 3);
+          x += bw + 4 + r() * 5;
         }
-        // The white shelf.
-        ctx.fillStyle = '#f2f0ec';
-        ctx.fillRect(0, y + sh - 4, W, 4);
+        // Glass shelf with a bright edge.
+        ctx.fillStyle = 'rgba(255,240,220,0.9)';
+        ctx.fillRect(0, y + rh - 3, W, 2);
+        ctx.fillStyle = 'rgba(40,24,12,0.8)';
+        ctx.fillRect(0, y + rh - 1, W, 1);
       }
+      // The cabinet's frame: a dark top with a soft light strip, and the ledge.
+      ctx.fillStyle = '#2a1c14';
+      ctx.fillRect(0, top - 6, W, 6);
+      ctx.fillStyle = 'rgba(255,214,150,0.7)';
+      ctx.fillRect(0, top - 1, W, 1.5);
+      ctx.fillStyle = '#3a2618';
+      ctx.fillRect(0, bottom, W, 6);
+      ctx.fillStyle = 'rgba(255,255,255,0.25)';
+      ctx.fillRect(0, bottom, W, 1.5);
+      ctx.fillStyle = 'rgba(0,0,0,0.45)';
+      ctx.fillRect(0, bottom + 6, W, 4);
       baseboard(ctx, W, H, '#0c0a10');
     },
   },

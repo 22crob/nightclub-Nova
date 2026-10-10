@@ -21,7 +21,6 @@ export class RatingMixin {
   noteIncome(kind, amount) {
     this.totals = this.totals || {};
     this.totals[kind] = (this.totals[kind] || 0) + amount;
-    this.meterIncome(kind, amount);
   }
 
   noteStormOut() {

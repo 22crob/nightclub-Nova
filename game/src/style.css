@@ -227,8 +227,7 @@ body { font-family: var(--ui-font); color: var(--ink); }
 
 /* ------------------------------------------------------------------ */
 /* Right edge: the drink meter (scene/meter.js), a glass cylinder of    */
-/* purple liquid (--fill) that fills with drinks, tips and bonuses;     */
-/* full, it glows and drains while drinks cost double.                  */
+/* purple liquid (--fill) showing the drinks left; click to restock.   */
 /* ------------------------------------------------------------------ */
 #drinkMeter {
   --fill: 0%;
@@ -275,11 +274,15 @@ body { font-family: var(--ui-font); color: var(--ink); }
   font-family: var(--money-font); font-weight: 800; font-size: 11px; color: #fff; font-variant-numeric: tabular-nums;
 }
 .meterTimer:empty { display: none; }
-#drinkMeter.doubled .meterGlass { box-shadow: 0 0 0 2px var(--edge), inset 0 0 0 2px #fff, 0 0 26px #d27bff, 0 0 46px rgba(255, 79, 216, 0.6); animation: readyPulse 0.8s ease-in-out infinite; }
-#drinkMeter.doubled .meterBase::after {
-  content: 'x2'; position: absolute; top: -12px; right: -14px; padding: 1px 5px; border-radius: 8px; transform: rotate(10deg);
-  background: var(--price); color: #3a1a00; border: 2px solid #fff; font-family: var(--display-font); font-weight: 900; font-size: 11px;
-}
+/* Restocking: the liquid rises slowly to the top with a bright glow. */
+#drinkMeter { cursor: pointer; }
+#drinkMeter:hover .meterBase { animation: boing 0.35s ease-out; }
+#drinkMeter.refilling .meterLiquid { transition: height 1.5s cubic-bezier(.25, .8, .3, 1); }
+#drinkMeter.refilling .meterGlass { box-shadow: 0 0 0 2px var(--edge), inset 0 0 0 2px #fff, 0 0 26px #d27bff, 0 0 46px rgba(180, 92, 255, 0.6); }
+#drinkMeter.refilling .meterBubbles { animation-duration: 0.6s; }
+/* Running low: the glass glows red and pulses, asking for a restock. */
+#drinkMeter.low:not(.refilling) .meterGlass { box-shadow: 0 0 0 2px var(--edge), inset 0 0 0 2px #fff, 0 0 18px #ff4f6a, 0 0 32px rgba(255, 60, 90, 0.55); animation: readyPulse 1s ease-in-out infinite; }
+#drinkMeter.low:not(.refilling) .meterBase { background: var(--shine), linear-gradient(180deg, #ff6f8a, #c0183a); }
 @media (height <= 560px) { .meterGlass { height: 110px; } }
 
 /* ------------------------------------------------------------------ */
