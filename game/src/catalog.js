@@ -4,6 +4,11 @@ import barWoodSprite from './assets/sprites/bar_wood.json';
 import barNeonSprite from './assets/sprites/bar_neon.json';
 import barIceSprite from './assets/sprites/bar_ice.json';
 import bar_speakeasySprite from './assets/sprites/bar_speakeasy.json';
+import bar_chromeSprite from './assets/sprites/bar_chrome.json';
+import bar_velvetSprite from './assets/sprites/bar_velvet.json';
+import bar_ultravioletSprite from './assets/sprites/bar_ultraviolet.json';
+import bar_pinkneonSprite from './assets/sprites/bar_pinkneon.json';
+import bar_champagneSprite from './assets/sprites/bar_champagne.json';
 import bar_discoSprite from './assets/sprites/bar_disco.json';
 import bar_marbleSprite from './assets/sprites/bar_marble.json';
 import bar_cyberSprite from './assets/sprites/bar_cyber.json';
@@ -288,6 +293,13 @@ export const PROP_TYPES = {
   iceBar: barTier('iceBar', 'Ice Bar', 400, 30, 'bar_ice', barIceSprite),
   // The ten themed bars (art/blender/bar_designs.py).
   speakeasyBar: barTier('speakeasyBar', 'Speakeasy Bar', 500, 14, 'bar_speakeasy', bar_speakeasySprite),
+  // The nightclub batch (October 2026, art/blender/bar_designs.py), made
+  // after the item review to fill the gaps between the bars kept.
+  chromeBar: barTier('chromeBar', 'Chrome Bar', 220, 10, 'bar_chrome', bar_chromeSprite),
+  velvetBar: barTier('velvetBar', 'Velvet Bar', 380, 18, 'bar_velvet', bar_velvetSprite),
+  ultravioletBar: barTier('ultravioletBar', 'Ultraviolet Bar', 480, 26, 'bar_ultraviolet', bar_ultravioletSprite),
+  pinkNeonBar: barTier('pinkNeonBar', 'Pink Neon Bar', 600, 35, 'bar_pinkneon', bar_pinkneonSprite),
+  champagneBar: barTier('champagneBar', 'Champagne Bar', 700, 44, 'bar_champagne', bar_champagneSprite),
   discoBar: barTier('discoBar', 'Disco Bar', 560, 40, 'bar_disco', bar_discoSprite),
   marbleBar: barTier('marbleBar', 'Marble Lounge Bar', 750, 48, 'bar_marble', bar_marbleSprite),
   cyberBar: barTier('cyberBar', 'Cyber Bar', 900, 56, 'bar_cyber', bar_cyberSprite),
@@ -439,7 +451,7 @@ export const PROP_TYPES = {
 // glow on the floor around them: [colour, radius in tiles].
 const PROP_LIGHTS = {
   bar: [0xffa050, 1.4], neonBar: [0xc040ff, 2.0], iceBar: [0x60c8ff, 2.0],
-  speakeasyBar: [0xffb04a, 1.4],
+  speakeasyBar: [0xffb04a, 1.4], chromeBar: [0x2ae0ff, 1.6], velvetBar: [0xffa040, 1.3], ultravioletBar: [0xa24bff, 1.9], pinkNeonBar: [0xff3fb4, 1.9], champagneBar: [0xffc060, 1.5],
   discoBar: [0xff60c0, 2.0], cyberBar: [0x23e4ff, 2.0],   proBooth: [0xffb45a, 1.0], dj: [0xff60c0, 1.2], neonBooth: [0xc040ff, 1.8], iceBooth: [0x60c8ff, 1.8],
   lavaLamp: [0xff3a28, 1.5], glowTube: [0x30c0ff, 1.6], neonSign: [0xff40c0, 1.6], aquarium: [0x3080ff, 1.5],
   speakerTower: [0x30e0ff, 0.9], neonSpeaker: [0xc040ff, 1.3], discoBall: [0xc8c8ff, 1.2], spotlight: [0xfff0c0, 1.6],

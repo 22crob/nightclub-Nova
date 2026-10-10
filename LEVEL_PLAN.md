@@ -10,6 +10,8 @@
 
 **Your current club keeps everything it has.** Things already placed or in storage stay yours, even if they now unlock later.
 
+**Nightclub batch (October 2026):** after the review I made new bars and booths in the club style the owner kept. The bars went in between the kept ones (Chrome 10, Velvet 18, Ultraviolet 26, Pink Neon 35, Champagne 44).
+
 ## Level by level
 
 | Level | Unlocks |
@@ -23,7 +25,7 @@
 | 7 | DJ booth: Brick Booth; Decoration: Lava Lamp |
 | 8 | Dance floor: Checker Floor; Decoration: Speaker Tower; Celebrity: Rico Diamond; Bouncer: +1 |
 | 9 | Seat/booth: Candle Table; Wallpaper: Brick |
-| 10 | DJ booth: Club Booth; Decoration: Globe Lamp; Drink: Mojito; Bartender: +1 |
+| 10 | Bar: Chrome Bar; DJ booth: Club Booth; Decoration: Globe Lamp; Drink: Mojito; Bartender: +1 |
 | 11 | Floor: Stone Tiles; Decoration: Neon Sign |
 | 12 | Dance floor: Soft Glow; Wallpaper: Stripes; Party: Neon Night |
 | 13 | Seat/booth: Chrome Bar Stool; Decoration: Crystal Column; Celebrity: Max Volt |
@@ -31,7 +33,7 @@
 | 15 | DJ booth: Neon Booth; Wallpaper: Subway Tile |
 | 16 | Dance floor: Wood Floor; Decoration: Glow Plinth; Drink: Martini; Bartender: +1 |
 | 17 | Decoration: Pool Table; Wallpaper: Wood Panel |
-| 18 | Floor: Wood Planks; Seat/booth: Chesterfield; Celebrity: DJ Kai Blaze; Bouncer: +1 |
+| 18 | Bar: Velvet Bar; Floor: Wood Planks; Seat/booth: Chesterfield; Celebrity: DJ Kai Blaze; Bouncer: +1 |
 | 19 | DJ booth: Truss Booth; Decoration: Pink Globe Lamp |
 | 20 | Decoration: Speaker Stack; Wallpaper: Wood Planks; Party: VIP Gala |
 | 21 | Dance floor: Blue Pulse; Decoration: Spotlight |
@@ -39,7 +41,7 @@
 | 23 | Decoration: Pink Crystal Column; Wallpaper: Retro Dots; Bartender: +1 |
 | 24 | DJ booth: LED Screen Booth; Decoration: Glass Screen; Celebrity: Leo Lux; Drink: Champagne |
 | 25 | Floor: Red Carpet; Dance floor: Pink Pulse |
-| 26 | Decoration: Aquarium; Wallpaper: Velvet; Party: Glow Party |
+| 26 | Bar: Ultraviolet Bar; Decoration: Aquarium; Wallpaper: Velvet; Party: Glow Party |
 | 27 | DJ booth: Ice Booth; Seat/booth: Red Velvet Booth |
 | 28 | Decoration: Purple Liquid Tank; Wallpaper: Neon Strip |
 | 29 | Dance floor: Two-Tone Blink; Decoration: Neon Speaker |
@@ -48,7 +50,7 @@
 | 32 | Seat/booth: Wood Lounge; Wallpaper: Speaker Wall |
 | 33 | Dance floor: Glow Floor; Decoration: Retro Robot; Party: Masquerade Ball |
 | 34 | Decoration: Gold Trophy; Wallpaper: Equalizer; Drink: Nova Neon |
-| 35 | DJ booth: Holo Booth; Decoration: Glass Waterfall |
+| 35 | Bar: Pink Neon Bar; DJ booth: Holo Booth; Decoration: Glass Waterfall |
 | 36 | Seat/booth: Black Leather Booth; Decoration: Blue Liquid Tank |
 | 37 | Dance floor: Light-Up Floor; Wallpaper: Black Arches; Celebrity: Jett Starr |
 | 38 | Floor: Marble; Decoration: Lucky Cat |
@@ -57,7 +59,7 @@
 | 41 | Seat/booth: Tulip Lounge; Decoration: Bottle Cabinet |
 | 42 | Dance floor: Neon Rings; Decoration: Truss Spotlights |
 | 43 | DJ booth: Glow Panel Booth; Wallpaper: Bottle Shelf |
-| 44 | Floor: Black Gloss; Decoration: Glass Divider |
+| 44 | Bar: Champagne Bar; Floor: Black Gloss; Decoration: Glass Divider |
 | 45 | Seat/booth: LED Cube Bench; Decoration: Bubble Column |
 | 46 | Dance floor: Color Wave; Wallpaper: Neon Chevron |
 | 47 | DJ booth: Faceted Booth; Decoration: Ribbon Sculpture |

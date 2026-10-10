@@ -245,7 +245,8 @@ const tiers = await page.evaluate(() => {
   const rec = s.placed['2,5'];
   return {
     layered: !!rec.frontObject && rec.frontObject.depth > rec.gameObject.depth,
-    bars: ['woodBar', 'bar', 'neonBar', 'iceBar', 'speakeasyBar', 'discoBar', 'marbleBar', 'cyberBar'].filter((k) => s.hasLayerSprites(k)).length,
+    bars: ['woodBar', 'bar', 'neonBar', 'iceBar', 'speakeasyBar', 'discoBar', 'marbleBar', 'cyberBar',
+      'chromeBar', 'velvetBar', 'ultravioletBar', 'pinkNeonBar', 'champagneBar'].filter((k) => s.hasLayerSprites(k)).length,
     booths: ['woodBooth', 'proBooth', 'brickBooth', 'dj', 'neonBooth', 'trussBooth', 'screenBooth',
       'iceBooth', 'decoBooth', 'holoBooth', 'glowPanelBooth', 'curveBooth', 'facetBooth', 'rackBooth', 'capsuleBooth', 'glassBooth'].filter((k) => s.hasAnySprite(k)).length,
     // The owner's sketched decorations and Booth 7 (October 2026), with
@@ -256,7 +257,7 @@ const tiers = await page.evaluate(() => {
       .every(([k, n]) => s.getFootprint(k, 0, 0, 0).length === n),
   };
 });
-check('all eight bars load, each in two layers', tiers.bars === 8, `${tiers.bars} of 8`);
+check('all thirteen bars load (the nightclub batch too), each in two layers', tiers.bars === 13, `${tiers.bars} of 13`);
 check('a bar facing the camera draws its counter in front', tiers.layered);
 check('all sixteen DJ booth tiers load', tiers.booths === 16, `${tiers.booths} of 16`);
 check('the owner\'s sketched decorations and Gem Lounge load, wide ones on their wide footprints', tiers.sketched === 15 && tiers.wide, JSON.stringify(tiers));
