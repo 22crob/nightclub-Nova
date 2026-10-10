@@ -273,14 +273,103 @@ def sit_flip(view, p):
     return p
 
 
+# Clips drawn whole, frame by frame (the owner's preferred way, October
+# 2026: "different drawings jumping frame to frame"): <name>_<clip>_<view>.png
+# is a picture of the frames side by side, left to right, on white. They
+# replace the posed frames for that clip, at their own speed.
+DRAWN_FPS = {'walk': 4, 'idle': 2, 'dance': 4, 'sit': 1}
+
+
+def drawn_frames(name, clip, view, height):
+    """The whole drawn frames of a clip, or None: cut off the white, split
+    into figures left to right, scaled together so the first stands
+    `height` px tall (sheet px), each centred on its head with its soles on
+    the ground line. Nothing inside a drawing is moved."""
+    path = os.path.join(HERE, f'{name}_{clip}_{view}.png')
+    if not os.path.exists(path):
+        return None
+    src = Image.open(path).convert('RGBA')
+    if (np.array(src)[:, :, 3] < 128).mean() > 0.2:
+        # Already cut out (ChatGPT can give a see-through background).
+        rgba = np.array(src)
+        rgba[:, :, 3] = np.where(rgba[:, :, 3] < 24, 0, rgba[:, :, 3])
+        return split_frames(rgba, height)
+    img = src.convert('RGB')
+    a = np.array(img).astype(int)
+    white = a.min(2) >= 240
+    lab, _ = ndimage.label(white)
+    edge = np.unique(np.concatenate([lab[0], lab[-1], lab[:, 0], lab[:, -1]]))
+    bg = np.isin(lab, edge[edge > 0])
+    # Specks of compression noise out in the white count as background.
+    flab, _ = ndimage.label(~bg)
+    sizes = np.bincount(flab.ravel())
+    bg |= (sizes < 400)[flab] & (flab > 0)
+    # Soften the rim: pixels next to the background fade out by how light
+    # they are, so no white fringe shows on the dark club.
+    rim = ndimage.binary_dilation(bg, iterations=2) & ~bg
+    alpha = np.where(bg, 0, 255).astype(float)
+    light = a.min(2)
+    alpha[rim] = np.clip((255 - light[rim]) / 120 * 255, 0, 255)
+    rgba = np.dstack([a.astype(np.uint8), alpha.astype(np.uint8)])
+    return split_frames(rgba, height)
+
+
+def split_frames(rgba, height):
+    """Splits a cut-out picture of frames side by side into frames on the
+    sheet's canvas (see drawn_frames())."""
+    fg = rgba[:, :, 3] > 20
+    cols = np.where(fg.any(0))[0]
+    # Figures are separated by empty columns.
+    runs, start = [], cols[0]
+    for x0, x1 in zip(cols, cols[1:]):
+        if x1 - x0 > 8:
+            runs.append((start, x0 + 1))
+            start = x1
+    runs.append((start, cols[-1] + 1))
+    runs = [r for r in runs if r[1] - r[0] > 60]
+    figs = []
+    for x0, x1 in runs:
+        rows = np.where(fg[:, x0:x1].any(1))[0]
+        figs.append(Image.fromarray(rgba[rows[0]:rows[-1] + 1, x0:x1], 'RGBA'))
+    scale = height * SS / figs[0].height
+    out = []
+    for f in figs:
+        f = scaled(f, scale)
+        fa = np.array(f)[:, :, 3] > 40
+        top = np.where(fa.any(1))[0]
+        head = fa[top[0]:top[0] + int(f.height * 0.3)]
+        hx = np.where(head.any(0))[0]
+        cx = (hx[0] + hx[-1]) / 2
+        c = Image.new('RGBA', (FW * SS, FH * SS))
+        c.alpha_composite(f, (int(round(FW * SS / 2 - cx)), int(round(FEET_Y * SS - f.height))))
+        out.append(c)
+    return out
+
+
 def build(name, preview=None):
     views = find_parts(os.path.join(HERE, f'{name}_parts.png'))
     # The head (no hair) is this share of the frame height at SS.
     unit = (FH * SS * 0.31) / views['front']['head'].height
     rigs = {v: Rig(views[v], v, unit) for v in views}
-    rows = []
+    # Standing height: soles to the top of the hair in the rest pose.
+    rest = draw_pose(rigs['front'], stand(), (FW * SS, FH * SS), (FW * SS / 2, FEET_Y * SS))
+    a = np.array(rest)[:, :, 3] > 40
+    top = np.where(a.any(1))[0].min() / SS
+    standing = FEET_Y - top
+    rows, counts, fps = [], {}, dict(FPS)
     for clip, poses in POSES.items():
+        drawn = {v: drawn_frames(name, clip, v, standing * 0.97) for v in ('front', 'back')}
+        n = next((len(d) for d in drawn.values() if d), len(poses))
+        counts[clip] = n
+        if any(drawn.values()):
+            fps[clip] = DRAWN_FPS[clip]
+            # The view not drawn yet takes the same number of posed frames,
+            # evenly spaced (a two-step walk takes the two steps).
+            poses = [poses[i * len(poses) // n] for i in range(n)]
         for view in ('front', 'back'):
+            if drawn[view]:
+                rows.append((f'{clip}_{view}', [f.resize((FW, FH), Image.LANCZOS) for f in drawn[view]]))
+                continue
             frames = []
             for p in poses:
                 p = json.loads(json.dumps(p))
@@ -302,13 +391,9 @@ def build(name, preview=None):
     for k, f in enumerate(cells):
         if f is not None:
             sheet.alpha_composite(f, ((k % COLUMNS) * FW, (k // COLUMNS) * FH))
-    # Standing height: soles to the top of the hair in the rest pose.
-    rest = draw_pose(rigs['front'], stand(), (FW * SS, FH * SS), (FW * SS / 2, FEET_Y * SS))
-    a = np.array(rest)[:, :, 3] > 40
-    top = np.where(a.any(1))[0].min() / SS
     meta = {'frameWidth': FW, 'frameHeight': FH, 'columns': COLUMNS, 'originX': 0.5,
-            'originY': round(FEET_Y / FH, 5), 'standingHeight': round(FEET_Y - top, 1),
-            'starts': starts, 'frames': {k: len(v) for k, v in POSES.items()}, 'fps': FPS}
+            'originY': round(FEET_Y / FH, 5), 'standingHeight': round(standing, 1),
+            'starts': starts, 'frames': counts, 'fps': fps}
     if preview:
         os.makedirs(preview, exist_ok=True)
         bg = Image.new('RGBA', sheet.size, (70, 60, 90, 255))
