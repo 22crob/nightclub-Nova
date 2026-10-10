@@ -477,6 +477,195 @@ def build_candy():
     foot_rail(plain('#ff4fa8', rough=0.3))
 
 
+# --------------------------------------------------------------------------
+# The nightclub batch (October 2026): made after the owner's item review,
+# from the kept bars and the main reference clubs. Glossy black, white,
+# chrome and velvet, lit by the bar itself.
+# --------------------------------------------------------------------------
+
+def bays(frame, glow_hex, bottle_cols, cols=3, rows=2, seed=0, strength=1.6):
+    """A back wall of backlit bottle bays: a frame of cells, each glowing
+    from behind with a few bottles standing in it (the reference clubs'
+    white cabinets lit purple)."""
+    w = 0.92 / cols
+    h = (HZ1 - HZ0 - 0.06) / rows
+    for r in range(rows):
+        for c in range(cols):
+            x0 = -0.46 + c * w
+            z0 = HZ0 + 0.03 + r * h
+            box(f'BayGlow{r}_{c}', x0 + 0.02, x0 + w - 0.02, HY1 - 0.08, HY1 - 0.06, z0 + 0.02, z0 + h - 0.02,
+                principled(f'Bay{glow_hex}{strength}', srgb(glow_hex), rough=0.6, emission=srgb(glow_hex), emission_strength=strength), bevel=0)
+            box(f'BayShelf{r}_{c}', x0 + 0.02, x0 + w - 0.02, 0.92, HY1 - 0.06, z0, z0 + 0.025, frame, bevel=0.003)
+            bottle_row(f'Bottle{r}_{c}_', x0 + 0.05, x0 + w - 0.05, 1.15, z0 + 0.025, 2, bottle_cols, seed=seed + r * 7 + c,
+                       heights=(0.2, min(0.28, h - 0.1)))
+    for c in range(cols + 1):
+        x = -0.46 + c * w
+        box(f'BayPost{c}', x - 0.018, x + 0.018, 0.9, 0.96, HZ0, HZ1, frame, bevel=0.004)
+    for r in range(rows + 1):
+        z = HZ0 + 0.03 + r * h
+        box(f'BayRail{r}', -0.47, 0.47, 0.9, 0.96, z - 0.012, z + 0.012, frame, bevel=0.003)
+
+
+# 11. Ultraviolet Bar: a white gloss counter banded in purple light, and
+#     white bottle bays glowing purple behind (reference club 2).
+def build_ultraviolet():
+    white = principled('UvWhite', srgb('#f4f2f8'), rough=0.12)
+    black = principled('UvBlack', srgb('#16121e'), rough=0.15)
+    purple = glowing('#a24bff', 5)
+    shell(white, black, white)
+    for z in (0.22, 0.52, 0.82):
+        box(f'Band{z}', -0.45, 0.45, -1.292, -1.28, z, z + 0.05, purple, bevel=0)
+    box('TopGlow', -0.49, 0.49, -1.385, -1.37, 0.99, 1.03, purple, bevel=0)
+    box('KickGlow', -0.45, 0.45, -1.27, -1.255, 0.01, 0.035, purple, bevel=0)
+    hutch(white, black, crown=white)
+    bays(white, '#8a2aff', bottles_of('#ffffff', '#c8a0ff', '#ff6fd8', glow=0.6), seed=201, strength=1.2)
+    box('CrownGlow', -0.49, 0.49, HY0 - 0.035, HY0 - 0.02, HZ1 + 0.02, HZ1 + 0.05, purple, bevel=0)
+    for i, (x, c) in enumerate(((-0.3, '#b46bff'), (-0.16, '#ff6fd8'))):
+        cocktail(f'Uv{i}', x, -1.12, 1.05, clear_glass(), c)
+    foot_rail(principled('UvChrome', srgb('#d6dae4'), rough=0.15))
+
+
+# 12. Champagne Bar: black lacquer quilted in gold, and behind it a gold
+#     arch over a mirror, champagne on ice and a wall of golden bottles.
+def build_champagne():
+    black = principled('ChampBlack', srgb('#141016'), rough=0.12)
+    gold = principled('ChampGold', srgb('#f0c24a'), rough=0.2, emission=srgb('#a87000'), emission_strength=0.15)
+    shell(black, gold, black, top_edge=gold)
+    # Gold diamond quilting on the counter front, clipped to the panel.
+    X0, X1, Z0, Z1 = -0.43, 0.43, 0.1, 0.92
+    for i in range(-4, 5):
+        for slope in (1, -1):
+            pts = []
+            for x in (X0, X1):                      # z = c + slope * 1.6 * x
+                c = 0.51 + i * 0.27
+                pts.append((x, c + slope * 1.6 * x))
+            (xa, za), (xb, zb) = pts
+            seg = []
+            for t in [k / 200 for k in range(201)]:
+                x, z = xa + (xb - xa) * t, za + (zb - za) * t
+                if Z0 <= z <= Z1:
+                    seg.append((x, z))
+            if len(seg) > 1:
+                neon_tube(f'Quilt{slope}_{i}', [(seg[0][0], -1.29, seg[0][1]), (seg[-1][0], -1.29, seg[-1][1])], 0.007, gold)
+    foot_rail(gold)
+    hutch(black, black, crown=gold)
+    bays(gold, '#d06a10', bottles_of('#2a5a2a', '#e8c070', '#3a2a10', glow=0.2), cols=3, rows=2, seed=211, strength=0.7)
+    for k in range(13):           # a gold arch along the crown
+        a = math.radians(180 * k / 12)
+        neon_tube(f'Arch{k}', [(0.46 * math.cos(a), HY0 - 0.03, HZ1 + 0.05 + 0.22 * math.sin(a)),
+                               (0.46 * math.cos(a + math.pi / 12), HY0 - 0.03, HZ1 + 0.05 + 0.22 * math.sin(a + math.pi / 12))], 0.012, gold)
+    cylinder('Bucket', 0.24, -1.07, 1.05, 1.2, 0.07, principled('ChampSilver', srgb('#d8dce4'), rough=0.15), verts=20)
+    cylinder('Bubbly', 0.24, -1.07, 1.1, 1.36, 0.028, principled('ChampBottle', srgb('#1f4a2a'), rough=0.15), verts=12)
+    cylinder('Foil', 0.24, -1.07, 1.36, 1.41, 0.017, gold, verts=10)
+    fizz = glowing('#ffe9a8', 1.5)
+    for x in (-0.3, -0.19, -0.08):
+        cylinder(f'FluteStem{x}', x, -1.12, 1.05, 1.12, 0.004, gold, verts=8)
+        cone(f'Flute{x}', x, -1.12, 1.12, 1.25, 0.012, 0.025, fizz)
+
+
+# 13. Velvet Bar: a counter of deep red tufted velvet with a black top,
+#     and behind it amber-lit arched niches full of bottles.
+def build_velvet():
+    velvet = principled('BarVelvet', srgb('#9a0c26'), rough=0.85)
+    dark = principled('BarVelvetDark', srgb('#5a0616'), rough=0.85)
+    black = principled('BarBlackTop', srgb('#121014'), rough=0.1)
+    brass = principled('BarBrass', srgb('#d8a84a'), rough=0.25)
+    shell(velvet, black, black, top_edge=brass)
+    for r, z in enumerate((0.25, 0.48, 0.71)):      # tufted panels with buttons
+        for k in range(5):
+            x = -0.36 + k * 0.18 + (0.09 if r % 2 else 0)
+            if abs(x) > 0.42:
+                continue
+            sphere(f'Tuft{r}{k}', x, -1.285, z, 0.016, dark, segs=8)
+    for z in (0.12, 0.92):
+        box(f'Piping{z}', -0.46, 0.46, -1.295, -1.28, z - 0.012, z + 0.012, brass, bevel=0)
+    foot_rail(brass)
+    hutch(black, black, crown=velvet)
+    for i, x in enumerate((-0.3, 0.0, 0.3)):        # arched amber niches
+        box(f'Niche{i}', x - 0.12, x + 0.12, HY1 - 0.08, HY1 - 0.06, HZ0 + 0.08, 1.95, glowing('#ffa040', 1.4), bevel=0)
+        arc_niche = [(x + 0.12 * math.cos(math.radians(a)), 1.95 + 0.12 * math.sin(math.radians(a))) for a in range(0, 181, 30)]
+        for j in range(len(arc_niche) - 1):
+            (x0, z0), (x1, z1) = arc_niche[j], arc_niche[j + 1]
+            neon_tube(f'NicheArch{i}_{j}', [(x0, HY1 - 0.09, z0), (x1, HY1 - 0.09, z1)], 0.01, brass)
+        box(f'NicheTop{i}', x - 0.12, x + 0.12, HY1 - 0.08, HY1 - 0.06, 1.95, 2.05, glowing('#ffa040', 1.4), bevel=0)
+        for z in (1.12, 1.5):
+            box(f'NicheShelf{i}{z}', x - 0.12, x + 0.12, 0.92, HY1 - 0.06, z, z + 0.02, brass, bevel=0.002)
+            bottle_row(f'Bottle{i}_{z}', x - 0.09, x + 0.09, 1.15, z + 0.02, 2, bottles_of('#c86a1a', '#6a1a1a', '#e8c070'), seed=int(z * 10) + i)
+    for x in (-0.48, 0.48):
+        box(f'NicheWall{x}', x - 0.03, x + 0.03, 0.9, HY1, HZ0, HZ1, black, bevel=0.003)
+    for x in (-0.28, -0.14):
+        cylinder(f'Rocks{x}', x, -1.1, 1.05, 1.13, 0.035, plain('#c08030', rough=0.05, transmission=0.6), verts=16)
+
+
+# 14. Chrome Bar: a quilted chrome counter edged in cyan light; behind it
+#     glass shelves lit cyan, and a row of beer taps on the bar top.
+def build_chrome():
+    chrome = principled('BarChrome', srgb('#c8ced8'), rough=0.12)
+    dark = principled('BarGunmetal', srgb('#2a2e36'), rough=0.2)
+    cyan = glowing('#2ae0ff', 5)
+    glass = principled('ShelfGlass', srgb('#bff4ff'), rough=0.03, transmission=0.9)
+    shell(chrome, dark, dark)
+    for r in range(4):            # quilted chrome squares
+        for k in range(5):
+            x0 = -0.44 + k * 0.176
+            z0 = 0.1 + r * 0.21
+            box(f'Quilt{r}{k}', x0 + 0.012, x0 + 0.164, -1.3, -1.285, z0 + 0.012, z0 + 0.198,
+                principled(f'Quilt{(r + k) % 2}', srgb(('#dfe4ec', '#aeb6c2')[(r + k) % 2]), rough=0.12), bevel=0.01)
+    box('TopGlow', -0.49, 0.49, -1.385, -1.37, 0.99, 1.03, cyan, bevel=0)
+    for x in (-0.47, 0.47):
+        box(f'EdgeGlow{x}', x - 0.008, x + 0.008, -1.31, -1.29, 0.06, 0.98, cyan, bevel=0)
+    foot_rail(chrome)
+    hutch(chrome, principled('ChromeBack', srgb('#0a2a36'), rough=0.2, emission=srgb('#0a6a8a'), emission_strength=1.0), crown=dark)
+    for j, z in enumerate((1.3, 1.66, 2.0)):
+        box(f'GlassShelf{j}', -0.45, 0.45, 0.92, 1.34, z - 0.015, z, glass, bevel=0.002)
+        box(f'ShelfGlow{j}', -0.45, 0.45, 0.915, 0.925, z - 0.02, z - 0.012, cyan, bevel=0)
+        bottle_row(f'Bottle{j}_', -0.36, 0.36, 1.13, z, 6, bottles_of('#bff4ff', '#2ae0ff', '#ffffff', '#7a8aff', glow=0.5), seed=231 + j)
+    box('TapBar', -0.3, 0.3, 0.96, 1.02, 0.94, 1.0, chrome, bevel=0.01)
+    for i in range(5):
+        x = -0.24 + i * 0.12
+        cylinder(f'Tap{i}', x, 0.99, 1.0, 1.14, 0.012, chrome, verts=10)
+        cylinder(f'TapHandle{i}', x, 0.99, 1.14, 1.24, 0.016, (cyan, dark)[i % 2], verts=10)
+    for x in (-0.28, -0.15):
+        cylinder(f'Pint{x}', x, -1.1, 1.05, 1.2, 0.038, plain('#f2b23a', rough=0.05, transmission=0.5), verts=16)
+        cylinder(f'Foam{x}', x, -1.1, 1.2, 1.23, 0.038, plain('#fff6e0', rough=0.8), verts=16)
+
+
+# 15. Pink Neon Bar: black gloss with a pink neon wave along the front;
+#     behind it a mirror wall with a neon sign of two glasses clinking.
+def build_pinkneon():
+    black = principled('PinkBlack', srgb('#120c14'), rough=0.08)
+    pink = glowing('#ff3fb4', 6)
+    hot = glowing('#ff8ad8', 4)
+    mirror = principled('PinkMirror', srgb('#3a2238'), rough=0.05, emission=srgb('#ff3fb4'), emission_strength=0.15)
+    shell(black, black, black)
+    wave = [(-0.44 + i * 0.04, -1.29, 0.5 + 0.18 * math.sin(i * 0.55)) for i in range(23)]
+    neon_tube('Wave', wave, 0.012, pink)
+    wave2 = [(-0.44 + i * 0.04, -1.29, 0.35 + 0.14 * math.sin(i * 0.55 + 1.6)) for i in range(23)]
+    neon_tube('Wave2', wave2, 0.008, hot)
+    box('TopGlow', -0.49, 0.49, -1.385, -1.37, 0.99, 1.03, pink, bevel=0)
+    foot_rail(principled('PinkChrome', srgb('#d6dae4'), rough=0.15))
+    hutch(black, mirror, crown=black)
+    # Two cocktail glasses clinking, drawn in neon on the mirror.
+    for side in (-1, 1):
+        cx = side * 0.13
+        tilt = side * 0.18
+        pts = [(cx - 0.12, 1.85 + tilt * -0.3), (cx + 0.12, 1.85 + tilt * 0.3), (cx, 1.62), (cx - 0.12, 1.85 + tilt * -0.3)]
+        neon_tube(f'GlassSign{side}', [(x, HY1 - 0.09, z) for x, z in pts], 0.012, pink)
+        neon_tube(f'GlassStem{side}', [(cx, HY1 - 0.09, 1.62), (cx, HY1 - 0.09, 1.42)], 0.012, pink)
+        neon_tube(f'GlassFoot{side}', [(cx - 0.07, HY1 - 0.09, 1.42), (cx + 0.07, HY1 - 0.09, 1.42)], 0.012, pink)
+    for k in range(5):            # sparkle lines where they touch
+        a = math.radians(40 + k * 25)
+        neon_tube(f'Clink{k}', [(0.1 * math.cos(a) * 0.4, HY1 - 0.09, 1.98 + 0.04 * math.sin(a)),
+                                (0.1 * math.cos(a), HY1 - 0.09, 1.98 + 0.12 * math.sin(a))], 0.007, hot)
+    box('Shelf', -0.45, 0.45, 0.92, 1.34, 1.18, 1.2, black, bevel=0.003)
+    box('ShelfGlow', -0.45, 0.45, 0.915, 0.925, 1.17, 1.18, pink, bevel=0)
+    bottle_row('Bottle', -0.38, 0.38, 1.13, 1.2, 6, bottles_of('#ff3fb4', '#ffffff', '#ff8ad8', glow=1.0), seed=241)
+    bottle_row('BackBottle', -0.36, 0.36, 1.0, 0.94, 5, bottles_of('#ff3fb4', '#c8a0ff', glow=1.6), seed=242)
+    for i, (x, c) in enumerate(((-0.3, '#ff3fb4'), (-0.16, '#ff8ad8'))):
+        cocktail(f'Pink{i}', x, -1.12, 1.05, clear_glass(), c)
+
+
+
 DESIGNS = {
     'tiki': ('Tiki Bar', build_tiki),
     'disco': ('Disco Bar', build_disco),
@@ -488,6 +677,11 @@ DESIGNS = {
     'garden': ('Garden Bar', build_garden),
     'cyber': ('Cyber Bar', build_cyber),
     'candy': ('Candy Bar', build_candy),
+    'ultraviolet': ('Ultraviolet Bar', build_ultraviolet),
+    'champagne': ('Champagne Bar', build_champagne),
+    'velvet': ('Velvet Bar', build_velvet),
+    'chrome': ('Chrome Bar', build_chrome),
+    'pinkneon': ('Pink Neon Bar', build_pinkneon),
 }
 
 
