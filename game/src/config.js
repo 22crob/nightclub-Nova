@@ -70,11 +70,13 @@ export const TRUSS_BEAMS = {
 // Live aquariums (tankFx.js): for each tank, its water as a box in the
 // model's own units (as in art/blender/decor_batch2.py, front glass at y0),
 // how many fish swim in it and their colours, and bubbles in a few streams.
+// Heights (z) of the cabinet, hex, long, jelly and arch tanks include the
+// stretch they're built with (SCALE in art/blender/build_decor.py).
 export const TANKS = {
   cabinet: {
-    glass: { x0: -0.69, x1: 0.69, y0: -0.27, y1: 0.27, z0: 0.5, z1: 1.2 }, // the water as seen through the glass: fish and bubbles are clipped to it
-    water: { x0: -0.66, x1: 0.66, y0: -0.2, y1: -0.02, z0: 0.56, z1: 1.18 },
-    swim: [0.68, 0.98], // the heights fish keep to, clear of the gravel and the lid
+    glass: { x0: -0.69, x1: 0.69, y0: -0.27, y1: 0.27, z0: 0.7, z1: 1.68 }, // the water as seen through the glass: fish and bubbles are clipped to it
+    water: { x0: -0.66, x1: 0.66, y0: -0.2, y1: -0.02, z0: 0.784, z1: 1.652 },
+    swim: [0.952, 1.372], // the heights fish keep to, clear of the gravel and the lid
     fish: 5, fishScale: 0.8, colors: [0xff8a1f, 0xffe03a, 0xff4a8a, 0x5af0ff], bubbles: 6, streams: 2,
   },
   // `allSides`: glass all round, so they show from every side.
@@ -84,24 +86,24 @@ export const TANKS = {
     fish: 3, fishScale: 0.75, colors: [0xffe03a, 0xff8a1f, 0xff4a8a], bubbles: 5, streams: 2,
   },
   hex: {
-    glass: { x0: -0.27, x1: 0.27, y0: -0.27, y1: 0.27, z0: 0.48, z1: 1.25 }, // the water as seen through the glass: fish and bubbles are clipped to it
-    water: { x0: -0.24, x1: 0.24, y0: -0.18, y1: -0.02, z0: 0.54, z1: 1.23 }, swim: [0.68, 1.04], allSides: true,
+    glass: { x0: -0.27, x1: 0.27, y0: -0.27, y1: 0.27, z0: 0.648, z1: 1.688 }, // the water as seen through the glass: fish and bubbles are clipped to it
+    water: { x0: -0.24, x1: 0.24, y0: -0.18, y1: -0.02, z0: 0.729, z1: 1.661 }, swim: [0.918, 1.404], allSides: true,
     fish: 3, fishScale: 0.75, colors: [0xff4a8a, 0xffe03a, 0x5af0ff], bubbles: 4, streams: 2,
   },
   long: {
-    glass: { x0: -1.04, x1: 1.04, y0: -0.21, y1: 0.21, z0: 0.3, z1: 0.86 }, // the water as seen through the glass: fish and bubbles are clipped to it
-    water: { x0: -1.0, x1: 1.0, y0: -0.18, y1: -0.02, z0: 0.36, z1: 0.86 }, swim: [0.46, 0.7],
+    glass: { x0: -1.04, x1: 1.04, y0: -0.21, y1: 0.21, z0: 0.51, z1: 1.462 }, // the water as seen through the glass: fish and bubbles are clipped to it
+    water: { x0: -1.0, x1: 1.0, y0: -0.18, y1: -0.02, z0: 0.612, z1: 1.462 }, swim: [0.782, 1.19],
     fish: 7, fishScale: 0.8, colors: [0xff8a1f, 0xffe03a, 0xff4a8a, 0x5af0ff, 0x8aff6a], bubbles: 6, streams: 3,
   },
   // Jellyfish bob up and down as they drift.
   jelly: {
-    glass: { x0: -0.6, x1: 0.6, y0: -0.24, y1: 0.24, z0: 0.16, z1: 1.0 }, // the water as seen through the glass: fish and bubbles are clipped to it
-    water: { x0: -0.5, x1: 0.5, y0: -0.16, y1: 0.04, z0: 0.22, z1: 1.0 }, swim: [0.42, 0.74], allSides: true, jelly: true,
+    glass: { x0: -0.6, x1: 0.6, y0: -0.24, y1: 0.24, z0: 0.256, z1: 1.6 }, // the water as seen through the glass: fish and bubbles are clipped to it
+    water: { x0: -0.5, x1: 0.5, y0: -0.16, y1: 0.04, z0: 0.352, z1: 1.6 }, swim: [0.672, 1.184], allSides: true, jelly: true,
     fish: 5, fishScale: 0.9, colors: [0xff7ae0, 0xc07aff, 0x7ae0ff], bubbles: 4, streams: 2,
   },
   arch: {
-    glass: { x0: -0.57, x1: 0.57, y0: -0.19, y1: 0.19, z0: 0.16, z1: 1.0 }, // the water as seen through the glass: fish and bubbles are clipped to it
-    water: { x0: -0.54, x1: 0.54, y0: -0.16, y1: 0.0, z0: 0.22, z1: 1.0 }, swim: [0.4, 0.88], allSides: true,
+    glass: { x0: -0.57, x1: 0.57, y0: -0.19, y1: 0.19, z0: 0.256, z1: 1.6 }, // the water as seen through the glass: fish and bubbles are clipped to it
+    water: { x0: -0.54, x1: 0.54, y0: -0.16, y1: 0.0, z0: 0.352, z1: 1.6 }, swim: [0.64, 1.408], allSides: true,
     fish: 5, fishScale: 0.8, colors: [0xff8a1f, 0xffe03a, 0xff4a8a, 0x5af0ff], bubbles: 5, streams: 2,
   },
   // The older Aquarium, built 1.25 times taller (heights here include that).
@@ -110,10 +112,10 @@ export const TANKS = {
     water: { x0: -0.38, x1: 0.38, y0: -0.32, y1: -0.1, z0: 0.86, z1: 2.08 }, swim: [1.1, 1.8],
     fish: 3, fishScale: 1.0, colors: [0xff8a1f, 0xffe03a, 0xff8a1f], bubbles: 4, streams: 1,
   },
-  // Bubbles only.
+  // Bubbles only (the liquid tanks are glass cylinders in one casing).
   liquid: {
-    glass: { x0: -0.33, x1: 0.33, y0: -0.33, y1: 0.33, z0: 0.22, z1: 1.72 }, // the water as seen through the glass: fish and bubbles are clipped to it
-    water: { x0: -0.26, x1: 0.26, y0: -0.3, y1: -0.2, z0: 0.24, z1: 1.7 }, allSides: true,
+    glass: { x0: -0.3, x1: 0.3, y0: -0.3, y1: 0.3, z0: 0.3, z1: 1.72 }, // the liquid as seen through the glass: bubbles are clipped to it
+    water: { x0: -0.22, x1: 0.22, y0: -0.26, y1: -0.16, z0: 0.32, z1: 1.7 }, allSides: true,
     fish: 0, colors: [], bubbles: 7, streams: 3,
   },
   column: {

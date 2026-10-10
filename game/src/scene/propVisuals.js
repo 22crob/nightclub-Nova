@@ -362,7 +362,6 @@ export class PropVisualsMixin {
       }
     }
     this.animateWalls(music);
-    this.animateWallDecor(music);
   }
 
   isStepTile(gx, gy) {

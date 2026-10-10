@@ -12,6 +12,8 @@
 
 **Nightclub batch (October 2026):** after the review I made new bars and booths in the club style the owner kept. The bars went in between the kept ones (Chrome 10, Velvet 18, Ultraviolet 26, Pink Neon 35, Champagne 44), and the booths too (Bean Bags 7, Stripe Booth 16, Bottle Service 30, Onyx Horseshoe 39, Neon Ring Booth 47, Crystal VIP Booth 52).
 
+**October 2026 feedback, round 2:** wall decorations became 3D and moved to Decorations (plus Vine Wall 22 and the Floating Bottle Shelf 41, which replaced the Bottle Cabinet); new Black Stool 2, Black Table 3, Snake Plant 6, Glow High-Top 7, Club Chair 9, Monstera 11, Glass Table 15, Black Bamboo 17, Velvet Tub Chair 20, Black Pool Table 30; Red Gloss moved to 14, Red Pulse to 13; Leopard Print became Cheetah Print (41).
+
 **October 2026 feedback:** wall decorations (Hanging Fern 4, Pendant Lights 8, Cyan LED Pole 13, Neon Heart 19, Pink LED Pole 24, Wall Speaker 28, Fairy Lights 33), Red Pulse dance floor 23, Red Gloss floor 34, Leopard Print floor 41. Walls grow to 20 tiles at most (by level 40).
 
 ## Level by level

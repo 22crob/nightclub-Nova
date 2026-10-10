@@ -282,7 +282,7 @@ export class ClubScene extends Phaser.Scene {
       }
       // With nothing in hand, the Edit tools (and right-click to sell) work
       // on a wall decoration too.
-      if (!this.selectedProp && this.hoverWall && this.wallDecor[this.hoverWall] && !this.objectAt(p.x, p.y)) {
+      if (!this.selectedProp && this.hoverWall && this.wallDecorAnchor(this.hoverWall) && !this.objectAt(p.x, p.y)) {
         if (p.button === 0 && this.dockTab === 'edit') { this.editWallDecor(this.hoverWall); return; }
         if (p.button === 2) { this.editWallDecor(this.hoverWall, 'sell'); return; }
       }

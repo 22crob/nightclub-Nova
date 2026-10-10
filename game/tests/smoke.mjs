@@ -249,7 +249,7 @@ const tiers = await page.evaluate(() => {
       'iceBooth', 'decoBooth', 'holoBooth', 'glowPanelBooth', 'curveBooth', 'facetBooth', 'rackBooth', 'capsuleBooth', 'glassBooth'].filter((k) => s.hasAnySprite(k)).length,
     // The owner's sketched decorations and Booth 7 (October 2026), with
     // their wide footprints.
-    sketched: ['trussLights', 'bubbleColumn', 'ribbon', 'glassDivider', 'bottleCabinet', 'glowCubes', 'popStar', 'rapperStatue',
+    sketched: ['trussLights', 'bubbleColumn', 'ribbon', 'glassDivider', 'glowCubes', 'popStar', 'rapperStatue',
       'cabinetAquarium', 'tubeAquarium', 'hexAquarium', 'longAquarium', 'jellyTank', 'archAquarium', 'gemLounge'].filter((k) => s.hasAnySprite(k)).length,
     wide: [['trussLights', 2], ['glassDivider', 2], ['longAquarium', 3], ['archAquarium', 2], ['popStar', 1], ['gemLounge', 9]]
       .every(([k, n]) => s.getFootprint(k, 0, 0, 0).length === n),
@@ -258,7 +258,7 @@ const tiers = await page.evaluate(() => {
 check('all thirteen bars load (the nightclub batch too), each in two layers', tiers.bars === 13, `${tiers.bars} of 13`);
 check('a bar facing the camera draws its counter in front', tiers.layered);
 check('all sixteen DJ booth tiers load', tiers.booths === 16, `${tiers.booths} of 16`);
-check('the owner\'s sketched decorations and Gem Lounge load, wide ones on their wide footprints', tiers.sketched === 15 && tiers.wide, JSON.stringify(tiers));
+check('the owner\'s sketched decorations and Gem Lounge load, wide ones on their wide footprints', tiers.sketched === 14 && tiers.wide, JSON.stringify(tiers));
 
 // A live aquarium: fish and bubbles drawn over the Cabinet Aquarium,
 // only while its front glass faces the camera, gone when it's removed.
@@ -1365,6 +1365,15 @@ const moreSeats = await page.evaluate(() => {
   return out;
 });
 check('the newer booths and sofas all have their art', moreSeats.missing.length === 0, moreSeats.missing.join(', ') || 'all there');
+// The October 2026 pieces: club tables, chairs and stools, plants, the black
+// pool table and the 3D wall decorations all have their pictures.
+const club26 = await page.evaluate(() => {
+  const s = window.__clubNova.scene.getScene('club');
+  const keys = ['blackStool', 'clubChair', 'tubChair', 'blackTable', 'highTop', 'glassTable', 'snakePlant', 'monstera', 'bamboo', 'poolBlack',
+    'hangingFern', 'pendantLights', 'ledPoleCyan', 'ledPolePink', 'neonHeart', 'wallSpeaker', 'fairyLights', 'vineWall', 'bottleShelf'];
+  return { missing: keys.filter((k) => !s.hasAnySprite(k)), stripe: s.getFootprint('stripeBooth', 0, 0, 0).length };
+});
+check('the new tables, chairs, stools, plants, black pool table and wall decorations have their art; Stripe Booth sections are 3 x 1', club26.missing.length === 0 && club26.stripe === 3, JSON.stringify(club26));
 check('the Wood Lounge takes 3 x 2 tiles', moreSeats.woodTiles === 6, String(moreSeats.woodTiles));
 // The nightclub batch of booths (October 2026): art, seats, VIP booths.
 const clubSeats = await page.evaluate(() => {
@@ -1383,8 +1392,8 @@ const clubSeats = await page.evaluate(() => {
   }
   return out;
 });
-check('the nightclub booths have their art and seats (bean bags 2, booths 4 or 5)', clubSeats.missing.length === 0 && clubSeats.seats.beanBags === 2
-  && ['stripeBooth', 'bottleSectional', 'onyxBooth', 'ringBooth'].every((k) => clubSeats.seats[k] === 4) && clubSeats.seats.crystalBooth === 5, JSON.stringify(clubSeats));
+check('the nightclub booths have their art and seats (bean bags 2, a Stripe Booth section 3, booths 4 or 5)', clubSeats.missing.length === 0 && clubSeats.seats.beanBags === 2
+  && clubSeats.seats.stripeBooth === 3 && ['bottleSectional', 'onyxBooth', 'ringBooth'].every((k) => clubSeats.seats[k] === 4) && clubSeats.seats.crystalBooth === 5, JSON.stringify(clubSeats));
 
 // Decorations: the first ones have their sprites, and one can be placed and
 // rotated like any other prop.
@@ -3009,16 +3018,20 @@ const wallDecor = await page.evaluate(() => {
   s.selectProp('neonHeart');
   out.twice = s.placeWallDecor('L2') === false;
   s.deselectProp();
-  out.drawn = !!s.wallDecorImages?.L2 && s.wallDecorImages.L2.texture.key.startsWith('wallDecor_ledPoleCyan');
+  out.drawn = !!s.wallDecorImages?.L2 && s.wallDecorImages.L2.texture.key === 'decor_wallLedCyan_90'; // the 3D piece, facing the room from the left wall
+  s.selectProp('bottleShelf');
+  out.wide = s.placeWallDecor('R4') && s.wallDecorAnchor('R5') === 'R4' && s.placeWallDecor('R5') === false;
+  s.editWallDecor('R5', 'sell');
+  s.deselectProp();
   out.saved = s.serializeState().wallDecor.L2 === 'ledPoleCyan';
-  s.setShopCategory('Wallpaper');
+  s.setShopCategory('Decorations');
   out.inShop = [...document.querySelectorAll('#shopItems .propSlot')].some((e) => e.dataset.tipName === 'Cyan LED Pole');
   const c0 = s.cash;
   out.sold = s.editWallDecor('L2', 'sell') && !s.wallDecor.L2 && s.cash > c0;
   s.fans = fans; s.cash = cash;
   return out;
 });
-check('wall decorations hang on a wall section (one each), are saved, are in the Walls shop and can be taken down', wallDecor.hung && wallDecor.twice && wallDecor.drawn && wallDecor.saved && wallDecor.inShop && wallDecor.sold, JSON.stringify(wallDecor));
+check('wall decorations are 3D pieces hung on a wall section (one each, the shelf two), saved, sold with the Decorations, and can be taken down', wallDecor.hung && wallDecor.twice && wallDecor.drawn && wallDecor.wide && wallDecor.saved && wallDecor.inShop && wallDecor.sold, JSON.stringify(wallDecor));
 
 // An old save with items taken out of the game (the Royal Thrones, the
 // October 2026 review's cuts) gets their price back, placed, stored or on a wall.

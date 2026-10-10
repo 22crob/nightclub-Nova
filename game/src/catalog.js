@@ -24,7 +24,6 @@ import boothDecoSprite from './assets/sprites/dj_deco.json';
 import boothHoloSprite from './assets/sprites/dj_holo.json';
 import seat_woodStool from './assets/sprites/seat_woodStool.json';
 import seat_couch from './assets/sprites/seat_couch.json';
-import decor_bottleShelf from './assets/sprites/decor_bottleShelf.json';
 import decor_trussLights from './assets/sprites/decor_trussLights.json';
 import decor_glassDivider from './assets/sprites/decor_glassDivider.json';
 import decor_bubbleColumn from './assets/sprites/decor_bubbleColumn.json';
@@ -38,6 +37,19 @@ import decor_tankHex from './assets/sprites/decor_tankHex.json';
 import decor_tankLong from './assets/sprites/decor_tankLong.json';
 import decor_jellyBowl from './assets/sprites/decor_jellyBowl.json';
 import decor_tankArch from './assets/sprites/decor_tankArch.json';
+import decor_snakePlant from './assets/sprites/decor_snakePlant.json';
+import decor_monstera from './assets/sprites/decor_monstera.json';
+import decor_bamboo from './assets/sprites/decor_bamboo.json';
+import decor_poolBlack from './assets/sprites/decor_poolBlack.json';
+import decor_wallFern from './assets/sprites/decor_wallFern.json';
+import decor_wallPendants from './assets/sprites/decor_wallPendants.json';
+import decor_wallLedCyan from './assets/sprites/decor_wallLedCyan.json';
+import decor_wallLedPink from './assets/sprites/decor_wallLedPink.json';
+import decor_wallHeart from './assets/sprites/decor_wallHeart.json';
+import decor_wallSpeaker from './assets/sprites/decor_wallSpeaker.json';
+import decor_wallFairy from './assets/sprites/decor_wallFairy.json';
+import decor_wallVines from './assets/sprites/decor_wallVines.json';
+import decor_wallBottles from './assets/sprites/decor_wallBottles.json';
 import dj_rack from './assets/sprites/dj_rack.json';
 import dj_glowFront from './assets/sprites/dj_glowFront.json';
 import dj_facet from './assets/sprites/dj_facet.json';
@@ -47,6 +59,12 @@ import dj_glass from './assets/sprites/dj_glass.json';
 import seat_facetBooth from './assets/sprites/seat_facetBooth.json';
 import seat_beanBags from './assets/sprites/seat_beanBags.json';
 import seat_stripeBooth from './assets/sprites/seat_stripeBooth.json';
+import seat_blackStool from './assets/sprites/seat_blackStool.json';
+import seat_clubChair from './assets/sprites/seat_clubChair.json';
+import seat_tubChair from './assets/sprites/seat_tubChair.json';
+import seat_blackTable from './assets/sprites/seat_blackTable.json';
+import seat_highTop from './assets/sprites/seat_highTop.json';
+import seat_glassTable from './assets/sprites/seat_glassTable.json';
 import seat_bottleSectional from './assets/sprites/seat_bottleSectional.json';
 import seat_onyxBooth from './assets/sprites/seat_onyxBooth.json';
 import seat_ringBooth from './assets/sprites/seat_ringBooth.json';
@@ -190,7 +208,6 @@ const DECOR_SPRITES = {
   waterfall: decor_waterfall,
   pagoda: decor_pagoda,
   // The owner's own sketches (October 2026, art/blender/decor_batch2.py).
-  bottleShelf: decor_bottleShelf,
   trussLights: decor_trussLights,
   glassDivider: decor_glassDivider,
   bubbleColumn: decor_bubbleColumn,
@@ -204,6 +221,21 @@ const DECOR_SPRITES = {
   tankLong: decor_tankLong,
   jellyBowl: decor_jellyBowl,
   tankArch: decor_tankArch,
+  // Plants, the black pool table and the 3D wall decorations (October 2026,
+  // art/blender/decor_batch3.py).
+  snakePlant: decor_snakePlant,
+  monstera: decor_monstera,
+  bamboo: decor_bamboo,
+  poolBlack: decor_poolBlack,
+  wallFern: decor_wallFern,
+  wallPendants: decor_wallPendants,
+  wallLedCyan: decor_wallLedCyan,
+  wallLedPink: decor_wallLedPink,
+  wallHeart: decor_wallHeart,
+  wallSpeaker: decor_wallSpeaker,
+  wallFairy: decor_wallFairy,
+  wallVines: decor_wallVines,
+  wallBottles: decor_wallBottles,
 };
 function decorTier(key, label, cost, unlockLevel, model, fanRate, extra = {}) {
   const meta = DECOR_SPRITES[model];
@@ -239,6 +271,12 @@ const SEAT_SPRITES = {
   facetBooth: seat_facetBooth,
   beanBags: seat_beanBags,
   stripeBooth: seat_stripeBooth,
+  blackStool: seat_blackStool,
+  clubChair: seat_clubChair,
+  tubChair: seat_tubChair,
+  blackTable: seat_blackTable,
+  highTop: seat_highTop,
+  glassTable: seat_glassTable,
   bottleSectional: seat_bottleSectional,
   onyxBooth: seat_onyxBooth,
   ringBooth: seat_ringBooth,
@@ -273,10 +311,10 @@ function seatTier(key, label, cost, unlockLevel, model, fanRate, footprint = nul
 
 // Wallpaper is painted onto one wall section (a tile wide) at a time; the
 // price is per section. Looks only, no gameplay effect.
-// Wall decorations (src/walls.js WALL_DECOR, scene/wallDecor.js): hung on a
-// wall section over the wallpaper.
-function wallDecorTier(key, label, cost, unlockLevel, wallDecor) {
-  return { key, label, cost, unlockLevel, category: 'Wall Decor', wallDecor };
+// Wall decorations (scene/wallDecor.js): 3D pieces hung on a wall section,
+// sold with the Decorations; `span` is how many wall sections they cover.
+function wallDecorTier(key, label, cost, unlockLevel, model, fanRate, span = 1) {
+  return { ...decorTier(key, label, cost, unlockLevel, model, fanRate), rotatable: false, wallDecor: true, span };
 }
 
 function wallTier(key, label, cost, unlockLevel, wallStyle) {
@@ -396,11 +434,18 @@ export const PROP_TYPES = {
   gemLounge: seatTier('gemLounge', 'Gem Lounge', 1450, 58, 'facetBooth', 1.15, BOOTH_3X3), // the owner's Booth 7 sketch
   // The nightclub batch (October 2026, art/blender/seating_designs.py).
   beanBags: seatTier('beanBags', 'Bean Bags', 120, 7, 'beanBags', 0.25, BOOTH_FOOTPRINT),
-  stripeBooth: seatTier('stripeBooth', 'Stripe Booth', 300, 16, 'stripeBooth', 0.45, BOOTH_3X3),
+  stripeBooth: seatTier('stripeBooth', 'Stripe Booth', 200, 16, 'stripeBooth', 0.4, BOOTH_FOOTPRINT), // straight sections that join up, like bars
   bottleSectional: seatTier('bottleSectional', 'Bottle Service', 450, 30, 'bottleSectional', 0.6, BOOTH_3X3),
   onyxBooth: seatTier('onyxBooth', 'Onyx Horseshoe', 600, 39, 'onyxBooth', 0.75, BOOTH_3X3),
   ringBooth: seatTier('ringBooth', 'Neon Ring Booth', 750, 47, 'ringBooth', 0.85, BOOTH_3X3),
   crystalBooth: seatTier('crystalBooth', 'Crystal VIP Booth', 900, 52, 'crystalBooth', 0.95, BOOTH_3X3),
+  // Club tables, chairs and stools, sold separately (October 2026).
+  blackStool: seatTier('blackStool', 'Black Stool', 45, 2, 'blackStool', 0.1),
+  blackTable: seatTier('blackTable', 'Black Table', 60, 3, 'blackTable', 0.15),
+  highTop: seatTier('highTop', 'Glow High-Top', 90, 7, 'highTop', 0.2),
+  clubChair: seatTier('clubChair', 'Club Chair', 110, 9, 'clubChair', 0.25),
+  glassTable: seatTier('glassTable', 'Glass Table', 150, 15, 'glassTable', 0.3),
+  tubChair: seatTier('tubChair', 'Velvet Tub Chair', 180, 20, 'tubChair', 0.35),
   galaxyPods: seatTier('galaxyPods', 'Galaxy Egg Pods', 1350, 54, 'galaxyPods', 1.1, BOOTH_3X3),
   // Decorations, simple to fancy. 'plant', 'discoBall' and 'neonSign' are
   // the keys of the original placeholder decorations, kept for old saves.
@@ -413,6 +458,11 @@ export const PROP_TYPES = {
   neonSign: decorTier('neonSign', 'Neon Sign', 200, 11, 'neonSign', 0.6),
   glowTube: decorTier('glowTube', 'Glow Tube', 220, 14, 'tube', 0.6),
   poolTable: decorTier('poolTable', 'Pool Table', 300, 17, 'pool', 0.7, { footprint: BOOTH_FOOTPRINT }),
+  poolBlack: decorTier('poolBlack', 'Black Pool Table', 650, 30, 'poolBlack', 0.9, { footprint: BOOTH_FOOTPRINT }),
+  // Cool plants for a club (October 2026).
+  snakePlant: decorTier('snakePlant', 'Snake Plant', 70, 6, 'snakePlant', 0.25),
+  monstera: decorTier('monstera', 'Monstera', 110, 11, 'monstera', 0.35),
+  bamboo: decorTier('bamboo', 'Black Bamboo', 150, 17, 'bamboo', 0.45),
   spotlight: decorTier('spotlight', 'Spotlight', 260, 21, 'spotlight', 0.7, { spotBeam: true }), // shines a beam (createSpotBeam())
   aquarium: decorTier('aquarium', 'Aquarium', 350, 26, 'aquarium', 0.8, { tankFx: 'aquarium' }),
   neonSpeaker: decorTier('neonSpeaker', 'Neon Speaker', 380, 29, 'neonSpeaker', 0.85, { speakerCones: 'neonSpeaker' }),
@@ -435,7 +485,6 @@ export const PROP_TYPES = {
   pagoda: decorTier('pagoda', 'Pagoda Statue', 650, 39, 'pagoda', 1.1),
   // The owner's own sketches (October 2026): one every two levels past the
   // rest (there's no level cap).
-  bottleCabinet: decorTier('bottleCabinet', 'Bottle Cabinet', 800, 41, 'bottleShelf', 1.12, { footprint: WIDE_2X1 }),
   trussLights: decorTier('trussLights', 'Truss Spotlights', 850, 42, 'trussLights', 1.14, { footprint: STRADDLE_5, straddle: true, sweepBeams: 'truss' }),
   glassDivider: decorTier('glassDivider', 'Glass Divider', 900, 44, 'glassDivider', 1.16, { footprint: WIDE_2X1 }),
   bubbleColumn: decorTier('bubbleColumn', 'Bubble Column', 950, 45, 'bubbleColumn', 1.18, { tankFx: 'column' }),
@@ -451,14 +500,18 @@ export const PROP_TYPES = {
   archAquarium: decorTier('archAquarium', 'Arch Aquarium', 1600, 61, 'tankArch', 1.4, { footprint: WIDE_2X1, tankFx: 'arch' }),
   // Wallpaper (src/walls.js, drawn in code): simple to fancy across the
   // first ten levels.
-  // Wall decorations (the owner asked for them, October 2026).
-  hangingFern: wallDecorTier('hangingFern', 'Hanging Fern', 60, 4, 'hangingFern'),
-  pendantLights: wallDecorTier('pendantLights', 'Pendant Lights', 90, 8, 'pendantLights'),
-  ledPoleCyan: wallDecorTier('ledPoleCyan', 'Cyan LED Pole', 120, 13, 'ledPoleCyan'),
-  neonHeart: wallDecorTier('neonHeart', 'Neon Heart', 150, 19, 'neonHeart'),
-  ledPolePink: wallDecorTier('ledPolePink', 'Pink LED Pole', 180, 24, 'ledPolePink'),
-  wallSpeaker: wallDecorTier('wallSpeaker', 'Wall Speaker', 200, 28, 'wallSpeaker'),
-  fairyLights: wallDecorTier('fairyLights', 'Fairy Lights', 220, 33, 'fairyLights'),
+  // Wall decorations: 3D pieces hung on the walls, sold with the
+  // Decorations (the owner's notes, October 2026; same keys as the first,
+  // flat ones).
+  hangingFern: wallDecorTier('hangingFern', 'Hanging Fern', 60, 4, 'wallFern', 0.25),
+  pendantLights: wallDecorTier('pendantLights', 'Pendant Lights', 90, 8, 'wallPendants', 0.3),
+  ledPoleCyan: wallDecorTier('ledPoleCyan', 'Cyan LED Pole', 120, 13, 'wallLedCyan', 0.4),
+  neonHeart: wallDecorTier('neonHeart', 'Neon Heart', 150, 19, 'wallHeart', 0.5),
+  vineWall: wallDecorTier('vineWall', 'Vine Wall', 200, 22, 'wallVines', 0.55),
+  ledPolePink: wallDecorTier('ledPolePink', 'Pink LED Pole', 180, 24, 'wallLedPink', 0.55),
+  wallSpeaker: wallDecorTier('wallSpeaker', 'Wall Speaker', 200, 28, 'wallSpeaker', 0.6),
+  fairyLights: wallDecorTier('fairyLights', 'Fairy Lights', 220, 33, 'wallFairy', 0.65),
+  bottleShelf: wallDecorTier('bottleShelf', 'Floating Bottle Shelf', 800, 41, 'wallBottles', 1.12, 2), // the Bottle Cabinet, now on the wall
   wpPaint: wallTier('wpPaint', 'Paint', 8, 1, 'paint'),
   wpOldBrick: wallTier('wpOldBrick', 'Old Brick', 6, 2, 'oldBrick'),
   wpCinder: wallTier('wpCinder', 'Cinder Block', 9, 6, 'cinderBlock'),
@@ -498,7 +551,6 @@ const PROP_LIGHTS = {
   trussLights: [0xff80c0, 1.8],
   bubbleColumn: [0x6a7cff, 1.4],
   glowCubes: [0x30e0ff, 1.2],
-  bottleCabinet: [0xffd8a0, 1.2],
   glassDivider: [0xff60c0, 1.1],
   cabinetAquarium: [0x3080ff, 1.5],
   tubeAquarium: [0x30e0c0, 1.4],
@@ -589,4 +641,5 @@ export const FLOOR_DECAL_PROPS = new Set(Object.keys(PROP_TYPES).filter((k) => P
 // cash back for each, placed or in the inventory (see loadSaveData()).
 // The October 2026 item review cut 33 that didn't fit the nightclub vibe
 // (bars, booths, seating, a wallpaper and decorations): refunded in full.
-export const REMOVED_ITEMS = { throneBooth: 1500, barrel: 70, bathtubSofa: 300, beerBench: 120, birdcageBooth: 850, breweryBar: 420, candyBar: 620, catStatue: 480, cloudBed: 1000, crateBooth: 195, crates: 40, cruiserSofa: 220, decoSofa: 260, dinerBar: 340, discoStage: 1200, donutLounge: 750, fireSectional: 480, gardenBar: 380, gardenGazebo: 600, gargoyle: 400, glowLounge: 520, iglooBooth: 700, kissSofa: 350, palm: 110, rattanSeat: 450, rockStar: 1400, shellBooth: 900, starterBar: 100, streetLamp: 120, surfBar: 300, theatreBooth: 300, tikiBar: 220, tikiHut: 380, wpTheatre: 34 };
+// The Bottle Cabinet became the Bottle Shelf on the wall (the owner asked).
+export const REMOVED_ITEMS = { bottleCabinet: 800, throneBooth: 1500, barrel: 70, bathtubSofa: 300, beerBench: 120, birdcageBooth: 850, breweryBar: 420, candyBar: 620, catStatue: 480, cloudBed: 1000, crateBooth: 195, crates: 40, cruiserSofa: 220, decoSofa: 260, dinerBar: 340, discoStage: 1200, donutLounge: 750, fireSectional: 480, gardenBar: 380, gardenGazebo: 600, gargoyle: 400, glowLounge: 520, iglooBooth: 700, kissSofa: 350, palm: 110, rattanSeat: 450, rockStar: 1400, shellBooth: 900, starterBar: 100, streetLamp: 120, surfBar: 300, theatreBooth: 300, tikiBar: 220, tikiHut: 380, wpTheatre: 34 };

@@ -111,7 +111,7 @@ export class WallpaperMixin {
     if (def.wallDecor) {
       // A wall decoration: see-through, tinted red where one already hangs.
       this.wallGhost = this.wallDecorImage(section, this.selectedProp).setAlpha(0.75);
-      if (this.wallDecor[section]) this.wallGhost.setTint(0xff6060);
+      if (!this.wallDecorFits(section, this.selectedProp)) this.wallGhost.setTint(0xff6060);
       this.wallDecorLayerReady().add(this.wallGhost);
     } else {
       this.wallGhost = this.wallImage(section, this.selectedProp).setAlpha(0.8);
