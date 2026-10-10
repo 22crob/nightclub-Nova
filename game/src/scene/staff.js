@@ -2,7 +2,7 @@
 // Mixed into ClubScene (see ClubScene.js); `this` is the scene.
 import { PATRON_META, PATRON_SHEETS, patronMetaOf } from '../assets.js';
 import { PROP_TYPES, STAFF_TYPES } from '../catalog.js';
-import { BAR_QUEUE_LENGTH, BARTENDERS, BOOST, DRINK_FUN_MOOD, XP, CHARACTER_DISPLAY_HEIGHT, MONEY, THIRST_INTERVAL, PATRON_POPUP_Y, PROP_SCALE, BOUNCERS, BAR_TRAINING, DRINK_STOCK } from '../config.js';
+import { BAR_LIMIT, BAR_QUEUE_LENGTH, BARTENDERS, BOOST, DRINK_FUN_MOOD, XP, CHARACTER_DISPLAY_HEIGHT, MONEY, THIRST_INTERVAL, PATRON_POPUP_Y, PROP_SCALE, BOUNCERS, BAR_TRAINING, DRINK_STOCK } from '../config.js';
 import { SFX } from '../sfx.js';
 import { randRange } from '../util.js';
 import { MOOD } from './mood.js';
@@ -135,6 +135,16 @@ export class StaffMixin {
   bartenderAllowance() {
     const level = this.levelInfo().level;
     return BARTENDERS.levels.filter((l) => level >= l).length;
+  }
+
+  // How many bar pieces your level allows (BAR_LIMIT), and how many stand
+  // in the club.
+  barAllowance() {
+    return BAR_LIMIT.perBartender * this.bartenderAllowance();
+  }
+
+  barUnitCount() {
+    return this.staffableRecords().filter((rec) => PROP_TYPES[rec.type].category === 'Bars').length;
   }
 
   bartenderCount() {

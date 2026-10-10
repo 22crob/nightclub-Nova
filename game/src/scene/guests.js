@@ -351,6 +351,25 @@ export class GuestsMixin {
   }
 
   // Wires up the card (see index.html) and its refresh.
+  // While building or editing (Build, Edit, Expand, Inventory open, or
+  // something in hand) the guests and their bonus badges step out of sight
+  // so the club can be furnished in peace; they pop back when the panel
+  // closes (the owner asked for this). They keep doing what they were doing.
+  editingClub() {
+    return ['decor', 'edit', 'expand', 'inventory'].includes(this.dockTab) || !!this.selectedProp || !!this.movingBooth;
+  }
+
+  syncGuestsHidden() {
+    const hide = this.editingClub();
+    const fight = this.argument && this.argument.state === 'fight' ? [this.argument.a, this.argument.b] : [];
+    for (const p of this.patrons || []) {
+      if (!p.container || !p.container.active || fight.includes(p)) continue;
+      if (p.container.visible === hide) p.container.setVisible(!hide);
+    }
+    for (const b of this.bonuses || []) if (b.holder && b.holder.visible === hide) b.holder.setVisible(!hide);
+    this.guestsHidden = hide;
+  }
+
   setupGuests() {
     document.getElementById('infoClose')?.addEventListener('click', () => this.closeInfoCard());
     const guestAction = (id, fn) => document.getElementById(id)?.addEventListener('click', () => {
@@ -371,6 +390,7 @@ export class GuestsMixin {
       if (this.infoCard && this.infoCard.kind === 'bartender') this.bottomsUp(this.infoCard.target);
     });
     this.time.addEvent({ delay: 400, loop: true, callback: () => this.refreshInfoCard() });
+    this.events.on('update', () => this.syncGuestsHidden());
     this.time.addEvent({ delay: 1000, loop: true, callback: () => this.checkSlammedBars() });
   }
 }

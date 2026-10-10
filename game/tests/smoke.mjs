@@ -65,8 +65,6 @@ const waitForScene = async () => {
     // The How to play guide would cover the top of the screen (checked on its own below).
     s.tutorial = { step: 99, done: true };
     s.showTutorialStep();
-    // Achievements would pay cash at odd moments (checked on their own below).
-    s.checkAchievements = () => {};
     // So would the one-time tips (checked on their own below).
     s.tickHints = () => {};
   });
@@ -168,7 +166,7 @@ const closed = await page.evaluate(() => ({ held: window.__clubNova.scene.getSce
 check('clicking a shop card picks the item up, clicking again puts it down', picked.held === 'woodStool' && picked.glow && !closed.held, JSON.stringify({ picked, closed }));
 await page.click('#storeOk');
 // Expand: a card for each open edge, each adding one row of floor. Hovering
-// or clicking one shows the new row in green; a confirm card buys it.
+// or clicking one shows the new row in green; a double-click buys it.
 await page.evaluate(() => window.__clubNova.scene.getScene('club').setDockTab('expand'));
 const expandCard = await page.evaluate(() => {
   const slots = [...document.querySelectorAll('#shopItems .expandSlot')];
@@ -191,13 +189,13 @@ const hovered = await page.evaluate(() => { const s = window.__clubNova.scene.ge
 await page.click('#shopItems .expandSlot[data-side="left"]');
 const picked2 = await page.evaluate(() => {
   const s = window.__clubNova.scene.getScene('club');
-  return { pending: s.pendingExpand, preview: s.expandPreviewSide, strip: s.expansionTiles('left').length, grid: [s.gridW, s.gridH], confirm: !!document.querySelector('#shopItems .confirmSlot') };
+  return { pending: s.pendingExpand, preview: s.expandPreviewSide, strip: s.expansionTiles('left').length, grid: [s.gridW, s.gridH] };
 });
-await page.click('#shopItems .confirmSlot');
+await page.dblclick('#shopItems .expandSlot[data-side="left"]');
 const bought = await page.evaluate(() => {
   const s = window.__clubNova.scene.getScene('club');
   const saved = JSON.parse(localStorage.getItem('clubNovaSave_v2'));
-  const out = { grid: [s.gridW, s.gridH], spent: 99999 - s.cash, tile: !!s.tiles[`0,${s.gridH - 1}`], saved: [saved.gridW, saved.gridH], preview: s.expandPreviewSide, confirm: !!document.querySelector('#shopItems .confirmSlot') };
+  const out = { grid: [s.gridW, s.gridH], spent: 99999 - s.cash, tile: !!s.tiles[`0,${s.gridH - 1}`], saved: [saved.gridW, saved.gridH], preview: s.expandPreviewSide };
   s.levelInfo = s.__realLevelInfo;
   s.cash = s.__cash;
   s.shopItemsEl.dataset.rendered = '';
@@ -205,8 +203,8 @@ const bought = await page.evaluate(() => {
   return out;
 });
 check('the Expand tab has a card for each side, with its price', expandCard.cards === 2 && expandCard.sides === 'left,right' && /more floor tiles/.test(expandCard.tip) && /\$|Lv|Max/.test(expandCard.price), JSON.stringify(expandCard));
-check('picking a side shows the new row in green sizeBefore you buy it', hovered === 'left' && picked2.pending === 'left' && picked2.preview === 'left' && picked2.strip === sizeBefore[0] && picked2.grid.join() === sizeBefore.join() && picked2.confirm, JSON.stringify({ hovered, picked2 }));
-check('confirming adds just one row on that side', bought.grid[0] === sizeBefore[0] && bought.grid[1] === sizeBefore[1] + 1 && bought.spent > 0 && bought.tile && bought.saved.join() === bought.grid.join() && !bought.preview && !bought.confirm, JSON.stringify({ sizeBefore, bought }));
+check('picking a side shows the new row in green sizeBefore you buy it', hovered === 'left' && picked2.pending === 'left' && picked2.preview === 'left' && picked2.strip === sizeBefore[0] && picked2.grid.join() === sizeBefore.join(), JSON.stringify({ hovered, picked2 }));
+check('double-clicking the side adds just one row on that side', bought.grid[0] === sizeBefore[0] && bought.grid[1] === sizeBefore[1] + 1 && bought.spent > 0 && bought.tile && bought.saved.join() === bought.grid.join(), JSON.stringify({ sizeBefore, bought }));
 await page.click('#navBuild');
 await page.evaluate(() => window.__clubNova.scene.getScene('club').selectProp('woodBar'));
 
@@ -469,8 +467,9 @@ check('save restores after reload', restored.placed === restored.savedPlaced && 
 const djAfterReload = await page.evaluate(() => { const b = window.__clubNova.scene.getScene('club').clubBooth(); return !!b && !!b.staff && b.anchor.join(',') === '6,1'; });
 check('the DJ booth and its DJ come back after reload', djAfterReload);
 
-// DJ booths are shop items: the club's last one can't be sold, but buying
-// and placing another brings its own DJ, and then the old one can go.
+// DJ booths are shop items: the club's last one can't be sold; buying and
+// placing another brings its own DJ and puts the old one in the inventory
+// (one booth at a time).
 const upgrade = await page.evaluate(() => {
   const s = window.__clubNova.scene.getScene('club');
   const fans = s.fans;
@@ -490,9 +489,9 @@ const upgrade = await page.evaluate(() => {
   s.deselectProp();
   const pro = s.placed[`${spot[0]},${spot[1]}`];
   const result = { kept, placed: pro?.type, dj: !!pro?.staff, paid: 1000 - s.cash, booths: s.clubBooths().length, main: s.clubBooth()?.type };
-  const c1 = s.cash;
-  s.sellProp(first.anchor[0], first.anchor[1]);
-  result.soldOld = s.clubBooths().length === 1 && s.cash > c1;
+  // One booth at a time: the old one went into the inventory.
+  result.stored = s.inventoryCount(first.type) >= 1 && !s.clubBooths().some((r) => r.type === first.type);
+  s.addToInventory(first.type, -1);
   // ...and put the club back the way it was, for the checks after this.
   s.sellProp(spot[0], spot[1]);
   result.lastKept = s.clubBooths().length === 1;
@@ -505,8 +504,43 @@ const upgrade = await page.evaluate(() => {
   s.fans = fans;
   return result;
 });
+// Editing the club hides the guests (they pop back when the panel closes),
+// and bars are limited by level: three pieces per bartender allowed.
+const editHide = await page.evaluate(() => {
+  const s = window.__clubNova.scene.getScene('club');
+  const had = s.patrons.find((q) => !q.gone);
+  if (!had) s.trySpawnPatron();
+  const p = had || s.patrons.find((q) => !q.gone);
+  const out = { guest: !!p };
+  s.setDockTab('decor');
+  s.syncGuestsHidden();
+  out.hidden = !!p && !p.container.visible;
+  s.closeDock();
+  s.syncGuestsHidden();
+  out.back = !!p && p.container.visible;
+  const real = s.levelInfo.bind(s);
+  s.levelInfo = () => ({ ...real(), level: 1 });
+  out.allowance = s.barAllowance();
+  const cash = s.cash;
+  s.cash = 100000;
+  const before = s.barUnitCount();
+  s.selectProp('woodBar');
+  let placedBars = 0;
+  for (let gy = 3; gy < s.gridH - 1; gy += 2) for (let gx = 1; gx < s.gridW - 3; gx += 4) {
+    if (s.barUnitCount() > before + placedBars) break;
+    if (s.footprintValid(s.getFootprint('woodBar', 0, gx, gy), 'woodBar')) { const n = s.barUnitCount(); s.placeProp(gx, gy); if (s.barUnitCount() > n) placedBars++; }
+  }
+  s.deselectProp();
+  out.capped = s.barUnitCount() <= Math.max(before, out.allowance);
+  for (const r of s.staffableRecords().filter((r) => r.type === 'woodBar' && !r.staff && s.barGroup(r).every((u) => !u.staff))) s.removeProp(r);
+  s.levelInfo = real;
+  s.cash = cash;
+  if (!had && p) { p.gone = true; p.container.destroy(); s.patrons = s.patrons.filter((q) => q !== p); }
+  return out;
+});
+check('guests vanish while the club is being edited and pop back after; bars are capped by level (3 pieces at level 1)', editHide.guest && editHide.hidden && editHide.back && editHide.allowance === 3 && editHide.capped, JSON.stringify(editHide));
 check('the club\'s last DJ booth can\'t be sold', upgrade.kept && upgrade.lastKept, JSON.stringify(upgrade));
-check('DJ booths are bought and placed like other items, each with its own DJ, and an extra one can be sold', upgrade.placed === 'proBooth' && upgrade.dj && upgrade.paid === 215 && upgrade.booths === 2 && upgrade.main === 'proBooth' && upgrade.soldOld && upgrade.restored, JSON.stringify(upgrade));
+check('DJ booths are bought and placed like other items, each with its own DJ; placing one stores the old one (one at a time)', upgrade.placed === 'proBooth' && upgrade.dj && upgrade.paid === 215 && upgrade.booths === 1 && upgrade.main === 'proBooth' && upgrade.stored && upgrade.restored, JSON.stringify(upgrade));
 
 // Bass Boost and Drink Rush: each runs for a while, then needs to recharge.
 // Starting one sends a share of the crowd off (one by one) to dance or to
@@ -783,10 +817,18 @@ const capacity = await page.evaluate(() => {
   out.base = s.patronCapacity();
   s.gridW = 12;
   out.expandedOnly = s.patronCapacity();
-  s.gridW = 10; s.popularity = 100;
+  s.gridW = 10; s.popularity = 49;
   out.popular = s.patronCapacity();
   s.popularity = 10000;
   out.roomLimit = s.patronCapacity();
+  // However big and popular: 32 at most, 40 while a party runs.
+  s.gridW = 26; s.gridH = 26;
+  out.max = s.patronCapacity();
+  const party = s.currentParty;
+  s.currentParty = () => ({ key: 'house' });
+  out.partyMax = s.patronCapacity();
+  s.currentParty = party;
+  s.gridW = 10; s.gridH = 10;
   s.popularity = 50;
   s.noteVisitPopularity({ mood: 90 });
   out.happyUp = s.popularity - 50;
@@ -807,14 +849,14 @@ const capacity = await page.evaluate(() => {
   s.patronCapacity = cap;
   return out;
 });
-check('8 guests fit a new club; more as popularity grows (expanding alone adds none), up to what the room holds; happy visits raise popularity and storm-outs lower it', capacity.base === 8 && capacity.expandedOnly === 8 && capacity.popular === 18 && capacity.roomLimit === 20 && capacity.happyUp === 3 && capacity.stormDown === -5 && capacity.faster && capacity.matches && capacity.popShown && capacity.fullBlocks, JSON.stringify(capacity));
+check('8 guests fit a new club; more as popularity grows (expanding alone adds none), up to what the room holds, 32 at most (40 at a party); happy visits raise popularity and storm-outs lower it', capacity.base === 8 && capacity.expandedOnly === 8 && capacity.popular === 13 && capacity.roomLimit === 16 && capacity.max === 32 && capacity.partyMax === 40 && capacity.happyUp === 3 && capacity.stormDown === -5 && capacity.faster && capacity.matches && capacity.popShown && capacity.fullBlocks, JSON.stringify(capacity));
 
 // A club can only grow a row per wall every couple of levels.
 const growth = await page.evaluate(() => {
   const s = window.__clubNova.scene.getScene('club');
   return { l1: s.maxWallAt(1), l3: s.maxWallAt(3), l10: s.maxWallAt(10), l40: s.maxWallAt(40) };
 });
-check('expanding is locked by level: walls of 10 at level 1, 11 at 3, 14 at 10, 26 at 40', growth.l1 === 10 && growth.l3 === 11 && growth.l10 === 14 && growth.l40 === 26, JSON.stringify(growth));
+check('expanding is locked by level: walls of 10 at level 1, 11 at 3, 13 at 10, 20 at 40 (the most)', growth.l1 === 10 && growth.l3 === 11 && growth.l10 === 13 && growth.l40 === 20, JSON.stringify(growth));
 
 // XP for purchases: the first buy of an item gives XP by price (5 to 30);
 // buying it again, moving it and selling it give and take nothing, so
@@ -2062,10 +2104,11 @@ const lvl = await page.evaluate(() => {
   document.getElementById('levelOk').click();
   out.bartender = Object.getPrototypeOf(s).unlocksAt.call(s, 5).some((u) => u.name === '+1 Bartender') && !s.unlocksAt(4).some((u) => u.name === '+1 Bartender');
   out.celeb = s.unlocksAt(8).some((u) => u.name === 'Rico Diamond' && u.portrait !== undefined);
+  out.walls = s.unlocksAt(6).some((u) => /Walls up to/.test(u.name));
   out.closed = !document.getElementById('levelUp').classList.contains('open');
   return out;
 });
-check('levelling up shows a menu of everything unlocked, each with a picture', lvl.open && lvl.title === 'Level 5!' && lvl.names.includes('Plain Tile') && lvl.names.includes('Disco Ball') && lvl.names.includes('Hip Hop Night') && lvl.celeb && lvl.names.some((n) => /Walls up to/.test(n)) && lvl.pictures && lvl.closed && lvl.bartender, JSON.stringify(lvl));
+check('levelling up shows a menu of everything unlocked, each with a picture', lvl.open && lvl.title === 'Level 5!' && lvl.names.includes('Plain Tile') && lvl.names.includes('Disco Ball') && lvl.names.includes('Hip Hop Night') && lvl.celeb && lvl.walls && lvl.pictures && lvl.closed && lvl.bartender, JSON.stringify(lvl));
 
 // A new club's walls are beaten-up torn wallpaper; brick is a level 5 wallpaper.
 const walls = await page.evaluate(() => {
@@ -2102,8 +2145,9 @@ await page.mouse.move(5, 400);
 check('buttons and shop tabs are icons with no words, each with a hover name', icons.bare.length === 0 && icons.tabs === 9 && icons.tabIcons === 9, JSON.stringify(icons));
 check('hovering Bass Boost pops up its name and what it does', hoverTip.shown && hoverTip.name === 'Bass Boost!' && hoverTip.text.length > 10, JSON.stringify(hoverTip));
 
-// Goals: three show at a time with their progress; finishing one pays its
-// cash and XP, brings in the next and is saved.
+// Goals: three show at a time with their progress; one reached shows a
+// Claim button (and the tab counts it), and claiming pays its cash and XP,
+// brings in the next and is saved.
 const goals = await page.evaluate(() => {
   const s = window.__clubNova.scene.getScene('club');
   delete s.completeGoal; // the real payout (waitForScene stubs it)
@@ -2118,6 +2162,11 @@ const goals = await page.evaluate(() => {
   s.bumpGoal(first.stat, 1);
   out.partial = document.querySelector(`#goalList [data-goal="${first.id}"] .goalCount`)?.textContent;
   s.bumpGoal(first.stat, first.target);
+  out.notYet = s.cash === cash && !s.goalsDone.includes(first.id);
+  const claim = document.querySelector(`#goalList [data-goal="${first.id}"] .goalClaim`);
+  out.claimShown = !!claim;
+  out.badge = document.getElementById('goalsBadge').textContent;
+  claim?.click();
   out.paid = s.cash - cash;
   out.xp = s.fans - fans;
   out.reward = [first.cash, first.xp];
@@ -2128,7 +2177,7 @@ const goals = await page.evaluate(() => {
   out.saved = (saved.goalsDone || []).includes(first.id) && saved.goalStats && saved.goalStats[first.stat] >= first.target;
   return out;
 });
-check('goals show three at a time, track progress, pay cash and XP when done, and are saved', goals.showing === 3 && goals.partial === '1/' + (goals.partial || '').split('/')[1] && goals.paid === goals.reward[0] && goals.xp === goals.reward[1] && goals.gone && goals.stillThree === 3 && goals.saved, JSON.stringify(goals));
+check('goals show three at a time, track progress, wait to be claimed, pay cash and XP when claimed, and are saved', goals.notYet && goals.claimShown && goals.badge === '1' && goals.showing === 3 && goals.partial === '1/' + (goals.partial || '').split('/')[1] && goals.paid === goals.reward[0] && goals.xp === goals.reward[1] && goals.gone && goals.stillThree === 3 && goals.saved, JSON.stringify(goals));
 
 // The new shop buttons: Edit Floor opens the store on Floors (and lights
 // up), Store goes back to the last category, Sell opens Edit with the Sell
@@ -2219,14 +2268,6 @@ const topUi = await page.evaluate(() => {
   document.getElementById('goalsClose').click();
   out.xCloses = !shown();
   out.notInDock = !document.getElementById('dock').contains(goals) && !document.getElementById('navGoals');
-  delete s.completeGoal;
-  const done = [...s.goalsDone];
-  s.completeGoal(s.activeGoals()[0]);
-  out.badge = document.getElementById('goalsBadge').textContent;
-  s.goalsDone = done;
-  s.completeGoal = (goal) => { s.goalsDone.push(goal.id); };
-  document.getElementById('goalTab').click();
-  out.badgeCleared = document.getElementById('goalsBadge').textContent === '';
   s.toggleGoals(false);
   return out;
 });
@@ -2253,7 +2294,7 @@ const cashRoll = await page.evaluate(async () => {
   return out;
 });
 check('the cash rolls up to a new amount; buttons have the candy look', cashRoll.rolling && cashRoll.landed && cashRoll.stopped && cashRoll.rim === 'rgb(255, 255, 255)' && !!cashRoll.padColour, JSON.stringify(cashRoll));
-check('the Goals tab on the side drops the goals down and closes them (tab or x), not in the dock; a finished goal puts a ! on it until opened', topUi.startsClosed && topUi.opens && topUi.closes && topUi.xCloses && topUi.notInDock && topUi.badge === '!' && topUi.badgeCleared, JSON.stringify(topUi));
+check('the Goals tab on the side drops the goals down and closes them (tab or x), not in the dock', topUi.startsClosed && topUi.opens && topUi.closes && topUi.xCloses && topUi.notInDock, JSON.stringify(topUi));
 
 // With a drink in hand a guest goes and sits down with it when a seat is
 // free, or stands somewhere quiet, never on the dance floor.
@@ -2823,37 +2864,6 @@ const hints = await page.evaluate(() => {
 });
 check('one-time tips show the first time something comes up (a full club), glow round their button, and never again', hints.shown && hints.glow && hints.saved && hints.closed && hints.once, JSON.stringify(hints));
 
-// Achievements: reaching a milestone pays its cash and XP once, with a big
-// popup and a ! on the Trophies tab; the trophy wall shows every badge.
-const trophies = await page.evaluate(() => {
-  const s = window.__clubNova.scene.getScene('club');
-  const check = Object.getPrototypeOf(s).checkAchievements;
-  const out = {};
-  s.achievements = [];
-  s.achievementsQuiet = false;
-  s.goalStats = { ...(s.goalStats || {}), drinks: 50 };
-  const cash0 = s.cash;
-  const realProgress = s.achievementProgress;
-  s.achievementProgress = (a) => (a.stat === 'drinks' ? 50 : 0); // only this one reached
-  check.call(s);
-  out.earned = s.achievements.includes('drinks50');
-  out.paid = s.cash - cash0;
-  out.badge = document.getElementById('trophyBadge').textContent === '1';
-  check.call(s);
-  out.once = s.cash - cash0 === out.paid;
-  out.saved = s.serializeState().achievements.includes('drinks50');
-  s.achievementProgress = realProgress;
-  document.getElementById('trophyTab').click();
-  out.open = document.getElementById('trophyBox').classList.contains('open');
-  out.badges = document.querySelectorAll('#trophyShelf .trophy').length;
-  out.gold = document.querySelectorAll('#trophyShelf .trophy.earned').length;
-  out.cleared = document.getElementById('trophyBadge').textContent === '';
-  document.getElementById('trophyClose').click();
-  out.closed = !document.getElementById('trophyBox').classList.contains('open');
-  document.getElementById('bigPopup')?.classList.remove('show');
-  return out;
-});
-check('achievements pay once when reached (popup, ! on the Trophies tab), are saved, and the trophy wall shows every badge', trophies.earned && trophies.paid === 150 && trophies.badge && trophies.once && trophies.saved && trophies.open && trophies.badges >= 20 && trophies.gold === 1 && trophies.cleared && trophies.closed, JSON.stringify(trophies));
 
 // Staff: the Staff panel shows people (bartenders per bar, bouncers) with
 // pictures; more bouncers unlock with levels. Troublemakers bother the guests
@@ -2912,7 +2922,7 @@ check('a troublemaker upsets guests near them; a bouncer spots them and walks th
 const streetLook = await page.evaluate(() => {
   const s = window.__clubNova.scene.getScene('club');
   const imgs = s.buildingLayer ? s.buildingLayer.list.filter((o) => o.type === 'Image') : [];
-  const lights = s.streetStrings && s.buildingLayer.list.includes(s.streetStrings) && s.streetStrings.commandBuffer.length > 100;
+  const lights = s.streetStrings && s.buildingLayer.list.includes(s.streetStrings) && s.streetStrings.list.filter((o) => o.type === 'Image').length > 50;
   const keys = imgs.map((i) => i.texture.key);
   return {
     buildings: imgs.length,
@@ -3032,7 +3042,7 @@ check('the nine new wallpapers each paint a wall', newWalls.painted === newWalls
   // a drag from it slides it, and only the ✓ buys it there. ✕ puts it down.
   const scr = (gx, gy) => tp.evaluate(([gx, gy]) => { const s = window.__clubNova.scene.getScene('club'); const t = s.gridToScreen(gx, gy); return { x: s.world.x + t.sx * s.world.scaleX, y: s.world.y + t.sy * s.world.scaleY }; }, [gx, gy]);
   const state = () => tp.evaluate(() => { const s = window.__clubNova.scene.getScene('club'); return { spot: s.placeSpot && [s.placeSpot.gx, s.placeSpot.gy], bar: document.getElementById('placeBar').classList.contains('open'), cash: s.cash, plants: new Set(Object.values(s.placed).filter((r) => r.type === 'plant')).size, held: s.selectedProp }; });
-  await tp.evaluate(() => { const s = window.__clubNova.scene.getScene('club'); s.completeGoal = (goal) => { s.goalsDone.push(goal.id); }; s.checkAchievements = () => {}; s.closeDock(); s.cash = 5000; s.zoomTo(1.2); s.selectProp('plant'); });
+  await tp.evaluate(() => { const s = window.__clubNova.scene.getScene('club'); s.completeGoal = (goal) => { s.goalsDone.push(goal.id); }; s.closeDock(); s.cash = 5000; s.zoomTo(1.2); s.selectProp('plant'); });
   const picked = await state();
   const free = await tp.evaluate(() => { const s = window.__clubNova.scene.getScene('club'); for (let y = 2; y < s.gridH - 1; y++) for (let x = 2; x < s.gridW - 1; x++) if (s.footprintValid([[x, y]], 'plant') && !s.isBlockingProp(x + 1, y) && !s.isBlockingProp(x, y + 1) && (x !== s.placeSpot.gx || y !== s.placeSpot.gy)) return [x, y]; return null; });
   const t1 = await scr(...free);

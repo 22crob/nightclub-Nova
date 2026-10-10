@@ -44,7 +44,6 @@ import { PopularityMixin } from './popularity.js';
 import { UpgradesMixin } from './upgrades.js';
 import { PartyFxMixin } from './partyFx.js';
 import { TutorialMixin } from './tutorial.js';
-import { AchievementsMixin } from './achievements.js';
 import { TouchPlaceMixin } from './touchPlace.js';
 import { AppUpdateMixin } from './appUpdate.js';
 import { TankFxMixin } from './tankFx.js';
@@ -375,7 +374,6 @@ export class ClubScene extends Phaser.Scene {
     this.setupClubName(); // the name and its sign outside; asks for one if there isn't (clubName.js)
     this.setupDaily(); // today's gift, once a day (daily.js)
     this.setupTutorial(); // the How to play guide (tutorial.js)
-    this.setupAchievements(); // badges and the trophy wall (achievements.js)
     this.setupTouchPlace(); // drag-and-confirm placing on phones (touchPlace.js)
     this.setupAppUpdate(); // the New version button (appUpdate.js)
     this.setupDrinkMenu(); // what the bars serve (drinks.js)
@@ -416,7 +414,6 @@ applyMixins(ClubScene, [
   UpgradesMixin,
   PartyFxMixin,
   TutorialMixin,
-  AchievementsMixin,
   TouchPlaceMixin,
   AppUpdateMixin,
   InventoryMixin,

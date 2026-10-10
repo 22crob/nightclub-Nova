@@ -60,12 +60,16 @@ export class StreetMixin {
     this.streetRope = this.add.graphics();
     this.streetPassLayer = this.add.container(0, 0);
     this.streetLamps = this.add.graphics();
-    this.streetLayer.add([this.streetPassLayer, this.streetLamps]);
+    // The round parts of lamps and rope posts are pictures (drawn once), not
+    // shapes redrawn every frame (see streetPropTextures()).
+    this.streetLampPics = this.add.container(0, 0);
+    this.streetRopePics = this.add.container(0, 0);
+    this.streetLayer.add([this.streetPassLayer, this.streetLamps, this.streetLampPics]);
     // The left and back sidewalks are behind the walls: drawn under them,
     // so the wall hides people's legs, like Nightclub City's line.
     this.streetBackLayer = this.add.container(0, 0);
     this.streetBackPassLayer = this.add.container(0, 0);
-    this.streetBackLayer.add([this.streetRope, this.streetQueueLayer, this.streetBackPassLayer]);
+    this.streetBackLayer.add([this.streetRope, this.streetRopePics, this.streetQueueLayer, this.streetBackPassLayer]);
   }
 
   // Ground: road, sidewalk, curb, lane markings, the red carpet, pools of
@@ -111,12 +115,16 @@ export class StreetMixin {
     g.lineBetween(...P(cx0, cy1, -drop), ...P(cx1, cy1, -drop));
     g.lineBetween(...P(cx0, cy0, -drop), ...P(cx1, cy0, -drop));
     // Warm pools of light under the street lamps.
+    // (pictures, drawn once: see streetPropTextures())
+    this.streetPropTextures();
+    if (!this.groundPics) {
+      this.groundPics = this.add.container(0, 0);
+      this.tileLayer.addAt(this.groundPics, this.tileLayer.getIndex(g) + 1);
+    }
+    this.groundPics.removeAll(true);
     for (const [lx, ly] of this.streetLampSpots(t, nx, ny)) {
       const [cx, cy] = P(lx, ly, -drop);
-      g.fillStyle(STREET.lampGlow, 0.04);
-      g.fillEllipse(cx, cy, 150, 75);
-      g.fillStyle(STREET.lampGlow, 0.04);
-      g.fillEllipse(cx, cy, 90, 45);
+      this.groundPics.add(this.add.image(cx, cy, 'lampPool'));
     }
   }
 
@@ -167,8 +175,12 @@ export class StreetMixin {
     const L = STREET.stringLights;
     this.streetStrings?.destroy();
     const g = this.add.graphics();
-    this.buildingLayer.add(g);
-    this.streetStrings = g;
+    // The bulbs are one small picture each (streetBulbTexture()), not shapes:
+    // hundreds of drawn circles were redrawn every frame and slowed big clubs.
+    const holder = this.add.container(0, 0, [g]);
+    this.buildingLayer.add(holder);
+    this.streetStrings = holder;
+    const bulbKey = this.streetBulbTexture();
     const far = t - R + 0.05; // the buildings' fronts
     const wallTop = WALL_HEIGHT + 2;
     const strands = [];
@@ -202,22 +214,50 @@ export class StreetMixin {
       g.strokePath();
       bulbs.push(...pts.slice(1, -1));
     }
-    for (const [x, y] of bulbs) {
-      g.fillStyle(L.glow, 0.06);
-      g.fillCircle(x, y + 3, 15);
-      g.fillStyle(L.glow, 0.1);
-      g.fillCircle(x, y + 3, 9);
-      g.fillStyle(L.glow, 0.22);
-      g.fillCircle(x, y + 3, 5);
-    }
-    for (const [x, y] of bulbs) {
-      g.fillStyle(L.wire, 1);
-      g.fillRect(x - 0.8, y - 0.5, 1.6, 2);
-      g.fillStyle(L.glow, 1);
-      g.fillCircle(x, y + 3, 2.8);
-      g.fillStyle(L.bulb, 1);
-      g.fillCircle(x - 0.5, y + 2.5, 1.6);
-    }
+    for (const [x, y] of bulbs) holder.add(this.add.image(x, y + 3, bulbKey).setScale(0.5));
+  }
+
+  // One string-light bulb with its soft glow, drawn once at twice the size
+  // it's shown (so it stays sharp zoomed in).
+  streetBulbTexture() {
+    const key = 'streetBulb';
+    if (this.textures.exists(key)) return key;
+    const L = STREET.stringLights;
+    const g = this.make.graphics({ x: 0, y: 0, add: false });
+    const c = 32; // centre of a 64 x 64 picture; everything at 2x
+    g.fillStyle(L.glow, 0.06); g.fillCircle(c, c, 30);
+    g.fillStyle(L.glow, 0.1); g.fillCircle(c, c, 18);
+    g.fillStyle(L.glow, 0.22); g.fillCircle(c, c, 10);
+    g.fillStyle(L.wire, 1); g.fillRect(c - 1.6, c - 7, 3.2, 4);
+    g.fillStyle(L.glow, 1); g.fillCircle(c, c, 5.6);
+    g.fillStyle(L.bulb, 1); g.fillCircle(c - 1, c - 1, 3.2);
+    g.generateTexture(key, 64, 64);
+    g.destroy();
+    return key;
+  }
+
+  // The round bits of the street props, drawn once at twice their size:
+  // a rope post's foot and knob, a lamp's shadow, and its head with glow.
+  streetPropTextures() {
+    if (this.textures.exists('lampHead')) return;
+    const g = this.make.graphics({ x: 0, y: 0, add: false });
+    const make = (key, w, h, draw) => { g.clear(); draw(w / 2, h / 2); g.generateTexture(key, w, h); };
+    make('ropeFoot', 28, 16, (c, m) => {
+      g.fillStyle(0x000000, 0.35); g.fillEllipse(c, m, 24, 10);
+      g.fillStyle(STREET.brass, 1); g.fillEllipse(c, m - 2, 18, 8);
+    });
+    make('ropeKnob', 16, 16, (c, m) => { g.fillStyle(STREET.brass, 1); g.fillCircle(c, m, 6); });
+    make('lampPool', 152, 77, (c, m) => {
+      g.fillStyle(STREET.lampGlow, 0.04); g.fillEllipse(c, m, 150, 75);
+      g.fillStyle(STREET.lampGlow, 0.04); g.fillEllipse(c, m, 90, 45);
+    });
+    make('lampShadow', 32, 16, (c, m) => { g.fillStyle(0x000000, 0.35); g.fillEllipse(c, m, 28, 12); });
+    make('lampHead', 104, 104, (c, m) => {
+      for (let r = 3; r >= 1; r--) { g.fillStyle(STREET.lampGlow, 0.12); g.fillCircle(c, m, 12 + r * 12); }
+      g.fillStyle(STREET.lampPost, 1); g.fillRect(c - 12, m - 12, 24, 10);
+      g.fillStyle(0xfff3c4, 1); g.fillEllipse(c, m + 2, 20, 12);
+    });
+    g.destroy();
   }
 
   // A row of dark buildings with lit windows across each back road. Only
@@ -284,37 +324,30 @@ export class StreetMixin {
       }
       rope.strokePath();
     }
+    this.streetPropTextures();
+    this.streetRopePics.removeAll(true);
     for (const [x, y] of posts) {
-      rope.fillStyle(0x000000, 0.35);
-      rope.fillEllipse(x, y, 12, 5);
+      this.streetRopePics.add(this.add.image(x, y, 'ropeFoot').setScale(0.5));
       rope.fillStyle(STREET.brass, 1);
       rope.fillRect(x - 1.5, y - postH, 3, postH);
-      rope.fillEllipse(x, y - 1, 9, 4);
-      rope.fillCircle(x, y - postH - 1, 3);
       rope.lineStyle(1, 0x3a2a0a, 1);
       rope.strokeRect(x - 1.5, y - postH, 3, postH);
+      this.streetRopePics.add(this.add.image(x, y - postH - 1, 'ropeKnob').setScale(0.5));
     }
 
     const lamps = this.streetLamps;
     lamps.clear();
+    this.streetLampPics.removeAll(true);
     for (const [lx, ly] of this.streetLampSpots(t, nx, ny)) {
       const [x, y] = P(lx, ly, -drop);
       const top = y - 78;
-      lamps.fillStyle(0x000000, 0.35);
-      lamps.fillEllipse(x, y, 14, 6);
+      this.streetLampPics.add(this.add.image(x, y, 'lampShadow').setScale(0.5));
       lamps.fillStyle(STREET.lampPost, 1);
       lamps.fillRect(x - 2, top, 4, 78);
       lamps.fillRect(x - 4, y - 8, 8, 8);
       lamps.lineStyle(1, 0x0a0a10, 1);
       lamps.strokeRect(x - 2, top, 4, 78);
-      for (let r = 3; r >= 1; r--) {
-        lamps.fillStyle(STREET.lampGlow, 0.12);
-        lamps.fillCircle(x, top - 2, 6 + r * 6);
-      }
-      lamps.fillStyle(STREET.lampPost, 1);
-      lamps.fillRect(x - 6, top - 8, 12, 5);
-      lamps.fillStyle(0xfff3c4, 1);
-      lamps.fillEllipse(x, top - 1, 10, 6);
+      this.streetLampPics.add(this.add.image(x, top - 2, 'lampHead').setScale(0.5));
     }
 
     // The bouncer, at the front of the line.

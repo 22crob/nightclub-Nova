@@ -55,6 +55,9 @@ export class WorldMixin {
         );
         tile.gx = gx;
         tile.gy = gy;
+        // Never drawn (an invisible shape still costs a fill every frame,
+        // which added up in a big club); hovering is worked out by math.
+        tile.setVisible(false);
         this.tileLayer.add(tile);
         this.tiles[key] = tile;
       }

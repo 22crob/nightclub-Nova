@@ -75,7 +75,7 @@ export class TutorialMixin {
   // The first time a tip's moment comes, it shows (one at a time).
   tickHints() {
     if (this.hint || this.time.now < (this.nextHintAt || 0)) return;
-    const busy = ['namePrompt', 'dailyBox', 'levelUp', 'partySummary', 'trophyBox'].some((id) => document.getElementById(id)?.classList.contains('open'));
+    const busy = ['namePrompt', 'dailyBox', 'levelUp', 'partySummary'].some((id) => document.getElementById(id)?.classList.contains('open'));
     if (busy) return;
     const seen = new Set(this.hintsSeen || []);
     const hint = HINTS.find((h) => !seen.has(h.id) && h.when(this));

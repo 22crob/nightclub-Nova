@@ -130,12 +130,12 @@ export const STREET = {
   lampPost: 0x2a2a33, lampGlow: 0xffd77a, lampEvery: 6,
   buildings: [0x2a2438, 0x262a3a, 0x30283a, 0x232433], windowLit: 0xf2c75c, windowDark: 0x16141e,
   lineOut: 3.1, lineLength: 6, startInLine: 3, bouncerCharacter: 4,
-  msPerTile: 420, admitEveryMs: 1500, partyAdmitMs: 3000, passerEveryMs: [700, 1800],
+  msPerTile: 420, admitEveryMs: 1500, partyAdmitMs: 3000, passerEveryMs: [2200, 4500],
   // A livelier street: some passers-by walk in twos and threes, and small
   // groups stand chatting on the sidewalk, breaking up now and then.
   // The buildings along each back road, in order (art/blender/build_buildings.py).
   buildingRow: ['hotel', 'cocktail', 'walkup', 'noodles', 'karaoke', 'walkupDark', 'liquor', 'diner', 'tattoo', 'laundromat'],
-  groupChance: 0.35, hangouts: 3, hangoutMs: [25000, 50000],
+  groupChance: 0.25, hangouts: 2, hangoutMs: [25000, 50000],
   // Strings of bulbs across the back roads (drawStringLights()): ends every
   // `every` tiles, hung `height` px up the buildings, sagging `sag` px, a
   // bulb every `spacing` tiles.
@@ -174,7 +174,10 @@ export const FACINGS = [0, 90, 180, 270];
 // tiles (20 in the first 10x10 room), so a bigger room still matters later,
 // and never more than `max` (a crowd that size is plenty, and phones cope).
 // Balance-checked with a simulated club (October 2026).
-export const CAPACITY = { base: 8, perRootPopularity: 1.0, tilesPerGuest: 5, max: 80 };
+// The owner wants to see the club, not just a crowd: at most `max` guests
+// normally, and a running party lets in `partyBonus` more, never past
+// `partyMax` (40) (October 2026; it was 80, and a long-played club had 57).
+export const CAPACITY = { base: 8, perRootPopularity: 0.8, tilesPerGuest: 6, max: 32, partyBonus: 8, partyMax: 40 };
 // Popularity (see popularity.js): the club's reputation. Each guest's visit
 // moves it: leaving happy (mood 70+) +happy, content (40+) +content, unhappy
 // +unhappy, storming out +stormOut. It sets how many guests fit
@@ -371,6 +374,10 @@ export const BAR = {
 // to start, two at level 4, ... five at level 15). Extra bartenders can work
 // another bar or join a long bar that already has one.
 export const BARTENDERS = { levels: [1, 5, 10, 16, 23, 30] };
+// Bars are limited by level as well: `perBartender` bar pieces (one long
+// bar) for each bartender your level allows, so 3 at level 1, 6 at 5, ...
+// (the owner, October 2026: buying 8 bars straight away shouldn't work).
+export const BAR_LIMIT = { perBartender: 3 };
 
 // Bass Boost (see boost.js): for durationMs, guests are danceWeight times
 // as keen to dance, dancers tip `speedUp` times as often and `tipMultiplier`
@@ -496,36 +503,6 @@ export const SECURITY = {
   settleChance: 0.7, fightMs: 3500, moodHit: 12,
   danceTogetherChance: 0.35,
 };
-// Achievements (see achievements.js): badges for milestones, shown on the
-// trophy wall (the 🏅 tab on the left). `stat` is a goal counter (goalStats,
-// bumped where things happen) or a live value (level, popularity, luxury,
-// wall: the longer wall); reaching `target` pays `cash` and `xp` once.
-export const ACHIEVEMENTS = [
-  { id: 'drinks50', icon: '🍺', name: 'Barkeep', text: 'Serve 50 drinks', stat: 'drinks', target: 50, cash: 150, xp: 25 },
-  { id: 'drinks500', icon: '🍸', name: 'Mixologist', text: 'Serve 500 drinks', stat: 'drinks', target: 500, cash: 800, xp: 120 },
-  { id: 'drinks5000', icon: '🥂', name: 'Legend of the Bar', text: 'Serve 5,000 drinks', stat: 'drinks', target: 5000, cash: 5000, xp: 600 },
-  { id: 'happy25', icon: '😊', name: 'Good Times', text: '25 guests leave happy', stat: 'happyGuests', target: 25, cash: 150, xp: 25 },
-  { id: 'happy250', icon: '😍', name: 'Crowd Pleaser', text: '250 guests leave happy', stat: 'happyGuests', target: 250, cash: 1000, xp: 150 },
-  { id: 'happy2500', icon: '🌟', name: 'Best Night Ever', text: '2,500 guests leave happy', stat: 'happyGuests', target: 2500, cash: 6000, xp: 700 },
-  { id: 'party1', icon: '🎉', name: 'Party Starter', text: 'Throw your first party', stat: 'parties', target: 1, cash: 100, xp: 20 },
-  { id: 'party10', icon: '🪩', name: 'Party Machine', text: 'Throw 10 parties', stat: 'parties', target: 10, cash: 1200, xp: 150 },
-  { id: 'celeb1', icon: '⭐', name: 'Star Struck', text: 'A celebrity visits your club', stat: 'celebs', target: 1, cash: 250, xp: 40 },
-  { id: 'celeb10', icon: '🎬', name: 'A-List Hangout', text: '10 celebrity visits', stat: 'celebs', target: 10, cash: 2000, xp: 250 },
-  { id: 'walkout1', icon: '🚪', name: 'Not Tonight', text: 'Your bouncers walk out a troublemaker', stat: 'walkouts', target: 1, cash: 100, xp: 20 },
-  { id: 'walkout25', icon: '🛡️', name: 'Safe and Sound', text: 'Walk out 25 troublemakers', stat: 'walkouts', target: 25, cash: 1000, xp: 120 },
-  { id: 'bonus25', icon: '✋', name: 'High Five!', text: 'Catch 25 high fives', stat: 'bonuses', target: 25, cash: 200, xp: 30 },
-  { id: 'bonus250', icon: '🙌', name: 'Quick Hands', text: 'Catch 250 high fives', stat: 'bonuses', target: 250, cash: 1500, xp: 180 },
-  { id: 'level10', icon: '🔟', name: 'Rising Star', text: 'Reach level 10', stat: 'level', target: 10, cash: 500, xp: 0 },
-  { id: 'level20', icon: '💫', name: 'Hot Spot', text: 'Reach level 20', stat: 'level', target: 20, cash: 2000, xp: 0 },
-  { id: 'level30', icon: '🔥', name: 'Talk of the Town', text: 'Reach level 30', stat: 'level', target: 30, cash: 5000, xp: 0 },
-  { id: 'level40', icon: '👑', name: 'Nightlife Royalty', text: 'Reach level 40', stat: 'level', target: 40, cash: 10000, xp: 0 },
-  { id: 'pop100', icon: '💖', name: 'Getting Noticed', text: 'Reach 100 popularity', stat: 'popularity', target: 100, cash: 300, xp: 50 },
-  { id: 'pop1000', icon: '💘', name: 'Everyone Wants In', text: 'Reach 1,000 popularity', stat: 'popularity', target: 1000, cash: 2500, xp: 300 },
-  { id: 'lux500', icon: '💎', name: 'Classy', text: 'Reach 500 luxury', stat: 'luxury', target: 500, cash: 500, xp: 80 },
-  { id: 'lux3000', icon: '💍', name: 'Pure Luxury', text: 'Reach 3,000 luxury', stat: 'luxury', target: 3000, cash: 3000, xp: 350 },
-  { id: 'wall15', icon: '🏗️', name: 'Moving On Up', text: 'Grow a wall to 15 tiles', stat: 'wall', target: 15, cash: 600, xp: 80 },
-  { id: 'wall22', icon: '🏙️', name: 'Mega Club', text: 'Grow a wall to 22 tiles', stat: 'wall', target: 22, cash: 4000, xp: 400 },
-];
 
 // The Celebrity List (see celebrities.js): each unlocks at a club level and
 // from then on drops in on their own now and then: one every visitEveryMs

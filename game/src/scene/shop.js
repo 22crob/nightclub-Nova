@@ -255,6 +255,8 @@ export class ShopMixin {
       const lines = [];
       if (def.category === 'Dance Floors') lines.push('Dance floor: guests dance on it.');
       if (def.category === 'Floors') lines.push('Regular floor: paint it tile by tile.');
+      if (def.category === 'Bars') lines.push(`Bar pieces: ${this.barUnitCount()} of ${this.barAllowance()} your level allows.`);
+      if (def.staff === 'dj') lines.push('One DJ booth at a time: placing it puts your old one in the inventory.');
       lines.push(`Luxury: ${Math.round((def.cost || 0) * LUXURY.perDollar)}`);
       if (def.seats) lines.push(`Comfort: ${'★'.repeat(this.seatComfort(key))}${'☆'.repeat(5 - this.seatComfort(key))} (comfier seats make guests happier and stay longer)`);
       const picture = realSpriteIconFor(key) || renderIsoIcon(def.color, FLOOR_DECAL_PROPS.has(key));
@@ -307,30 +309,30 @@ export class ShopMixin {
         button.classList.toggle('selected', pending === side);
         cost.textContent = unlocked ? `$${tier.cost}` : `🔒 Lv ${tier.unlockLevel}`;
         slot.dataset.tipText = `${tier.tiles} more floor tiles along the front-${side} edge: the ${side} wall grows from ${wall} to ${tier.newLen} tiles: more room for a popular club's crowd.`
-          + (unlocked ? ' Click to see it, then confirm.' : ` Reach level ${tier.unlockLevel} to build it.`);
+          + (unlocked ? ' Click to see it in green, double-click to build it.' : ` Reach level ${tier.unlockLevel} to build it.`);
         slot.addEventListener('mouseenter', () => this.showExpandPreview(side));
         slot.addEventListener('mouseleave', () => this.showExpandPreview(this.pendingExpand));
+        // One click shows the row in green; a second click on the same
+        // side straight after (a double-click or double-tap) builds it (the
+        // owner asked for this instead of a separate confirm card).
         slot.addEventListener('click', () => {
           if (!unlocked) { SFX.denied(); return; }
-          this.pendingExpand = this.pendingExpand === side ? null : side;
-          this.showExpandPreview(this.pendingExpand || side);
-          this.renderExpandCard();
+          const now = performance.now();
+          const second = this.pendingExpand === side && now - (this.expandClickAt || 0) < 500;
+          this.expandClickAt = now;
+          if (second) {
+            this.expandClickAt = 0;
+            if (this.expandClub(side)) { this.pendingExpand = null; this.clearExpandPreview?.(); }
+            this.renderExpandCard();
+            return;
+          }
+          this.pendingExpand = side;
+          this.showExpandPreview(side);
+          for (const el of this.shopItemsEl.querySelectorAll('.expandSlot')) {
+            el.querySelector('.propButton')?.classList.toggle('selected', el.dataset.side === side);
+          }
         });
       }
-      fillIcons(slot);
-      this.shopItemsEl.appendChild(slot);
-    }
-    if (pending) {
-      const tier = tiers[pending];
-      const { slot, button, icon, cost } = this.makeCard('Build it!', `Add the row shown in green for $${tier.cost}.`, null);
-      slot.classList.add('confirmSlot');
-      icon.dataset.icon = 'check';
-      button.classList.toggle('unaffordable', this.cash < tier.cost);
-      cost.textContent = `Buy $${tier.cost}`;
-      slot.addEventListener('click', () => {
-        if (this.expandClub(pending)) this.pendingExpand = null;
-        this.renderExpandCard();
-      });
       fillIcons(slot);
       this.shopItemsEl.appendChild(slot);
     }

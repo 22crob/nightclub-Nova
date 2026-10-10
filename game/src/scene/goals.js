@@ -1,7 +1,8 @@
 // ClubScene methods: goals, like Nightclub City's. A chain of small goals
 // (GOALS in config.js) gives the player something to aim for: three show
-// at a time in the Goals panel, each with its progress, and finishing one
-// pays its cash and XP straight away and brings in the next.
+// at a time in the Goals panel, each with its progress. A goal reached
+// shows a Claim button (the owner wanted goals claimed, not paid
+// automatically); claiming pays its cash and XP and brings in the next.
 //
 // Progress comes from counters (this.goalStats, saved) bumped where things
 // happen (bumpGoal()), from bests seen while playing (noteGoalBest()), or
@@ -45,20 +46,41 @@ export class GoalsMixin {
     this.checkGoals();
   }
 
-  // Pays out any showing goal that's been reached, and refreshes the panel.
+  // A showing goal reached: ready to claim.
+  goalReady(goal) {
+    return this.goalProgress(goal) >= goal.target;
+  }
+
+  // Refreshes the panel, and cheers when a goal is newly ready to claim.
   checkGoals() {
     this.goalsDone = this.goalsDone || [];
-    let finished = true;
-    while (finished) {
-      finished = false;
-      for (const goal of this.activeGoals()) {
-        if (this.goalProgress(goal) < goal.target) continue;
-        this.completeGoal(goal);
-        finished = true;
-        break;
+    this.goalsAnnounced = this.goalsAnnounced || new Set();
+    for (const goal of this.activeGoals()) {
+      if (!this.goalReady(goal) || this.goalsAnnounced.has(goal.id)) continue;
+      this.goalsAnnounced.add(goal.id);
+      if (!this.goalsLoaded) continue; // ready since last time: no fanfare on load
+      SFX.unlock();
+      this.showToast(`🎯 Goal reached: ${goal.text}! Claim it in Goals.`, 4000);
+      const button = document.getElementById('goalTab');
+      if (button) {
+        button.classList.remove('cheer');
+        void button.offsetWidth; // restart the animation
+        button.classList.add('cheer');
       }
     }
+    const ready = this.activeGoals().filter((g) => this.goalReady(g)).length;
+    const badge = document.getElementById('goalsBadge');
+    if (badge) badge.textContent = ready ? String(ready) : '';
     this.renderGoals();
+  }
+
+  // The Claim button: pays the goal and brings in the next.
+  claimGoal(id) {
+    const goal = this.activeGoals().find((g) => g.id === id);
+    if (!goal || !this.goalReady(goal)) { SFX.denied(); return false; }
+    this.completeGoal(goal);
+    this.checkGoals();
+    return true;
   }
 
   completeGoal(goal) {
@@ -66,16 +88,8 @@ export class GoalsMixin {
     this.cash += goal.cash;
     this.fans += goal.xp;
     this.noteIncome('goals', goal.cash);
-    SFX.levelUp();
-    this.showToast(`🎯 Goal complete: ${goal.text}! +$${goal.cash}${goal.xp ? ` +${goal.xp} XP` : ''}`, 4500);
-    this.justDone = goal.id;
-    const button = document.getElementById('goalTab');
-    if (button && !this.goalsOpen()) {
-      document.getElementById('goalsBadge').textContent = '!';
-      button.classList.remove('cheer');
-      void button.offsetWidth; // restart the animation
-      button.classList.add('cheer');
-    }
+    SFX.trophy();
+    this.showToast(`🎯 Goal claimed: +$${goal.cash}${goal.xp ? ` +${goal.xp} XP` : ''}`, 3500);
     this.updateUI();
     this.saveGame();
   }
@@ -85,7 +99,7 @@ export class GoalsMixin {
     const list = document.getElementById('goalList');
     if (!list) return;
     const goals = this.activeGoals();
-    const key = goals.map((g) => `${g.id}:${Math.min(g.target, this.goalProgress(g))}`).join('|');
+    const key = goals.map((g) => `${g.id}:${Math.min(g.target, Math.floor(this.goalProgress(g)))}`).join('|');
     if (list.dataset.rendered === key && !force) return;
     list.dataset.rendered = key;
     list.innerHTML = '';
@@ -107,6 +121,14 @@ export class GoalsMixin {
       row.querySelector('.goalFill').style.width = `${(have / goal.target) * 100}%`;
       row.querySelector('.goalCount').textContent = `${have}/${goal.target}`;
       row.querySelector('.goalReward').textContent = `$${goal.cash}${goal.xp ? ` · ${goal.xp} XP` : ''}`;
+      if (this.goalReady(goal)) {
+        row.classList.add('ready');
+        const claim = document.createElement('div');
+        claim.className = 'goalClaim summaryButton';
+        claim.textContent = 'Claim';
+        claim.addEventListener('click', () => this.claimGoal(goal.id));
+        row.appendChild(claim);
+      }
       list.appendChild(row);
     }
   }
@@ -133,15 +155,16 @@ export class GoalsMixin {
     hideTip();
   }
 
-  // The Goals panel was opened: the ! goes.
+  // The Goals panel was opened (the badge counts goals to claim, so it
+  // stays until they're claimed).
   seenGoals() {
-    const badge = document.getElementById('goalsBadge');
-    if (badge) badge.textContent = '';
+    document.getElementById('goalTab')?.classList.remove('cheer');
   }
 
   setupGoals() {
     document.getElementById('goalTab')?.addEventListener('click', () => { SFX.unlock(); this.toggleGoals(); });
     document.getElementById('goalsClose')?.addEventListener('click', () => { SFX.unlock(); this.toggleGoals(false); });
     this.checkGoals();
+    this.goalsLoaded = true;
   }
 }

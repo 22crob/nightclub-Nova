@@ -1,7 +1,7 @@
 // ClubScene methods: Footprints, the placement ghost, and placing / rotating / selling / restoring props.
 // Mixed into ClubScene (see ClubScene.js); `this` is the scene.
 import { PROP_TYPES, STAFF_TYPES } from '../catalog.js';
-import { FACINGS, FALLBACK_PROP_HEIGHT, SELL_REFUND_RATIO, TILE_H, TILE_W } from '../config.js';
+import { BAR_LIMIT, FACINGS, FALLBACK_PROP_HEIGHT, SELL_REFUND_RATIO, TILE_H, TILE_W } from '../config.js';
 import { floorTextureKey } from '../floors.js';
 import { SFX } from '../sfx.js';
 
@@ -280,6 +280,14 @@ export class PlacementMixin {
 
     const tiles = this.getFootprint(this.selectedProp, this.currentFacing, gx, gy);
     if (!this.footprintValid(tiles)) { SFX.denied(); return; } // occupied or off-grid
+    // Bars are limited by level too, so a club can't fill up with bars and
+    // staff before it's earned them (see barAllowance(), staff.js).
+    if (def.category === 'Bars' && this.barUnitCount() >= this.barAllowance()) {
+      SFX.denied();
+      const next = this.nextBartenderLevel();
+      this.showToast(`🍸 Your level allows ${this.barAllowance()} bar pieces (${BAR_LIMIT.perBartender} for each bartender you can hire).${next ? ` More at level ${next}!` : ''}`, 3500);
+      return;
+    }
 
     this.cash -= cost;
     const facing = def.rotatable ? this.currentFacing : 0;
@@ -317,6 +325,17 @@ export class PlacementMixin {
     this.updateUI();
     this.saveGame();
     if (def.staff === 'dj' && !record.staff) this.attachStaff(record); // every booth comes with its DJ
+    // One DJ booth at a time (the owner's rule): a new one sends the old one
+    // to the inventory.
+    if (def.staff === 'dj') {
+      for (const old of this.clubBooths().filter((r) => r !== record)) {
+        this.removeProp(old);
+        this.addToInventory(old.type);
+        this.pushInventoryXp(old.type, old.xp);
+        this.showToast(`📦 Your ${PROP_TYPES[old.type].label} went into your inventory: one DJ booth at a time.`, 3500);
+      }
+      this.refreshDock();
+    }
     const staffKind = def.staff && STAFF_TYPES[def.staff];
     if (staffKind && !this.isWorked(record)) this.showToast(`Now hire a ${staffKind.label.toLowerCase()} for it in the Staff tab.`, 3500);
   }

@@ -82,6 +82,7 @@ export class BonusesMixin {
     for (const b of [...this.bonuses]) if (now >= b.expiresAt) this.removeBonus(b, true);
     if (this.nextBonusAt === undefined) this.nextBonusAt = now + randRange(...BONUS.everyMs);
     if (this.bonuses.some((b) => b.kind !== 'tip') || now < this.nextBonusAt) return;
+    if (this.guestsHidden) return; // nobody holds up a badge while the club is being edited
     const happy = this.patrons.filter((p) => !p.gone && !p.leaving && !p.arguing && p.mood >= BONUS.minMood && p.container.visible);
     if (happy.length === 0) { this.nextBonusAt = now + 3000; return; } // try again soon
     this.offerBonus(happy[Math.floor(Math.random() * happy.length)]);
