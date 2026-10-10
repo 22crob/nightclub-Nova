@@ -45,6 +45,12 @@ import dj_curve from './assets/sprites/dj_curve.json';
 import dj_capsule from './assets/sprites/dj_capsule.json';
 import dj_glass from './assets/sprites/dj_glass.json';
 import seat_facetBooth from './assets/sprites/seat_facetBooth.json';
+import seat_beanBags from './assets/sprites/seat_beanBags.json';
+import seat_stripeBooth from './assets/sprites/seat_stripeBooth.json';
+import seat_bottleSectional from './assets/sprites/seat_bottleSectional.json';
+import seat_onyxBooth from './assets/sprites/seat_onyxBooth.json';
+import seat_ringBooth from './assets/sprites/seat_ringBooth.json';
+import seat_crystalBooth from './assets/sprites/seat_crystalBooth.json';
 import seat_candleTable from './assets/sprites/seat_candleTable.json';
 import seat_standingTable from './assets/sprites/seat_standingTable.json';
 import seat_stool from './assets/sprites/seat_stool.json';
@@ -231,6 +237,12 @@ const SEAT_SPRITES = {
   cubeBench: seat_cubeBench,
   galaxyPods: seat_galaxyPods,
   facetBooth: seat_facetBooth,
+  beanBags: seat_beanBags,
+  stripeBooth: seat_stripeBooth,
+  bottleSectional: seat_bottleSectional,
+  onyxBooth: seat_onyxBooth,
+  ringBooth: seat_ringBooth,
+  crystalBooth: seat_crystalBooth,
 };
 const SQUARE_3X3 = [[0, 0], [1, 0], [2, 0], [0, 1], [1, 1], [2, 1], [0, 2], [1, 2], [2, 2]];
 const BOOTH_3X3 = { 0: SQUARE_3X3, 90: SQUARE_3X3, 180: SQUARE_3X3, 270: SQUARE_3X3 };
@@ -373,6 +385,13 @@ export const PROP_TYPES = {
   tulipLounge: seatTier('tulipLounge', 'Tulip Lounge', 420, 41, 'tulipLounge', 0.55, BOOTH_3X3),
   cubeBench: seatTier('cubeBench', 'LED Cube Bench', 380, 45, 'cubeBench', 0.55, BOOTH_FOOTPRINT),
   gemLounge: seatTier('gemLounge', 'Gem Lounge', 1450, 58, 'facetBooth', 1.15, BOOTH_3X3), // the owner's Booth 7 sketch
+  // The nightclub batch (October 2026, art/blender/seating_designs.py).
+  beanBags: seatTier('beanBags', 'Bean Bags', 120, 7, 'beanBags', 0.25, BOOTH_FOOTPRINT),
+  stripeBooth: seatTier('stripeBooth', 'Stripe Booth', 300, 16, 'stripeBooth', 0.45, BOOTH_3X3),
+  bottleSectional: seatTier('bottleSectional', 'Bottle Service', 450, 30, 'bottleSectional', 0.6, BOOTH_3X3),
+  onyxBooth: seatTier('onyxBooth', 'Onyx Horseshoe', 600, 39, 'onyxBooth', 0.75, BOOTH_3X3),
+  ringBooth: seatTier('ringBooth', 'Neon Ring Booth', 750, 47, 'ringBooth', 0.85, BOOTH_3X3),
+  crystalBooth: seatTier('crystalBooth', 'Crystal VIP Booth', 900, 52, 'crystalBooth', 0.95, BOOTH_3X3),
   galaxyPods: seatTier('galaxyPods', 'Galaxy Egg Pods', 1350, 54, 'galaxyPods', 1.1, BOOTH_3X3),
   // Decorations, simple to fancy. 'plant', 'discoBall' and 'neonSign' are
   // the keys of the original placeholder decorations, kept for old saves.
@@ -477,6 +496,12 @@ const PROP_LIGHTS = {
   capsuleBooth: [0x40d8ff, 1.8],
   glassBooth: [0x80c8ff, 1.9],
   gemLounge: [0xff50b0, 1.3],
+  beanBags: [0xb060ff, 0.9],
+  stripeBooth: [0xff2a8a, 1.3],
+  bottleSectional: [0xff2040, 1.3],
+  onyxBooth: [0xffa030, 1.5],
+  ringBooth: [0xff40c0, 1.8],
+  crystalBooth: [0x9fd0ff, 1.5],
 };
 for (const [key, light] of Object.entries(PROP_LIGHTS)) PROP_TYPES[key].light = light;
 
@@ -507,7 +532,7 @@ export const STAFF_TYPES = {
 // The VIP booths: the only seats you can show a guest to from their card
 // (see seatGuest() in scene/guests.js), like Nightclub City's booths.
 export const VIP_BOOTHS = new Set(['vipLounge', 'blackBooth', 'goldBooth',
-  'woodLounge', 'tulipLounge', 'galaxyPods', 'gemLounge']);
+  'woodLounge', 'tulipLounge', 'galaxyPods', 'gemLounge', 'stripeBooth', 'bottleSectional', 'onyxBooth', 'ringBooth', 'crystalBooth']);
 
 // Expanding adds one row of floor along one of the room's two open edges at
 // a time (see expandClub()). How long a wall can get depends on your level:

@@ -10,7 +10,7 @@
 
 **Your current club keeps everything it has.** Things already placed or in storage stay yours, even if they now unlock later.
 
-**Nightclub batch (October 2026):** after the review I made new bars and booths in the club style the owner kept. The bars went in between the kept ones (Chrome 10, Velvet 18, Ultraviolet 26, Pink Neon 35, Champagne 44).
+**Nightclub batch (October 2026):** after the review I made new bars and booths in the club style the owner kept. The bars went in between the kept ones (Chrome 10, Velvet 18, Ultraviolet 26, Pink Neon 35, Champagne 44), and the booths too (Bean Bags 7, Stripe Booth 16, Bottle Service 30, Onyx Horseshoe 39, Neon Ring Booth 47, Crystal VIP Booth 52).
 
 ## Level by level
 
@@ -22,7 +22,7 @@
 | 4 | Seat/booth: Fabric Couch; Decoration: Velvet Rope |
 | 5 | Floor: Plain Tile; Decoration: Disco Ball; Party: Hip Hop Night; Bartender: +1 |
 | 6 | Bar: Pub Bar; Wallpaper: Cinder Block; Drink: Shots |
-| 7 | DJ booth: Brick Booth; Decoration: Lava Lamp |
+| 7 | Seat/booth: Bean Bags; DJ booth: Brick Booth; Decoration: Lava Lamp |
 | 8 | Dance floor: Checker Floor; Decoration: Speaker Tower; Celebrity: Rico Diamond; Bouncer: +1 |
 | 9 | Seat/booth: Candle Table; Wallpaper: Brick |
 | 10 | Bar: Chrome Bar; DJ booth: Club Booth; Decoration: Globe Lamp; Drink: Mojito; Bartender: +1 |
@@ -31,7 +31,7 @@
 | 13 | Seat/booth: Chrome Bar Stool; Decoration: Crystal Column; Celebrity: Max Volt |
 | 14 | Bar: Speakeasy Bar; Decoration: Glow Tube |
 | 15 | DJ booth: Neon Booth; Wallpaper: Subway Tile |
-| 16 | Dance floor: Wood Floor; Decoration: Glow Plinth; Drink: Martini; Bartender: +1 |
+| 16 | Seat/booth: Stripe Booth; Dance floor: Wood Floor; Decoration: Glow Plinth; Drink: Martini; Bartender: +1 |
 | 17 | Decoration: Pool Table; Wallpaper: Wood Panel |
 | 18 | Bar: Velvet Bar; Floor: Wood Planks; Seat/booth: Chesterfield; Celebrity: DJ Kai Blaze; Bouncer: +1 |
 | 19 | DJ booth: Truss Booth; Decoration: Pink Globe Lamp |
@@ -45,7 +45,7 @@
 | 27 | DJ booth: Ice Booth; Seat/booth: Red Velvet Booth |
 | 28 | Decoration: Purple Liquid Tank; Wallpaper: Neon Strip |
 | 29 | Dance floor: Two-Tone Blink; Decoration: Neon Speaker |
-| 30 | Bar: Ice Bar; Decoration: Purple Speaker Stack; Celebrity: Tony Fame; Bartender: +1; Bouncer: +1 |
+| 30 | Seat/booth: Bottle Service; Bar: Ice Bar; Decoration: Purple Speaker Stack; Celebrity: Tony Fame; Bartender: +1; Bouncer: +1 |
 | 31 | DJ booth: Art Deco Booth; Floor: Purple Carpet |
 | 32 | Seat/booth: Wood Lounge; Wallpaper: Speaker Wall |
 | 33 | Dance floor: Glow Floor; Decoration: Retro Robot; Party: Masquerade Ball |
@@ -54,7 +54,7 @@
 | 36 | Seat/booth: Black Leather Booth; Decoration: Blue Liquid Tank |
 | 37 | Dance floor: Light-Up Floor; Wallpaper: Black Arches; Celebrity: Jett Starr |
 | 38 | Floor: Marble; Decoration: Lucky Cat |
-| 39 | DJ booth: Steel Rack Booth; Decoration: Pagoda Statue; Party: Neon Rave |
+| 39 | Seat/booth: Onyx Horseshoe; DJ booth: Steel Rack Booth; Decoration: Pagoda Statue; Party: Neon Rave |
 | 40 | Bar: Disco Bar; Wallpaper: Mirror Tiles |
 | 41 | Seat/booth: Tulip Lounge; Decoration: Bottle Cabinet |
 | 42 | Dance floor: Neon Rings; Decoration: Truss Spotlights |
@@ -62,12 +62,12 @@
 | 44 | Bar: Champagne Bar; Floor: Black Gloss; Decoration: Glass Divider |
 | 45 | Seat/booth: LED Cube Bench; Decoration: Bubble Column |
 | 46 | Dance floor: Color Wave; Wallpaper: Neon Chevron |
-| 47 | DJ booth: Faceted Booth; Decoration: Ribbon Sculpture |
+| 47 | Seat/booth: Neon Ring Booth; DJ booth: Faceted Booth; Decoration: Ribbon Sculpture |
 | 48 | Bar: Marble Lounge Bar; Wallpaper: Purple Glow |
 | 49 | Seat/booth: Gold VIP Booth; Decoration: Tube Aquarium |
 | 50 | Dance floor: Rainbow Flow; Decoration: Pop Star Statue |
 | 51 | DJ booth: Curve Booth; Floor: Gold Marble |
-| 52 | Decoration: Glow Cubes; Wallpaper: LED Wall |
+| 52 | Seat/booth: Crystal VIP Booth; Decoration: Glow Cubes; Wallpaper: LED Wall |
 | 53 | Decoration: Cabinet Aquarium; Wallpaper: Ice Panels |
 | 54 | Seat/booth: Galaxy Egg Pods; Decoration: Rapper Statue |
 | 55 | DJ booth: Capsule Booth; Dance floor: Step Floor |

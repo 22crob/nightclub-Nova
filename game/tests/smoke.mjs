@@ -1305,6 +1305,25 @@ const moreSeats = await page.evaluate(() => {
 });
 check('the newer booths and sofas all have their art', moreSeats.missing.length === 0, moreSeats.missing.join(', ') || 'all there');
 check('the Wood Lounge takes 3 x 2 tiles', moreSeats.woodTiles === 6, String(moreSeats.woodTiles));
+// The nightclub batch of booths (October 2026): art, seats, VIP booths.
+const clubSeats = await page.evaluate(() => {
+  const s = window.__clubNova.scene.getScene('club');
+  const keys = ['beanBags', 'stripeBooth', 'bottleSectional', 'onyxBooth', 'ringBooth', 'crystalBooth'];
+  const out = { missing: keys.filter((k) => !s.hasLayerSprites(k)), seats: {},  };
+  for (const k of keys) {
+    let rec = null;
+    for (let gy = 1; gy < s.gridH - 3 && !rec; gy++) for (let gx = 1; gx < s.gridW - 3 && !rec; gx++) {
+      if (s.footprintValid(s.getFootprint(k, 0, gx, gy), k)) rec = s.restoreProp(k, 0, [gx, gy]);
+    }
+    let n = 0;
+    if (rec) { try { while (n < 9 && s.seatSpot(rec, n)) n++; } catch (e) { /* past the last seat */ } }
+    out.seats[k] = rec ? n : -1;
+    if (rec) s.removeProp(rec);
+  }
+  return out;
+});
+check('the nightclub booths have their art and seats (bean bags 2, booths 4 or 5)', clubSeats.missing.length === 0 && clubSeats.seats.beanBags === 2
+  && ['stripeBooth', 'bottleSectional', 'onyxBooth', 'ringBooth'].every((k) => clubSeats.seats[k] === 4) && clubSeats.seats.crystalBooth === 5, JSON.stringify(clubSeats));
 
 // Decorations: the first ones have their sprites, and one can be placed and
 // rotated like any other prop.
