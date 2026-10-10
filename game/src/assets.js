@@ -28,17 +28,19 @@ export const BUILDING_META = Object.fromEntries(
 // grid in a JSON beside it and two more clips: drink and sittalk. The
 // Neon Cartoon guys (patron_neon<NN>.png, drawn in code as a cut-out puppet
 // by art/characters/neon/neon_rig.py) come next, also with a JSON grid, and
+// the cut-out puppets (patron_cut_<name>.png, art/characters/cutout), and
 // the street people (patron_st<NN>.png) last.
 // patronMetaOf(i) gives any character's grid in one shape: frame size,
 // anchor between the feet, standing height, and for each clip_facing its
 // first frame (`starts`), with frame counts and speeds per clip.
 const patronSheets = import.meta.glob('./assets/sprites/patrons/patron_*.png', { eager: true, import: 'default' });
-const patronSheetMetas = import.meta.glob(['./assets/sprites/patrons/patron_3d_*.json', './assets/sprites/patrons/patron_neon*.json', './assets/sprites/patrons/patron_st*.json'], { eager: true, import: 'default' });
+const patronSheetMetas = import.meta.glob(['./assets/sprites/patrons/patron_3d_*.json', './assets/sprites/patrons/patron_neon*.json', './assets/sprites/patrons/patron_cut_*.json', './assets/sprites/patrons/patron_st*.json'], { eager: true, import: 'default' });
 const drawnKeys = Object.keys(patronSheets).filter((k) => /patron_\d+\.png$/.test(k)).sort();
 const modelKeys = Object.keys(patronSheets).filter((k) => /patron_3d_\w+\.png$/.test(k)).sort();
 const neonKeys = Object.keys(patronSheets).filter((k) => /patron_neon\w+\.png$/.test(k)).sort();
+const cutKeys = Object.keys(patronSheets).filter((k) => /patron_cut_\w+\.png$/.test(k)).sort();
 const streetKeys = Object.keys(patronSheets).filter((k) => /patron_st\d+\.png$/.test(k)).sort();
-export const PATRON_SHEETS = [...drawnKeys, ...modelKeys, ...neonKeys, ...streetKeys].map((k) => patronSheets[k]);
+export const PATRON_SHEETS = [...drawnKeys, ...modelKeys, ...neonKeys, ...cutKeys, ...streetKeys].map((k) => patronSheets[k]);
 export const PATRON_META = patronMeta;
 const drawnMeta = {
   ...patronMeta,
@@ -48,6 +50,7 @@ const PATRON_METAS = [
   ...drawnKeys.map(() => drawnMeta),
   ...modelKeys.map((k) => patronSheetMetas[k.replace(/\.png$/, '.json')]),
   ...neonKeys.map((k) => patronSheetMetas[k.replace(/\.png$/, '.json')]),
+  ...cutKeys.map((k) => patronSheetMetas[k.replace(/\.png$/, '.json')]),
   ...streetKeys.map((k) => patronSheetMetas[k.replace(/\.png$/, '.json')]),
 ];
 // The characters made from the owner's 3D model.
@@ -59,7 +62,11 @@ export const PAINTED_PATRONS = Object.fromEntries(modelKeys.map((k, i) => [k.mat
 export const NEON_PATRONS = neonKeys.map((_, i) => drawnKeys.length + modelKeys.length + i);
 // The people on the street outside (art/characters/street): drawn by
 // ChatGPT, they walk and stand (other clips stand still).
-export const STREET_PATRONS = streetKeys.map((_, i) => drawnKeys.length + modelKeys.length + neonKeys.length + i);
+// The cut-out puppet guests (art/characters/cutout/cutout_rig.py): one
+// ChatGPT drawing in pieces, posed frame by frame like Nightclub City's
+// characters (patron_cut_<name>.png), by name.
+export const CUTOUT_PATRONS = Object.fromEntries(cutKeys.map((k, i) => [k.match(/patron_cut_(\w+)\.png$/)[1], drawnKeys.length + modelKeys.length + neonKeys.length + i]));
+export const STREET_PATRONS = streetKeys.map((_, i) => drawnKeys.length + modelKeys.length + neonKeys.length + cutKeys.length + i);
 export function patronMetaOf(character) {
   return PATRON_METAS[character] || drawnMeta;
 }

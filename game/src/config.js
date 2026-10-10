@@ -298,6 +298,12 @@ export const MODEL_PATRON_SHARE = 0.35;
 // assets.js); more on the test link, so they're easy to look at.
 export const NEON_PATRON_SHARE = 0.3;
 export const NEON_PATRON_SHARE_TEST = 0.6;
+// The cut-out puppet guests (CUTOUT_PATRONS in assets.js, by name), on
+// trial: on the test link this share of guests wears one of CUTOUT_LOOKS,
+// the real club none yet (the owner will judge them first).
+export const CUTOUT_LOOKS = ['guy01'];
+export const CUTOUT_SHARE = 0;
+export const CUTOUT_SHARE_TEST = 0.6;
 export const CHARACTER_DISPLAY_HEIGHT = 87.4; // px: big next to the furniture, like Nightclub City
 // How far above a patron's feet their tip / drink popups start.
 export const PATRON_POPUP_Y = CHARACTER_DISPLAY_HEIGHT * 0.8;

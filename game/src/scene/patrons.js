@@ -1,9 +1,9 @@
 // ClubScene methods: Patrons: spawning, wandering, animation, tipping and leaving.
 // Mixed into ClubScene (see ClubScene.js); `this` is the scene.
 import Phaser from 'phaser';
-import { MODEL_PATRONS, NEON_PATRONS, PAINTED_PATRONS, PATRON_SHEETS, STREET_PATRONS, patronMetaOf } from '../assets.js';
+import { CUTOUT_PATRONS, MODEL_PATRONS, NEON_PATRONS, PAINTED_PATRONS, PATRON_SHEETS, STREET_PATRONS, patronMetaOf } from '../assets.js';
 import { FLOOR_DECAL_PROPS, PROP_TYPES, STAFF_TYPES } from '../catalog.js';
-import { BOOST, CHARACTER_DISPLAY_HEIGHT, GUEST_LOOKS, MODEL_PATRON_SHARE, NEON_PATRON_SHARE, NEON_PATRON_SHARE_TEST, TEST_MODE, HAIR_STYLES, PATRON_HAIR_COLORS, PATRON_MOVE_INTERVAL, PATRON_OUTFIT_COLORS, PATRON_POPUP_Y, PATRON_SKIN_TONES, PATRON_SPAWN_INTERVAL, MONEY, PATRON_TIP_INTERVAL, PATRON_Y_OFFSET, PROP_SCALE, VISIT, XP } from '../config.js';
+import { BOOST, CHARACTER_DISPLAY_HEIGHT, CUTOUT_LOOKS, CUTOUT_SHARE, CUTOUT_SHARE_TEST, GUEST_LOOKS, MODEL_PATRON_SHARE, NEON_PATRON_SHARE, NEON_PATRON_SHARE_TEST, TEST_MODE, HAIR_STYLES, PATRON_HAIR_COLORS, PATRON_MOVE_INTERVAL, PATRON_OUTFIT_COLORS, PATRON_POPUP_Y, PATRON_SKIN_TONES, PATRON_SPAWN_INTERVAL, MONEY, PATRON_TIP_INTERVAL, PATRON_Y_OFFSET, PROP_SCALE, VISIT, XP } from '../config.js';
 import { SFX } from '../sfx.js';
 import { MOOD } from './mood.js';
 import { randRange } from '../util.js';
@@ -138,18 +138,25 @@ export class PatronsMixin {
   // scaled so a standing character is 90% of CHARACTER_DISPLAY_HEIGHT tall
   // (head to feet), the proportion the game was tuned with. Starts idle,
   // facing front.
+  // The character index of a cut-out puppet guest by name (CUTOUT_PATRONS).
+  cutoutLook(name) {
+    return CUTOUT_PATRONS[name];
+  }
+
   drawPatronCharacterSprite(sx, sy, scaleVariance, character) {
     const container = this.add.container(sx, sy);
     const shadow = this.add.ellipse(0, 2 * PROP_SCALE, 30 * PROP_SCALE, 12 * PROP_SCALE, 0x000000, 0.3);
     // Patrons never wear a staff member's character, so staff stand out.
     const staffLooks = new Set(Object.values(STAFF_TYPES).map((t) => t.character % PATRON_SHEETS.length));
-    const choices = PATRON_SHEETS.map((_, i) => i).filter((i) => !staffLooks.has(i) && !MODEL_PATRONS.includes(i) && !NEON_PATRONS.includes(i) && !STREET_PATRONS.includes(i));
+    const choices = PATRON_SHEETS.map((_, i) => i).filter((i) => !staffLooks.has(i) && !MODEL_PATRONS.includes(i) && !NEON_PATRONS.includes(i) && !Object.values(CUTOUT_PATRONS).includes(i) && !STREET_PATRONS.includes(i));
     // Some guests are the Neon Cartoon characters (NEON_PATRON_SHARE), some
     // the owner's 3D model (MODEL_PATRON_SHARE), the rest drawn.
     const neonShare = TEST_MODE ? NEON_PATRON_SHARE_TEST : NEON_PATRON_SHARE;
     let pool = choices;
     const looks = GUEST_LOOKS.map((name) => PAINTED_PATRONS[name]).filter((i) => i !== undefined);
-    if (looks.length) pool = looks;
+    const cutouts = CUTOUT_LOOKS.map((name) => CUTOUT_PATRONS[name]).filter((i) => i !== undefined);
+    if (cutouts.length && Math.random() < (TEST_MODE ? CUTOUT_SHARE_TEST : CUTOUT_SHARE)) pool = cutouts;
+    else if (looks.length) pool = looks;
     else if (NEON_PATRONS.length && Math.random() < neonShare) pool = NEON_PATRONS;
     else if (MODEL_PATRONS.length && Math.random() < MODEL_PATRON_SHARE) pool = MODEL_PATRONS;
     container.patronCharacter = character ?? Phaser.Utils.Array.GetRandom(pool.length ? pool : [0]);

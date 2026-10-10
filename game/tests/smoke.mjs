@@ -2497,6 +2497,21 @@ const neon = await page.evaluate(() => {
 });
 check('the Neon Cartoon guy is a guest with idle, walk, dance and sit, front and back', neon.anims && neon.height > 0, JSON.stringify(neon));
 
+// The cut-out puppet guy (art/characters/cutout) is a guest too, with every
+// clip in both views, standing about as tall as the other guests.
+const cut = await page.evaluate(() => {
+  const s = window.__clubNova.scene.getScene('club');
+  const i = s.cutoutLook('guy01');
+  if (i === undefined) return { found: false };
+  const clips = ['idle', 'walk', 'dance', 'sit'].flatMap((c) => ['front', 'back'].map((d) => `patron_${i}_${c}_${d}`));
+  const c = s.drawPatronCharacterSprite(0, 0, 1, i);
+  const d = s.drawPatronCharacterSprite(0, 0, 1, 0);
+  const out = { i, anims: clips.every((k) => s.anims.exists(k)), height: Math.round(c.patronSprite.displayHeight), drawnHeight: Math.round(d.patronSprite.displayHeight) };
+  c.destroy(); d.destroy();
+  return out;
+});
+check('the cut-out puppet guy is a guest with idle, walk, dance and sit, front and back', cut.anims && cut.height > 0, JSON.stringify(cut));
+
 // The drink menu: drinks unlock with level and go on the menu; a click
 // takes one off or puts it back (never the last one); guests order from the
 // menu (celebrities the priciest), pay its price and fancier drinks take
