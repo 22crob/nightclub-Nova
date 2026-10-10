@@ -19,7 +19,7 @@ const CATEGORIES = {
   Bars: { icon: 'bars', text: 'Bars sell drinks. Each long bar needs one bartender.' },
   Seating: { label: 'Seats', icon: 'seating', text: 'Couches and booths where guests sit down and relax.' },
   Floors: { icon: 'floors', text: 'Dance floors, where guests dance, and regular floors, painted tile by tile.', includes: ['Dance Floors', 'Floors'] },
-  Wallpaper: { label: 'Walls', icon: 'roller', text: 'Paper the walls, section by section.' },
+  Wallpaper: { label: 'Walls', icon: 'roller', text: 'Paper the walls section by section, and hang things on them: plants, lights, LED poles.', includes: ['Wallpaper', 'Wall Decor'] },
   Decorations: { label: 'Decor', icon: 'lamp', text: 'Plants, lights and statues to make the club fancier.' },
   'DJ Booths': { label: 'DJ', icon: 'turntable', text: 'DJ booths, each with a DJ playing. A better booth gets the dance floor going.' },
 };
@@ -255,6 +255,7 @@ export class ShopMixin {
       const lines = [];
       if (def.category === 'Dance Floors') lines.push('Dance floor: guests dance on it.');
       if (def.category === 'Floors') lines.push('Regular floor: paint it tile by tile.');
+      if (def.wallDecor) lines.push('Wall decoration: hang it on a wall section, one per section.');
       if (def.category === 'Bars') lines.push(`Bar pieces: ${this.barUnitCount()} of ${this.barAllowance()} your level allows.`);
       if (def.staff === 'dj') lines.push('One DJ booth at a time: placing it puts your old one in the inventory.');
       lines.push(`Luxury: ${Math.round((def.cost || 0) * LUXURY.perDollar)}`);

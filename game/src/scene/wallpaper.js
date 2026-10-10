@@ -104,13 +104,21 @@ export class WallpaperMixin {
   // Preview of the selected wallpaper on the hovered wall section.
   updateWallGhost() {
     const def = PROP_TYPES[this.selectedProp];
-    const section = def && def.wallStyle ? this.hoverWall : null;
-    if (this.wallGhost && this.wallGhost.section === section) return;
+    const section = def && (def.wallStyle || def.wallDecor) ? this.hoverWall : null;
+    if (this.wallGhost && this.wallGhost.section === section && this.wallGhost.type === this.selectedProp) return;
     if (this.wallGhost) { this.wallGhost.destroy(); this.wallGhost = null; }
     if (!section) return;
-    this.wallGhost = this.wallImage(section, this.selectedProp).setAlpha(0.8);
+    if (def.wallDecor) {
+      // A wall decoration: see-through, tinted red where one already hangs.
+      this.wallGhost = this.wallDecorImage(section, this.selectedProp).setAlpha(0.75);
+      if (this.wallDecor[section]) this.wallGhost.setTint(0xff6060);
+      this.wallDecorLayerReady().add(this.wallGhost);
+    } else {
+      this.wallGhost = this.wallImage(section, this.selectedProp).setAlpha(0.8);
+      this.wallpaperLayer.add(this.wallGhost);
+    }
     this.wallGhost.section = section;
-    this.wallpaperLayer.add(this.wallGhost);
+    this.wallGhost.type = this.selectedProp;
   }
 
   // Steps animated wallpaper while a DJ plays (called from animateFloors()).

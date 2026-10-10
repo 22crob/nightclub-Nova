@@ -241,6 +241,10 @@ export class InventoryMixin {
       if (!PROP_TYPES[rec.type] || PROP_TYPES[rec.type].staff) continue; // the DJ booth and bars stay
       if (this.pickUpProp(rec) !== false) count++;
     }
+    for (const section of Object.keys(this.wallDecor || {})) { // wall decorations come down too
+      const type = this.removeWallDecor(section);
+      if (type) { this.addToInventory(type); count++; }
+    }
     if (count > 0) {
       SFX.sell();
       this.showToast(`📦 Put ${count} thing${count === 1 ? '' : 's'} away in your inventory.`);

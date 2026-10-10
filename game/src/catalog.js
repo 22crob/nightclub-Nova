@@ -273,6 +273,12 @@ function seatTier(key, label, cost, unlockLevel, model, fanRate, footprint = nul
 
 // Wallpaper is painted onto one wall section (a tile wide) at a time; the
 // price is per section. Looks only, no gameplay effect.
+// Wall decorations (src/walls.js WALL_DECOR, scene/wallDecor.js): hung on a
+// wall section over the wallpaper.
+function wallDecorTier(key, label, cost, unlockLevel, wallDecor) {
+  return { key, label, cost, unlockLevel, category: 'Wall Decor', wallDecor };
+}
+
 function wallTier(key, label, cost, unlockLevel, wallStyle) {
   return { key, label, cost, unlockLevel, category: 'Wallpaper', wallStyle };
 }
@@ -445,6 +451,14 @@ export const PROP_TYPES = {
   archAquarium: decorTier('archAquarium', 'Arch Aquarium', 1600, 61, 'tankArch', 1.4, { footprint: WIDE_2X1, tankFx: 'arch' }),
   // Wallpaper (src/walls.js, drawn in code): simple to fancy across the
   // first ten levels.
+  // Wall decorations (the owner asked for them, October 2026).
+  hangingFern: wallDecorTier('hangingFern', 'Hanging Fern', 60, 4, 'hangingFern'),
+  pendantLights: wallDecorTier('pendantLights', 'Pendant Lights', 90, 8, 'pendantLights'),
+  ledPoleCyan: wallDecorTier('ledPoleCyan', 'Cyan LED Pole', 120, 13, 'ledPoleCyan'),
+  neonHeart: wallDecorTier('neonHeart', 'Neon Heart', 150, 19, 'neonHeart'),
+  ledPolePink: wallDecorTier('ledPolePink', 'Pink LED Pole', 180, 24, 'ledPolePink'),
+  wallSpeaker: wallDecorTier('wallSpeaker', 'Wall Speaker', 200, 28, 'wallSpeaker'),
+  fairyLights: wallDecorTier('fairyLights', 'Fairy Lights', 220, 33, 'fairyLights'),
   wpPaint: wallTier('wpPaint', 'Paint', 8, 1, 'paint'),
   wpOldBrick: wallTier('wpOldBrick', 'Old Brick', 6, 2, 'oldBrick'),
   wpCinder: wallTier('wpCinder', 'Cinder Block', 9, 6, 'cinderBlock'),

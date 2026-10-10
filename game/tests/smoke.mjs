@@ -2969,6 +2969,29 @@ const newWalls = await page.evaluate(() => {
   return { painted: painted.length, of: types.length };
 });
 check('the nine new wallpapers each paint a wall', newWalls.painted === newWalls.of, JSON.stringify(newWalls));
+// Wall decorations hang on a wall section (one each), are saved, show in
+// the Walls key, and the Edit tools take them down again.
+const wallDecor = await page.evaluate(() => {
+  const s = window.__clubNova.scene.getScene('club');
+  const fans = s.fans, cash = s.cash;
+  s.fans = Math.max(s.fans, s.fansForLevel(s.topUnlockLevel()));
+  s.cash = 1e6;
+  const out = {};
+  s.selectProp('ledPoleCyan');
+  out.hung = s.placeWallDecor('L2');
+  s.selectProp('neonHeart');
+  out.twice = s.placeWallDecor('L2') === false;
+  s.deselectProp();
+  out.drawn = !!s.wallDecorImages?.L2 && s.wallDecorImages.L2.texture.key.startsWith('wallDecor_ledPoleCyan');
+  out.saved = s.serializeState().wallDecor.L2 === 'ledPoleCyan';
+  s.setShopCategory('Wallpaper');
+  out.inShop = [...document.querySelectorAll('#shopItems .propSlot')].some((e) => e.dataset.tipName === 'Cyan LED Pole');
+  const c0 = s.cash;
+  out.sold = s.editWallDecor('L2', 'sell') && !s.wallDecor.L2 && s.cash > c0;
+  s.fans = fans; s.cash = cash;
+  return out;
+});
+check('wall decorations hang on a wall section (one each), are saved, are in the Walls shop and can be taken down', wallDecor.hung && wallDecor.twice && wallDecor.drawn && wallDecor.saved && wallDecor.inShop && wallDecor.sold, JSON.stringify(wallDecor));
 
 // An old save with items taken out of the game (the Royal Thrones, the
 // October 2026 review's cuts) gets their price back, placed, stored or on a wall.

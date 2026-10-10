@@ -230,7 +230,7 @@ export class PlacementMixin {
 
     const def = PROP_TYPES[this.selectedProp];
     if (def.paintStyle) { this.drawFootprintOutline([[this.hoverTile.gx, this.hoverTile.gy]], PLACE_OK); return; } // the tile to floor, over everything
-    if (def.wallStyle) return; // wallpaper has its own preview
+    if (def.wallStyle || def.wallDecor) return; // wallpaper and wall decorations have their own preview
 
     const { gx, gy } = this.hoverTile;
     const facing = def.rotatable ? this.currentFacing : 0;
@@ -282,7 +282,7 @@ export class PlacementMixin {
   placeProp(gx, gy) {
     if (!this.selectedProp) return; // nothing selected (see deselectProp()) — an empty-handed click does nothing
     const def = PROP_TYPES[this.selectedProp];
-    if (def.wallStyle || def.paintStyle) return; // painted with paintWall() / paintFloor()
+    if (def.wallStyle || def.paintStyle || def.wallDecor) return; // painted with paintWall() / paintFloor(), hung with placeWallDecor()
     // Things from the inventory are already paid for, and can be placed
     // whatever your level.
     const fromInventory = this.holdingFromInventory && this.inventoryCount(this.selectedProp) > 0;

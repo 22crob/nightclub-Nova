@@ -973,3 +973,244 @@ export function wallFrameFor(style, index, tick) {
 export function wallTextureKey(style, frame, side) {
   return `wall_${style}_${side}_${frame}`;
 }
+
+// ---------------------------------------------------------------------------
+// Wall decorations (the owner asked for them, October 2026): things hung on
+// a wall section over whatever wallpaper is there, drawn the same way as a
+// wallpaper strip but on a see-through background, then sheared onto the
+// wall. One per section (see scene/wallDecor.js). Animated ones step while a
+// DJ plays, like animated wallpaper.
+
+// A soft glow behind a shape (drawn first).
+function glowRect(ctx, x, y, w, h, color, blur) {
+  ctx.save();
+  ctx.shadowColor = color;
+  ctx.shadowBlur = blur;
+  ctx.fillStyle = color;
+  ctx.fillRect(x, y, w, h);
+  ctx.restore();
+}
+
+// An upright LED tube on two chrome brackets, its light pulsing.
+function ledPole(rgb) {
+  return {
+    frames: 6,
+    speed: 1,
+    phase: 'flow',
+    period: 6,
+    draw(ctx, W, H, frame) {
+      const k = 0.6 + 0.4 * Math.sin((frame / 6) * Math.PI * 2);
+      const [r, g, b] = rgb;
+      const x = W / 2 - 4, top = H * 0.06, bot = H - BASEBOARD - 10;
+      // light washing the wall
+      const wash = ctx.createRadialGradient(W / 2, (top + bot) / 2, 4, W / 2, (top + bot) / 2, W * 0.9);
+      wash.addColorStop(0, `rgba(${r},${g},${b},${0.35 * k})`);
+      wash.addColorStop(1, `rgba(${r},${g},${b},0)`);
+      ctx.fillStyle = wash;
+      ctx.fillRect(0, top - 10, W, bot - top + 20);
+      glowRect(ctx, x, top, 8, bot - top, `rgba(${r},${g},${b},${0.9 * k})`, 18);
+      ctx.fillStyle = `rgb(${Math.min(255, r + 120)},${Math.min(255, g + 120)},${Math.min(255, b + 120)})`;
+      ctx.fillRect(x + 2.5, top + 2, 3, bot - top - 4);
+      for (const y of [top - 4, bot - 4]) { // end caps and brackets
+        ctx.fillStyle = '#c8ccd6';
+        ctx.fillRect(x - 3, y, 14, 8);
+        ctx.fillStyle = '#6a6e78';
+        ctx.fillRect(x - 3, y + 6, 14, 2);
+      }
+    },
+  };
+}
+
+export const WALL_DECOR = {
+  // A fern in a woven pot, hung on a cord from the top of the wall, its
+  // fronds spilling over.
+  hangingFern: {
+    frames: 1,
+    draw(ctx, W, H) {
+      const cx = W / 2, potY = H * 0.36;
+      ctx.strokeStyle = '#d8c8a8';
+      ctx.lineWidth = 1.5;
+      for (const dx of [-18, 0, 18]) { ctx.beginPath(); ctx.moveTo(cx, 4); ctx.lineTo(cx + dx, potY); ctx.stroke(); }
+      const r = rng(11);
+      for (let k = 0; k < 14; k++) { // trailing fronds
+        const a = -Math.PI / 2 + (r() - 0.5) * 3.6;
+        const len = 30 + r() * 45;
+        const down = Math.abs(Math.sin(a)) < 0.5 || r() < 0.5;
+        ctx.strokeStyle = r() < 0.5 ? '#3f9a3a' : '#2f7a2c';
+        ctx.lineWidth = 4;
+        ctx.beginPath();
+        const sx = cx + (r() - 0.5) * 26, sy = potY - 4;
+        ctx.moveTo(sx, sy);
+        const ex = sx + Math.cos(a) * len * 0.6, ey = sy + (down ? len : -len * 0.5);
+        ctx.quadraticCurveTo(sx + Math.cos(a) * len, sy - 6, ex, ey);
+        ctx.stroke();
+        ctx.fillStyle = ctx.strokeStyle;
+        for (let t = 0.3; t <= 1; t += 0.18) {
+          const px = sx + (ex - sx) * t, py = sy + (ey - sy) * t;
+          ctx.beginPath(); ctx.ellipse(px, py, 6, 3, a + t, 0, Math.PI * 2); ctx.fill();
+        }
+      }
+      ctx.fillStyle = '#c8a26a'; // the pot
+      ctx.beginPath(); ctx.moveTo(cx - 22, potY - 4); ctx.lineTo(cx + 22, potY - 4); ctx.lineTo(cx + 15, potY + 22); ctx.lineTo(cx - 15, potY + 22); ctx.closePath(); ctx.fill();
+      ctx.fillStyle = 'rgba(90,60,30,0.5)';
+      for (let y = potY; y < potY + 22; y += 4) ctx.fillRect(cx - 20 + (y - potY) * 0.3, y, 40 - (y - potY) * 0.6, 1.5);
+    },
+  },
+
+  // Three glass globe pendants on long cords, warm bulbs glowing.
+  pendantLights: {
+    frames: 1,
+    draw(ctx, W, H) {
+      for (const [x, drop] of [[W * 0.22, 0.34], [W * 0.5, 0.48], [W * 0.78, 0.3]]) {
+        const y = H * drop;
+        ctx.strokeStyle = '#1a1a1e';
+        ctx.lineWidth = 2;
+        ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x, y - 12); ctx.stroke();
+        const glow = ctx.createRadialGradient(x, y, 2, x, y, 40);
+        glow.addColorStop(0, 'rgba(255,200,110,0.8)');
+        glow.addColorStop(1, 'rgba(255,200,110,0)');
+        ctx.fillStyle = glow;
+        ctx.fillRect(x - 40, y - 40, 80, 80);
+        ctx.fillStyle = '#2a2a30';
+        ctx.fillRect(x - 4, y - 16, 8, 5);
+        ctx.fillStyle = 'rgba(255,236,190,0.55)';
+        ctx.beginPath(); ctx.arc(x, y, 12, 0, Math.PI * 2); ctx.fill();
+        ctx.fillStyle = '#ffe2a0';
+        ctx.beginPath(); ctx.arc(x, y + 1, 6, 0, Math.PI * 2); ctx.fill();
+        ctx.fillStyle = 'rgba(255,255,255,0.8)';
+        ctx.beginPath(); ctx.arc(x - 4, y - 4, 2.5, 0, Math.PI * 2); ctx.fill();
+      }
+    },
+  },
+
+  ledPoleCyan: ledPole([40, 220, 255]),
+  ledPolePink: ledPole([255, 60, 190]),
+
+  // A pink neon heart on a clear backing, flickering now and then.
+  neonHeart: {
+    frames: 4,
+    speed: 2,
+    phase: 'random',
+    draw(ctx, W, H, frame) {
+      const on = frame !== 3 ? 1 : 0.55;
+      const cx = W / 2, cy = H * 0.38, s = W * 0.44;
+      ctx.fillStyle = 'rgba(200,220,255,0.12)';
+      ctx.fillRect(cx - s - 8, cy - s - 6, s * 2 + 16, s * 2 + 10);
+      ctx.save();
+      ctx.shadowColor = `rgba(255,60,170,${on})`;
+      ctx.shadowBlur = 22;
+      ctx.strokeStyle = `rgba(255,${120 + 80 * on},${210 + 30 * on},${on})`;
+      ctx.lineWidth = 7;
+      ctx.beginPath();
+      ctx.moveTo(cx, cy + s * 0.9);
+      ctx.bezierCurveTo(cx - s * 1.4, cy - s * 0.1, cx - s * 0.6, cy - s * 1.1, cx, cy - s * 0.35);
+      ctx.bezierCurveTo(cx + s * 0.6, cy - s * 1.1, cx + s * 1.4, cy - s * 0.1, cx, cy + s * 0.9);
+      ctx.stroke();
+      ctx.restore();
+    },
+  },
+
+  // A small black speaker on a wall bracket, its cones ringed in cyan.
+  wallSpeaker: {
+    frames: 1,
+    draw(ctx, W, H) {
+      const x = W / 2 - 22, y = H * 0.16, w = 44, h = 66;
+      ctx.fillStyle = '#5a5e68';
+      ctx.fillRect(W / 2 - 3, y - 10, 6, 12);
+      ctx.fillStyle = '#18181e';
+      ctx.fillRect(x, y, w, h);
+      ctx.strokeStyle = '#3a3a44';
+      ctx.lineWidth = 1.5;
+      ctx.strokeRect(x + 0.75, y + 0.75, w - 1.5, h - 1.5);
+      for (const [cy, rad] of [[y + 18, 10], [y + 45, 15]]) {
+        ctx.save();
+        ctx.shadowColor = '#2ad8ff';
+        ctx.shadowBlur = 8;
+        ctx.strokeStyle = '#2ad8ff';
+        ctx.lineWidth = 2;
+        ctx.beginPath(); ctx.arc(W / 2, cy, rad, 0, Math.PI * 2); ctx.stroke();
+        ctx.restore();
+        ctx.fillStyle = '#2a2a32';
+        ctx.beginPath(); ctx.arc(W / 2, cy, rad - 2.5, 0, Math.PI * 2); ctx.fill();
+        ctx.fillStyle = '#0c0c10';
+        ctx.beginPath(); ctx.arc(W / 2, cy, rad * 0.35, 0, Math.PI * 2); ctx.fill();
+      }
+    },
+  },
+
+  // Fairy lights draped in swoops across the top of the wall, twinkling.
+  fairyLights: {
+    frames: 4,
+    speed: 2,
+    phase: 'random',
+    draw(ctx, W, H, frame) {
+      const colors = ['#ff5fb8', '#5fd8ff', '#ffe36f', '#9cff7a', '#c88cff'];
+      const sag = (x, base, depth) => base + depth * Math.sin((x / W) * Math.PI);
+      for (const [base, depth, seed] of [[H * 0.08, 18, 3], [H * 0.2, 14, 7]]) {
+        ctx.strokeStyle = '#2a2a30';
+        ctx.lineWidth = 1;
+        ctx.beginPath();
+        for (let x = 0; x <= W; x += 2) { const y = sag(x, base, depth); if (x === 0) ctx.moveTo(x, y); else ctx.lineTo(x, y); }
+        ctx.stroke();
+        const r = rng(seed);
+        for (let i = 0; i < 6; i++) {
+          const x = (i + 0.5) * (W / 6), y = sag(x, base, depth) + 3;
+          const lit = (i + frame + seed) % 4 !== 0;
+          const c = colors[(i + seed) % colors.length];
+          if (lit) {
+            const glow = ctx.createRadialGradient(x, y, 1, x, y, 13);
+            glow.addColorStop(0, c);
+            glow.addColorStop(1, 'rgba(0,0,0,0)');
+            ctx.fillStyle = glow;
+            ctx.fillRect(x - 13, y - 13, 26, 26);
+          }
+          ctx.globalAlpha = lit ? 1 : 0.45;
+          ctx.fillStyle = c;
+          ctx.beginPath(); ctx.arc(x, y, 3.8, 0, Math.PI * 2); ctx.fill();
+          ctx.globalAlpha = 1;
+          r();
+        }
+      }
+    },
+  },
+};
+
+// One frame of a wall decoration, sheared onto the left or right wall.
+export function wallDecorCanvas(style, frame = 0, side = 'right') {
+  const strip = document.createElement('canvas');
+  strip.width = STRIP_W;
+  strip.height = STRIP_H;
+  WALL_DECOR[style].draw(strip.getContext('2d'), STRIP_W, STRIP_H, frame);
+  return shearOntoWall(strip, side);
+}
+
+// The shop's picture of a wall decoration: the whole strip on a dark wall.
+export function wallDecorSwatch(style, frame = 0) {
+  const strip = document.createElement('canvas');
+  strip.width = STRIP_W;
+  strip.height = STRIP_H;
+  WALL_DECOR[style].draw(strip.getContext('2d'), STRIP_W, STRIP_H, frame);
+  const size = 96;
+  const out = document.createElement('canvas');
+  out.width = out.height = size;
+  const ctx = out.getContext('2d');
+  ctx.fillStyle = '#1c1624';
+  ctx.fillRect(0, 0, size, size);
+  const k = size / STRIP_H;
+  ctx.drawImage(strip, (size - STRIP_W * k) / 2, 0, STRIP_W * k, size);
+  return out;
+}
+
+export function wallDecorFrameFor(style, index, tick) {
+  const st = WALL_DECOR[style];
+  if (st.frames <= 1) return 0;
+  const beat = Math.floor(tick / (st.speed || 1));
+  let offset = 0;
+  if (st.phase === 'random') offset = (index * 5 + 3) % st.frames;
+  else if (st.phase === 'flow') offset = -index * Math.round(st.frames / st.period);
+  return (((beat + offset) % st.frames) + st.frames) % st.frames;
+}
+
+export function wallDecorKey(style, frame, side) {
+  return `wallDecor_${style}_${frame}_${side}`;
+}

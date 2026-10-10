@@ -83,6 +83,7 @@ export class EconomyMixin {
     }
     for (const type of Object.values(this.wallpaper)) dollars += (PROP_TYPES[type] && PROP_TYPES[type].cost) || 0;
     for (const type of Object.values(this.floorPaint)) dollars += (PROP_TYPES[type] && PROP_TYPES[type].cost) || 0;
+    dollars += this.wallDecorLuxuryDollars();
     return Math.round(dollars * LUXURY.perDollar);
   }
 

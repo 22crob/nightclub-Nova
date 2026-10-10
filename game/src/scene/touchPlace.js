@@ -30,7 +30,7 @@ export class TouchPlaceMixin {
   // and floor paint are tapped / dragged straight on).
   touchPlacing() {
     const def = this.touchUI && PROP_TYPES[this.selectedProp];
-    return !!def && !def.wallStyle && !def.paintStyle;
+    return !!def && !def.wallStyle && !def.paintStyle && !def.wallDecor;
   }
 
   // Keeps the held item on its spot (called by updateGhost()): picks a spot

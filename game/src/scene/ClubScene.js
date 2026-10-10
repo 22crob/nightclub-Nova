@@ -16,6 +16,7 @@ import { HudMixin } from './hud.js';
 import { StaffMixin } from './staff.js';
 import { MoodMixin } from './mood.js';
 import { WallpaperMixin } from './wallpaper.js';
+import { WallDecorMixin } from './wallDecor.js';
 import { SeatingMixin } from './seating.js';
 import { LightingMixin } from './lighting.js';
 import { BoostMixin } from './boost.js';
@@ -60,6 +61,7 @@ export class ClubScene extends Phaser.Scene {
     this.selectedProp = null; // nothing in hand until you pick something in the shop
     this.currentFacing = 0; // facing used for the NEXT rotatable prop placed
     this.wallpaper = {}; // wall section -> wallpaper type (see wallpaper.js)
+    this.wallDecor = {}; // wall section -> decoration hung there (see wallDecor.js)
     this.floorPaint = {}; // "gx,gy" -> regular floor type (see floorPaint.js)
     this.placed = {}; // "gx,gy" -> { type, facing, gameObject, label }
     // The club's current floor size — grows a row at a time via expandClub()
@@ -273,6 +275,17 @@ export class ClubScene extends Phaser.Scene {
         if (p.button === 0 && this.hoverWall) this.paintWall(this.hoverWall);
         return;
       }
+      // A wall decoration hangs on the wall section clicked (wallDecor.js).
+      if (holding && holding.wallDecor) {
+        if (p.button === 0 && this.hoverWall) this.placeWallDecor(this.hoverWall);
+        return;
+      }
+      // With nothing in hand, the Edit tools (and right-click to sell) work
+      // on a wall decoration too.
+      if (!this.selectedProp && this.hoverWall && this.wallDecor[this.hoverWall] && !this.objectAt(p.x, p.y)) {
+        if (p.button === 0 && this.dockTab === 'edit') { this.editWallDecor(this.hoverWall); return; }
+        if (p.button === 2) { this.editWallDecor(this.hoverWall, 'sell'); return; }
+      }
       // With nothing in hand, a click goes to whatever is drawn under the
       // cursor: the Edit tools act on the piece clicked (anywhere on it), a
       // person opens their card, furniture is selected (selection.js).
@@ -446,6 +459,7 @@ applyMixins(ClubScene, [
   StaffMixin,
   MoodMixin,
   WallpaperMixin,
+  WallDecorMixin,
   SeatingMixin,
   LightingMixin,
   BoostMixin,
