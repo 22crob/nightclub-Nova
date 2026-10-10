@@ -6,7 +6,7 @@
 // Mixed into ClubScene (see ClubScene.js); `this` is the scene.
 import { PROP_TYPES } from '../catalog.js';
 import { FLOOR_PAINTS, floorFrameCanvas, floorTextureKey } from '../floors.js';
-import { TILE_H, TILE_W } from '../config.js';
+import { FLOOR_OVERLAP, TILE_H, TILE_W } from '../config.js';
 import { SFX } from '../sfx.js';
 
 // How see-through furniture is while a regular floor is held.
@@ -31,7 +31,7 @@ export class FloorPaintMixin {
 
   floorPaintImage(gx, gy, type) {
     const { sx, sy } = this.gridToScreen(gx, gy);
-    return this.add.image(sx, sy, floorTextureKey(PROP_TYPES[type].paintStyle, 0)).setDisplaySize(TILE_W, TILE_H);
+    return this.add.image(sx, sy, floorTextureKey(PROP_TYPES[type].paintStyle, 0)).setDisplaySize(TILE_W * FLOOR_OVERLAP, TILE_H * FLOOR_OVERLAP); // overlap a hair: no seams (propVisuals.js)
   }
 
   drawFloorPaint(gx, gy, type) {

@@ -263,7 +263,7 @@ export class SecurityMixin {
   // Two guests have just started chatting: once in a while it goes badly.
   maybeArgue(a, b) {
     const now = this.time.now;
-    if (this.argument || !this.guard || this.guard.target || a.celeb || b.celeb) return false;
+    if (this.argument || !this.guard || a.celeb || b.celeb) return false;
     if (now < (this.lastArgumentAt || -Infinity) + SECURITY.cooldownMs) return false;
     if (Math.random() > SECURITY.argueChance) return false;
     this.startArgument(a, b);
@@ -284,7 +284,8 @@ export class SecurityMixin {
     const c = a.container;
     this.floatText(c.x, c.y - PATRON_POPUP_Y - 10, 'Hey!!', '#ff5a5a');
     SFX.denied();
-    // Security heads over.
+    // Security heads over (if busy walking someone out, it turns into a fight).
+    if (this.guard.target) return;
     const spot = this.tileNextTo(a, b);
     if (spot) this.guardWalkTo(spot[0], spot[1], () => this.guardArrived());
     else this.guardArrived();

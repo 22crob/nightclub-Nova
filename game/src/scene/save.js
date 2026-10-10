@@ -56,7 +56,7 @@ export class SaveMixin {
       inventory[this.movingBooth.type] -= 1;
       if (inventory[this.movingBooth.type] <= 0) delete inventory[this.movingBooth.type];
     }
-    return { cash: this.cash, fans: this.fans, popularity: this.popularity || 0, bouncers: this.bouncers || 1, barTraining: this.barTraining || 0, tutorial: this.tutorial || null, achievements: this.achievements || [], hintsSeen: this.hintsSeen || [], bought: [...(this.boughtTypes || [])], drinkStock: this.drinkStock ?? null, gridW: this.gridW, gridH: this.gridH, placed: placedList, wallpaper: { ...this.wallpaper }, wallDecor: { ...(this.wallDecor || {}) }, floorPaint: { ...this.floorPaint }, nightStars: this.nightStars || [], inventory, inventoryXp, goalsDone: this.goalsDone || [], goalStats: this.goalStats || {}, clubName: this.clubName || '', daily: this.daily || null, drinksOff: this.drinksOff || [], celebs: this.celebState || {}, celebInvited: Object.keys(this.celebInvites || {}) };
+    return { cash: this.cash, fans: this.fans, popularity: this.popularity || 0, bouncers: this.bouncers || 1, barTraining: this.barTraining || 0, tutorial: this.tutorial || null, achievements: this.achievements || [], hintsSeen: this.hintsSeen || [], bought: [...(this.boughtTypes || [])], drinkStock: this.drinkStock ?? null, gridW: this.gridW, gridH: this.gridH, placed: placedList, wallpaper: { ...this.wallpaper }, wallDecor: { ...(this.wallDecor || {}) }, floorPaint: { ...this.floorPaint }, nightStars: this.nightStars || [], inventory, inventoryXp, goalsDone: this.goalsDone || [], goalStats: this.goalStats || {}, clubName: this.clubName || '', daily: this.daily || null, drinksOff: this.drinksOff || [], celebs: this.celebState || {}, celebInvited: Object.keys(this.celebInvites || {}), partyReadyAt: this.partyReadyAt || 0 };
   }
 
   saveGame() {
@@ -267,6 +267,7 @@ export class SaveMixin {
       }
     }
     if (Array.isArray(data.nightStars)) this.nightStars = data.nightStars.filter((n) => n >= 1 && n <= 5).slice(-5);
+    this.partyReadyAt = typeof data.partyReadyAt === 'number' ? data.partyReadyAt : 0; // the rest after a party (parties.js)
     this.restoreWallpaper(data.wallpaper);
     this.restoreWallDecor(data.wallDecor);
     this.restoreFloorPaint(data.floorPaint);

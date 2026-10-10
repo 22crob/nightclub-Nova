@@ -630,43 +630,37 @@ export const FLOOR_PAINTS = {
     },
   },
 
-  // Leopard print: rosettes of dark spots round tawny centres on a golden
-  // ground, wrapping across the tile edges so neighbours join up.
-  leopard: {
+  // Cheetah print: small solid black spots, round and blobby, scattered
+  // over a warm golden ground (they wrap across the tile edges so
+  // neighbouring tiles join up).
+  cheetah: {
     frames: 1,
     draw(ctx, S) {
-      ctx.fillStyle = '#d8a24e';
+      const g = ctx.createLinearGradient(0, 0, S, S);
+      g.addColorStop(0, '#e8b964');
+      g.addColorStop(1, '#d49a44');
+      ctx.fillStyle = g;
       ctx.fillRect(0, 0, S, S);
-      const r = rng(17);
-      const spots = [];
-      for (let k = 0; k < 9; k++) spots.push([r() * S, r() * S, 6 + r() * 5, r() * Math.PI * 2]);
-      for (const [x0, y0, rad, turn] of spots) {
+      const r = rng(29);
+      for (let k = 0; k < 18; k++) {
+        const x0 = r() * S, y0 = r() * S, rad = 4 + r() * 5, turn = r() * Math.PI, squash = 0.65 + r() * 0.35;
         for (const dx of [-S, 0, S]) {
           for (const dy of [-S, 0, S]) {
             const x = x0 + dx, y = y0 + dy;
-            if (x < -20 || x > S + 20 || y < -20 || y > S + 20) continue;
-            ctx.fillStyle = '#b06a22'; // the tawny centre
+            if (x < -10 || x > S + 10 || y < -10 || y > S + 10) continue;
+            ctx.fillStyle = '#1a1006';
             ctx.beginPath();
-            ctx.ellipse(x, y, rad * 0.8, rad * 0.65, turn, 0, Math.PI * 2);
+            ctx.ellipse(x, y, rad, rad * squash, turn, 0, Math.PI * 2);
             ctx.fill();
-            ctx.fillStyle = '#2a1608'; // broken dark ring round it
-            for (let a = 0; a < 5; a++) {
-              const t = turn + a * 1.26 + 0.3;
-              ctx.beginPath();
-              ctx.ellipse(x + Math.cos(t) * rad, y + Math.sin(t) * rad * 0.85, rad * 0.42, rad * 0.26, t + 1.57, 0, Math.PI * 2);
-              ctx.fill();
-            }
           }
         }
       }
-      for (let k = 0; k < 14; k++) { // small dots between
-        const x = r() * S, y = r() * S;
-        ctx.fillStyle = '#2a1608';
-        ctx.beginPath();
-        ctx.arc(x, y, 1.5 + r() * 1.8, 0, Math.PI * 2);
-        ctx.fill();
-      }
-      fuzz(ctx, S, 23);
+      fuzz(ctx, S, 41);
+      const sheen = ctx.createLinearGradient(0, 0, S, S);
+      sheen.addColorStop(0, 'rgba(255,255,255,0.12)');
+      sheen.addColorStop(0.5, 'rgba(255,255,255,0)');
+      ctx.fillStyle = sheen;
+      ctx.fillRect(0, 0, S, S);
     },
   },
 

@@ -9,7 +9,7 @@
 //     a good party earns fans (XP) for every guest it brought.
 // A banner shows the countdown, then the time left.
 // Mixed into ClubScene (see ClubScene.js); `this` is the scene.
-import { PARTIES, PARTY_COUNTDOWN_MS, PARTY_LENGTH_MS, PATRON_POPUP_Y, XP } from '../config.js';
+import { PARTIES, PARTY_COOLDOWN_MS, PARTY_COUNTDOWN_MS, PARTY_LENGTH_MS, PATRON_POPUP_Y, XP } from '../config.js';
 import { SFX } from '../sfx.js';
 import { refreshTip } from '../tooltips.js';
 import { randRange } from '../util.js';
@@ -41,6 +41,9 @@ export class PartiesMixin {
   // Why a party can't be thrown right now, or null if it can.
   partyBlocker(def) {
     if (this.party) return 'One party at a time';
+    // A rest between parties, kept in real time so a reload doesn't skip it.
+    const wait = (this.partyReadyAt || 0) - Date.now();
+    if (wait > 0) return `Next party in ${clock(wait)}`;
     if (def && this.levelInfo().level < def.unlockLevel) return `Unlocks at level ${def.unlockLevel}`;
     if (def && this.cash < def.cost) return 'Not enough cash';
     return null;
@@ -103,6 +106,7 @@ export class PartiesMixin {
     this.party = null;
     this.partyPhase = null;
     this.partyCrowd = [];
+    if (running) this.partyReadyAt = Date.now() + PARTY_COOLDOWN_MS;
     this.moodColor = undefined;
     this.drawMoodShade();
     this.stopPartyFx();
@@ -198,6 +202,9 @@ export class PartiesMixin {
     } else if (def) {
       state = 'active';
       text = `${def.emoji} ${def.label} is on! ${clock(this.partyStartedAt + PARTY_LENGTH_MS - now)} left.`;
+    } else if ((this.partyReadyAt || 0) > Date.now()) {
+      state = 'cooldown';
+      text = `The club needs a rest after a party: the next one can be thrown in ${clock(this.partyReadyAt - Date.now())}.`;
     }
     if (button.dataset.state !== state) button.dataset.state = state;
     if (button.dataset.tipText !== text) {
@@ -265,7 +272,7 @@ export class PartiesMixin {
     this.partyButton?.addEventListener('click', () => {
       SFX.unlock();
       const blocked = this.partyBlocker();
-      if (blocked) { SFX.denied(); this.showToast(`${this.thrownParty().emoji} ${this.thrownParty().label} is on!`); return; }
+      if (blocked) { SFX.denied(); this.showToast(this.thrownParty() ? `${this.thrownParty().emoji} ${this.thrownParty().label} is on!` : `🎉 ${blocked}.`); return; }
       this.showPartyPicker();
     });
     document.getElementById('partyCancel')?.addEventListener('click', () => this.hidePartyPicker());

@@ -1,10 +1,14 @@
 // ClubScene methods: the club's hours and rating. Like Nightclub City, the
 // club runs one endless night: the doors are always open and the DJ always
-// plays. Every so often (RATING.sampleMs) the club is rated on how happy
-// the crowd has been: stars, and a few bonus fans for a good crowd. The
-// club rating is the average of the last few.
-// Mixed into ClubScene (see ClubScene.js); `this` is the scene.
-import { RATING } from '../config.js';
+// plays. Every so often (RATING.sampleMs) the crowd's mood earns a few
+// bonus fans (kept in nightStars). The club rating shown in the HUD is
+// steady: stars for how good the club itself is (clubRating(): luxury,
+// variety of decorations, seats, dance floor and DJ booth), changing only
+// when you build (the owner wanted it consistent, not swinging with the
+// crowd, which popularity already follows). Mixed into ClubScene (see
+// ClubScene.js); `this` is the scene.
+import { PROP_TYPES } from '../catalog.js';
+import { DJ, RATING } from '../config.js';
 
 export class RatingMixin {
   // The doors never close and the music never stops (kept as methods so the
@@ -48,12 +52,33 @@ export class RatingMixin {
     this.saveGame();
   }
 
-  // The club's star rating: the average of the recent ratings, to the
-  // nearest half star, or null before the first.
+  // The club's star rating, 1 to 5 in half stars, from the club itself
+  // (RATING.quality: how many points each part is worth, and what earns
+  // them all).
   clubRating() {
-    const s = this.nightStars || [];
-    if (s.length === 0) return null;
-    return Math.round((s.reduce((a, b) => a + b, 0) / s.length) * 2) / 2;
+    const Q = RATING.quality;
+    const cap = Math.max(8, this.patronCapacity ? this.patronCapacity() : 8);
+    let seats = 0, dance = 0;
+    const decor = new Set();
+    const seen = new Set();
+    for (const key in this.placed || {}) {
+      const rec = this.placed[key];
+      if (seen.has(rec)) continue;
+      seen.add(rec);
+      const def = PROP_TYPES[rec.type];
+      if (!def) continue;
+      if (def.seats) seats += def.seats.length;
+      if (def.floorStyle) dance += 1;
+      if (def.category === 'Decorations') decor.add(rec.type);
+    }
+    for (const type of Object.values(this.wallDecor || {})) decor.add(type);
+    const dj = this.djQuality ? (this.djQuality() - DJ.qualityMin) / Math.max(0.0001, DJ.qualityMax - DJ.qualityMin) : 0;
+    const points = Q.luxury * Math.min(1, this.luxury() / Q.fullLuxury)
+      + Q.variety * Math.min(1, decor.size / Q.fullVariety)
+      + Q.seats * Math.min(1, seats / (cap * Q.seatsPerGuest))
+      + Q.dance * Math.min(1, dance / (cap * Q.danceTilesPerGuest))
+      + Q.dj * Math.max(0, Math.min(1, dj));
+    return Math.max(1, Math.min(5, Math.round((1 + points / 25) * 2) / 2));
   }
 
   // A well-rated club draws guests faster.

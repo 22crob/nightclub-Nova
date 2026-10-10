@@ -302,6 +302,9 @@ export const PATRON_POPUP_Y = CHARACTER_DISPLAY_HEIGHT * 0.8;
 
 // Camera zoom: the club starts zoomed in, and the mouse wheel or the +/-
 // buttons zoom between these limits.
+// Floor and dance floor tiles are drawn this much bigger than a tile so
+// neighbours overlap and no seams show between them.
+export const FLOOR_OVERLAP = 1.04;
 export const ZOOM_DEFAULT = 1.35;
 export const ZOOM_MIN = 0.6;
 export const ZOOM_MAX = 2.2;
@@ -405,6 +408,7 @@ export const RUSH = { durationMs: 45000, cooldownMs: 180000, drinkWeight: 5, joi
 // leavers). shade tints the room's mood lighting.
 export const PARTY_LENGTH_MS = 3 * 60 * 1000;
 export const PARTY_COUNTDOWN_MS = 10 * 1000; // from paying to the party starting
+export const PARTY_COOLDOWN_MS = 6 * 60 * 1000; // after a party ends, before the next can be thrown (the owner's rule)
 // Guests getting along (or not). Dancers side by side sometimes dance
 // together. Now and then a chat turns into an argument (💢): the security
 // guard inside walks over and usually calms it down (settleChance); if not,
@@ -424,7 +428,7 @@ export const REACTIONS = {
 // minMood) offers a high five or fist bump about every everyMs; clicking it
 // within lifeMs collects `amount`. size: the high five / fist bump badge,
 // tipSize: a decoration tip coin, in px.
-export const BONUS = { amount: 88, everyMs: [45000, 75000], lifeMs: 8000, minMood: 70, size: 60, tipSize: 30 };
+export const BONUS = { amount: 88, everyMs: [45000, 75000], lifeMs: 8000, minMood: 70, size: 78, tipSize: 46 };
 
 // Hovering and selecting (see selection.js): the outline glow round
 // whatever's under the cursor (colour, strength), round a selected piece,
@@ -494,8 +498,10 @@ export const BOUNCERS = { levels: [1, 8, 18, 30], hireCost: [0, 300, 900, 2000],
 export const TROUBLE = { annoyEveryMs: [7000, 12000], annoyRange: 2, annoyMood: 6, detectRange: 8, xp: 5 };
 export const SECURITY = {
   character: 4, scale: 1.12, stepMs: 380, // all in black, like the bouncer
-  argueChance: 0.12, cooldownMs: 90 * 1000, argueMs: [8000, 12000],
-  settleChance: 0.7, fightMs: 3500, moodHit: 12,
+  // Livelier since October 2026 (the owner wasn't seeing fights): more
+  // arguments, and fewer talked down.
+  argueChance: 0.22, cooldownMs: 60 * 1000, argueMs: [7000, 11000],
+  settleChance: 0.45, fightMs: 3500, moodHit: 12,
   danceTogetherChance: 0.35,
 };
 
@@ -526,6 +532,9 @@ export const CELEBRITIES = [
 export const CELEB = {
   tipPerFame: 0.5, fansPerFame: 3,
   inviteCost: [0, 250, 500, 1000, 1800, 3000], inviteArriveMs: [5000, 12000],
+  // Popularity the club needs before a celebrity of each fame will take an
+  // invitation (the owner's rule, October 2026).
+  popularityNeeded: [0, 40, 100, 180, 280, 400],
   liking: { mood: 0.4, vipSeat: 10, onTheHouse: 8, perStar: 4, stormedOut: 25 },
   minLikingToReturn: 10, returnEveryMs: [600000, 120000], returnJitter: 0.3, regularLiking: 70,
   fanTipChance: 0.45, fanTip: [5, 20],
@@ -539,8 +548,8 @@ export const PARTIES = [
     blurb: 'Glow sticks and neon paint. The whole town wants in.' },
   { key: 'gala', label: 'VIP Gala', emoji: '🥂', cost: 600, unlockLevel: 20, arrivals: 2, tips: 2, thirst: 1.5, fans: 2, shade: 0x2e2306, crowd: 15, leaveOverMs: [10000, 70000],
     blurb: 'Red carpet, champagne, the A-list. Huge tips and XP.' },
-  { key: 'glow', label: 'Glow Party', emoji: '✨', cost: 900, unlockLevel: 26, arrivals: 2.2, tips: 2.2, thirst: 1.6, fans: 2.2, shade: 0x062a2e, crowd: 17, leaveOverMs: [10000, 70000],
-    blurb: 'Glow sticks for everyone and the lights down low. A packed, happy floor.' },
+  { key: 'glow', label: 'Foam Party', emoji: '🫧', cost: 900, unlockLevel: 26, arrivals: 2.2, tips: 2.2, thirst: 1.6, fans: 2.2, shade: 0x062a2e, crowd: 17, leaveOverMs: [10000, 70000],
+    blurb: 'Bubbles everywhere and shades on. A packed, happy floor.' },
   { key: 'masquerade', label: 'Masquerade Ball', emoji: '🎭', cost: 1300, unlockLevel: 33, arrivals: 2.4, tips: 2.5, thirst: 1.6, fans: 2.4, shade: 0x2e0624, crowd: 19, leaveOverMs: [10000, 70000],
     blurb: 'Masks, gowns and mystery. The fanciest guests in town, tipping big.' },
   { key: 'rave', label: 'Neon Rave', emoji: '🌈', cost: 1800, unlockLevel: 39, arrivals: 2.7, tips: 2.7, thirst: 1.8, fans: 2.7, shade: 0x0a062e, crowd: 22, leaveOverMs: [10000, 70000],
@@ -586,5 +595,11 @@ export const SONGS = { lengthMs: 60 * 1000, likeFans: 1, newSongFun: 10 };
 // for each of starVibes its average vibe reached) and starFans bonus fans.
 // The rating is the average of the last `samples` of those. Each star above
 // 3 brings guests arrivalsPerStar faster (and each below, slower).
-export const RATING = { samples: 5, sampleMs: 60 * 1000, starVibes: [40, 55, 70, 85], starFans: [0, 0, 1, 1, 2], arrivalsPerStar: 0.08 };
+// The club rating (rating.js): `quality` gives points (100 in all) for
+// luxury (all of them at fullLuxury), different decorations (fullVariety
+// kinds), seats (seatsPerGuest per guest the club fits), dance floor tiles
+// (danceTilesPerGuest per guest) and the DJ booth's quality; 1 star + one
+// per 25 points. The crowd's mood still earns starFans every sampleMs.
+export const RATING = { samples: 5, sampleMs: 60 * 1000, starVibes: [40, 55, 70, 85], starFans: [0, 0, 1, 1, 2], arrivalsPerStar: 0.08,
+  quality: { luxury: 40, fullLuxury: 1500, variety: 20, fullVariety: 8, seats: 15, seatsPerGuest: 0.5, dance: 10, danceTilesPerGuest: 0.5, dj: 15 } };
 export const MOOD_LIGHTING = { color: 0x0b0418, floorAlpha: 0.3, wallAlpha: 0.2, glows: false, glowAlpha: 0.55 };

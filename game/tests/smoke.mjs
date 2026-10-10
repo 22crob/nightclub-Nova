@@ -156,7 +156,7 @@ check('dance floors and regular floors share one category, and the tip says whic
 // Floors are listed in the order they unlock (LEVEL_PLAN.md): a mix of
 // regular and dance floors spread over levels 1-59.
 const floorOrder = await page.$$eval('#shopItems .propSlot', (els) => els.map((e) => /^Dance/.test(e.dataset.tipText) ? 'D' : 'R').join(''));
-check('regular and dance floors unlock mixed together, in the order of the level plan', floorOrder === 'RDDRDRDDRDDRDDRDRDRRDRDDRDRD', floorOrder);
+check('regular and dance floors unlock mixed together, in the order of the level plan', floorOrder === 'RDDRDRDDRDRDRDDRDDRRDRDDRDRD', floorOrder);
 // Clicking a card picks the item up; clicking it again puts it down.
 await page.click('.storeTab[data-tip-name="Seating"]');
 await page.locator('.propSlot').first().click();
@@ -732,7 +732,7 @@ const bonusSetup = await page.evaluate(() => {
   s.patrons = others;
   s.followBonus();
   const bonus0 = s.bonuses[0];
-  out.offered = !!bonus0 && bonus0.patron === happy && ['highfive', 'fist'].includes(bonus0.kind);
+  out.offered = !!bonus0 && bonus0.patron === happy && bonus0.kind === 'cash';
   const h = bonus0.holder;
   out.at = { x: s.world.x + h.x * s.world.scaleX, y: s.world.y + h.y * s.world.scaleY };
   out.cash = s.cash;
@@ -1568,6 +1568,10 @@ const extras = await page.evaluate(async () => {
   out.noFreeVisits = s.celebDropIn() === null;
   const cash0 = s.cash;
   s.cash = 1000;
+  const pop0 = s.popularity;
+  s.popularity = 0;
+  out.needsPopular = s.celebStatus(s.celebDef('rico')) === 'unpopular' && s.inviteCelebrity('rico') === false && s.cash === 1000;
+  s.popularity = Math.max(pop0 || 0, 1000);
   out.invited = s.inviteCelebrity('rico') && s.cash === 1000 - 250 && s.celebStatus(s.celebDef('rico')) === 'invited';
   out.notTwice = s.inviteCelebrity('rico') === false;
   out.locked = s.inviteCelebrity('leo') === false; // level 24
@@ -1632,12 +1636,23 @@ const extras = await page.evaluate(async () => {
   document.getElementById('navBuild').click();
   s.streetQueue = queue0;
   s.levelInfo = realLevel;
+  s.popularity = pop0;
   s.celebState = {};
   s.celebNextAt = {};
   q.celeb = null;
-  // Rating: the average of recent ratings.
+  // Rating: steady stars for the club itself; the crowd's recent mood
+  // (nightStars) doesn't move it, and building something nice does.
   const stars0 = s.nightStars;
+  const before = s.clubRating();
+  s.nightStars = [1, 1];
+  out.steady = s.clubRating() === before;
   s.nightStars = [3, 4];
+  const cashR = s.cash;
+  s.cash = 1e6;
+  const lux = s.restoreProp('aquarium', 0, [s.gridW - 3, s.gridH - 3]) || s.restoreProp('plant', 0, [s.gridW - 2, s.gridH - 2]);
+  out.rises = s.clubRating() >= before;
+  if (lux) s.removeProp(lux);
+  s.cash = cashR;
   s.updateUI();
   out.rating = s.clubRating();
   out.ratingShown = document.getElementById('ratingVal').textContent;
@@ -1654,11 +1669,11 @@ check('guests can only be seated at a VIP booth; the button is greyed out withou
 check('a drink on the house, once a visit', extras.onHouse, JSON.stringify(extras));
 check('a guest can be sent to the dance floor', extras.danced, JSON.stringify(extras));
 check('the Celebrity List shows six celebrities with portrait, name, fame stars, how much they like the club, and their invite fee', extras.tab === 'navCelebs' && extras.listed, JSON.stringify(extras.list));
-check('celebrities come first by paid invitation only', extras.noFreeVisits && extras.invited && extras.notTwice && extras.locked && extras.arrives, JSON.stringify(extras));
+check('celebrities come first by paid invitation only, once the club is popular enough', extras.needsPopular && extras.noFreeVisits && extras.invited && extras.notTwice && extras.locked && extras.arrives, JSON.stringify(extras));
 check('when a celebrity walks in, the crowd gets star eyes, goes wild and tips', extras.welcomed && extras.crowdReacts && extras.reactionTex, JSON.stringify(extras));
 check('a great visit (VIP booth, drink on the house) builds liking; they come back on their own, sooner the more they like the club, and become regulars', extras.celebLiked && extras.notYet && extras.returns && extras.fasterWhenLiked && extras.regular && extras.coldNoReturn, JSON.stringify(extras));
 check('what celebrities think of the club is saved', extras.celebSaved, JSON.stringify(extras));
-check('the club rating is the average of recent ratings, shown at the top', extras.rating === 3.5 && extras.ratingShown === '3.5' && extras.faster, JSON.stringify(extras));
+check('the club rating is steady stars for the club itself (not the crowd\'s swings), shown at the top', extras.steady && extras.rises && extras.rating >= 1 && extras.rating <= 5 && extras.ratingShown === String(extras.rating) && typeof extras.faster === 'boolean', JSON.stringify(extras));
 check('ratings are saved', extras.saved, JSON.stringify(extras));
 
 // Money comes in like Nightclub City: a cover charge at the door, each
@@ -2401,7 +2416,7 @@ const meter = await page.evaluate(() => {
   out.oneLess = s.drinkStockLeft() === s.maxDrinkStock() - 1 && el.style.getPropertyValue('--fill') !== out.full;
   s.drinkStock = 1;
   s.renderMeter();
-  out.low = el.classList.contains('low');
+  out.noRed = !el.classList.contains('low');
   const cash = s.cash;
   s.cash = 100000;
   el.click();
@@ -2412,7 +2427,7 @@ const meter = await page.evaluate(() => {
   out.noZoom = !document.getElementById('zoomSlider') && !document.getElementById('zoomIn');
   return out;
 });
-check('the stock meter is full when stocked and drops with each drink served, glowing red when low', meter.full === '100.0%' && meter.priced && meter.oneLess && meter.low && meter.noZoom, JSON.stringify(meter));
+check('the stock meter is full when stocked and drops with each drink served (no red glow when low)', meter.full === '100.0%' && meter.priced && meter.oneLess && meter.noRed && meter.noZoom, JSON.stringify(meter));
 check('clicking the stock meter restocks the bars, the liquid rising back to the top', meter.refilling && meter.restocked && meter.paid, JSON.stringify(meter));
 
 // Money pops up over guests in big outlined letters; while a boost
@@ -2969,6 +2984,18 @@ const newWalls = await page.evaluate(() => {
   return { painted: painted.length, of: types.length };
 });
 check('the nine new wallpapers each paint a wall', newWalls.painted === newWalls.of, JSON.stringify(newWalls));
+// After a party the club rests for 6 minutes before the next can be thrown.
+const partyRest = await page.evaluate(() => {
+  const s = window.__clubNova.scene.getScene('club');
+  const was = s.partyReadyAt;
+  s.partyReadyAt = Date.now() + 6 * 60 * 1000;
+  const out = { blocked: /Next party in [56]:/.test(s.partyBlocker() || ''), refused: s.throwParty('house') === false };
+  s.partyReadyAt = Date.now() - 1;
+  out.freeAfter = !s.partyBlocker(s.partyBlocker ? undefined : undefined);
+  s.partyReadyAt = was;
+  return out;
+});
+check('after a party there is a 6 minute rest before the next one', partyRest.blocked && partyRest.refused && partyRest.freeAfter, JSON.stringify(partyRest));
 // Wall decorations hang on a wall section (one each), are saved, show in
 // the Walls key, and the Edit tools take them down again.
 const wallDecor = await page.evaluate(() => {

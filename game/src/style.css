@@ -208,7 +208,7 @@ body { font-family: var(--ui-font); color: var(--ink); }
 .partyButton { --c: #ff8a1f; }
 .boostButton[data-state="ready"] { animation: readyPulse 1.6s ease-in-out infinite; }
 .boostButton[data-state="active"], .rushButton[data-state="active"], .partyButton[data-state="active"] { --c: var(--pink); animation: readyPulse 0.8s ease-in-out infinite; cursor: default; }
-.boostButton[data-state="cooldown"], .rushButton[data-state="cooldown"], .partyButton[data-state="off"] {
+.boostButton[data-state="cooldown"], .rushButton[data-state="cooldown"], .partyButton[data-state="off"], .partyButton[data-state="cooldown"] {
   --c: #6a5a86; filter: grayscale(0.7) brightness(0.8); cursor: default; animation: none;
 }
 
@@ -280,9 +280,6 @@ body { font-family: var(--ui-font); color: var(--ink); }
 #drinkMeter.refilling .meterLiquid { transition: height 1.5s cubic-bezier(.25, .8, .3, 1); }
 #drinkMeter.refilling .meterGlass { box-shadow: 0 0 0 2px var(--edge), inset 0 0 0 2px #fff, 0 0 26px #d27bff, 0 0 46px rgba(180, 92, 255, 0.6); }
 #drinkMeter.refilling .meterBubbles { animation-duration: 0.6s; }
-/* Running low: the glass glows red and pulses, asking for a restock. */
-#drinkMeter.low:not(.refilling) .meterGlass { box-shadow: 0 0 0 2px var(--edge), inset 0 0 0 2px #fff, 0 0 18px #ff4f6a, 0 0 32px rgba(255, 60, 90, 0.55); animation: readyPulse 1s ease-in-out infinite; }
-#drinkMeter.low:not(.refilling) .meterBase { background: var(--shine), linear-gradient(180deg, #ff6f8a, #c0183a); }
 @media (height <= 560px) { .meterGlass { height: 110px; } }
 
 /* ------------------------------------------------------------------ */

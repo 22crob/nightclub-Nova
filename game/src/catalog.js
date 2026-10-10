@@ -352,8 +352,8 @@ export const PROP_TYPES = {
   fpMarble: paintTier('fpMarble', 'Marble', 12, 38, 'marble'),
   fpBlackGloss: paintTier('fpBlackGloss', 'Black Gloss', 15, 44, 'blackGloss'),
   fpGoldMarble: paintTier('fpGoldMarble', 'Gold Marble', 20, 51, 'goldMarble'),
-  fpRedGloss: paintTier('fpRedGloss', 'Red Gloss', 11, 34, 'redGloss'),
-  fpLeopard: paintTier('fpLeopard', 'Leopard Print', 14, 41, 'leopard'),
+  fpRedGloss: paintTier('fpRedGloss', 'Red Gloss', 8, 14, 'redGloss'),
+  fpLeopard: paintTier('fpLeopard', 'Cheetah Print', 14, 41, 'cheetah'), // was Leopard Print (the owner found it bad); key kept for saves
   fpStarry: paintTier('fpStarry', 'Starry Glass', 24, 58, 'starryGlass'),
   // Dance floors (src/floors.js, drawn in code): simple to fancy, all with
   // the same gameplay. Floors are the ONLY
@@ -368,7 +368,7 @@ export const PROP_TYPES = {
   woodFloor: floorTier('woodFloor', 'Wood Floor', 35, 16, 'parquet'),
   bluePulseFloor: floorTier('bluePulseFloor', 'Blue Pulse', 40, 21, 'bluePulse'),
   pinkPulseFloor: floorTier('pinkPulseFloor', 'Pink Pulse', 45, 25, 'pinkPulse'),
-  redPulseFloor: floorTier('redPulseFloor', 'Red Pulse', 48, 23, 'redPulse'),
+  redPulseFloor: floorTier('redPulseFloor', 'Red Pulse', 32, 13, 'redPulse'),
   twoToneFloor: floorTier('twoToneFloor', 'Two-Tone Blink', 50, 29, 'twoTone'),
   glowFloor: floorTier('glowFloor', 'Glow Floor', 55, 33, 'glow'),
   neonFloor: floorTier('neonFloor', 'Light-Up Floor', 70, 37, 'lightUp'),

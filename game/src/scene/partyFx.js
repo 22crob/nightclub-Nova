@@ -5,7 +5,8 @@
 //   Hip Hop Night snapback caps and gold chains, gold music notes
 //   Neon Night    neon glasses, neon lights flying round the room
 //   VIP Gala      gold crowns, gold sparkles
-//   Glow Party    glow-stick necklaces, glowing specks drifting up
+//   Foam Party    dark sunglasses, big soap bubbles floating up and popping
+//                 (it was the Glow Party, too like Neon Night; the save key stays 'glow')
 //   Masquerade    masks over the eyes, feathers drifting down
 //   Neon Rave     neon glasses and glow necklaces, sweeping lasers and lights
 // Nothing pulses to the beat (the owner asked for no beat-pulsing lights).
@@ -31,7 +32,7 @@ const NEON = [0xff3dd2, 0x3de0ff, 0xb45cff, 0x7dff5a, 0xffe14a];
 // from the front (masks and glasses are on the face).
 const COSTUME = {
   house: { draw: 'partyHat' }, hiphop: { draw: 'snapback' }, neon: { draw: 'neonGlasses', front: true },
-  gala: { draw: 'crown' }, glow: { draw: 'glowNecklace' }, masquerade: { draw: 'mask', front: true }, rave: { draw: 'raveGear', front: true },
+  gala: { draw: 'crown' }, glow: { draw: 'shades', front: true }, masquerade: { draw: 'mask', front: true }, rave: { draw: 'raveGear', front: true },
 };
 
 export class PartyFxMixin {
@@ -46,7 +47,7 @@ export class PartyFxMixin {
     else if (k === 'hiphop') every(500, () => this.fxNote(0xffd23d, '♪'));
     else if (k === 'neon') for (let i = 0; i < 7; i++) this.fxNeonLight(NEON[i % NEON.length], i);
     else if (k === 'gala') every(160, () => this.fxSparkle(0xffd76a));
-    else if (k === 'glow') every(110, () => this.fxGlowSpeck());
+    else if (k === 'glow') every(160, () => this.fxFoamBubble());
     else if (k === 'masquerade') { every(700, () => this.fxFeather()); every(260, () => this.fxSparkle(0xd6a8ff)); }
     else if (k === 'rave') { this.fxLasers(); for (let i = 0; i < 5; i++) this.fxNeonLight(NEON[i % NEON.length], i); }
     // Front-only costume pieces hide when a guest turns their back.
@@ -134,6 +135,14 @@ export class PartyFxMixin {
     g.fillStyle(0x0a0a14, 0.92).fillRoundedRect(-14, EYES - 5, 13, 9, 3).fillRoundedRect(2, EYES - 5, 13, 9, 3);
     g.lineStyle(2, col, 1).strokeRoundedRect(-14, EYES - 5, 13, 9, 3).strokeRoundedRect(2, EYES - 5, 13, 9, 3);
     g.lineBetween(-1, EYES - 2, 2, EYES - 2);
+  }
+
+  // Dark sunglasses (the Foam Party).
+  draw_shades(g) {
+    g.fillStyle(0x0a0a10, 0.95).fillRoundedRect(-14, EYES - 5, 13, 8, 3).fillRoundedRect(2, EYES - 5, 13, 8, 3);
+    g.lineStyle(1.5, 0x3a3a46, 1).strokeRoundedRect(-14, EYES - 5, 13, 8, 3).strokeRoundedRect(2, EYES - 5, 13, 8, 3);
+    g.lineBetween(-1, EYES - 3, 2, EYES - 3);
+    g.fillStyle(0xffffff, 0.55).fillRect(-11, EYES - 3, 3, 1.5).fillRect(5, EYES - 3, 3, 1.5);
   }
 
   draw_crown(g) {
@@ -229,14 +238,25 @@ export class PartyFxMixin {
     this.tweens.add({ targets: g, scale: 1.2, angle: 90, duration: 500, yoyo: true, ease: 'Sine.easeInOut', onComplete: () => g.destroy() });
   }
 
-  fxGlowSpeck() {
+  // A soap bubble from the floor: drifts up, wobbling, then pops.
+  fxFoamBubble() {
     const { x, y } = this.fxPoint(5);
-    const col = Phaser.Utils.Array.GetRandom(NEON);
-    const g = this.add.graphics();
-    g.fillStyle(col, 0.25).fillCircle(0, 0, 6).fillStyle(col, 0.9).fillCircle(0, 0, 2.2);
-    g.setPosition(x, y);
-    this.fxAdd(g, true);
-    this.tweens.add({ targets: g, y: y - randRange(60, 110), x: x + randRange(-15, 15), alpha: 0, duration: randRange(3000, 4500), ease: 'Sine.easeOut', onComplete: () => g.destroy() });
+    if (!this.textures.exists('foamBubble')) {
+      const g = this.make.graphics({ x: 0, y: 0, add: false });
+      g.fillStyle(0xe8f6ff, 0.18).fillCircle(24, 24, 22);
+      g.lineStyle(2.5, 0xffffff, 0.75).strokeCircle(24, 24, 21);
+      g.lineStyle(2, 0xff9ae0, 0.4).beginPath(); g.arc(24, 24, 18, 3.6, 5.2); g.strokePath();
+      g.lineStyle(2, 0x8ae4ff, 0.45).beginPath(); g.arc(24, 24, 18, 0.4, 1.6); g.strokePath();
+      g.fillStyle(0xffffff, 0.9).fillEllipse(16, 15, 8, 5);
+      g.generateTexture('foamBubble', 48, 48);
+      g.destroy();
+    }
+    const b = this.add.image(x, y, 'foamBubble').setScale(randRange(0.25, 0.6));
+    this.fxAdd(b, true);
+    const rise = randRange(70, 140);
+    this.tweens.add({ targets: b, y: y - rise, duration: randRange(2600, 4000), ease: 'Sine.easeOut',
+      onComplete: () => this.tweens.add({ targets: b, scale: b.scale * 1.5, alpha: 0, duration: 160, onComplete: () => b.destroy() }) });
+    this.tweens.add({ targets: b, x: x + randRange(-18, 18), duration: 900, yoyo: true, repeat: 2, ease: 'Sine.easeInOut' });
   }
 
   fxFeather() {

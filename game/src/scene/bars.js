@@ -249,13 +249,23 @@ export class BarsMixin {
       // else is serving.
       const ready = this.barGroupQueue(group[0]).filter((p) => p.readyToOrder && this.atServiceSpot(p) && !p.servedBy && !p.leaving);
       if (this.drinkStockLeft() <= 0) { this.warnDrinkStock(); this.checkBarPatience(group); continue; } // out of drinks
+      // A unit another bartender stands at (or is walking to) is theirs:
+      // two bartenders never stop on the same spot (they may walk past).
+      const taken = (unit, b) => staff.some((o) => o !== b && (o.walkingTo ? o.walkingTo === unit : o.atUnit === unit));
       for (const b of staff) {
         if (b.task || ready.length === 0) continue;
         const at = group.indexOf(b.atUnit);
-        const options = ready.filter((p) => !p.servedBy && !p.queue.claimedBy);
+        const options = ready.filter((p) => !p.servedBy && !p.queue.claimedBy && !taken(p.queue, b));
         if (options.length === 0) break;
         options.sort((x, y) => Math.abs(group.indexOf(x.queue) - at) - Math.abs(group.indexOf(y.queue) - at) || x.queuedAt - y.queuedAt);
         this.startServing(b, options[0], group);
+      }
+      // An idle bartender sharing a spot steps along to the nearest free one.
+      for (const b of staff) {
+        if (b.task || b.walkingTo || !taken(b.atUnit, b)) continue;
+        const at = group.indexOf(b.atUnit);
+        const free = group.filter((u) => !taken(u, b)).sort((x, y) => Math.abs(group.indexOf(x) - at) - Math.abs(group.indexOf(y) - at))[0];
+        if (free) this.bartenderWalk(b, free, group, () => {});
       }
       this.checkBarPatience(group);
     }
@@ -300,9 +310,11 @@ export class BarsMixin {
     c.setDepth(base + 0.001);
     this.propLayer.sort('depth');
     this.tweens.killTweensOf(c);
+    b.walkingTo = unit;
     this.tweens.add({
       targets: c, x: sx, y: sy, duration: Math.abs(to - from) * BAR.walkMsPerUnit / this.bartenderSpeed(b), ease: 'Linear',
       onComplete: () => {
+        b.walkingTo = null;
         b.atUnit = unit;
         c.setDepth(unit.gameObject.baseDepth + (unit.frontObject ? 0.001 : 0.003));
         this.propLayer.sort('depth');

@@ -689,64 +689,70 @@ export const WALL_STYLES = {
 
   // Backlit white shelves full of bottles, as behind the best bars.
   bottleShelf: {
-    // A built-in back-bar shelf at head height: two backlit rows of bottles
-    // set into a dark wall, a little ledge under them and dark panelling
-    // below (the owner found the old floor-to-ceiling shelves too much).
+    // Little lit windows set into the wall at head height, each a recess
+    // with a bottle or two standing in it: shadowed top and sides, a sill
+    // in front, warm light from the back (the owner found painted-on
+    // shelves too flat). Dark panelling below.
     frames: 1,
     draw(ctx, W, H) {
-      ctx.fillStyle = '#141018';
+      ctx.fillStyle = '#16111a';
       ctx.fillRect(0, 0, W, H);
-      const top = Math.round(H * 0.2), bottom = Math.round(H * 0.62); // head height down to chest height
-      const rows = 2, rh = (bottom - top) / rows;
-      // Panelling below the ledge.
-      ctx.fillStyle = '#1c1520';
-      ctx.fillRect(0, bottom, W, H - bottom);
-      ctx.fillStyle = 'rgba(255,255,255,0.05)';
-      ctx.fillRect(W / 2 - 1, bottom + 10, 2, H - bottom - BASEBOARD - 16);
-      // The recess, lit warm from behind.
+      ctx.fillStyle = 'rgba(255,255,255,0.03)';
+      ctx.fillRect(0, 0, W, 2);
+      const top = Math.round(H * 0.2), bottom = Math.round(H * 0.6);
+      ctx.fillStyle = '#1e1622';
+      ctx.fillRect(0, bottom + 10, W, H - bottom - 10);
+      const rows = 2, cols = 2;
+      const gap = 6, cw = (W - gap * (cols + 1)) / cols, ch = (bottom - top - gap * (rows + 1)) / rows;
       const r = rng(73);
       const colors = ['#2f8a3a', '#7a3a12', '#c8d4dc', '#3a5ab8', '#a01a3a', '#d8a030', '#5a2a78'];
       for (let row = 0; row < rows; row++) {
-        const y = top + row * rh;
-        const g = ctx.createLinearGradient(0, y, 0, y + rh);
-        g.addColorStop(0, '#5a3418');
-        g.addColorStop(1, '#ffc070');
-        ctx.fillStyle = g;
-        ctx.fillRect(0, y, W, rh);
-        // A few chunky bottles with rounded shoulders, gaps between.
-        let x = 4 + r() * 4;
-        while (x < W - 12) {
-          const bw = 8 + r() * 3, bh2 = rh * (0.55 + r() * 0.25);
-          const by = y + rh - 3 - bh2;
-          const body = by + bh2 * 0.38;
-          ctx.fillStyle = colors[(r() * colors.length) | 0];
-          ctx.fillRect(x, body, bw, y + rh - 3 - body);
-          ctx.beginPath();
-          ctx.ellipse(x + bw / 2, body, bw / 2, bh2 * 0.12, 0, Math.PI, 0);
-          ctx.fill();
-          ctx.fillRect(x + bw / 2 - 1.5, by, 3, bh2 * 0.32);
-          ctx.fillStyle = 'rgba(255,255,255,0.5)';
-          ctx.fillRect(x + 1.5, body + 2, 1.5, (y + rh - 3 - body) * 0.7);
-          ctx.fillStyle = 'rgba(255,240,200,0.75)'; // label
-          ctx.fillRect(x + 1, body + (y + rh - 3 - body) * 0.4, bw - 2, 3);
-          x += bw + 4 + r() * 5;
+        for (let col = 0; col < cols; col++) {
+          const x = gap + col * (cw + gap), y = top + gap + row * (ch + gap);
+          const d = 5; // how deep the recess looks
+          // the frame round the window
+          ctx.fillStyle = '#2c2026';
+          ctx.fillRect(x - 2, y - 2, cw + 4, ch + 4);
+          // the lit back of the recess
+          const back = ctx.createRadialGradient(x + cw / 2, y + ch * 0.75, 2, x + cw / 2, y + ch * 0.6, ch);
+          back.addColorStop(0, '#ffcf80');
+          back.addColorStop(1, '#8a4a1c');
+          ctx.fillStyle = back;
+          ctx.fillRect(x, y, cw, ch);
+          // inner walls: the ceiling in shadow, the left side lit, the right darker
+          ctx.fillStyle = 'rgba(20,8,4,0.75)';
+          ctx.beginPath(); ctx.moveTo(x, y); ctx.lineTo(x + cw, y); ctx.lineTo(x + cw - d, y + d); ctx.lineTo(x + d, y + d); ctx.closePath(); ctx.fill();
+          ctx.fillStyle = 'rgba(255,190,110,0.35)';
+          ctx.beginPath(); ctx.moveTo(x, y); ctx.lineTo(x + d, y + d); ctx.lineTo(x + d, y + ch); ctx.lineTo(x, y + ch); ctx.closePath(); ctx.fill();
+          ctx.fillStyle = 'rgba(30,10,4,0.5)';
+          ctx.beginPath(); ctx.moveTo(x + cw, y); ctx.lineTo(x + cw - d, y + d); ctx.lineTo(x + cw - d, y + ch); ctx.lineTo(x + cw, y + ch); ctx.closePath(); ctx.fill();
+          // one or two bottles standing on the recess floor, with shadows
+          const n = 1 + (r() < 0.6 ? 1 : 0);
+          for (let k = 0; k < n; k++) {
+            const bw = 7 + r() * 2, bh = ch * (0.55 + r() * 0.2);
+            const bx = x + d + 2 + (n === 1 ? (cw - 2 * d - 4 - bw) / 2 : k * (cw - 2 * d - 4 - bw));
+            const by = y + ch - 2 - bh;
+            ctx.fillStyle = 'rgba(40,16,4,0.45)';
+            ctx.fillRect(bx + 3, by + bh * 0.3, bw, bh * 0.7); // shadow on the back
+            ctx.fillStyle = colors[(r() * colors.length) | 0];
+            const body = by + bh * 0.36;
+            ctx.fillRect(bx, body, bw, by + bh - body);
+            ctx.beginPath(); ctx.ellipse(bx + bw / 2, body, bw / 2, bh * 0.1, 0, Math.PI, 0); ctx.fill();
+            ctx.fillRect(bx + bw / 2 - 1.5, by, 3, bh * 0.3);
+            ctx.fillStyle = 'rgba(255,255,255,0.55)';
+            ctx.fillRect(bx + 1.5, body + 2, 1.5, (by + bh - body) * 0.7);
+            ctx.fillStyle = 'rgba(255,236,200,0.8)';
+            ctx.fillRect(bx + 1, body + (by + bh - body) * 0.45, bw - 2, 3);
+          }
+          // the sill in front
+          ctx.fillStyle = '#3a2a30';
+          ctx.fillRect(x - 3, y + ch, cw + 6, 3);
+          ctx.fillStyle = 'rgba(255,255,255,0.2)';
+          ctx.fillRect(x - 3, y + ch, cw + 6, 1);
         }
-        // Glass shelf with a bright edge.
-        ctx.fillStyle = 'rgba(255,240,220,0.9)';
-        ctx.fillRect(0, y + rh - 3, W, 2);
-        ctx.fillStyle = 'rgba(40,24,12,0.8)';
-        ctx.fillRect(0, y + rh - 1, W, 1);
       }
-      // The cabinet's frame: a dark top with a soft light strip, and the ledge.
-      ctx.fillStyle = '#2a1c14';
-      ctx.fillRect(0, top - 6, W, 6);
-      ctx.fillStyle = 'rgba(255,214,150,0.7)';
-      ctx.fillRect(0, top - 1, W, 1.5);
-      ctx.fillStyle = '#3a2618';
-      ctx.fillRect(0, bottom, W, 6);
-      ctx.fillStyle = 'rgba(255,255,255,0.25)';
-      ctx.fillRect(0, bottom, W, 1.5);
-      ctx.fillStyle = 'rgba(0,0,0,0.45)';
+      // a dado rail between the windows and the panelling
+      ctx.fillStyle = '#2c2026';
       ctx.fillRect(0, bottom + 6, W, 4);
       baseboard(ctx, W, H, '#0c0a10');
     },

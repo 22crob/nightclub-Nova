@@ -1,6 +1,5 @@
 // ClubScene methods: clickable guest bonuses. Now and then (BONUS.everyMs)
-// a happy guest holds up a high five or a fist bump: a gold badge over their
-// head, different from the quick reactions (reactions.js). Click it within
+// a happy guest holds up a gold $ coin over their head, different from the quick reactions (reactions.js). Click it within
 // BONUS.lifeMs to collect BONUS.amount; otherwise it fades away. Guests who
 // admire a decoration offer a tip coin the same way (this.bonuses holds
 // every badge showing). A click on
@@ -19,7 +18,7 @@ const INK = 0x3a2200;
 export class BonusesMixin {
   // Draws the two badges once: a gold coin with an open hand or a fist.
   makeBonusTextures() {
-    if (this.textures.exists('bonus_highfive')) return;
+    if (this.textures.exists('bonus_cash')) return;
     const r = SIZE / 2;
     const badge = (g) => {
       g.fillStyle(0xb87400, 1);
@@ -40,38 +39,11 @@ export class BonusesMixin {
       g.generateTexture(key, SIZE, SIZE);
       g.destroy();
     };
-    // An open hand, fingers up.
-    make('bonus_highfive', (g) => {
-      g.fillStyle(SKIN, 1);
-      g.lineStyle(2.5, INK, 1);
-      const fingers = [[-11, -10, 13], [-4, -15, 17], [3, -15, 17], [10, -12, 14]];
-      for (const [x, top, h] of fingers) {
-        g.fillRoundedRect(r + x - 3, r + top, 6.5, h, 3);
-        g.strokeRoundedRect(r + x - 3, r + top, 6.5, h, 3);
-      }
-      g.fillRoundedRect(r - 14, r - 1, 28, 19, 7);
-      g.strokeRoundedRect(r - 14, r - 1, 28, 19, 7);
-      g.fillStyle(SKIN, 1);
-      g.fillRect(r - 12.5, r - 1, 25, 5); // hide the seam under the fingers
-      g.fillRoundedRect(r - 22, r + 2, 10, 7, 3.5); // thumb
-      g.strokeRoundedRect(r - 22, r + 2, 10, 7, 3.5);
-      g.fillRect(r - 14.5, r + 3, 4, 5);
-    });
-    // A tip: a plain coin (the $ is a label on top, see offerBonus()).
+    // A cash bonus and a tip are both a plain gold coin with a big $ on it
+    // (see offerBonus()); the owner swapped the high five / fist bump
+    // badges for a bigger $ (October 2026).
+    make('bonus_cash', () => {});
     make('bonus_tip', () => {});
-    // A fist, knuckles forward, with motion lines.
-    make('bonus_fist', (g) => {
-      g.fillStyle(SKIN, 1);
-      g.lineStyle(2.5, INK, 1);
-      g.fillRoundedRect(r - 13, r - 12, 26, 24, 8);
-      g.strokeRoundedRect(r - 13, r - 12, 26, 24, 8);
-      g.lineBetween(r - 13, r - 3, r + 13, r - 3);
-      for (const x of [-6.5, 0, 6.5]) g.lineBetween(r + x, r - 12, r + x, r - 3);
-      g.fillRoundedRect(r - 13, r + 1, 16, 7, 3.5); // thumb across
-      g.strokeRoundedRect(r - 13, r + 1, 16, 7, 3.5);
-      g.lineStyle(2.5, 0xb87400, 1);
-      for (const y of [-8, 0, 8]) g.lineBetween(r + 17, r + y, r + 23, r + y);
-    });
   }
 
   // Runs with the patron tick: offers a high five now and then, and lets
@@ -88,10 +60,10 @@ export class BonusesMixin {
     this.offerBonus(happy[Math.floor(Math.random() * happy.length)]);
   }
 
-  // A badge over a guest's head: a high five or fist bump (BONUS.amount),
+  // A badge over a guest's head: a gold $ coin (BONUS.amount),
   // or with `kind` 'tip' a gold coin worth `amount` (see admiring
   // decorations in activities.js). Returns the badge.
-  offerBonus(patron, kind = Math.random() < 0.5 ? 'highfive' : 'fist', amount = BONUS.amount) {
+  offerBonus(patron, kind = 'cash', amount = BONUS.amount) {
     this.makeBonusTextures();
     this.bonuses = this.bonuses || [];
     const size = kind === 'tip' ? BONUS.tipSize : BONUS.size;
@@ -99,11 +71,9 @@ export class BonusesMixin {
     const glow = this.add.image(0, 0, 'lightPool').setTint(0xffd84a).setBlendMode(Phaser.BlendModes.ADD)
       .setDisplaySize(size * 2, size * 2).setAlpha(0.6);
     const parts = [glow, icon];
-    if (kind === 'tip') {
-      parts.push(this.add.text(0, 0, '$', {
-        fontFamily: 'Arial Black, Arial, sans-serif', fontSize: `${Math.round(size * 0.62)}px`, color: '#2f9b2a', stroke: '#fff7c0', strokeThickness: 2,
-      }).setOrigin(0.5, 0.52));
-    }
+    parts.push(this.add.text(0, 0, '$', {
+      fontFamily: 'Arial Black, Arial, sans-serif', fontSize: `${Math.round(size * 0.66)}px`, color: '#2f9b2a', stroke: '#fff7c0', strokeThickness: 3,
+    }).setOrigin(0.5, 0.52));
     const holder = this.add.container(0, 0, parts);
     this.patronLayer.add(holder);
     const full = holder.scale;

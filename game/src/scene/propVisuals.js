@@ -3,7 +3,7 @@
 import Phaser from 'phaser';
 import { FLOOR_DECAL_PROPS, PROP_TYPES } from '../catalog.js';
 import { FLOOR_STYLES, floorFrameCanvas, floorFrameFor, floorTextureKey } from '../floors.js';
-import { FACINGS, FALLBACK_PROP_HEIGHT, FALLBACK_PROP_WIDTH, PROP_SCALE, TILE_H, TILE_W } from '../config.js';
+import { FACINGS, FALLBACK_PROP_HEIGHT, FALLBACK_PROP_WIDTH, FLOOR_OVERLAP, PROP_SCALE, TILE_H, TILE_W } from '../config.js';
 
 // Hover name labels sit above every prop.
 const LABEL_DEPTH = 100000;
@@ -211,7 +211,10 @@ export class PropVisualsMixin {
       gameObject = spriteImage(this.spriteKeyFor(type, facing));
     } else if (def.floorStyle) {
       gameObject = this.add.image(sx, sy, floorTextureKey(def.floorStyle, 0));
-      gameObject.setDisplaySize(TILE_W, TILE_H);
+      // A hair bigger than the tile so neighbours overlap: the diamond's soft
+      // edges otherwise let thin dark seams show between tiles, wider or
+      // narrower with the zoom (the owner saw floors that looked sunken).
+      gameObject.setDisplaySize(TILE_W * FLOOR_OVERLAP, TILE_H * FLOOR_OVERLAP);
       gameObject.floorFrame = 0;
       this.propLayer.add(gameObject);
     } else if (def.rotatable) {

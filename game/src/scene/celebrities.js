@@ -42,10 +42,16 @@ export class CelebritiesMixin {
   // 'coming' (in line outside) or 'inside'.
   celebStatus(def) {
     if (this.levelInfo().level < def.level) return 'locked';
+    if ((this.popularity || 0) < this.celebPopularityNeeded(def) && !this.celebRecord(def.key).visits) return 'unpopular';
     if (this.patrons.some((p) => !p.gone && p.celeb && p.celeb.key === def.key)) return 'inside';
     if ((this.streetQueue || []).some((p) => p.info && p.info.celeb === def.key)) return 'coming';
     if (this.celebInvites && this.celebInvites[def.key] !== undefined) return 'invited';
     return 'available';
+  }
+
+  // How popular the club must be before this celebrity will come.
+  celebPopularityNeeded(def) {
+    return CELEB.popularityNeeded[def.fame] || 0;
   }
 
   // Pays a celebrity's fee to invite them; they turn up shortly. False if
@@ -233,6 +239,7 @@ export class CelebritiesMixin {
         : `Been ${rec.visits} time${rec.visits === 1 ? '' : 's'}, likes your club ${rec.liking}%${regular ? ': a VIP regular who drops in often' : rec.liking >= CELEB.minLikingToReturn ? ', drops in now and then' : ', won\'t come back unless invited'}.`;
       const what = {
         locked: `Unlocks at level ${c.level}.`,
+        unpopular: `Your club needs ${this.celebPopularityNeeded(c)} popularity before they'll come (now ${this.popularity || 0}).`,
         available: `Click to invite them for $${cost}. Seat them at a VIP booth and give them a drink on the house so they love it.`,
         invited: 'Invited: on the way.',
         coming: 'Waiting in line outside.',
@@ -258,9 +265,9 @@ export class CelebritiesMixin {
         tag.textContent = 'VIP';
         slot.appendChild(tag);
       }
-      if (status === 'locked') button.classList.add('locked');
+      if (status === 'locked' || status === 'unpopular') button.classList.add('locked');
       if (status === 'available' && !afford[i]) button.classList.add('unaffordable');
-      strip.textContent = status === 'locked' ? `🔒 Lv ${c.level}` : status === 'available' ? `Invite $${cost}` : label[status];
+      strip.textContent = status === 'locked' ? `🔒 Lv ${c.level}` : status === 'unpopular' ? `❤ ${this.celebPopularityNeeded(c)} popular` : status === 'available' ? `Invite $${cost}` : label[status];
       if (status === 'available') slot.addEventListener('click', () => this.inviteCelebrity(c.key));
       el.appendChild(slot);
     });
