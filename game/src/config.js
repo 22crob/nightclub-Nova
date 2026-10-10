@@ -33,6 +33,10 @@ export const STARTING_CASH = 700;
 // concrete walls with pale top caps, a raised floor slab with dark front
 // edges, and a tiled sidewalk outside. Walls are about 1.3x a patron.
 export const WALL_HEIGHT = 104; // px: about 1.3 guests tall, like Nightclub City (was 128, which felt too tall)
+// Wall decorations (scene/wallDecor.js): drawn this much bigger than their
+// render (the owner found them small), but never taller than the wall less
+// `margin` px; hung at one of three heights the player picks (`levels`).
+export const WALL_DECOR = { scale: 1.4, margin: 6, levels: ['low', 'mid', 'high'], labels: { low: 'Low', mid: 'Middle', high: 'High' } };
 export const WALL_THICKNESS = 0.4; // in tiles
 export const WALL_BASEBOARD = 5;
 export const DOOR_HEIGHT = 90; // px: a little taller than a guest

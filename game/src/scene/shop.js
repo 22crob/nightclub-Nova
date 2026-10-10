@@ -255,7 +255,7 @@ export class ShopMixin {
       const lines = [];
       if (def.category === 'Dance Floors') lines.push('Dance floor: guests dance on it.');
       if (def.category === 'Floors') lines.push('Regular floor: paint it tile by tile.');
-      if (def.wallDecor) lines.push(`Hangs on a wall: click a wall section${(def.span || 1) > 1 ? ` (it takes ${def.span})` : ''}.`);
+      if (def.wallDecor) lines.push(`Hangs on a wall: click a wall section${(def.span || 1) > 1 ? ` (it takes ${def.span})` : ''}. Pick low, middle or high first.`);
       if (def.category === 'Bars') lines.push(`Bar pieces: ${this.barUnitCount()} of ${this.barAllowance()} your level allows.`);
       if (def.staff === 'dj') lines.push('One DJ booth at a time: placing it puts your old one in the inventory.');
       lines.push(`Luxury: ${Math.round((def.cost || 0) * LUXURY.perDollar)}`);
@@ -375,6 +375,7 @@ export class ShopMixin {
     if (!this.selectedChip) return;
     const key = this.selectedProp;
     const def = PROP_TYPES[key];
+    this.updateWallHeightBar?.();
     if (!def) {
       this.selectedChip.textContent = '';
       return;

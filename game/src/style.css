@@ -431,6 +431,18 @@ body.kick .navPad > .uiArt { transform: scale(1.06); transition: none; }
 }
 #selectedChip .chipCost { font-family: var(--display-font); font-weight: 900; color: var(--gold); }
 @media (width <= 900px) { #selectedChip { top: calc(136px + env(safe-area-inset-top, 0px)); } }
+/* Low / Middle / High for a held wall decoration, under the name tag. */
+#wallHeightBar {
+  position: fixed; top: calc(104px + env(safe-area-inset-top, 0px)); left: 50%; transform: translateX(-50%);
+  display: flex; gap: 4px; z-index: 31; padding: 4px; border-radius: 14px; background: var(--panel); box-shadow: var(--panel-shadow);
+}
+#wallHeightBar[hidden] { display: none; }
+#wallHeightBar .wallHeightOption {
+  padding: 5px 12px; border-radius: 10px; cursor: pointer; font-size: 13px; font-weight: 800; text-shadow: var(--outline);
+  background: var(--key); border: 2px solid var(--edge);
+}
+#wallHeightBar .wallHeightOption.on { background: #ff3ddc; border-color: #fff; box-shadow: 0 0 10px rgba(255, 61, 220, 0.7); }
+@media (width <= 900px) { #wallHeightBar { top: calc(176px + env(safe-area-inset-top, 0px)); } }
 
 /* A card (storage, staff, expand, celebrities, edit tools): a purple key
    with the picture and a strip under it. */
@@ -794,11 +806,11 @@ body { touch-action: manipulation; -webkit-user-select: none; user-select: none;
 canvas { touch-action: none; }
 input, textarea { -webkit-user-select: text; user-select: text; }
 @media (width <= 560px) {
-  #hudProfile, #hudRight, #goalSide, #drinkMeter, .partyBanner, #dock, #selectedChip, #testModeTag, #updateButton { zoom: 0.58; }
+  #hudProfile, #hudRight, #goalSide, #drinkMeter, .partyBanner, #dock, #selectedChip, #wallHeightBar, #testModeTag, #updateButton { zoom: 0.58; }
   #hudCash .amount { font-size: 19px; }
 }
 @media (height <= 500px) and (width > 560px) {
-  #hudProfile, #hudRight, #goalSide, #drinkMeter, .partyBanner, #dock, #selectedChip, #testModeTag, #updateButton { zoom: 0.62; }
+  #hudProfile, #hudRight, #goalSide, #drinkMeter, .partyBanner, #dock, #selectedChip, #wallHeightBar, #testModeTag, #updateButton { zoom: 0.62; }
   .summaryCard, .levelCard, #infoCard { zoom: 0.8; }
 }
 

@@ -264,6 +264,47 @@ def build_wall_bottles():
     box('BackGlow', -0.7, 0.7, -0.014, -0.012, 0.8, 1.65, principled('BottleWash', srgb('#ffb060'), rough=0.6, emission=srgb('#ff9a40'), emission_strength=0.5), bevel=0)
 
 
+
+def build_wall_bottles_lux():
+    """The luxury bottle shelf: a gloss black cabinet two sections wide,
+    three black shelves with a warm LED strip under each shining down on
+    the bottles below (pools of light on the shelf, the glass lit up), a
+    thin gold frame and an amber glow behind the top row."""
+    gloss = principled('LuxBlack', srgb('#08080a'), rough=0.08)
+    inside = principled('LuxInside', srgb('#050506'), rough=0.6)
+    shelf_m = principled('LuxShelf', srgb('#101014'), rough=0.12)
+    gold = mat('#e0b450', rough=0.2)
+    led = neon('LuxLed', (1.0, 0.8, 0.5), 9)
+    pool = principled('LuxPool', srgb('#ffcf8a'), rough=0.5, emission=srgb('#ffb860'), emission_strength=0.4)
+    colors = ['#d8a030', '#2f8a3a', '#e8eef2', '#a01a3a', '#7a3a12', '#3a5ab8', '#f0d070']
+    mats = [principled(f'LuxB{c}', srgb(c), rough=0.08, transmission=0.4, emission=srgb(c), emission_strength=0.3) for c in colors]
+    X = 0.72
+    box('Cabinet', -X, X, -0.03, 0.0, 0.56, 1.72, inside, bevel=0.0)
+    for x0, x1 in ((-X, -X + 0.04), (X - 0.04, X)):
+        box(f'Side{x0}', x0, x1, -0.29, -0.03, 0.56, 1.72, gloss, bevel=0)
+        box(f'Edge{x0}', x0, x1, -0.3, -0.29, 0.56, 1.72, gold, bevel=0)   # a thin gold edge at the front only
+    box('Top', -X, X, -0.29, -0.03, 1.68, 1.72, gloss, bevel=0)
+    box('TopEdge', -X, X, -0.3, -0.29, 1.68, 1.72, gold, bevel=0)
+    box('Bottom', -X, X, -0.29, -0.03, 0.56, 0.6, gloss, bevel=0)
+    box('BottomEdge', -X, X, -0.3, -0.29, 0.56, 0.6, gold, bevel=0)
+    box('TopLed', -X + 0.06, X - 0.06, -0.24, -0.06, 1.675, 1.68, led, bevel=0)
+    rows = (0.64, 0.99, 1.34)
+    for i, z in enumerate(rows):
+        box(f'Shelf{i}', -X + 0.04, X - 0.04, -0.28, -0.03, z - 0.035, z, shelf_m, bevel=0)
+        box(f'ShelfLip{i}', -X + 0.04, X - 0.04, -0.29, -0.28, z - 0.035, z, gold, bevel=0)
+        box(f'Pool{i}', -X + 0.08, X - 0.08, -0.22, -0.06, z, z + 0.002, pool, bevel=0)
+        if i:   # the strip under this shelf lights the row below
+            box(f'Led{i}', -X + 0.06, X - 0.06, -0.24, -0.06, z - 0.04, z - 0.035, led, bevel=0)
+        for k in range(8):
+            x = -0.58 + k * 0.166
+            hgt = 0.22 + ((k * 5 + i * 3) % 4) * 0.02
+            m = mats[(k + i * 3) % len(mats)]
+            cylinder(f'LBottle{i}_{k}', x, -0.14, z, z + hgt * 0.62, 0.038, m, verts=16)
+            cone(f'LShoulder{i}_{k}', x, -0.14, z + hgt * 0.62, z + hgt * 0.76, 0.038, 0.013, m, verts=16)
+            cylinder(f'LNeck{i}_{k}', x, -0.14, z + hgt * 0.76, z + hgt, 0.012, m, verts=10)
+            cylinder(f'LCap{i}_{k}', x, -0.14, z + hgt, z + hgt + 0.02, 0.014, gold, verts=10)
+    box('BackGlow', -X + 0.06, X - 0.06, -0.034, -0.03, 1.36, 1.64, principled('LuxWash', srgb('#ffb060'), rough=0.6, emission=srgb('#ff9a40'), emission_strength=0.35), bevel=0)
+
 DESIGNS = {
     'snakePlant': build_snake_plant,
     'monstera': build_monstera,
@@ -278,4 +319,5 @@ DESIGNS = {
     'wallFairy': build_wall_fairy,
     'wallVines': build_wall_vines,
     'wallBottles': build_wall_bottles,
+    'wallBottlesLux': build_wall_bottles_lux,
 }

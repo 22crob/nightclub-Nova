@@ -408,6 +408,7 @@ export class ClubScene extends Phaser.Scene {
     this.setupAppUpdate(); // the New version button (appUpdate.js)
     this.setupDrinkMenu(); // what the bars serve (drinks.js)
     this.setupMeter(); // the drink meter on the right edge (meter.js)
+    this.setupWallHeightBar(); // Low / Middle / High for wall decorations (wallDecor.js)
     this.time.addEvent({ delay: 1000, loop: true, callback: () => this.tickMeter() });
     this.scheduleNextPatronSpawn();
 

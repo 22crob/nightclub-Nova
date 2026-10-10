@@ -805,6 +805,32 @@ def stripe_booth():
     return {'seats': [[-0.56, -0.08], [0.0, -0.08], [0.56, -0.08]], 'sitLift': 0.0}
 
 
+def stripe_corner():
+    """1 x 1: the Stripe Booth's corner, backrests on two sides, so two
+    straight sections and a corner make an L, half a square (the owner's
+    ask). Its backs line up with the straight sections' (the same depth
+    and height), and their stripes carry on round it: a black block in the
+    corner, then pink, black, pink along each arm, meeting a section's
+    black end stripe. Turn it to make the L either way round."""
+    black = principled('StripeBlack', srgb('#1a1620'), rough=0.6)
+    pink = principled('StripePink', srgb('#e0207a'), rough=0.7)
+    trim = principled('StripeTrim', srgb('#0c0a0e'), rough=0.3)
+    x0, x1, y0, y1 = -0.4, 0.375, -0.375, 0.4   # back on +Y, side back on -X
+    bx, by = -0.16, 0.16                          # inner faces of the backs
+    box('Base', bx, x1, y0, by, 0, 0.1, trim, bevel=0.0)
+    box('Seat', bx, x1, y0, by, 0.1, 0.42, black, bevel=0.0)
+    box('BackCorner', x0, bx, by, y1, 0.0, 1.0, black, bevel=0.0)
+    w = (x1 - bx) / 3
+    for k in range(3):
+        box(f'BackStripeB{k}', bx + k * w, bx + (k + 1) * w, by, y1, 0.0, 1.0, (pink, black)[k % 2], bevel=0.0)
+    h = (by - y0) / 3
+    for k in range(3):
+        box(f'BackStripeS{k}', x0, bx, by - (k + 1) * h, by - k * h, 0.0, 1.0, (pink, black)[k % 2], bevel=0.0)
+    box('BackPipeB', x0 - 0.01, x1, by - 0.01, y1 + 0.01, 1.0, 1.04, trim, bevel=0.0)
+    box('BackPipeS', x0 - 0.01, bx + 0.01, y0, by, 1.0, 1.04, trim, bevel=0.0)
+    return {'seats': [[0.1, -0.1]], 'sitLift': 0.0}
+
+
 def bottle_sectional():
     """Bottle service: a black leather L-sectional with red stitching and
     a red underglow, round a square black glass table with an ice bucket."""
@@ -955,6 +981,7 @@ DESIGNS = {
     'crystalBooth': crystal_booth,
     'ringBooth': ring_booth,
     'stripeBooth': stripe_booth,
+    'stripeCorner': stripe_corner,
     'bottleSectional': bottle_sectional,
     'beanBags': bean_bags,
     'blackStool': black_stool,

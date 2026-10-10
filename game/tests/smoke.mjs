@@ -1370,10 +1370,42 @@ check('the newer booths and sofas all have their art', moreSeats.missing.length 
 const club26 = await page.evaluate(() => {
   const s = window.__clubNova.scene.getScene('club');
   const keys = ['blackStool', 'clubChair', 'tubChair', 'blackTable', 'highTop', 'glassTable', 'snakePlant', 'monstera', 'bamboo', 'poolBlack',
-    'hangingFern', 'pendantLights', 'ledPoleCyan', 'ledPolePink', 'neonHeart', 'wallSpeaker', 'fairyLights', 'vineWall', 'bottleShelf'];
-  return { missing: keys.filter((k) => !s.hasAnySprite(k)), stripe: s.getFootprint('stripeBooth', 0, 0, 0).length };
+    'hangingFern', 'pendantLights', 'ledPoleCyan', 'ledPolePink', 'neonHeart', 'wallSpeaker', 'fairyLights', 'vineWall', 'bottleShelf', 'luxBottleShelf', 'stripeCorner'];
+  return { missing: keys.filter((k) => !s.hasAnySprite(k)), stripe: s.getFootprint('stripeBooth', 0, 0, 0).length, corner: s.getFootprint('stripeCorner', 0, 0, 0).length };
 });
-check('the new tables, chairs, stools, plants, black pool table and wall decorations have their art; Stripe Booth sections are 3 x 1', club26.missing.length === 0 && club26.stripe === 3, JSON.stringify(club26));
+check('the new tables, chairs, stools, plants, black pool table and wall decorations have their art; Stripe Booth sections are 3 x 1, its corner 1 x 1', club26.missing.length === 0 && club26.stripe === 3 && club26.corner === 1, JSON.stringify(club26));
+
+// Wall decorations hang low, in the middle or high (picked before hanging,
+// changed with the Edit tools' Turn), drawn bigger but inside the wall, and
+// the height is saved.
+const wallLevels = await page.evaluate(() => {
+  const s = window.__clubNova.scene.getScene('club');
+  const cash = s.cash;
+  s.cash = 1e6;
+  for (const sec of ['R1', 'R2']) s.removeWallDecor(sec);
+  s.addToInventory('neonHeart', 1); // from storage, so the level doesn't matter
+  s.selectedProp = 'neonHeart';
+  s.holdingFromInventory = true;
+  s.setHeldWallLevel('high');
+  const bar = document.getElementById('wallHeightBar');
+  const barShown = !bar.hidden && bar.querySelector('.on')?.dataset.level === 'high';
+  s.placeWallDecor('R1');
+  const top = (sec) => { const img = s.wallDecorImages[sec]; return img.y + s.opaqueBox(img.texture.key).top * img.scaleY; };
+  const high = top('R1');
+  s.editWallDecor('R1', 'rotate'); // high -> low
+  const low = top('R1');
+  const level = s.wallDecorLevelOf('R1');
+  const saved = s.serializeState();
+  s.selectedProp = null;
+  s.updateWallHeightBar();
+  const out = { barShown, high: Math.round(high), low: Math.round(low), level, barHidden: bar.hidden,
+    savedLevel: (saved.wallDecorLevel || {}).R1 };
+  s.removeWallDecor('R1');
+  s.cash = cash;
+  return out;
+});
+check('a wall decoration hangs at the height picked (Low / Middle / High bar), Turn moves it, and the height is saved',
+  wallLevels.barShown && wallLevels.high < wallLevels.low - 10 && wallLevels.level === 'low' && wallLevels.barHidden && wallLevels.savedLevel === 'low', JSON.stringify(wallLevels));
 check('the Wood Lounge takes 3 x 2 tiles', moreSeats.woodTiles === 6, String(moreSeats.woodTiles));
 // The nightclub batch of booths (October 2026): art, seats, VIP booths.
 const clubSeats = await page.evaluate(() => {

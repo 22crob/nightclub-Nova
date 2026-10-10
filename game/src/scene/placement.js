@@ -111,6 +111,7 @@ export class PlacementMixin {
   }
 
   handleRotateKey() {
+    if (this.wallDecorRotateKey()) return; // a wall decoration's height (wallDecor.js)
     if (this.hoverTile) {
       const tileKey = `${this.hoverTile.gx},${this.hoverTile.gy}`;
       const placed = this.placed[tileKey];

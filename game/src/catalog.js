@@ -50,6 +50,7 @@ import decor_wallSpeaker from './assets/sprites/decor_wallSpeaker.json';
 import decor_wallFairy from './assets/sprites/decor_wallFairy.json';
 import decor_wallVines from './assets/sprites/decor_wallVines.json';
 import decor_wallBottles from './assets/sprites/decor_wallBottles.json';
+import decor_wallBottlesLux from './assets/sprites/decor_wallBottlesLux.json';
 import dj_rack from './assets/sprites/dj_rack.json';
 import dj_glowFront from './assets/sprites/dj_glowFront.json';
 import dj_facet from './assets/sprites/dj_facet.json';
@@ -59,6 +60,7 @@ import dj_glass from './assets/sprites/dj_glass.json';
 import seat_facetBooth from './assets/sprites/seat_facetBooth.json';
 import seat_beanBags from './assets/sprites/seat_beanBags.json';
 import seat_stripeBooth from './assets/sprites/seat_stripeBooth.json';
+import seat_stripeCorner from './assets/sprites/seat_stripeCorner.json';
 import seat_blackStool from './assets/sprites/seat_blackStool.json';
 import seat_clubChair from './assets/sprites/seat_clubChair.json';
 import seat_tubChair from './assets/sprites/seat_tubChair.json';
@@ -236,6 +238,7 @@ const DECOR_SPRITES = {
   wallFairy: decor_wallFairy,
   wallVines: decor_wallVines,
   wallBottles: decor_wallBottles,
+  wallBottlesLux: decor_wallBottlesLux,
 };
 function decorTier(key, label, cost, unlockLevel, model, fanRate, extra = {}) {
   const meta = DECOR_SPRITES[model];
@@ -271,6 +274,7 @@ const SEAT_SPRITES = {
   facetBooth: seat_facetBooth,
   beanBags: seat_beanBags,
   stripeBooth: seat_stripeBooth,
+  stripeCorner: seat_stripeCorner,
   blackStool: seat_blackStool,
   clubChair: seat_clubChair,
   tubChair: seat_tubChair,
@@ -435,6 +439,7 @@ export const PROP_TYPES = {
   // The nightclub batch (October 2026, art/blender/seating_designs.py).
   beanBags: seatTier('beanBags', 'Bean Bags', 120, 7, 'beanBags', 0.25, BOOTH_FOOTPRINT),
   stripeBooth: seatTier('stripeBooth', 'Stripe Booth', 200, 16, 'stripeBooth', 0.4, BOOTH_FOOTPRINT), // straight sections that join up, like bars
+  stripeCorner: seatTier('stripeCorner', 'Stripe Booth Corner', 90, 16, 'stripeCorner', 0.2), // turns two sections into an L (half a square)
   bottleSectional: seatTier('bottleSectional', 'Bottle Service', 450, 30, 'bottleSectional', 0.6, BOOTH_3X3),
   onyxBooth: seatTier('onyxBooth', 'Onyx Horseshoe', 600, 39, 'onyxBooth', 0.75, BOOTH_3X3),
   ringBooth: seatTier('ringBooth', 'Neon Ring Booth', 750, 47, 'ringBooth', 0.85, BOOTH_3X3),
@@ -512,6 +517,7 @@ export const PROP_TYPES = {
   wallSpeaker: wallDecorTier('wallSpeaker', 'Wall Speaker', 200, 28, 'wallSpeaker', 0.6),
   fairyLights: wallDecorTier('fairyLights', 'Fairy Lights', 220, 33, 'wallFairy', 0.65),
   bottleShelf: wallDecorTier('bottleShelf', 'Floating Bottle Shelf', 800, 41, 'wallBottles', 1.12, 2), // the Bottle Cabinet, now on the wall
+  luxBottleShelf: wallDecorTier('luxBottleShelf', 'Black Lux Bottle Shelf', 1600, 50, 'wallBottlesLux', 1.5, 2), // black cabinet, lights shining down on the bottles
   wpPaint: wallTier('wpPaint', 'Paint', 8, 1, 'paint'),
   wpOldBrick: wallTier('wpOldBrick', 'Old Brick', 6, 2, 'oldBrick'),
   wpCinder: wallTier('wpCinder', 'Cinder Block', 9, 6, 'cinderBlock'),
@@ -567,6 +573,7 @@ const PROP_LIGHTS = {
   gemLounge: [0xff50b0, 1.3],
   beanBags: [0xb060ff, 0.9],
   stripeBooth: [0xff2a8a, 1.3],
+  stripeCorner: [0xff2a8a, 0.6],
   bottleSectional: [0xff2040, 1.3],
   onyxBooth: [0xffa030, 1.5],
   ringBooth: [0xff40c0, 1.8],
@@ -601,7 +608,7 @@ export const STAFF_TYPES = {
 // The VIP booths: the only seats you can show a guest to from their card
 // (see seatGuest() in scene/guests.js), like Nightclub City's booths.
 export const VIP_BOOTHS = new Set(['vipLounge', 'blackBooth', 'goldBooth',
-  'woodLounge', 'tulipLounge', 'galaxyPods', 'gemLounge', 'stripeBooth', 'bottleSectional', 'onyxBooth', 'ringBooth', 'crystalBooth']);
+  'woodLounge', 'tulipLounge', 'galaxyPods', 'gemLounge', 'stripeBooth', 'stripeCorner', 'bottleSectional', 'onyxBooth', 'ringBooth', 'crystalBooth']);
 
 // Expanding adds one row of floor along one of the room's two open edges at
 // a time (see expandClub()). How long a wall can get depends on your level:
