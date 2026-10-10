@@ -277,7 +277,7 @@ def sit_flip(view, p):
 # 2026: "different drawings jumping frame to frame"): <name>_<clip>_<view>.png
 # is a picture of the frames side by side, left to right, on white. They
 # replace the posed frames for that clip, at their own speed.
-DRAWN_FPS = {'walk': 4, 'idle': 2, 'dance': 4, 'sit': 1}
+DRAWN_FPS = {'walk': 8, 'idle': 2, 'dance': 4, 'sit': 1}
 
 
 def drawn_frames(name, clip, view, height):
