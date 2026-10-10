@@ -277,10 +277,10 @@ def sit_flip(view, p):
 # 2026: "different drawings jumping frame to frame"): <name>_<clip>_<view>.png
 # is a picture of the frames side by side, left to right, on white. They
 # replace the posed frames for that clip, at their own speed.
-DRAWN_FPS = {'walk': 8, 'idle': 2, 'dance': 4, 'sit': 1}
+DRAWN_FPS = {'walk': 4, 'idle': 2, 'dance': 5, 'sit': 1}
 
 
-def drawn_frames(name, clip, view, height):
+def drawn_frames(name, clip, view):
     """The whole drawn frames of a clip, or None: cut off the white, split
     into figures left to right, scaled together so the first stands
     `height` px tall (sheet px), each centred on its head with its soles on
@@ -293,7 +293,7 @@ def drawn_frames(name, clip, view, height):
         # Already cut out (ChatGPT can give a see-through background).
         rgba = np.array(src)
         rgba[:, :, 3] = np.where(rgba[:, :, 3] < 24, 0, rgba[:, :, 3])
-        return split_frames(rgba, height)
+        return split_frames(rgba)
     img = src.convert('RGB')
     a = np.array(img).astype(int)
     white = a.min(2) >= 240
@@ -311,37 +311,61 @@ def drawn_frames(name, clip, view, height):
     light = a.min(2)
     alpha[rim] = np.clip((255 - light[rim]) / 120 * 255, 0, 255)
     rgba = np.dstack([a.astype(np.uint8), alpha.astype(np.uint8)])
-    return split_frames(rgba, height)
+    return split_frames(rgba)
 
 
-def split_frames(rgba, height):
+def split_frames(rgba):
     """Splits a cut-out picture of frames side by side into frames on the
     sheet's canvas (see drawn_frames())."""
     fg = rgba[:, :, 3] > 20
     cols = np.where(fg.any(0))[0]
-    # Figures are separated by empty columns.
-    runs, start = [], cols[0]
-    for x0, x1 in zip(cols, cols[1:]):
-        if x1 - x0 > 8:
-            runs.append((start, x0 + 1))
-            start = x1
-    runs.append((start, cols[-1] + 1))
-    runs = [r for r in runs if r[1] - r[0] > 60]
+    # Figures may touch (ChatGPT packs them close, hair overlapping), so
+    # cut at the thinnest columns between them: local minima of how much
+    # of each column is drawn, at least about a figure's width apart.
+    rows = np.where(fg.any(1))[0]
+    height = rows[-1] - rows[0] + 1
+    dens = np.convolve(fg.sum(0).astype(float), np.ones(9) / 9, mode='same')
+    half = int(height * 0.22)
+    cuts = []
+    for x in range(cols[0] + half, cols[-1] - half):
+        win = dens[x - half:x + half + 1]
+        if dens[x] <= win.min() + 1e-6 and dens[x] < 0.3 * np.median(dens[cols]) and (not cuts or x - cuts[-1] > half):
+            cuts.append(x)
+    edges = [cols[0]] + cuts + [cols[-1] + 1]
+    runs = [(x0, x1) for x0, x1 in zip(edges, edges[1:]) if x1 - x0 > 60]
     figs = []
     for x0, x1 in runs:
         rows = np.where(fg[:, x0:x1].any(1))[0]
         figs.append(Image.fromarray(rgba[rows[0]:rows[-1] + 1, x0:x1], 'RGBA'))
-    scale = height * SS / figs[0].height
+    return figs
+
+
+def hair_width(fig):
+    """The widest row across the top fifth of a figure: the hair, which is
+    the same size in every pose, so drawings of different poses (a seated
+    one is shorter) can be scaled to match each other."""
+    a = np.array(fig)[:, :, 3] > 40
+    rows = np.where(a.any(1))[0]
+    band = a[rows[0]:rows[0] + max(1, int(fig.height * 0.2))]
+    return max((np.where(r)[0][-1] - np.where(r)[0][0] + 1) for r in band if r.any())
+
+
+def place_figs(figs, scale, top=None):
+    """Puts drawn figures on the sheet's canvas at `scale`, each centred on
+    its head; standing ones with their soles on the ground line, or (sitting,
+    `top` given) with the top of the hair at `top`: a seated guest's upper
+    body stays where it is standing, as the game's seats expect."""
     out = []
     for f in figs:
         f = scaled(f, scale)
         fa = np.array(f)[:, :, 3] > 40
-        top = np.where(fa.any(1))[0]
-        head = fa[top[0]:top[0] + int(f.height * 0.3)]
+        rows = np.where(fa.any(1))[0]
+        head = fa[rows[0]:rows[0] + int(f.height * 0.3)]
         hx = np.where(head.any(0))[0]
         cx = (hx[0] + hx[-1]) / 2
         c = Image.new('RGBA', (FW * SS, FH * SS))
-        c.alpha_composite(f, (int(round(FW * SS / 2 - cx)), int(round(FEET_Y * SS - f.height))))
+        y = top * SS if top is not None else FEET_Y * SS - f.height
+        c.alpha_composite(f, (int(round(FW * SS / 2 - cx)), int(round(y))))
         out.append(c)
     return out
 
@@ -357,8 +381,18 @@ def build(name, preview=None):
     top = np.where(a.any(1))[0].min() / SS
     standing = FEET_Y - top
     rows, counts, fps = [], {}, dict(FPS)
+    # Drawn clips are all scaled to the drawn walk: its first frame stands
+    # as tall as the posed guy, and every other drawing's hair matches its
+    # hair width (per view).
+    ref = {}
+    for v in ('front', 'back'):
+        walk = drawn_frames(name, 'walk', v)
+        ref[v] = hair_width(walk[0]) * standing * 0.97 * SS / walk[0].height if walk else None
     for clip, poses in POSES.items():
-        drawn = {v: drawn_frames(name, clip, v, standing * 0.97) for v in ('front', 'back')}
+        drawn = {}
+        for v in ('front', 'back'):
+            figs = drawn_frames(name, clip, v)
+            drawn[v] = figs and place_figs(figs, ref[v] / hair_width(figs[0]), (FEET_Y - standing) if clip == 'sit' else None)
         n = next((len(d) for d in drawn.values() if d), len(poses))
         counts[clip] = n
         if any(drawn.values()):
