@@ -336,6 +336,8 @@ def split_frames(rgba):
     figs = []
     for x0, x1 in runs:
         rows = np.where(fg[:, x0:x1].any(1))[0]
+        if len(rows) < 60:
+            continue  # an empty gap between figures (or a stray speck)
         figs.append(Image.fromarray(rgba[rows[0]:rows[-1] + 1, x0:x1], 'RGBA'))
     return figs
 
@@ -404,7 +406,11 @@ def build(name, preview=None):
         drawn = {}
         for v in ('front', 'back'):
             figs = drawn_frames(name, clip, v)
-            drawn[v] = figs and place_figs(figs, ref[v] / hair_width(figs[0]), (FEET_Y - standing) if clip == 'sit' else None)
+            # Standing still is sized by height, as tall as the walk: the
+            # hair is drawn fuller in some standing drawings, so matching its
+            # width made him shrink when he stopped.
+            scale = standing * 0.97 * SS / figs[0].height if figs and clip == 'idle' else figs and ref[v] / hair_width(figs[0])
+            drawn[v] = figs and place_figs(figs, scale, (FEET_Y - standing) if clip == 'sit' else None)
         if not rigs:
             # Nothing to pose: a view not drawn yet shows the other view's
             # drawings, and a clip not drawn at all shows him standing (the

@@ -2596,8 +2596,9 @@ const everyone = await page.evaluate(() => {
 });
 check('every character wears the hand-drawn guy for now (guests, staff, bouncers)', everyone.look !== undefined && everyone.guests && everyone.staff && everyone.guards, JSON.stringify(everyone));
 
-// A guest look not drawn dancing or sitting yet (the suit guy, so far only
-// walking and standing) never dances or sits; the drawn guy does both.
+// The suit guy is drawn in every clip now (October 2026), so he dances and
+// sits like the drawn guy. (A look with a clip not drawn lists it under
+// `missing` in its JSON and canDoClip() keeps it from that.)
 const partial = await page.evaluate(() => {
   const s = window.__clubNova.scene.getScene('club');
   const suit = s.cutoutLook('suit01');
@@ -2607,10 +2608,10 @@ const partial = await page.evaluate(() => {
   const w = s.activityWeights(fake(suit));
   const g = s.activityWeights(fake(guy));
   return { found: true, suitDance: s.canDoClip(fake(suit), 'dance'), suitSit: s.canDoClip(fake(suit), 'sit'), suitWalk: s.canDoClip(fake(suit), 'walk'),
-    weights: [w.dance, w.sit], guyWeights: [g.dance > 0 || !s.musicPlaying(), g.sit > 0], seat: s.claimSeat(fake(suit)) };
+    weights: [w.dance, w.sit], guyWeights: [g.dance > 0 || !s.musicPlaying(), g.sit > 0] };
 });
-check('the suit guy (only walking and standing drawn so far) never dances or sits; the drawn guy does', partial.found && !partial.suitDance && !partial.suitSit && partial.suitWalk
-  && partial.weights[0] === 0 && partial.weights[1] === 0 && partial.guyWeights[0] && partial.guyWeights[1] && partial.seat === false, JSON.stringify(partial));
+check('the suit guy, drawn in every clip now, dances and sits like the drawn guy', partial.found && partial.suitDance && partial.suitSit && partial.suitWalk
+  && partial.weights[1] > 0 && partial.guyWeights[0] && partial.guyWeights[1], JSON.stringify(partial));
 
 // The drink menu: drinks unlock with level and go on the menu; a click
 // takes one off or puts it back (never the last one); guests order from the
