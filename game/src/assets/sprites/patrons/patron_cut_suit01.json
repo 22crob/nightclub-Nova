@@ -32,7 +32,6 @@
     "sit"
   ],
   "borrowed": [
-    "idle_back",
-    "walk_back"
+    "idle_back"
   ]
 }
