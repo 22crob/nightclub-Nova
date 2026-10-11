@@ -388,7 +388,7 @@ const looks = await page.evaluate(() => {
 });
 check('patrons use chibi characters and play an animation', looks.length > 0 && looks.every((l) => /^patron_\d+$/.test(l.tex) && /^patron_\d+_(idle|walk|dance|drink|sit|sittalk)_(front|back)$/.test(l.anim)), JSON.stringify(looks[0]));
 const guestLooks = await page.evaluate(() => [...new Set(window.__clubNova.scene.getScene('club').patrons.filter((p) => !p.celeb).map((p) => p.container.patronCharacter))]);
-check('every ordinary guest is the ChatGPT-painted guy (guy01, a 3D sheet after the 12 drawn ones)', guestLooks.length === 1 && guestLooks[0] >= 12, JSON.stringify(guestLooks));
+check('every ordinary guest is one of the hand-drawn guest looks (guy01, suit01)', guestLooks.length >= 1 && guestLooks.length <= 2 && guestLooks.every((c) => c >= 12), JSON.stringify(guestLooks));
 
 // Facing: moving down-screen shows the front, up-screen the back, and the
 // sprite is mirrored for the right-hand diagonals.
@@ -2595,6 +2595,19 @@ const everyone = await page.evaluate(() => {
   return { look, guests: guests.every((c) => c === look), staff: staff.length > 0 && staff.every((c) => c === look), guards: guards.every((c) => c === undefined || c === look) };
 });
 check('every character wears the hand-drawn guy for now (guests, staff, bouncers)', everyone.look !== undefined && everyone.guests && everyone.staff && everyone.guards, JSON.stringify(everyone));
+
+// Someone in the line walks in as the same guy (the owner saw guests
+// switch looks at the door).
+const keepsLook = await page.evaluate(() => {
+  const s = window.__clubNova.scene.getScene('club');
+  const suit = s.cutoutLook('suit01');
+  const guest = s.drawPatronSprite(0, 0, 1, suit); // what trySpawnPatron() draws for them
+  const staff = s.drawPatronCharacterSprite(0, 0, 1, 0);
+  const out = { suit, got: guest.patronCharacter, staffLook: staff.patronCharacter === s.everyoneLook() };
+  guest.destroy(); staff.destroy();
+  return out;
+});
+check('a guest from the line keeps their look inside the club; staff still wear the main look', keepsLook.suit !== undefined && keepsLook.got === keepsLook.suit && keepsLook.staffLook, JSON.stringify(keepsLook));
 
 // The suit guy is drawn in every clip now (October 2026), so he dances and
 // sits like the drawn guy. (A look with a clip not drawn lists it under

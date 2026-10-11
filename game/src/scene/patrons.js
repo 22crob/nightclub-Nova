@@ -185,9 +185,11 @@ export class PatronsMixin {
     else if (MODEL_PATRONS.length && Math.random() < MODEL_PATRON_SHARE) pool = MODEL_PATRONS;
     // Everyone wears the hand-drawn looks for now: a guest (no character
     // asked for) one of the guest looks, anyone else (staff, celebrities)
-    // the main one.
+    // the main one. A guest look asked for is kept: someone in the line
+    // outside walks in as the same guy (they swapped looks at the door).
     const everyone = this.everyoneLook();
-    if (everyone !== undefined) character = character === undefined ? this.randomGuestLook() : everyone;
+    const guestLooks = GUEST_CUTOUTS.map((n) => CUTOUT_PATRONS[n]);
+    if (everyone !== undefined && !guestLooks.includes(character)) character = character === undefined ? this.randomGuestLook() : everyone;
     container.patronCharacter = character ?? Phaser.Utils.Array.GetRandom(pool.length ? pool : [0]);
     container.patronDir = 'front';
     const meta = patronMetaOf(container.patronCharacter);
