@@ -19,7 +19,7 @@ import { randRange } from '../util.js';
 // Where things sit on a guest (container units, feet at 0): measured on the
 // guest sheets. The eye line, the top of the head and the neck.
 const EYES = -53;
-const HEAD_TOP = -77;
+const HEAD_TOP = -69; // sunk into the hand-drawn guys' big hair (it was -77 for the old sheets, so hats perched on top)
 const NECK = -42;
 
 // The box costume textures are drawn in (container units: x from -x, y
