@@ -370,38 +370,61 @@ def place_figs(figs, scale, top=None):
     return out
 
 
+# Standing height (sheet px) of a character drawn only in whole frames, with
+# no parts sheet to pose: the same as guy01's posed rest pose, so every
+# character stands the same size.
+STANDING = 185.0
+
+
 def build(name, preview=None):
-    views = find_parts(os.path.join(HERE, f'{name}_parts.png'))
-    # The head (no hair) is this share of the frame height at SS.
-    unit = (FH * SS * 0.31) / views['front']['head'].height
-    rigs = {v: Rig(views[v], v, unit) for v in views}
-    # Standing height: soles to the top of the hair in the rest pose.
-    rest = draw_pose(rigs['front'], stand(), (FW * SS, FH * SS), (FW * SS / 2, FEET_Y * SS))
-    a = np.array(rest)[:, :, 3] > 40
-    top = np.where(a.any(1))[0].min() / SS
-    standing = FEET_Y - top
-    rows, counts, fps = [], {}, dict(FPS)
+    parts = os.path.join(HERE, f'{name}_parts.png')
+    rigs = None
+    if os.path.exists(parts):
+        views = find_parts(parts)
+        # The head (no hair) is this share of the frame height at SS.
+        unit = (FH * SS * 0.31) / views['front']['head'].height
+        rigs = {v: Rig(views[v], v, unit) for v in views}
+        # Standing height: soles to the top of the hair in the rest pose.
+        rest = draw_pose(rigs['front'], stand(), (FW * SS, FH * SS), (FW * SS / 2, FEET_Y * SS))
+        a = np.array(rest)[:, :, 3] > 40
+        standing = FEET_Y - np.where(a.any(1))[0].min() / SS
+    else:
+        standing = STANDING
+    rows, counts, fps, missing = [], {}, dict(FPS), []
     # Drawn clips are all scaled to the drawn walk: its first frame stands
     # as tall as the posed guy, and every other drawing's hair matches its
-    # hair width (per view).
+    # hair width (per view; a view with no walk drawn yet uses the other's).
     ref = {}
     for v in ('front', 'back'):
         walk = drawn_frames(name, 'walk', v)
         ref[v] = hair_width(walk[0]) * standing * 0.97 * SS / walk[0].height if walk else None
+    ref = {v: ref[v] or ref['front'] or ref['back'] for v in ref}
+    done = {}
     for clip, poses in POSES.items():
         drawn = {}
         for v in ('front', 'back'):
             figs = drawn_frames(name, clip, v)
             drawn[v] = figs and place_figs(figs, ref[v] / hair_width(figs[0]), (FEET_Y - standing) if clip == 'sit' else None)
+        if not rigs:
+            # Nothing to pose: a view not drawn yet shows the other view's
+            # drawings, and a clip not drawn at all shows him standing (the
+            # game keeps such a guest from doing it; `missing` in the JSON).
+            if not any(drawn.values()):
+                missing.append(clip)
+                drawn = {v: done[f'idle_{v}'] for v in ('front', 'back')}
+                fps[clip] = DRAWN_FPS['idle']
+            for v, o in (('front', 'back'), ('back', 'front')):
+                drawn[v] = drawn[v] or drawn[o]
         n = next((len(d) for d in drawn.values() if d), len(poses))
         counts[clip] = n
-        if any(drawn.values()):
+        if any(drawn.values()) and clip not in missing:
             fps[clip] = DRAWN_FPS[clip]
             # The view not drawn yet takes the same number of posed frames,
             # evenly spaced (a two-step walk takes the two steps).
             poses = [poses[i * len(poses) // n] for i in range(n)]
         for view in ('front', 'back'):
             if drawn[view]:
+                done[f'{clip}_{view}'] = drawn[view]
                 rows.append((f'{clip}_{view}', [f.resize((FW, FH), Image.LANCZOS) for f in drawn[view]]))
                 continue
             frames = []
@@ -428,7 +451,9 @@ def build(name, preview=None):
     meta = {'frameWidth': FW, 'frameHeight': FH, 'columns': COLUMNS, 'originX': 0.5,
             'originY': round(FEET_Y / FH, 5), 'standingHeight': round(standing, 1),
             'starts': starts, 'frames': counts, 'fps': fps}
-    if preview:
+    if missing:
+        meta['missing'] = missing
+    if preview and rigs:
         os.makedirs(preview, exist_ok=True)
         bg = Image.new('RGBA', sheet.size, (70, 60, 90, 255))
         bg.alpha_composite(sheet)

@@ -311,6 +311,11 @@ export const CUTOUT_LOOKS = ['guy01'];
 // owner's call, October 2026 ("replace all characters with him for now").
 // null brings back each one's own look.
 export const EVERYONE_LOOK = 'guy01';
+// While EVERYONE_LOOK is set, guests (and the line and street crowd) are a
+// random one of these hand-drawn looks; staff and celebrities wear
+// EVERYONE_LOOK. A look missing a move (its sheet's `missing`, e.g. not
+// drawn dancing yet) never does it (canDoClip() in patrons.js).
+export const GUEST_CUTOUTS = ['guy01', 'suit01'];
 export const CUTOUT_SHARE = 0;
 export const CUTOUT_SHARE_TEST = 0.6;
 export const CHARACTER_DISPLAY_HEIGHT = 87.4; // px: big next to the furniture, like Nightclub City

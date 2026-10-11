@@ -58,6 +58,7 @@ export class SeatingMixin {
   // Returns false if there's nowhere to sit.
   // `types`, if given, limits it to those seating types.
   claimSeat(patron, types) {
+    if (!this.canDoClip(patron, 'sit')) return false; // a look not drawn sitting yet
     let free = this.freeSeats(types);
     if (free.length === 0) return false;
     // High rollers and VIP guests take a VIP booth if one's free; everyone

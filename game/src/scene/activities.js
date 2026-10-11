@@ -48,6 +48,9 @@ export class ActivitiesMixin {
     w.dance *= this.boostDanceFactor ? this.boostDanceFactor() : 1;
     w.drink *= this.rushDrinkFactor ? this.rushDrinkFactor() : 1;
     if (!this.musicPlaying()) w.dance = 0;
+    // A look not drawn dancing or sitting yet doesn't (canDoClip()).
+    if (!this.canDoClip(patron, 'dance')) w.dance = 0;
+    if (!this.canDoClip(patron, 'sit')) w.sit = 0;
     return w;
   }
 
@@ -105,6 +108,7 @@ export class ActivitiesMixin {
 
   beginActivityAt(patron, kind) {
     const now = this.time.now;
+    if ((kind === 'dance' || kind === 'sit') && !this.canDoClip(patron, kind)) return false;
     if (kind === 'drink') {
       if (!this.joinBarQueue(patron)) return false;
       patron.activity = { kind, phase: 'queue' };

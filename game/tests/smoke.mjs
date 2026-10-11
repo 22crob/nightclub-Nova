@@ -67,6 +67,9 @@ const waitForScene = async () => {
     s.showTutorialStep();
     // So would the one-time tips (checked on their own below).
     s.tickHints = () => {};
+    // Guests are the fully drawn look, so every check can make them dance
+    // and sit (a look missing a move is checked on its own below).
+    s.guestLooks = ['guy01'];
   });
 };
 
@@ -2557,6 +2560,22 @@ const everyone = await page.evaluate(() => {
   return { look, guests: guests.every((c) => c === look), staff: staff.length > 0 && staff.every((c) => c === look), guards: guards.every((c) => c === undefined || c === look) };
 });
 check('every character wears the hand-drawn guy for now (guests, staff, bouncers)', everyone.look !== undefined && everyone.guests && everyone.staff && everyone.guards, JSON.stringify(everyone));
+
+// A guest look not drawn dancing or sitting yet (the suit guy, so far only
+// walking and standing) never dances or sits; the drawn guy does both.
+const partial = await page.evaluate(() => {
+  const s = window.__clubNova.scene.getScene('club');
+  const suit = s.cutoutLook('suit01');
+  const guy = s.cutoutLook('guy01');
+  if (suit === undefined) return { found: false };
+  const fake = (c) => ({ container: { patronCharacter: c }, type: { weights: { drink: 1, dance: 1, sit: 1, chat: 1, wander: 1, admire: 0 } } });
+  const w = s.activityWeights(fake(suit));
+  const g = s.activityWeights(fake(guy));
+  return { found: true, suitDance: s.canDoClip(fake(suit), 'dance'), suitSit: s.canDoClip(fake(suit), 'sit'), suitWalk: s.canDoClip(fake(suit), 'walk'),
+    weights: [w.dance, w.sit], guyWeights: [g.dance > 0 || !s.musicPlaying(), g.sit > 0], seat: s.claimSeat(fake(suit)) };
+});
+check('the suit guy (only walking and standing drawn so far) never dances or sits; the drawn guy does', partial.found && !partial.suitDance && !partial.suitSit && partial.suitWalk
+  && partial.weights[0] === 0 && partial.weights[1] === 0 && partial.guyWeights[0] && partial.guyWeights[1] && partial.seat === false, JSON.stringify(partial));
 
 // The drink menu: drinks unlock with level and go on the menu; a click
 // takes one off or puts it back (never the last one); guests order from the
