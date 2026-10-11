@@ -107,9 +107,13 @@ def build_couch():
 
 
 def build_leather_couch():
-    leather = principled('Leather', srgb('#1e1b22'), rough=0.3)
-    cushion = principled('LeatherCushion', srgb('#2a2630'), rough=0.28)
-    return couch(leather, cushion, plain('#c9ccd6', rough=0.2), buttons=plain('#0e0c10', rough=0.4))
+    # Matches the Club Chair (seating_designs.py club_chair(); the owner
+    # wanted the two to look the same): its black leather and its bright
+    # chrome tufting dots, not dark buttons that vanish into the leather.
+    leather = principled('Leather', srgb('#1a181e'), rough=0.3)
+    cushion = principled('LeatherCushion', srgb('#24222a'), rough=0.3)
+    chrome = plain('#cfd4dc', rough=0.15)
+    return couch(leather, cushion, chrome, buttons=chrome)
 
 
 # --------------------------------------------------------------------------

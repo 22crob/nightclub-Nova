@@ -5,9 +5,9 @@
 # Run: python3 game/tools/balance_sim.py [name=value ...] to try other numbers.
 import math, sys
 # --- tunables under test ---
-P = dict(danceTipMin=5.25, bonusMin=117, capMax=80, stockPerGuest=0, happy=3, content=1, unhappy=-1, storm=-5, capBase=8, capRoot=1.2, tilesPerGuest=4,
+P = dict(danceTipMin=5.25, bonusMin=117, capMax=32, stockPerGuest=0, happy=3, content=1, unhappy=-1, storm=-5, capBase=8, capRoot=1.2, tilesPerGuest=4,
          stockBase=40, stockPerUnit=20, costPerDrink=2,
-         lvFirst=200, lvStep=180, lvCurve=6, passiveShare=0.05, hours=150, top=61)
+         lvFirst=185, lvStep=162, lvCurve=5.4, passiveShare=0.05, hours=150, top=61)
 for a in sys.argv[1:]:
     k,v=a.split('='); P[k]=float(v)
 def need(l): k=l-1; return P['lvFirst']+P['lvStep']*k+P['lvCurve']*k*k

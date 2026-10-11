@@ -236,6 +236,7 @@ export class WorldMixin {
     const onGrid = this.inGrid(gx, gy);
     const next = onGrid ? { gx, gy } : null;
     const wall = this.wallSectionAt(localX, localY);
+    this.hoverWallY = localY; // which of the wall decorations stacked on a section (wallDecor.js)
     if (wall !== this.hoverWall) {
       this.hoverWall = wall;
       this.updateWallGhost();

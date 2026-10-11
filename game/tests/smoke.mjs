@@ -211,10 +211,10 @@ check('double-clicking the side adds just one row on that side', bought.grid[0] 
 await page.click('#navBuild');
 await page.evaluate(() => window.__clubNova.scene.getScene('club').selectProp('woodBar'));
 
-// Place a Wood Bar ($130).
+// Place a Wood Bar ($330: its $130 value times the level-1 price factor).
 await clickTile(2, 5);
 st = await state();
-check('placing a Wood Bar costs $130', st.cash === 570 && st.placed === 2, `cash ${st.cash}`);
+check('placing a Wood Bar costs $330', st.cash === 370 && st.placed === 2, `cash ${st.cash}`);
 
 // The bar sprite spans exactly its 1x3 footprint: 4 half-tiles across,
 // plus the render script's small crop margin.
@@ -248,7 +248,7 @@ const tiers = await page.evaluate(() => {
     layered: !!rec.frontObject && rec.frontObject.depth > rec.gameObject.depth,
     bars: ['woodBar', 'bar', 'neonBar', 'iceBar', 'speakeasyBar', 'discoBar', 'marbleBar', 'cyberBar',
       'chromeBar', 'velvetBar', 'ultravioletBar', 'pinkNeonBar', 'champagneBar'].filter((k) => s.hasLayerSprites(k)).length,
-    booths: ['woodBooth', 'proBooth', 'brickBooth', 'dj', 'neonBooth', 'trussBooth', 'screenBooth',
+    booths: ['woodBooth', 'proBooth', 'brickBooth', 'dj', 'neonBooth', 'screenBooth',
       'iceBooth', 'decoBooth', 'holoBooth', 'glowPanelBooth', 'curveBooth', 'facetBooth', 'rackBooth', 'capsuleBooth', 'glassBooth'].filter((k) => s.hasAnySprite(k)).length,
     // The owner's sketched decorations and Booth 7 (October 2026), with
     // their wide footprints.
@@ -260,7 +260,7 @@ const tiers = await page.evaluate(() => {
 });
 check('all thirteen bars load (the nightclub batch too), each in two layers', tiers.bars === 13, `${tiers.bars} of 13`);
 check('a bar facing the camera draws its counter in front', tiers.layered);
-check('all sixteen DJ booth tiers load', tiers.booths === 16, `${tiers.booths} of 16`);
+check('all fifteen DJ booth tiers load', tiers.booths === 15, `${tiers.booths} of 15`);
 check('the owner\'s sketched decorations and Gem Lounge load, wide ones on their wide footprints', tiers.sketched === 14 && tiers.wide, JSON.stringify(tiers));
 
 // A live aquarium: fish and bubbles drawn over the Cabinet Aquarium,
@@ -345,7 +345,7 @@ check('the Truss Spotlights stand over a DJ set: only their two legs take floor'
 // Placing on an occupied tile is refused.
 await clickTile(2, 5);
 st = await state();
-check('occupied tile is refused', st.cash === 570 && st.placed === 2, JSON.stringify({ cash: st.cash, placed: st.placed }));
+check('occupied tile is refused', st.cash === 370 && st.placed === 2, JSON.stringify({ cash: st.cash, placed: st.placed }));
 
 // Rotate the DJ booth (hover + R).
 const moved = await page.evaluate(() => { const b = window.__clubNova.scene.getScene('club').clubBooth(); return b && b.anchor.join(','); });
@@ -371,7 +371,7 @@ const staffed = await page.evaluate(() => {
   const s = window.__clubNova.scene.getScene('club');
   return { cash: s.cash, music: s.musicPlaying(), bartenders: s.hireableRecords().filter((r) => r.staff).length };
 });
-check('hiring a bartender costs $50', staffed.cash === 520 && staffed.bartenders === 1 && staffed.music, JSON.stringify(staffed));
+check('hiring a bartender costs $50', staffed.cash === 320 && staffed.bartenders === 1 && staffed.music, JSON.stringify(staffed));
 await page.evaluate(() => { const s = window.__clubNova.scene.getScene('club'); delete s.collectPatronTip; delete s.chargeCover; });
 
 // Patrons arrive, get thirsty, buy drinks, earn fans and tip.
@@ -453,7 +453,7 @@ const cashBeforeSell = (await state()).cash;
 await page.keyboard.press('Escape');
 await clickTile(2, 5, 'right');
 st = await state();
-check('right-click sells the bar for half price ($50)', st.placed === 1 && st.cash - cashBeforeSell >= 50 && st.cash - cashBeforeSell < 75, `+$${st.cash - cashBeforeSell}`);
+check('right-click sells the bar for half price ($165)', st.placed === 1 && st.cash - cashBeforeSell >= 165 && st.cash - cashBeforeSell < 190, `+$${st.cash - cashBeforeSell}`);
 await page.evaluate(() => { delete window.__clubNova.scene.getScene('club').payWages; });
 
 // Save survives a reload. The game also saves as the page unloads, so
@@ -481,7 +481,7 @@ const upgrade = await page.evaluate(() => {
   const first = s.clubBooth();
   s.sellProp(first.anchor[0], first.anchor[1]);
   const kept = s.clubBooths().length === 1 && s.cash === c0;
-  s.cash = 1000;
+  s.cash = 5000;
   s.selectProp('proBooth');
   let spot = null;
   for (let gy = 2; gy < s.gridH - 1 && !spot; gy++) for (let gx = 1; gx < s.gridW - 2 && !spot; gx++) {
@@ -491,7 +491,7 @@ const upgrade = await page.evaluate(() => {
   s.placeProp(spot[0], spot[1]);
   s.deselectProp();
   const pro = s.placed[`${spot[0]},${spot[1]}`];
-  const result = { kept, placed: pro?.type, dj: !!pro?.staff, paid: 1000 - s.cash, booths: s.clubBooths().length, main: s.clubBooth()?.type };
+  const result = { kept, placed: pro?.type, dj: !!pro?.staff, paid: 5000 - s.cash, booths: s.clubBooths().length, main: s.clubBooth()?.type };
   // One booth at a time: the old one went into the inventory.
   result.stored = s.inventoryCount(first.type) >= 1 && !s.clubBooths().some((r) => r.type === first.type);
   s.addToInventory(first.type, -1);
@@ -507,6 +507,13 @@ const upgrade = await page.evaluate(() => {
   s.fans = fans;
   return result;
 });
+// Prices grow with the level an item unlocks at (the owner found
+// everything too cheap): the shop charges `price`, not the base `cost`.
+const pricing = await page.evaluate(() => {
+  const s = window.__clubNova.scene.getScene('club');
+  return { wood: s.currentCost('woodBar'), pro: s.currentCost('proBooth'), neon: s.currentCost('neonBooth'), glass: s.currentCost('glassBooth'), truss: 'trussBooth' in (window.__clubNova.catalog?.PROP_TYPES || {}) };
+});
+check('prices grow with an item\'s unlock level', pricing.wood === 330 && pricing.pro === 1200 && pricing.neon > 5000 && pricing.glass > 100000, JSON.stringify(pricing));
 // Editing the club hides the guests (they pop back when the panel closes),
 // and bars are limited by level: three pieces per bartender allowed.
 const editHide = await page.evaluate(() => {
@@ -543,7 +550,7 @@ const editHide = await page.evaluate(() => {
 });
 check('guests vanish while the club is being edited and pop back after; bars are capped by level (3 pieces at level 1)', editHide.guest && editHide.hidden && editHide.back && editHide.allowance === 3 && editHide.capped, JSON.stringify(editHide));
 check('the club\'s last DJ booth can\'t be sold', upgrade.kept && upgrade.lastKept, JSON.stringify(upgrade));
-check('DJ booths are bought and placed like other items, each with its own DJ; placing one stores the old one (one at a time)', upgrade.placed === 'proBooth' && upgrade.dj && upgrade.paid === 215 && upgrade.booths === 1 && upgrade.main === 'proBooth' && upgrade.stored && upgrade.restored, JSON.stringify(upgrade));
+check('DJ booths are bought and placed like other items, each with its own DJ; placing one stores the old one (one at a time)', upgrade.placed === 'proBooth' && upgrade.dj && upgrade.paid === 1200 && upgrade.booths === 1 && upgrade.main === 'proBooth' && upgrade.stored && upgrade.restored, JSON.stringify(upgrade));
 
 // Bass Boost and Drink Rush: each runs for a while, then needs to recharge.
 // Starting one sends a share of the crowd off (one by one) to dance or to
@@ -1151,7 +1158,7 @@ const wall = await page.evaluate(() => {
   delete s.paintWall;
   return { costs: s.paintCosts, painted: s.wallpaper.R3, saved: saved.wallpaper && saved.wallpaper.R3, visible: !!img && img.texture.key !== '__MISSING', ledFrames: frames.size };
 });
-check('clicking a wall paints it with wallpaper ($8)', wall.painted === 'wpPaint' && wall.costs.join() === '8' && wall.visible, `${wallXY.hit} -> ${wall.painted}, paid ${wall.costs.join()}`);
+check('clicking a wall paints it with wallpaper ($10)', wall.painted === 'wpPaint' && wall.costs.join() === '10' && wall.visible, `${wallXY.hit} -> ${wall.painted}, paid ${wall.costs.join()}`);
 check('wallpaper is saved', wall.saved === 'wpPaint');
 check('animated wallpaper moves while the DJ plays', wall.ledFrames > 3, `${wall.ledFrames} frames`);
 
@@ -1301,7 +1308,7 @@ const paint = await page.evaluate(() => {
   s.deselectProp();
   return r;
 });
-check('dragging paints a stroke of floor ($3 a tile)', paint.a === 'fpConcrete' && paint.b === 'fpConcrete' && paint.costs.length >= 2 && paint.costs.every((c) => c === 3), JSON.stringify(paint));
+check('dragging paints a stroke of floor ($5 a tile)', paint.a === 'fpConcrete' && paint.b === 'fpConcrete' && paint.costs.length >= 2 && paint.costs.every((c) => c === 5), JSON.stringify(paint));
 // Dance floors are laid the same way: hold and drag lays a stroke of tiles.
 await page.evaluate(() => { const s = window.__clubNova.scene.getScene('club'); s.cash += 500; s.selectProp('basicFloor'); });
 {
@@ -1393,7 +1400,7 @@ const wallLevels = await page.evaluate(() => {
   const bar = document.getElementById('wallHeightBar');
   const barShown = !bar.hidden && bar.querySelector('.on')?.dataset.level === 'high';
   s.placeWallDecor('R1');
-  const top = (sec) => { const img = s.wallDecorImages[sec]; return img.y + s.opaqueBox(img.texture.key).top * img.scaleY; };
+  const top = (sec) => { const img = s.wallDecorImages[s.wallDecorAnchor(sec)]; return img.y + s.opaqueBox(img.texture.key).top * img.scaleY; };
   const high = top('R1');
   s.editWallDecor('R1', 'rotate'); // high -> low
   const low = top('R1');
@@ -1402,13 +1409,41 @@ const wallLevels = await page.evaluate(() => {
   s.selectedProp = null;
   s.updateWallHeightBar();
   const out = { barShown, high: Math.round(high), low: Math.round(low), level, barHidden: bar.hidden,
-    savedLevel: (saved.wallDecorLevel || {}).R1 };
+    savedLevel: saved.wallDecor['R1:low'] === 'neonHeart' ? 'low' : null };
+  // Pieces stack on one section at different heights if they don't
+  // overlap (the owner's ask): fairy lights in the middle and above, but a
+  // full-height LED pole can't share.
+  s.removeWallDecor('R1');
+  s.addToInventory('fairyLights', 2);
+  s.selectedProp = 'fairyLights';
+  s.holdingFromInventory = true;
+  s.setHeldWallLevel('mid');
+  out.stackMid = s.placeWallDecor('R1');
+  s.setHeldWallLevel('high');
+  out.stackHigh = s.placeWallDecor('R1');
+  s.addToInventory('ledPoleCyan', 1);
+  s.selectedProp = 'ledPoleCyan';
+  s.holdingFromInventory = true;
+  s.setHeldWallLevel('low');
+  out.poleRefused = s.placeWallDecor('R1') === false;
+  s.selectedProp = null;
+  s.updateWallHeightBar();
+  // The pointer picks which of the stacked ones an Edit tool takes.
+  const hi = s.wallDecorSpot('R1', 'fairyLights', 'high');
+  out.pickHigh = s.wallDecorAnchor('R1', hi.y + hi.h / 2) === 'R1:high';
+  out.bothSaved = s.serializeState().wallDecor['R1:high'] === 'fairyLights' && s.serializeState().wallDecor['R1:mid'] === 'fairyLights';
+  s.removeWallDecor('R1:high'); s.removeWallDecor('R1:mid');
+  // An older save keyed by section, its height apart, still loads.
+  s.restoreWallDecor({ R1: 'neonHeart' }, { R1: 'high' });
+  out.oldSave = s.wallDecor['R1:high'] === 'neonHeart';
   s.removeWallDecor('R1');
   s.cash = cash;
   return out;
 });
 check('a wall decoration hangs at the height picked (Low / Middle / High bar), Turn moves it, and the height is saved',
   wallLevels.barShown && wallLevels.high < wallLevels.low - 10 && wallLevels.level === 'low' && wallLevels.barHidden && wallLevels.savedLevel === 'low', JSON.stringify(wallLevels));
+check('wall decorations stack on one section at heights where they don\'t overlap, the pointer picks which, and old saves load',
+  wallLevels.stackMid && wallLevels.stackHigh && wallLevels.poleRefused && wallLevels.pickHigh && wallLevels.bothSaved && wallLevels.oldSave, JSON.stringify(wallLevels));
 check('the Wood Lounge takes 3 x 2 tiles', moreSeats.woodTiles === 6, String(moreSeats.woodTiles));
 // The nightclub batch of booths (October 2026): art, seats, VIP booths.
 const clubSeats = await page.evaluate(() => {
@@ -2023,11 +2058,11 @@ const levels = await page.evaluate(() => {
   const s = window.__clubNova.scene.getScene('club');
   const fans = s.fans;
   const at = (n) => { s.fans = n; return s.levelInfo().level; };
-  const out = { at: [at(0), at(199), at(200), at(s.fansForLevel(3) - 1), at(s.fansForLevel(3)), at(s.fansForLevel(5))].join(), steps: [1, 2, 3, 4, 5].map((l) => s.fansToNextLevel(l)) };
+  const out = { at: [at(0), at(184), at(185), at(s.fansForLevel(3) - 1), at(s.fansForLevel(3)), at(s.fansForLevel(5))].join(), steps: [1, 2, 3, 4, 5].map((l) => s.fansToNextLevel(l)) };
   s.fans = fans;
   return out;
 });
-check('levels need more XP each time (200 for level 2)', levels.at === '1,1,2,2,3,5' && levels.steps.every((v, i, a) => i === 0 || v > a[i - 1] + (a[i - 1] - (a[i - 2] || 0)) * 0), JSON.stringify(levels));
+check('levels need more XP each time (185 for level 2)', levels.at === '1,1,2,2,3,5' && levels.steps.every((v, i, a) => i === 0 || v > a[i - 1] + (a[i - 1] - (a[i - 2] || 0)) * 0), JSON.stringify(levels));
 
 // One endless night: no night clock or summary, the doors and the music
 // never stop, wages keep being paid, and every minute the club gets stars
@@ -3098,16 +3133,16 @@ const wallDecor = await page.evaluate(() => {
   s.selectProp('neonHeart');
   out.twice = s.placeWallDecor('L2') === false;
   s.deselectProp();
-  out.drawn = !!s.wallDecorImages?.L2 && s.wallDecorImages.L2.texture.key === 'decor_wallLedCyan_90'; // the 3D piece, facing the room from the left wall
+  out.drawn = !!s.wallDecorImages?.['L2:mid'] && s.wallDecorImages['L2:mid'].texture.key === 'decor_wallLedCyan_90'; // the 3D piece, facing the room from the left wall
   s.selectProp('bottleShelf');
-  out.wide = s.placeWallDecor('R4') && s.wallDecorAnchor('R5') === 'R4' && s.placeWallDecor('R5') === false;
+  out.wide = s.placeWallDecor('R4') && s.wallDecorAnchor('R5') === 'R4:mid' && s.placeWallDecor('R5') === false;
   s.editWallDecor('R5', 'sell');
   s.deselectProp();
-  out.saved = s.serializeState().wallDecor.L2 === 'ledPoleCyan';
+  out.saved = s.serializeState().wallDecor['L2:mid'] === 'ledPoleCyan';
   s.setShopCategory('Decorations');
-  out.inShop = [...document.querySelectorAll('#shopItems .propSlot')].some((e) => e.dataset.tipName === 'Cyan LED Pole');
+  out.inShop = [...document.querySelectorAll('#shopItems .propSlot')].some((e) => e.dataset.tipName === 'Blue LED Pole');
   const c0 = s.cash;
-  out.sold = s.editWallDecor('L2', 'sell') && !s.wallDecor.L2 && s.cash > c0;
+  out.sold = s.editWallDecor('L2', 'sell') && !s.wallDecor['L2:mid'] && s.cash > c0;
   s.fans = fans; s.cash = cash;
   return out;
 });

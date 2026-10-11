@@ -120,7 +120,7 @@ export class InventoryMixin {
     this.removeFloorPaint(gx, gy);
     const xp = def.cost * XP.perDollar;
     if (tool === 'sell') {
-      this.cash += Math.round(def.cost * SELL_REFUND_RATIO);
+      this.cash += Math.round(def.price * SELL_REFUND_RATIO);
       const { sx, sy } = this.gridToScreen(gx, gy);
       this.revokePurchaseXp(xp, sx, sy - 20);
       SFX.sell();

@@ -18,7 +18,6 @@ import boothClubSprite from './assets/sprites/dj_club.json';
 import boothNeonSprite from './assets/sprites/dj_neon.json';
 import boothIceSprite from './assets/sprites/dj_ice.json';
 import boothBrickSprite from './assets/sprites/dj_brick.json';
-import boothTrussSprite from './assets/sprites/dj_truss.json';
 import boothScreenSprite from './assets/sprites/dj_screen.json';
 import boothDecoSprite from './assets/sprites/dj_deco.json';
 import boothHoloSprite from './assets/sprites/dj_holo.json';
@@ -45,6 +44,8 @@ import decor_wallFern from './assets/sprites/decor_wallFern.json';
 import decor_wallPendants from './assets/sprites/decor_wallPendants.json';
 import decor_wallLedCyan from './assets/sprites/decor_wallLedCyan.json';
 import decor_wallLedPink from './assets/sprites/decor_wallLedPink.json';
+import decor_wallLedRed from './assets/sprites/decor_wallLedRed.json';
+import decor_wallLedPurple from './assets/sprites/decor_wallLedPurple.json';
 import decor_wallHeart from './assets/sprites/decor_wallHeart.json';
 import decor_wallSpeaker from './assets/sprites/decor_wallSpeaker.json';
 import decor_wallFairy from './assets/sprites/decor_wallFairy.json';
@@ -233,6 +234,8 @@ const DECOR_SPRITES = {
   wallPendants: decor_wallPendants,
   wallLedCyan: decor_wallLedCyan,
   wallLedPink: decor_wallLedPink,
+  wallLedRed: decor_wallLedRed,
+  wallLedPurple: decor_wallLedPurple,
   wallHeart: decor_wallHeart,
   wallSpeaker: decor_wallSpeaker,
   wallFairy: decor_wallFairy,
@@ -368,7 +371,6 @@ export const PROP_TYPES = {
   brickBooth: boothTier('brickBooth', 'Brick Booth', 230, 7, 'dj_brick', boothBrickSprite),
   dj: boothTier('dj', 'Club Booth', 250, 10, 'dj_club', boothClubSprite),
   neonBooth: boothTier('neonBooth', 'Neon Booth', 380, 15, 'dj_neon', boothNeonSprite),
-  trussBooth: boothTier('trussBooth', 'Truss Booth', 440, 19, 'dj_truss', boothTrussSprite),
   screenBooth: boothTier('screenBooth', 'LED Screen Booth', 500, 24, 'dj_screen', boothScreenSprite),
   iceBooth: boothTier('iceBooth', 'Ice Booth', 550, 27, 'dj_ice', boothIceSprite),
   decoBooth: boothTier('decoBooth', 'Art Deco Booth', 650, 31, 'dj_deco', boothDecoSprite),
@@ -510,12 +512,14 @@ export const PROP_TYPES = {
   // flat ones).
   hangingFern: wallDecorTier('hangingFern', 'Hanging Fern', 60, 4, 'wallFern', 0.25),
   pendantLights: wallDecorTier('pendantLights', 'Pendant Lights', 90, 8, 'wallPendants', 0.3),
-  ledPoleCyan: wallDecorTier('ledPoleCyan', 'Cyan LED Pole', 120, 13, 'wallLedCyan', 0.4),
+  ledPoleCyan: wallDecorTier('ledPoleCyan', 'Blue LED Pole', 120, 13, 'wallLedCyan', 0.4),
   neonHeart: wallDecorTier('neonHeart', 'Neon Heart', 150, 19, 'wallHeart', 0.5),
   vineWall: wallDecorTier('vineWall', 'Vine Wall', 200, 22, 'wallVines', 0.55),
   ledPolePink: wallDecorTier('ledPolePink', 'Pink LED Pole', 180, 24, 'wallLedPink', 0.55),
+  ledPoleRed: wallDecorTier('ledPoleRed', 'Red LED Pole', 160, 17, 'wallLedRed', 0.5), // the owner asked for more colours (October 2026)
+  ledPolePurple: wallDecorTier('ledPolePurple', 'Purple LED Pole', 200, 30, 'wallLedPurple', 0.6),
   wallSpeaker: wallDecorTier('wallSpeaker', 'Wall Speaker', 200, 28, 'wallSpeaker', 0.6),
-  fairyLights: wallDecorTier('fairyLights', 'Fairy Lights', 220, 33, 'wallFairy', 0.65),
+  fairyLights: { ...wallDecorTier('fairyLights', 'Fairy Lights', 220, 33, 'wallFairy', 0.65), wallScale: 1.2 }, // a touch smaller so rows stack low, middle and high
   bottleShelf: wallDecorTier('bottleShelf', 'Floating Bottle Shelf', 800, 41, 'wallBottles', 1.12, 2), // the Bottle Cabinet, now on the wall
   luxBottleShelf: wallDecorTier('luxBottleShelf', 'Black Lux Bottle Shelf', 1600, 50, 'wallBottlesLux', 1.5, 2), // black cabinet, lights shining down on the bottles
   wpPaint: wallTier('wpPaint', 'Paint', 8, 1, 'paint'),
@@ -542,6 +546,22 @@ export const PROP_TYPES = {
   wpHolo: wallTier('wpHolo', 'Holo Wall', 110, 60, 'holo'),
 };
 
+// What things sell for in the shop (`price`, from currentCost()): `cost` is
+// the item's base value (luxury, seat comfort, admiring tips and first-buy
+// XP still go by it), and the price is that times a factor growing with the
+// level it unlocks at, so a level's new things take real saving (the owner
+// found everything far too cheap: a level 19 club had money for anything).
+// Floors, dance floors and wallpaper go by the tile, so they grow slower.
+export const PRICING = { perLevel: 1.5, perLevelTiles: 0.3 };
+function itemPrice(def) {
+  const level = def.unlockLevel || 1;
+  const tiles = def.paintStyle || def.floorStyle || def.wallStyle;
+  const raw = def.cost * (1 + level * (tiles ? PRICING.perLevelTiles : PRICING.perLevel));
+  const step = raw < 100 ? 5 : raw < 1000 ? 10 : raw < 10000 ? 50 : 100;
+  return Math.max(step, Math.round(raw / step) * step);
+}
+for (const def of Object.values(PROP_TYPES)) def.price = itemPrice(def);
+
 // Mood lighting (see lighting.js): props that give off light cast a soft
 // glow on the floor around them: [colour, radius in tiles].
 const PROP_LIGHTS = {
@@ -552,7 +572,7 @@ const PROP_LIGHTS = {
   speakerTower: [0x30e0ff, 0.9], neonSpeaker: [0xc040ff, 1.3], discoBall: [0xc8c8ff, 1.2], spotlight: [0xfff0c0, 1.6],
   trophy: [0xffc040, 0.9], table: [0xffa040, 1.0], vipLounge: [0xffa040, 1.3], blackBooth: [0xffa040, 1.3],
   goldBooth: [0xffc060, 1.8],
-  trussBooth: [0xfff0c0, 1.5], screenBooth: [0x80c0ff, 1.8], decoBooth: [0xffc060, 1.3],
+  screenBooth: [0x80c0ff, 1.8], decoBooth: [0xffc060, 1.3],
   holoBooth: [0xff80ff, 2.0],
   trussLights: [0xff80c0, 1.8],
   bubbleColumn: [0x6a7cff, 1.4],
@@ -625,8 +645,8 @@ export const EXPANSION = {
     { level: 12, size: 14 }, { level: 16, size: 15 }, { level: 20, size: 16 }, { level: 25, size: 17 },
     { level: 30, size: 18 }, { level: 35, size: 19 }, { level: 40, size: 20 },
   ],
-  perTile: 10,
-  perTileGrowth: 6,
+  perTile: 60,
+  perTileGrowth: 50,
 };
 
 // A 1-5 "Fame" rating shown in the shop instead of raw fan-rate/capacity
@@ -649,4 +669,5 @@ export const FLOOR_DECAL_PROPS = new Set(Object.keys(PROP_TYPES).filter((k) => P
 // The October 2026 item review cut 33 that didn't fit the nightclub vibe
 // (bars, booths, seating, a wallpaper and decorations): refunded in full.
 // The Bottle Cabinet became the Bottle Shelf on the wall (the owner asked).
-export const REMOVED_ITEMS = { bottleCabinet: 800, throneBooth: 1500, barrel: 70, bathtubSofa: 300, beerBench: 120, birdcageBooth: 850, breweryBar: 420, candyBar: 620, catStatue: 480, cloudBed: 1000, crateBooth: 195, crates: 40, cruiserSofa: 220, decoSofa: 260, dinerBar: 340, discoStage: 1200, donutLounge: 750, fireSectional: 480, gardenBar: 380, gardenGazebo: 600, gargoyle: 400, glowLounge: 520, iglooBooth: 700, kissSofa: 350, palm: 110, rattanSeat: 450, rockStar: 1400, shellBooth: 900, starterBar: 100, streetLamp: 120, surfBar: 300, theatreBooth: 300, tikiBar: 220, tikiHut: 380, wpTheatre: 34 };
+// The Truss Booth was cut too (the owner, October 2026).
+export const REMOVED_ITEMS = { trussBooth: 440, bottleCabinet: 800, throneBooth: 1500, barrel: 70, bathtubSofa: 300, beerBench: 120, birdcageBooth: 850, breweryBar: 420, candyBar: 620, catStatue: 480, cloudBed: 1000, crateBooth: 195, crates: 40, cruiserSofa: 220, decoSofa: 260, dinerBar: 340, discoStage: 1200, donutLounge: 750, fireSectional: 480, gardenBar: 380, gardenGazebo: 600, gargoyle: 400, glowLounge: 520, iglooBooth: 700, kissSofa: 350, palm: 110, rattanSeat: 450, rockStar: 1400, shellBooth: 900, starterBar: 100, streetLamp: 120, surfBar: 300, theatreBooth: 300, tikiBar: 220, tikiHut: 380, wpTheatre: 34 };

@@ -2,6 +2,7 @@
 // Mixed into ClubScene (see ClubScene.js); `this` is the scene.
 import { FLOOR_DECAL_PROPS, PROP_TYPES } from '../catalog.js';
 import { LUXURY } from '../config.js';
+import { formatMoney } from '../util.js';
 import { realSpriteIconFor, renderIsoIcon } from '../icons.js';
 import { SFX } from '../sfx.js';
 import { hideTip } from '../tooltips.js';
@@ -262,7 +263,7 @@ export class ShopMixin {
       if (def.seats) lines.push(`Comfort: ${'★'.repeat(this.seatComfort(key))}${'☆'.repeat(5 - this.seatComfort(key))} (comfier seats make guests happier and stay longer)`);
       const picture = realSpriteIconFor(key) || renderIsoIcon(def.color, FLOOR_DECAL_PROPS.has(key));
       const { slot, button, cost } = this.makeCard(def.label, lines.join(' '), picture);
-      cost.textContent = this.isUnlocked(key) ? `$${this.currentCost(key)}` : `🔒 Lv ${def.unlockLevel || 1}`;
+      cost.textContent = this.isUnlocked(key) ? formatMoney(this.currentCost(key)) : `🔒 Lv ${def.unlockLevel || 1}`;
       if (this.isNewItem(key)) {
         const tag = document.createElement('div');
         tag.className = 'newTag';
@@ -308,7 +309,7 @@ export class ShopMixin {
         button.classList.toggle('unaffordable', unlocked && this.cash < tier.cost);
         button.classList.toggle('locked', !unlocked);
         button.classList.toggle('selected', pending === side);
-        cost.textContent = unlocked ? `$${tier.cost}` : `🔒 Lv ${tier.unlockLevel}`;
+        cost.textContent = unlocked ? formatMoney(tier.cost) : `🔒 Lv ${tier.unlockLevel}`;
         slot.dataset.tipText = `${tier.tiles} more floor tiles along the front-${side} edge: the ${side} wall grows from ${wall} to ${tier.newLen} tiles: more room for a popular club's crowd.`
           + (unlocked ? ' Click to see it in green, double-click to build it.' : ` Reach level ${tier.unlockLevel} to build it.`);
         slot.addEventListener('mouseenter', () => this.showExpandPreview(side));
@@ -395,7 +396,7 @@ export class ShopMixin {
     text.innerHTML = this.holdingFromInventory
       ? `${def.label} <span class="chipCost">📦 ×${this.inventoryCount(key)}</span>`
       : unlocked
-      ? `${def.label} <span class="chipCost">$${this.currentCost(key)}</span>`
+      ? `${def.label} <span class="chipCost">${formatMoney(this.currentCost(key))}</span>`
       : `${def.label} <span class="chipCost">🔒 Lv ${def.unlockLevel || 1}</span>`;
 
     this.selectedChip.innerHTML = '';
@@ -403,17 +404,10 @@ export class ShopMixin {
     this.selectedChip.appendChild(text);
   }
 
-  // A prop's price is fixed forever, baked into its own definition
-  // (PROP_TYPES[type].cost) — not dynamic, not tied to how many you own,
-  // not tied to your current level. A $50 dance tile is $50 whether you
-  // just started or you're level 24. The progression is meant to live in
-  // WHICH props exist at which unlock tier (a level-1 starter item is
-  // cheap; a "cool one" unlocked later costs more because it's defined
-  // that way) — not in a formula that inflates existing items over time.
-  // This wrapper exists as the one place that decision lives, so future
-  // per-item unlock-tier pricing has a single hook instead of scattering
-  // `PROP_TYPES[type].cost` through placeProp/updateShopUI/buildShopUI.
+  // A prop's price is fixed forever (PROP_TYPES[type].price, set by
+  // itemPrice() in catalog.js from its base cost and unlock level): not tied
+  // to how many you own or your current level.
   currentCost(type) {
-    return PROP_TYPES[type].cost;
+    return PROP_TYPES[type].price;
   }
 }

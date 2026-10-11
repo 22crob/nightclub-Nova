@@ -110,7 +110,7 @@ export class EconomyMixin {
   // Fans needed to get from `level` to the next (see LEVEL_FANS).
   fansToNextLevel(level) {
     const k = level - 1;
-    return LEVEL_FANS.first + LEVEL_FANS.step * k + LEVEL_FANS.curve * k * k;
+    return Math.round(LEVEL_FANS.first + LEVEL_FANS.step * k + LEVEL_FANS.curve * k * k);
   }
 
   // Total fans at which `level` starts.

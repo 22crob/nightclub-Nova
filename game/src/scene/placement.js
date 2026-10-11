@@ -367,7 +367,7 @@ export class PlacementMixin {
       return;
     }
 
-    const refund = Math.round(PROP_TYPES[placed.type].cost * SELL_REFUND_RATIO);
+    const refund = Math.round(PROP_TYPES[placed.type].price * SELL_REFUND_RATIO);
     this.cash += refund;
     const center = this.footprintCenter(placed.tiles);
     this.revokePurchaseXp(placed.xp, center.sx, center.sy - 60); // no farming XP by buying and selling

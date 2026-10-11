@@ -3,13 +3,16 @@
 // lights, a living vine wall, a bottle shelf; art/blender/decor_batch3.py).
 // They're sold with the Decorations (catalog: `wallDecor: true`, `span`
 // wall sections wide) and hang on a wall section over whatever wallpaper is
-// there: this.wallDecor maps the section a piece starts at ('R3', 'L0', see
-// wallpaper.js) to its type, saved under `wallDecor`. The right wall shows
+// there: this.wallDecor maps each piece's key, the section it starts at
+// and its height ('R3:mid', 'L0:high'; sections are in wallpaper.js), to its
+// type, saved under `wallDecor` (older saves keyed by the section alone,
+// with the height under `wallDecorLevel`, still load). Pieces can share a
+// section at different heights as long as they don't overlap on the wall
+// (the owner's ask: a row of fairy lights in the middle and another above). The right wall shows
 // the piece's facing 0 picture, the left wall its facing 90 one. Placed with
 // a click on a wall section; the Edit tools move, put away or sell them (a
 // click on the section), and right-click sells one. Each hangs low, in the
-// middle or high on the wall (this.wallDecorLevels, saved under
-// `wallDecorLevel`, the owner's ask): picked before hanging from the
+// middle or high on the wall (the owner's ask): picked before hanging from the
 // Low / Middle / High bar under the name tag (#wallHeightBar) or with R,
 // and changed afterwards with the Edit tools' Turn or R over it. They're
 // drawn WALL_DECOR.scale bigger than their render, never taller than the
@@ -50,44 +53,91 @@ export class WallDecorMixin {
     return out;
   }
 
-  // The section the piece covering `section` starts at, or null.
-  wallDecorAnchor(section) {
-    if (!section) return null;
-    for (const [anchor, type] of Object.entries(this.wallDecor || {})) {
-      if (anchor[0] !== section[0]) continue;
-      const i = Number(anchor.slice(1));
-      const j = Number(section.slice(1));
-      if (j >= i && j < i + this.wallSpan(type)) return anchor;
-    }
-    return null;
+  // A piece's key ('R3:mid') split up: its side, first section number,
+  // section ('R3') and height.
+  decorKey(key) {
+    const [section, level = 'mid'] = key.split(':');
+    return { side: section[0], i: Number(section.slice(1)), section, level };
   }
 
-  // The piece's picture, hung on the wall: the point where it meets the
-  // wall stays over the middle of the sections it covers, and it's drawn
-  // WALL_DECOR.scale bigger (at most the wall's height) at the chosen
+  // Where a piece hangs on the wall: its picture, scale, and the top and
+  // height (screen px) of the piece itself in it. The point where it meets
+  // the wall stays over the middle of the sections it covers, and it's
+  // drawn WALL_DECOR.scale bigger (at most the wall's height) at the chosen
   // height: its top just under the wall's top ('high'), its bottom just
   // above the floor ('low'), or centred between ('mid').
-  wallDecorImage(section, type, level = 'mid') {
+  wallDecorSpot(section, type, level = 'mid') {
     const def = PROP_TYPES[type];
     const right = section[0] === 'R';
     const along = Number(section.slice(1)) + (this.wallSpan(type) - 1) / 2;
     const { sx, sy } = right ? this.gridToScreen(along, -0.5) : this.gridToScreen(-0.5, along);
     const key = def.sprites[right ? 0 : 90];
-    const img = this.add.image(sx, sy, key);
+    const width = this.textures.get(key).getSourceImage().width;
     // The picture is cropped to fit all four of the piece's facings, so
     // the piece itself fills only part of it: place and size by that part.
     const box = this.opaqueBox(key);
-    const k0 = def.displayWidth / img.width; // display px per picture px, unscaled
+    const k0 = def.displayWidth / width; // display px per picture px, unscaled
     const room = WALL_HEIGHT - 2 * WALL_DECOR.margin;
-    const k = k0 * Math.min(WALL_DECOR.scale, room / ((box.bottom - box.top) * k0));
+    const k = k0 * Math.min(def.wallScale || WALL_DECOR.scale, room / ((box.bottom - box.top) * k0));
     const h = (box.bottom - box.top) * k;
     const top = sy - WALL_HEIGHT + WALL_DECOR.margin;
     const bottom = sy - WALL_DECOR.margin;
     const y = level === 'high' ? top : level === 'low' ? bottom - h : (top + bottom - h) / 2;
-    img.setOrigin(def.originX, 0);
+    return { sx, key, k, box, y, h };
+  }
+
+  wallDecorImage(section, type, level = 'mid') {
+    const { sx, key, k, box, y } = this.wallDecorSpot(section, type, level);
+    const img = this.add.image(sx, y - box.top * k, key);
+    img.setOrigin(PROP_TYPES[type].originX, 0);
     img.setScale(k);
-    img.setPosition(sx, y - box.top * k);
     return img;
+  }
+
+  // The keys of the pieces covering `section`.
+  wallDecorsAt(section) {
+    if (!section) return [];
+    const j = Number(section.slice(1));
+    return Object.entries(this.wallDecor || {}).filter(([key, type]) => {
+      const { side, i } = this.decorKey(key);
+      return side === section[0] && j >= i && j < i + this.wallSpan(type);
+    }).map(([key]) => key);
+  }
+
+  // The piece covering `section` under the pointer (`y` in the world's
+  // own coordinates, the hovered point by default), else the nearest one
+  // on that section, or null.
+  wallDecorAnchor(section, y = this.hoverWallY) {
+    const keys = this.wallDecorsAt(section);
+    if (keys.length < 2 || y === undefined) return keys[0] || null;
+    let best = null;
+    let bestD = Infinity;
+    for (const key of keys) {
+      const { level } = this.decorKey(key);
+      const spot = this.wallDecorSpot(section, this.wallDecor[key], level);
+      const d = y < spot.y ? spot.y - y : y > spot.y + spot.h ? y - spot.y - spot.h : 0;
+      if (d < bestD) { bestD = d; best = key; }
+    }
+    return best;
+  }
+
+  // The piece already hanging that a piece of `type` at `section` and
+  // `level` would overlap on the wall (sharing a section and crossing
+  // heights), or null. `except` is left out (a piece changing height).
+  wallDecorClash(section, type, level, except = null) {
+    const mine = this.wallDecorSections(section, type);
+    if (!mine) return null;
+    const me = this.wallDecorSpot(section, type, level);
+    for (const [key, other] of Object.entries(this.wallDecor || {})) {
+      if (key === except) continue;
+      const o = this.decorKey(key);
+      const theirs = this.wallDecorSections(o.section, other) || [o.section];
+      if (!theirs.some((x) => mine.includes(x))) continue;
+      const them = this.wallDecorSpot(o.section, other, o.level);
+      const overlap = Math.min(me.y + me.h, them.y + them.h) - Math.max(me.y, them.y);
+      if (overlap > WALL_DECOR.stackSlack) return key;
+    }
+    return null;
   }
 
   // The rows and columns of a texture that aren't see-through, measured
@@ -123,8 +173,10 @@ export class WallDecorMixin {
     return out;
   }
 
+  // The height of the piece covering `section` (or with this key).
   wallDecorLevelOf(section) {
-    return (this.wallDecorLevels || {})[section] || 'mid';
+    const key = section.includes(':') ? section : this.wallDecorAnchor(section);
+    return key ? this.decorKey(key).level : 'mid';
   }
 
   // The next height after `level` (low, middle, high, then low again).
@@ -142,13 +194,18 @@ export class WallDecorMixin {
     this.updateWallHeightBar();
   }
 
-  // Moves the decoration covering `section` to its next height.
+  // Moves the decoration covering `section` (or with this key) to the
+  // next height it fits at, past anything else hanging there.
   cycleWallDecorLevel(section) {
-    const anchor = this.wallDecorAnchor(section);
-    if (!anchor) return false;
-    this.wallDecorLevels = this.wallDecorLevels || {};
-    this.wallDecorLevels[anchor] = this.nextWallLevel(this.wallDecorLevelOf(anchor));
-    this.drawWallDecor(anchor, this.wallDecor[anchor]);
+    const key = section.includes(':') ? section : this.wallDecorAnchor(section);
+    if (!key || !this.wallDecor[key]) return false;
+    const type = this.wallDecor[key];
+    const { section: at, level } = this.decorKey(key);
+    let next = level;
+    do next = this.nextWallLevel(next); while (next !== level && this.wallDecorClash(at, type, next, key));
+    if (next === level) { SFX.denied(); this.showToast('🖼️ No other height is free there.'); return false; }
+    this.removeWallDecor(key);
+    this.hangWallDecor(at, type, next);
     SFX.place();
     this.saveGame();
     return true;
@@ -193,18 +250,21 @@ export class WallDecorMixin {
     for (const b of bar.children) b.classList.toggle('on', b.dataset.level === (this.heldWallLevel || 'mid'));
   }
 
-  drawWallDecor(section, type) {
+  // Puts a piece on the wall (its record and its picture).
+  hangWallDecor(section, type, level = 'mid') {
+    const key = `${section}:${level}`;
+    this.wallDecor[key] = type;
     this.wallDecorImages = this.wallDecorImages || {};
-    this.wallDecorImages[section]?.destroy();
-    const img = this.wallDecorImage(section, type, this.wallDecorLevelOf(section));
+    this.wallDecorImages[key]?.destroy();
+    const img = this.wallDecorImage(section, type, level);
     this.wallDecorLayerReady().add(img);
-    this.wallDecorImages[section] = img;
+    this.wallDecorImages[key] = img;
+    return key;
   }
 
-  // Can the held piece hang starting at `section`?
-  wallDecorFits(section, type) {
-    const sections = this.wallDecorSections(section, type);
-    return !!sections && sections.every((s) => !this.wallDecorAnchor(s));
+  // Can a piece of `type` hang starting at `section` at that height?
+  wallDecorFits(section, type, level = this.heldWallLevel || 'mid') {
+    return !!this.wallDecorSections(section, type) && !this.wallDecorClash(section, type, level);
   }
 
   // Hangs the held decoration starting at a wall section.
@@ -213,9 +273,10 @@ export class WallDecorMixin {
     const def = PROP_TYPES[type];
     if (!def || !def.wallDecor || !section) return false;
     this.wallDecor = this.wallDecor || {};
-    if (!this.wallDecorFits(section, type)) {
+    const level = this.heldWallLevel || 'mid';
+    if (!this.wallDecorFits(section, type, level)) {
       SFX.denied();
-      this.showToast(this.wallDecorSections(section, type) ? '🖼️ Something already hangs there: move or sell it first (Club, Edit).' : '🖼️ It doesn\'t fit there: the wall ends.');
+      this.showToast(this.wallDecorSections(section, type) ? '🖼️ Something already hangs there: try another height, or move it first (Club, Edit).' : '🖼️ It doesn\'t fit there: the wall ends.');
       return false;
     }
     const fromInventory = this.holdingFromInventory && this.inventoryCount(type) > 0;
@@ -223,10 +284,7 @@ export class WallDecorMixin {
     const cost = fromInventory ? 0 : this.currentCost(type);
     if (this.cash < cost) { SFX.denied(); return false; }
     this.cash -= cost;
-    this.wallDecor[section] = type;
-    this.wallDecorLevels = this.wallDecorLevels || {};
-    this.wallDecorLevels[section] = this.heldWallLevel || 'mid';
-    this.drawWallDecor(section, type);
+    this.hangWallDecor(section, type, level);
     if (fromInventory) {
       this.takeInventoryXp(type);
       this.addToInventory(type, -1);
@@ -244,15 +302,15 @@ export class WallDecorMixin {
     return true;
   }
 
-  // Takes the decoration covering `section` off the wall.
+  // Takes a decoration off the wall: the one with this key, or the one
+  // covering this section (under the pointer). Gives its type.
   removeWallDecor(section) {
-    const anchor = this.wallDecorAnchor(section);
-    const type = anchor && this.wallDecor[anchor];
+    const key = section.includes(':') ? section : this.wallDecorAnchor(section);
+    const type = key && this.wallDecor[key];
     if (!type) return null;
-    delete this.wallDecor[anchor];
-    if (this.wallDecorLevels) delete this.wallDecorLevels[anchor];
-    this.wallDecorImages?.[anchor]?.destroy();
-    if (this.wallDecorImages) delete this.wallDecorImages[anchor];
+    delete this.wallDecor[key];
+    this.wallDecorImages?.[key]?.destroy();
+    if (this.wallDecorImages) delete this.wallDecorImages[key];
     return type;
   }
 
@@ -260,14 +318,14 @@ export class WallDecorMixin {
   // of its price, put away stores it, move stores it and holds it. True if
   // there was one.
   editWallDecor(section, tool = this.editTool || 'move') {
-    const anchor = this.wallDecorAnchor(section);
+    const anchor = section.includes(':') ? section : this.wallDecorAnchor(section);
     const type = anchor && this.wallDecor[anchor];
     if (!type) return false;
     if (tool === 'rotate') return this.cycleWallDecorLevel(anchor); // Turn: its next height
-    const level = this.wallDecorLevelOf(anchor);
+    const { level } = this.decorKey(anchor);
     this.removeWallDecor(anchor);
     if (tool === 'sell') {
-      this.cash += Math.floor((PROP_TYPES[type].cost || 0) * SELL_REFUND_RATIO);
+      this.cash += Math.floor((PROP_TYPES[type].price || 0) * SELL_REFUND_RATIO);
       SFX.sell();
     } else {
       this.addToInventory(type);
@@ -287,17 +345,16 @@ export class WallDecorMixin {
   }
 
   // Restores saved wall decorations, skipping anything unknown or that no
-  // longer fits.
+  // longer fits. Older saves keyed them by section, the height apart.
   restoreWallDecor(saved, levels) {
     this.wallDecor = {};
-    this.wallDecorLevels = {};
     if (!saved || typeof saved !== 'object') return;
-    for (const [section, type] of Object.entries(saved)) {
-      if (!/^[RL]\d+$/.test(section) || !PROP_TYPES[type] || !PROP_TYPES[type].wallDecor) continue;
-      if (!this.wallDecorFits(section, type)) continue;
-      this.wallDecor[section] = type;
-      if (levels && WALL_DECOR.levels.includes(levels[section])) this.wallDecorLevels[section] = levels[section];
-      this.drawWallDecor(section, type);
+    for (const [key, type] of Object.entries(saved)) {
+      const m = /^([RL]\d+)(?::(\w+))?$/.exec(key);
+      if (!m || !PROP_TYPES[type] || !PROP_TYPES[type].wallDecor) continue;
+      const level = m[2] || (levels && levels[m[1]]) || 'mid';
+      if (!WALL_DECOR.levels.includes(level) || !this.wallDecorFits(m[1], type, level)) continue;
+      this.hangWallDecor(m[1], type, level);
     }
   }
 }

@@ -36,7 +36,9 @@ export const WALL_HEIGHT = 104; // px: about 1.3 guests tall, like Nightclub Cit
 // Wall decorations (scene/wallDecor.js): drawn this much bigger than their
 // render (the owner found them small), but never taller than the wall less
 // `margin` px; hung at one of three heights the player picks (`levels`).
-export const WALL_DECOR = { scale: 1.4, margin: 6, levels: ['low', 'mid', 'high'], labels: { low: 'Low', mid: 'Middle', high: 'High' } };
+// Pieces can share a wall section at different heights if they overlap by
+// no more than `stackSlack` px on the wall.
+export const WALL_DECOR = { scale: 1.4, margin: 6, stackSlack: 3, levels: ['low', 'mid', 'high'], labels: { low: 'Low', mid: 'Middle', high: 'High' } };
 export const WALL_THICKNESS = 0.4; // in tiles
 export const WALL_BASEBOARD = 5;
 export const DOOR_HEIGHT = 90; // px: a little taller than a guest
@@ -194,10 +196,10 @@ export const POPULARITY = { happy: 3, content: 1, unhappy: -1, stormOut: -5, arr
 // first + step*(L-1) + curve*(L-1)^2 more to reach the next one, so each
 // level takes a little longer than the last, but gently (the owner asked
 // that the jumps not get so big that players feel stuck). Tuned against a
-// simulated club (tools/balance_sim.py): level 2 in about 6 minutes, 10 in
-// about 1h40, 20 in about 5 hours, 30 in about 10, 40 in about 19, and the
-// last unlock (61) in about 47.
-export const LEVEL_FANS = { first: 200, step: 180, curve: 6 };
+// simulated club (tools/balance_sim.py): level 2 in about 5 minutes, 10 in
+// about 1h35, 20 in about 6.5 hours, 30 in about 15, 40 in about 28 (made a
+// touch faster, about 10%, in October 2026: the owner asked).
+export const LEVEL_FANS = { first: 185, step: 162, curve: 5.4 };
 // Where XP (the save calls it fans) comes from: mostly good service,
 // satisfied visits and successful parties, not guests just moving between
 // activities; and buying things: perDollar XP for each $ spent on

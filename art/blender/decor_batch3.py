@@ -158,11 +158,14 @@ def build_wall_pendants():
         sphere(f'Bulb{i}', x, -0.3, z, 0.03, bulb, segments=12)
 
 
-def led_pole(rgb):
+def led_pole(rgb, name):
+    """A neon tube on two chrome brackets. The render still pales the
+    colour (AgX), so art/blender/tint_led.py deepens the tube in the
+    finished pictures (the owner found the first blue one washed out)."""
     def build():
         chrome = mat('#cfd4dc', rough=0.15)
-        glow = neon(f'LedPole{rgb}', rgb, 3.5)
-        cylinder('Tube', 0, -0.07, 0.12, 1.66, 0.028, glow, verts=16)
+        sleeve = principled(f'LedSleeve{name}', rgb, rough=0.9, emission=rgb, emission_strength=0.6)
+        cylinder('Tube', 0, -0.07, 0.12, 1.66, 0.032, sleeve, verts=16)
         for z in (0.1, 1.66):
             box(f'Bracket{z}', -0.05, 0.05, -0.12, 0.0, z - 0.03, z + 0.03, chrome, bevel=0.008)
     return build
@@ -312,8 +315,10 @@ DESIGNS = {
     'poolBlack': build_pool_black,
     'wallFern': build_wall_fern,
     'wallPendants': build_wall_pendants,
-    'wallLedCyan': led_pole((0.15, 0.85, 1.0)),
-    'wallLedPink': led_pole((1.0, 0.25, 0.75)),
+    'wallLedCyan': led_pole((0.02, 0.35, 1.0), 'Blue'),
+    'wallLedPink': led_pole((1.0, 0.08, 0.55), 'Pink'),
+    'wallLedRed': led_pole((1.0, 0.03, 0.03), 'Red'),
+    'wallLedPurple': led_pole((0.45, 0.05, 1.0), 'Purple'),
     'wallHeart': build_wall_heart,
     'wallSpeaker': build_wall_speaker,
     'wallFairy': build_wall_fairy,

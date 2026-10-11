@@ -34,13 +34,13 @@
 | 10 | Bar: Chrome Bar; DJ booth: Club Booth; Decoration: Globe Lamp; Drink: Mojito; Bartender: +1 |
 | 11 | Floor: Stone Tiles; Decoration: Neon Sign |
 | 12 | Dance floor: Soft Glow; Wallpaper: Stripes; Party: Neon Night |
-| 13 | Wall decor: Cyan LED Pole; Seat/booth: Chrome Bar Stool; Decoration: Crystal Column; Celebrity: Max Volt |
+| 13 | Wall decor: Blue LED Pole (was Cyan); Seat/booth: Chrome Bar Stool; Decoration: Crystal Column; Celebrity: Max Volt |
 | 14 | Bar: Speakeasy Bar; Decoration: Glow Tube |
 | 15 | DJ booth: Neon Booth; Wallpaper: Subway Tile |
 | 16 | Seat/booth: Stripe Booth; Dance floor: Wood Floor; Decoration: Glow Plinth; Drink: Martini; Bartender: +1 |
-| 17 | Decoration: Pool Table; Wallpaper: Wood Panel |
+| 17 | Decoration: Pool Table; Wallpaper: Wood Panel; Wall decor: Red LED Pole (October 2026) |
 | 18 | Bar: Velvet Bar; Floor: Wood Planks; Seat/booth: Chesterfield; Celebrity: DJ Kai Blaze; Bouncer: +1 |
-| 19 | Wall decor: Neon Heart; DJ booth: Truss Booth; Decoration: Pink Globe Lamp |
+| 19 | Wall decor: Neon Heart; Decoration: Pink Globe Lamp (the Truss Booth was cut, October 2026) |
 | 20 | Decoration: Speaker Stack; Wallpaper: Wood Planks; Party: VIP Gala |
 | 21 | Dance floor: Blue Pulse; Decoration: Spotlight |
 | 22 | Bar: Neon Bar; Seat/booth: Leather Couch |
@@ -51,7 +51,7 @@
 | 27 | DJ booth: Ice Booth; Seat/booth: Red Velvet Booth |
 | 28 | Wall decor: Wall Speaker; Decoration: Purple Liquid Tank; Wallpaper: Neon Strip |
 | 29 | Dance floor: Two-Tone Blink; Decoration: Neon Speaker |
-| 30 | Seat/booth: Bottle Service; Bar: Ice Bar; Decoration: Purple Speaker Stack; Celebrity: Tony Fame; Bartender: +1; Bouncer: +1 |
+| 30 | Wall decor: Purple LED Pole (October 2026); Seat/booth: Bottle Service; Bar: Ice Bar; Decoration: Purple Speaker Stack; Celebrity: Tony Fame; Bartender: +1; Bouncer: +1 |
 | 31 | DJ booth: Art Deco Booth; Floor: Purple Carpet |
 | 32 | Seat/booth: Wood Lounge; Wallpaper: Speaker Wall |
 | 33 | Wall decor: Fairy Lights; Dance floor: Glow Floor; Decoration: Retro Robot; Party: Masquerade Ball |
