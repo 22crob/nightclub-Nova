@@ -390,7 +390,7 @@ def build(name, preview=None):
         standing = FEET_Y - np.where(a.any(1))[0].min() / SS
     else:
         standing = STANDING
-    rows, counts, fps, missing = [], {}, dict(FPS), []
+    rows, counts, fps, missing, borrowed = [], {}, dict(FPS), [], []
     # Drawn clips are all scaled to the drawn walk: its first frame stands
     # as tall as the posed guy, and every other drawing's hair matches its
     # hair width (per view; a view with no walk drawn yet uses the other's).
@@ -414,6 +414,8 @@ def build(name, preview=None):
                 drawn = {v: done[f'idle_{v}'] for v in ('front', 'back')}
                 fps[clip] = DRAWN_FPS['idle']
             for v, o in (('front', 'back'), ('back', 'front')):
+                if not drawn[v] and drawn[o] and clip not in missing:
+                    borrowed.append(f'{clip}_{v}')  # the game keeps a look borrowing its back walk out
                 drawn[v] = drawn[v] or drawn[o]
         n = next((len(d) for d in drawn.values() if d), len(poses))
         counts[clip] = n
@@ -453,6 +455,8 @@ def build(name, preview=None):
             'starts': starts, 'frames': counts, 'fps': fps}
     if missing:
         meta['missing'] = missing
+    if borrowed:
+        meta['borrowed'] = borrowed
     if preview and rigs:
         os.makedirs(preview, exist_ok=True)
         bg = Image.new('RGBA', sheet.size, (70, 60, 90, 255))

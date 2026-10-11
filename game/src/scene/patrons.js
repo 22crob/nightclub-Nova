@@ -152,7 +152,10 @@ export class PatronsMixin {
   // A guest's look while EVERYONE_LOOK is set: one of GUEST_CUTOUTS.
   // (tests set guestLooks to pick which.)
   randomGuestLook() {
-    const looks = (this.guestLooks || GUEST_CUTOUTS).map((n) => CUTOUT_PATRONS[n]).filter((i) => i !== undefined);
+    // A look with no back walk drawn yet would moonwalk when walking away
+    // (it borrows the front walk, `borrowed` in its JSON), so it waits.
+    const looks = (this.guestLooks || GUEST_CUTOUTS).map((n) => CUTOUT_PATRONS[n])
+      .filter((i) => i !== undefined && !(patronMetaOf(i).borrowed || []).includes('walk_back'));
     return looks.length ? Phaser.Utils.Array.GetRandom(looks) : this.everyoneLook();
   }
 
