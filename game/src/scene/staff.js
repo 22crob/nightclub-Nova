@@ -231,10 +231,11 @@ export class StaffMixin {
       container.add(this.add.ellipse(0, -12 * PROP_SCALE, 18 * PROP_SCALE, 30 * PROP_SCALE, 0xffd24d, 1));
       return container;
     }
-    const character = type.character % PATRON_SHEETS.length;
+    const character = this.everyoneLook() ?? type.character % PATRON_SHEETS.length;
+    const meta = patronMetaOf(character);
     const sprite = this.add.sprite(0, 0, `patron_${character}`);
-    sprite.setOrigin(PATRON_META.originX, PATRON_META.originY);
-    sprite.setScale((CHARACTER_DISPLAY_HEIGHT * 0.9) / PATRON_META.standingHeight);
+    sprite.setOrigin(meta.originX, meta.originY);
+    sprite.setScale((CHARACTER_DISPLAY_HEIGHT * 0.9) / meta.standingHeight);
     container.add(sprite);
     container.staffSprite = sprite;
     container.staffCharacter = character;

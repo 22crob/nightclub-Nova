@@ -206,6 +206,7 @@ export class CelebritiesMixin {
 
   // A celebrity's face, cut from their sheet like the guest card's.
   celebPortrait(el, character) {
+    if (this.everyoneLook() !== undefined) { this.setPortrait(el, this.everyoneLook()); return; }
     const url = PATRON_SHEETS[character];
     if (!el || !url) return;
     const k = 0.72;

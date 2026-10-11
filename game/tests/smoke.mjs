@@ -2422,6 +2422,7 @@ const model3d = await page.evaluate(() => {
   out.drawnFallback = s.patronAnimKey({ patronCharacter: 0, patronDir: 'front' }, 'drink') === 'patron_0_idle_front'
     && s.patronAnimKey({ patronCharacter: 0, patronDir: 'back' }, 'sittalk') === 'patron_0_sit_back';
   if (!out.found) return out;
+  s.everyoneLookOff = true; // draw this look, not the one everyone wears
   const c = s.drawPatronCharacterSprite(100, 100, 1, idx);
   const guest = { container: c };
   s.setPatronAnimation(guest, 'drink');
@@ -2432,6 +2433,7 @@ const model3d = await page.evaluate(() => {
   const drawn = s.drawPatronCharacterSprite(100, 100, 1, 0);
   out.sameScale = Math.abs(c.patronSprite.scaleY - drawn.patronSprite.scaleY * 121.1 / 118) < 0.02;
   out.idx = idx;
+  s.everyoneLookOff = false;
   c.destroy();
   drawn.destroy();
   return out;
@@ -2543,6 +2545,18 @@ const cut = await page.evaluate(() => {
   return out;
 });
 check('the cut-out puppet guy is a guest with idle, walk, dance and sit, front and back', cut.anims && cut.height > 0, JSON.stringify(cut));
+
+// For now every character wears the owner's hand-drawn guy (EVERYONE_LOOK):
+// guests, staff and bouncers alike.
+const everyone = await page.evaluate(() => {
+  const s = window.__clubNova.scene.getScene('club');
+  const look = s.everyoneLook();
+  const guests = s.patrons.filter((q) => !q.gone).map((q) => q.container.patronCharacter);
+  const staff = Object.values(s.placed).filter((r) => r.staff).map((r) => r.staff.container.staffCharacter);
+  const guards = (s.guards || []).map((g) => g.container && (g.container.patronCharacter ?? g.container.staffCharacter));
+  return { look, guests: guests.every((c) => c === look), staff: staff.length > 0 && staff.every((c) => c === look), guards: guards.every((c) => c === undefined || c === look) };
+});
+check('every character wears the hand-drawn guy for now (guests, staff, bouncers)', everyone.look !== undefined && everyone.guests && everyone.staff && everyone.guards, JSON.stringify(everyone));
 
 // The drink menu: drinks unlock with level and go on the menu; a click
 // takes one off or puts it back (never the last one); guests order from the

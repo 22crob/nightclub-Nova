@@ -306,6 +306,11 @@ export const NEON_PATRON_SHARE_TEST = 0.6;
 // trial: on the test link this share of guests wears one of CUTOUT_LOOKS,
 // the real club none yet (the owner will judge them first).
 export const CUTOUT_LOOKS = ['guy01'];
+// Every character in the game (guests, the line and the street, staff,
+// bouncers, celebrities) wears this cut-out look while it's set: the
+// owner's call, October 2026 ("replace all characters with him for now").
+// null brings back each one's own look.
+export const EVERYONE_LOOK = 'guy01';
 export const CUTOUT_SHARE = 0;
 export const CUTOUT_SHARE_TEST = 0.6;
 export const CHARACTER_DISPLAY_HEIGHT = 87.4; // px: big next to the furniture, like Nightclub City

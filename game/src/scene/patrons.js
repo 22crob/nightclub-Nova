@@ -3,7 +3,7 @@
 import Phaser from 'phaser';
 import { CUTOUT_PATRONS, MODEL_PATRONS, NEON_PATRONS, PAINTED_PATRONS, PATRON_SHEETS, STREET_PATRONS, patronMetaOf } from '../assets.js';
 import { FLOOR_DECAL_PROPS, PROP_TYPES, STAFF_TYPES } from '../catalog.js';
-import { BOOST, CHARACTER_DISPLAY_HEIGHT, CUTOUT_LOOKS, CUTOUT_SHARE, CUTOUT_SHARE_TEST, GUEST_LOOKS, MODEL_PATRON_SHARE, NEON_PATRON_SHARE, NEON_PATRON_SHARE_TEST, TEST_MODE, HAIR_STYLES, PATRON_HAIR_COLORS, PATRON_MOVE_INTERVAL, PATRON_OUTFIT_COLORS, PATRON_POPUP_Y, PATRON_SKIN_TONES, PATRON_SPAWN_INTERVAL, MONEY, PATRON_TIP_INTERVAL, PATRON_Y_OFFSET, PROP_SCALE, VISIT, XP } from '../config.js';
+import { BOOST, CHARACTER_DISPLAY_HEIGHT, CUTOUT_LOOKS, EVERYONE_LOOK, CUTOUT_SHARE, CUTOUT_SHARE_TEST, GUEST_LOOKS, MODEL_PATRON_SHARE, NEON_PATRON_SHARE, NEON_PATRON_SHARE_TEST, TEST_MODE, HAIR_STYLES, PATRON_HAIR_COLORS, PATRON_MOVE_INTERVAL, PATRON_OUTFIT_COLORS, PATRON_POPUP_Y, PATRON_SKIN_TONES, PATRON_SPAWN_INTERVAL, MONEY, PATRON_TIP_INTERVAL, PATRON_Y_OFFSET, PROP_SCALE, VISIT, XP } from '../config.js';
 import { SFX } from '../sfx.js';
 import { MOOD } from './mood.js';
 import { randRange } from '../util.js';
@@ -143,6 +143,12 @@ export class PatronsMixin {
     return CUTOUT_PATRONS[name];
   }
 
+  // The look every character wears while EVERYONE_LOOK is set, or undefined
+  // (tests set everyoneLookOff to draw the other looks).
+  everyoneLook() {
+    return EVERYONE_LOOK && !this.everyoneLookOff ? CUTOUT_PATRONS[EVERYONE_LOOK] : undefined;
+  }
+
   drawPatronCharacterSprite(sx, sy, scaleVariance, character) {
     const container = this.add.container(sx, sy);
     const shadow = this.add.ellipse(0, 2 * PROP_SCALE, 30 * PROP_SCALE, 12 * PROP_SCALE, 0x000000, 0.3);
@@ -159,7 +165,7 @@ export class PatronsMixin {
     else if (looks.length) pool = looks;
     else if (NEON_PATRONS.length && Math.random() < neonShare) pool = NEON_PATRONS;
     else if (MODEL_PATRONS.length && Math.random() < MODEL_PATRON_SHARE) pool = MODEL_PATRONS;
-    container.patronCharacter = character ?? Phaser.Utils.Array.GetRandom(pool.length ? pool : [0]);
+    container.patronCharacter = this.everyoneLook() ?? character ?? Phaser.Utils.Array.GetRandom(pool.length ? pool : [0]);
     container.patronDir = 'front';
     const meta = patronMetaOf(container.patronCharacter);
     const sprite = this.add.sprite(0, 0, `patron_${container.patronCharacter}`);
