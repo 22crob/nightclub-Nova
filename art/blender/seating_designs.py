@@ -877,7 +877,7 @@ def bean_bags():
         emission=srgb('#b060ff'), emission_strength=1.2), bevel=0.03)
     for i, (x, y, c) in enumerate([(-0.06, -0.08, '#ff4dcf'), (0.07, 0.02, '#7dd8ff')]):
         cone(f'Glass{i}', x, y, 0.32, 0.44, 0.03, 0.045, mat(c, rough=0.1, glow=0.6, alpha=0.85), verts=12)
-    return {'seats': [[-0.62, -0.02], [0.62, -0.02]], 'sitLift': -0.04}
+    return {'seats': [[-0.62, -0.02], [0.62, -0.02]], 'sitLift': -0.24}  # low bags: guests sink in (they floated at chair height)
 
 # --------------------------------------------------------------------------
 # Club tables, chairs and stools (October 2026, the owner asked for more
