@@ -99,6 +99,13 @@ def mats():
         'pot': principled('Pot', srgb('#9a5a3a'), rough=0.7),
         'ac': principled('AC', srgb('#6a6a70'), rough=0.5),
         'party': principled('WinParty', srgb('#ff6ad8'), rough=0.5, emission=srgb('#e040c0'), emission_strength=1.8),
+        'stuccoRust': principled('StuccoRust', srgb('#4e2e26'), rough=0.9),
+        'stuccoGreen': principled('StuccoGreen', srgb('#28382f'), rough=0.9),
+        'stuccoPlum': principled('StuccoPlum', srgb('#2e2238'), rough=0.9),
+        'tan': brick('BrickTan', '#5e4a36', mortar='#6e6050'),
+        'panel': principled('Panel', srgb('#23262e'), rough=0.4),
+        'void': principled('Void', srgb('#0b0a10'), rough=0.9),
+        'gold': principled('Gold', srgb('#d9a83a'), rough=0.3, emission=srgb('#c08a20'), emission_strength=0.6),
     }
 
 
@@ -509,10 +516,337 @@ def hotel(W=6.0):
     roof_bits(W, H, seed=17)
 
 
+# --------------------------------------------------------------------------
+# The second street (October 2026): the owner liked the first ten but saw
+# them repeat down the roads, so each of these is its own place and every
+# building shows up once.
+# --------------------------------------------------------------------------
+
+def neon_circle(name, x, z, r, mat, y=None, n=28, tube=0.035):
+    """A neon ring on the front (records, a bowling ball)."""
+    y = FY - 0.13 if y is None else y
+    pts = [(x + r * math.cos(2 * math.pi * k / n), y, z + r * math.sin(2 * math.pi * k / n)) for k in range(n + 1)]
+    neon_tube(name, pts, tube, mat)
+
+
+def glow_ball(x, y, z, r, mat):
+    bpy.ops.mesh.primitive_uv_sphere_add(segments=12, ring_count=6, radius=r, location=(x, y, z))
+    bb._finish(bpy.context.active_object, mat, 0)
+
+
+def pizza(W=4.0):
+    """A pizza-by-the-slice joint: a neon slice, red and green."""
+    floors = 2
+    H = GROUND + floors * STOREY + 0.6
+    body(W, H, M['tan'])
+    spill(W, (1.0, 0.5, 0.2))
+    door_x = dark_shop(W, '#2a1208', '#ffb45a', door_x=W / 2 - 0.85)
+    red = neon('PizzaRed', (1.0, 0.18, 0.1), 10)
+    green = neon('PizzaGreen', (0.3, 1.0, 0.35), 9)
+    yellow = neon('PizzaCheese', (1.0, 0.8, 0.2), 9)
+    sign_text('PIZZA', -0.35, GROUND - 0.45, 0.48, red)
+    # the slice in the window: crust along the top, point down
+    x, z, y = -0.9, 1.75, FY - 0.12
+    neon_tube('Slice', [(x - 0.45, y, z + 0.45), (x + 0.45, y, z + 0.45), (x, y, z - 0.55), (x - 0.45, y, z + 0.45)], 0.035, yellow)
+    neon_tube('Crust', [(x - 0.5, y, z + 0.55), (x + 0.5, y, z + 0.55)], 0.05, red)
+    for dx, dz in ((-0.15, 0.25), (0.15, 0.2), (0.0, -0.05)):
+        glow_ball(x + dx, y, z + dz, 0.07, red)
+    sign_text('BY THE SLICE', door_x - 0.2, GROUND + 0.35, 0.18, green, y=FY - 0.1)
+    upper_floors(W, GROUND + 0.6, floors, 2, frame='cream', fire_escape=False)
+    roof_bits(W, H, seed=21)
+
+
+def arcade(W=6.0):
+    """A late-night video arcade: glowing cabinets and a pixel alien."""
+    floors = 2
+    H = GROUND + floors * STOREY + 0.6
+    body(W, H, M['stuccoPlum'], top_mat=M['trimDark'])
+    spill(W, (0.45, 0.4, 1.0))
+    door_x = dark_shop(W, '#0e0a1c', '#1a1240', door_x=W / 2 - 0.95)
+    cyan = neon('ArcCyan', (0.2, 0.95, 1.0), 10)
+    pink = neon('ArcPink', (1.0, 0.25, 0.75), 10)
+    alien = neon('ArcAlien', (0.4, 1.0, 0.3), 8)
+    sign_text('ARCADE', -0.5, GROUND - 0.45, 0.52, cyan, board=M['void'], pad=0.14)
+    neon_frame(-W / 2 + 0.3, door_x - 0.66, 0.56, GROUND - 0.96, pink)
+    # cabinets in the window, each screen its own colour
+    for i, col in enumerate(['#ff4fb8', '#4fd8ff', '#ffd24f', '#7a4fff']):
+        x = -W / 2 + 0.75 + i * 0.85
+        if x > door_x - 0.9: break
+        box('Cabinet', x - 0.3, x + 0.3, FY - 0.09, FY - 0.06, 0.5, 2.0, M['void'], bevel=0.01)
+        scr = principled('Screen', srgb(col), rough=0.4, emission=srgb(col), emission_strength=2.0)
+        box('Screen', x - 0.22, x + 0.22, FY - 0.1, FY - 0.08, 1.3, 1.75, scr, bevel=0)
+    # a pixel alien above the door
+    px = 0.12
+    rows = ['..X...X..', '...X.X...', '..XXXXX..', '.XX.X.XX.', 'XXXXXXXXX', 'X.XXXXX.X', 'X.X...X.X', '...X.X...']
+    cx, cz = door_x - 0.05, GROUND + 1.55
+    for r_, row in enumerate(rows):
+        for c_, ch in enumerate(row):
+            if ch == 'X':
+                x = cx + (c_ - 4) * px; z = cz - r_ * px
+                box('Pixel', x - px / 2, x + px / 2, FY - 0.12, FY - 0.04, z - px / 2, z + px / 2, alien, bevel=0)
+    upper_floors(W, GROUND + 0.6, floors, 4, frame='trimDark', fire_escape=False, plants=False)
+    roof_bits(W, H, seed=22)
+
+
+def barber(W=4.0):
+    """An old barber shop: striped awning and a spinning-style pole."""
+    floors = 3
+    H = GROUND + floors * STOREY + 0.6
+    body(W, H, M['brick'])
+    spill(W, (0.6, 0.75, 1.0))
+    door_x = shopfront(W, '#1f3a5a', glass='shopCool', door_x=W / 2 - 0.85, awning='#c8202a', stripes='#f4efe6')
+    white = neon('BarberWhite', (0.95, 0.95, 1.0), 8)
+    sign_text('BARBER', -0.3, GROUND + 0.45, 0.42, white, board=M['trimDark'], pad=0.14)
+    # the pole beside the door: red, white and blue bands under a glass cap
+    reds = [principled('PoleRed', srgb('#e02a2a'), rough=0.3, emission=srgb('#c01a1a'), emission_strength=0.8),
+            principled('PoleWhite', srgb('#f4f4f4'), rough=0.3, emission=srgb('#d0d0d0'), emission_strength=0.5),
+            principled('PoleBlue', srgb('#2a5ae0'), rough=0.3, emission=srgb('#1a3ac0'), emission_strength=0.8)]
+    px, py = door_x + 0.62, FY - 0.25
+    for k in range(9):
+        cylinder('PoleBand', px, py, 1.2 + k * 0.14, 1.34 + k * 0.14, 0.11, reds[k % 3], verts=16)
+    cylinder('PoleCapB', px, py, 1.1, 1.2, 0.14, M['cream'], verts=16)
+    cylinder('PoleCapT', px, py, 2.46, 2.58, 0.14, M['cream'], verts=16)
+    glow_ball(px, py, 2.66, 0.12, M['warm'])
+    upper_floors(W, GROUND, floors, 2, arch=True, frame='cream', fire_escape=True)
+    roof_bits(W, H, water_tower=True, seed=23)
+
+
+def records(W=5.0):
+    """A record shop: neon vinyl discs in the window, orange glow."""
+    floors = 2
+    H = GROUND + floors * STOREY + 0.6
+    body(W, H, M['stuccoGreen'], top_mat=M['trimDark'])
+    spill(W, (1.0, 0.55, 0.15))
+    door_x = dark_shop(W, '#14120e', '#3a2410', door_x=W / 2 - 0.9)
+    orange = neon('RecOrange', (1.0, 0.5, 0.1), 10)
+    teal = neon('RecTeal', (0.2, 1.0, 0.8), 9)
+    sign_text('RECORDS', -0.5, GROUND - 0.45, 0.46, orange)
+    for i, x in enumerate((-1.6, -0.6)):
+        if x > door_x - 0.9: break
+        neon_circle('Disc', x, 1.7, 0.42, teal if i == 0 else orange)
+        neon_circle('Label', x, 1.7, 0.12, orange if i == 0 else teal, n=14)
+    sign_text('VINYL', door_x, GROUND + 0.35, 0.22, teal, y=FY - 0.1)
+    upper_floors(W, GROUND + 0.6, floors, 3, frame='trimDark', fire_escape=False)
+    roof_bits(W, H, seed=24)
+
+
+def bowling(W=7.0):
+    """A low, wide bowling alley with a big rooftop sign on posts."""
+    H = GROUND + STOREY + 0.4
+    body(W, H, M['stuccoRust'], top_mat=M['concrete'])
+    spill(W, (1.0, 0.3, 0.5), energy=1200)
+    door_x = dark_shop(W, '#1a0e10', '#ff8a4a', door_x=0.0)
+    pink = neon('BowlPink', (1.0, 0.2, 0.55), 10)
+    blue = neon('BowlBlue', (0.25, 0.55, 1.0), 10)
+    white = neon('BowlWhite', (1.0, 0.95, 0.85), 8)
+    # glass both sides of a middle door
+    neon_frame(-W / 2 + 0.3, door_x - 0.66, 0.56, GROUND - 0.96, blue)
+    neon_frame(door_x + 0.66, W / 2 - 0.3, 0.56, GROUND - 0.96, blue)
+    # rooftop sign: a board on two posts, a neon ball and BOWL
+    top = H + 0.02
+    for x in (-1.6, 1.6):
+        box('SignPost', x - 0.08, x + 0.08, -0.1, 0.1, top, top + 1.2, M['iron'], bevel=0)
+    box('SignBoard', -2.6, 2.6, -0.12, 0.12, top + 1.2, top + 2.8, M['void'], bevel=0.04)
+    sign_text('BOWL', 0.5, top + 2.0, 0.95, pink, y=-0.2)
+    neon_circle('Ball', -1.75, top + 2.0, 0.55, blue, y=-0.2, n=32, tube=0.05)
+    for dx, dz in ((-0.12, 0.18), (0.08, 0.26), (0.0, 0.05)):
+        glow_ball(-1.75 + dx, -0.22, top + 2.0 + dz, 0.06, white)
+    # a starburst on the front, googie style
+    for k in range(8):
+        a = math.pi * k / 8
+        neon_tube('Ray', [(W / 2 - 1.0 + 0.15 * math.cos(a), FY - 0.12, GROUND + 0.9 + 0.15 * math.sin(a)),
+                          (W / 2 - 1.0 + 0.55 * math.cos(a), FY - 0.12, GROUND + 0.9 + 0.55 * math.sin(a))], 0.03, white)
+    sign_text('LANES', -W / 2 + 1.3, GROUND + 0.9, 0.36, white, y=FY - 0.1)
+    roof_bits(W, H, seed=25)
+
+
+def pawn(W=4.0):
+    """A pawn shop: barred window, three gold balls, gold neon."""
+    floors = 3
+    H = GROUND + floors * STOREY + 0.6
+    body(W, H, M['brickBlack'])
+    spill(W, (1.0, 0.8, 0.3))
+    door_x = dark_shop(W, '#121010', '#c89a3a', door_x=W / 2 - 0.85)
+    gold = neon('PawnGold', (1.0, 0.75, 0.2), 10)
+    sign_text('PAWN', -0.3, GROUND - 0.45, 0.5, gold)
+    for k in range(9):   # bars over the window
+        x = -W / 2 + 0.35 + k * 0.24
+        if x > door_x - 0.65: break
+        box('Bar', x - 0.02, x + 0.02, FY - 0.12, FY - 0.08, 0.5, GROUND - 0.9, M['iron'], bevel=0)
+    # the three balls hanging from a bracket
+    box('Bracket', -W / 2 + 0.3, -W / 2 + 1.2, FY - 0.74, FY - 0.66, GROUND + 0.6, GROUND + 0.66, M['iron'], bevel=0)
+    box('BracketArm', -W / 2 + 0.3, -W / 2 + 0.36, FY - 0.74, FY, GROUND + 0.6, GROUND + 0.66, M['iron'], bevel=0)
+    bx = -W / 2 + 0.33
+    for dx, dz in ((-0.2, 0.0), (0.2, 0.0), (0.0, -0.34)):
+        glow_ball(bx + 0.45 + dx, FY - 0.7, GROUND + 0.25 + dz, 0.15, M['gold'])
+    sign_text('LOANS', door_x - 0.05, GROUND + 0.3, 0.2, gold, y=FY - 0.1)
+    upper_floors(W, GROUND, floors, 2, frame='trimDark', fire_escape=True)
+    roof_bits(W, H, seed=26)
+
+
+def cinema(W=7.0):
+    """An old picture house: a bulb-lit marquee and a tall blade sign."""
+    floors = 3
+    H = GROUND + floors * STOREY + 1.2
+    body(W, H, M['brickDark'], top_mat=M['cream'])
+    spill(W, (1.0, 0.8, 0.45), energy=1300)
+    door_x = dark_shop(W, '#1c1008', '#ffcf7a', door_x=0.0)
+    red = neon('CineRed', (1.0, 0.15, 0.2), 10)
+    bulb = principled('Bulb', srgb('#fff1c2'), rough=0.4, emission=srgb('#ffd27a'), emission_strength=4.0)
+    # the marquee: a lit board sticking out over the door, bulbs round it
+    z0, z1, y0 = GROUND - 0.6, GROUND + 0.7, FY - 1.3
+    box('Marquee', -2.6, 2.6, y0, FY, z0, z1, M['trimDark'], bevel=0.03)
+    box('MarqueeBoard', -2.4, 2.4, y0 - 0.03, y0 + 0.02, z0 + 0.25, z1 - 0.25, M['shopCool'], bevel=0)
+    sign_text('NOW SHOWING', 0, (z0 + z1) / 2, 0.3, M['void'], y=y0 - 0.05)
+    for k in range(17):
+        x = -2.5 + k * 5.0 / 16
+        glow_ball(x, y0 - 0.05, z0 + 0.12, 0.05, bulb)
+        glow_ball(x, y0 - 0.05, z1 - 0.12, 0.05, bulb)
+    blade_sign('CINEMA', 0, H - 0.8, 0.62, red, M['trimDark'])
+    upper_floors(W, GROUND + 0.6, floors, 4, arch=True, frame='cream', fire_escape=False, plants=False)
+    roof_bits(W, H, seed=27)
+
+
+def bodega(W=5.0):
+    """A corner deli and grocery: green awning, fruit crates out front."""
+    floors = 3
+    H = GROUND + floors * STOREY + 0.6
+    body(W, H, M['tan'])
+    spill(W, (0.4, 1.0, 0.5))
+    door_x = shopfront(W, '#1a2a1e', glass='shopCool', door_x=W / 2 - 0.95, awning='#1f7a3a', stripes='#f4efe6')
+    green = neon('DeliGreen', (0.3, 1.0, 0.4), 10)
+    white = neon('DeliWhite', (1.0, 1.0, 0.95), 8)
+    sign_text('DELI', -1.3, GROUND + 0.4, 0.42, green, board=M['trimDark'], pad=0.12)
+    sign_text('GROCERY', 0.6, GROUND + 0.4, 0.3, white, board=M['trimDark'], pad=0.12)
+    wood = principled('Crate', srgb('#7a5a3a'), rough=0.8)
+    fruit = [principled('Fruit', srgb(c), rough=0.5) for c in ('#e0402a', '#f0a020', '#8ac040', '#f0d040')]
+    for i in range(3):
+        x = -W / 2 + 0.7 + i * 0.8
+        if x > door_x - 0.8: break
+        box('Crate', x - 0.33, x + 0.33, FY - 0.75, FY - 0.15, 0, 0.45, wood, bevel=0.01)
+        for j in range(3):
+            glow_ball(x - 0.2 + j * 0.2, FY - 0.45, 0.52, 0.09, fruit[(i + j) % 4])
+    upper_floors(W, GROUND, floors, 3, frame='cream', fire_escape=True)
+    roof_bits(W, H, water_tower=True, seed=28)
+
+
+def tacos(W=4.0):
+    """A taco stand: hot pink and yellow neon, paper flags across the front."""
+    floors = 2
+    H = GROUND + floors * STOREY + 0.6
+    body(W, H, M['stuccoRust'], top_mat=M['cream'])
+    spill(W, (1.0, 0.45, 0.6))
+    door_x = dark_shop(W, '#240e14', '#ffb04a', door_x=W / 2 - 0.85)
+    pink = neon('TacoPink', (1.0, 0.2, 0.6), 10)
+    yellow = neon('TacoYellow', (1.0, 0.85, 0.2), 10)
+    sign_text('TACOS', -0.3, GROUND - 0.45, 0.5, yellow)
+    neon_frame(-W / 2 + 0.3, door_x - 0.66, 0.56, GROUND - 0.96, pink)
+    # paper flags (papel picado) on a string across the front
+    cols = ['#ff4f8a', '#ffd24f', '#4fd8ff', '#8aff4f', '#c04fff']
+    n = int(W * 2.5)
+    for k in range(n):
+        x = -W / 2 + 0.2 + k * (W - 0.4) / (n - 1)
+        sag = 0.18 * math.sin(math.pi * k / (n - 1))
+        z = GROUND + 0.55 - sag
+        m = principled('Flag', srgb(cols[k % 5]), rough=0.6, emission=srgb(cols[k % 5]), emission_strength=0.6)
+        box('Flag', x - 0.11, x + 0.11, FY - 0.35, FY - 0.33, z - 0.3, z, m, bevel=0)
+    upper_floors(W, GROUND + 0.6, floors, 2, frame='cream', fire_escape=False)
+    roof_bits(W, H, seed=29)
+
+
+def tower(W=6.0):
+    """A dark glass office tower: rows of panels, a few lit late, a red beacon."""
+    floors = 7
+    H = GROUND + floors * STOREY * 0.8 + 0.4
+    box('Body', -W / 2, W / 2, FY, -FY, 0, H, M['panel'], bevel=0.02)
+    box('Roof', -W / 2 + 0.1, W / 2 - 0.1, FY + 0.1, -FY - 0.1, H - 0.05, H + 0.02, M['roof'], bevel=0)
+    spill(W, (0.5, 0.7, 1.0))
+    # a bright lobby
+    box('Lobby', -W / 2 + 0.3, W / 2 - 0.3, FY - 0.05, FY, 0.2, GROUND - 0.5, M['shopCool'], bevel=0)
+    for x in (-W / 2 + 0.3, -1, 1, W / 2 - 0.3):
+        box('LobbyFin', x - 0.06, x + 0.06, FY - 0.12, FY, 0, GROUND - 0.3, M['iron'], bevel=0)
+    box('LobbyHead', -W / 2, W / 2, FY - 0.14, FY, GROUND - 0.5, GROUND - 0.2, M['iron'], bevel=0)
+    cool = neon('TowerCool', (0.5, 0.8, 1.0), 6)
+    sign_text('NOVA TOWER', 0, GROUND - 0.35, 0.16, cool, y=FY - 0.16)
+    cols = 6
+    rr = random.Random(31)
+    for f in range(floors):
+        z = GROUND + 0.3 + f * STOREY * 0.8
+        for c in range(cols):
+            x0 = -W / 2 + 0.15 + c * (W - 0.3) / cols
+            lit = rr.random()
+            m = M['cool'] if lit < 0.12 else M['warm'] if lit < 0.2 else M['glassDark']
+            box('Pane', x0 + 0.04, x0 + (W - 0.3) / cols - 0.04, FY - 0.05, FY, z, z + STOREY * 0.8 - 0.3, m, bevel=0)
+        box('Floor', -W / 2, W / 2, FY - 0.1, FY, z - 0.12, z, M['iron'], bevel=0)
+    for c in range(cols + 1):
+        x = -W / 2 + 0.15 + c * (W - 0.3) / cols
+        box('Mullion', x - 0.04, x + 0.04, FY - 0.12, FY, GROUND, H, M['iron'], bevel=0)
+    # the antenna and its red light
+    box('Antenna', -0.04, 0.04, -0.04, 0.04, H, H + 2.2, M['iron'], bevel=0)
+    beacon = principled('Beacon', srgb('#ff3030'), rough=0.4, emission=srgb('#ff2020'), emission_strength=6)
+    glow_ball(0, 0, H + 2.25, 0.12, beacon)
+    for k in range(2):
+        box('RoofAC', -W / 2 + 0.8 + k * 1.4, -W / 2 + 1.6 + k * 1.4, 0.2, 1.0, H, H + 0.5, M['ac'], bevel=0.02)
+
+
+def gym(W=5.0):
+    """A 24-hour gym: a bright window of treadmills, red neon."""
+    floors = 2
+    H = GROUND + floors * STOREY + 0.6
+    body(W, H, M['concrete'], top_mat=M['trimDark'])
+    spill(W, (1.0, 0.2, 0.2))
+    door_x = shopfront(W, '#16161c', glass='shopCool', door_x=W / 2 - 0.9)
+    red = neon('GymRed', (1.0, 0.12, 0.15), 10)
+    white = neon('GymWhite', (1.0, 1.0, 1.0), 8)
+    sign_text('GYM', -0.9, GROUND - 0.35, 0.5, red)
+    sign_text('24 HR', 0.7, GROUND - 0.35, 0.3, white)
+    for i in range(3):   # treadmills, dark against the lit window
+        x = -W / 2 + 0.7 + i * 0.9
+        if x > door_x - 0.9: break
+        box('Belt', x - 0.35, x + 0.35, FY - 0.09, FY - 0.06, 0.6, 0.75, M['void'], bevel=0)
+        box('Post', x + 0.25, x + 0.3, FY - 0.09, FY - 0.06, 0.75, 1.55, M['void'], bevel=0)
+        box('Console', x + 0.08, x + 0.36, FY - 0.09, FY - 0.06, 1.5, 1.7, M['void'], bevel=0)
+    upper_floors(W, GROUND + 0.6, floors, 3, frame='trimDark', fire_escape=False, plants=False)
+    roof_bits(W, H, seed=30)
+
+
+def garage(W=6.0):
+    """A concrete parking garage: open decks, a few cars, a blue P."""
+    decks = 3
+    DECK = 2.4
+    H = decks * DECK + 1.0
+    body(W, H, M['concrete'], top_mat=M['concrete'])
+    spill(W, (0.3, 0.5, 1.0))
+    car_cols = ['#c02a2a', '#2a5ac0', '#e0e0e0', '#2a2a30', '#d9a83a']
+    rr = random.Random(32)
+    for d in range(decks):
+        z0 = d * DECK + 0.5
+        # the open deck: dark inside, a lit strip under the slab above
+        box('Open', -W / 2 + 0.3, W / 2 - 0.3, FY - 0.04, FY, z0, z0 + DECK - 0.8, M['void'], bevel=0)
+        box('DeckLight', -W / 2 + 0.3, W / 2 - 0.3, FY - 0.05, FY - 0.02, z0 + DECK - 0.95, z0 + DECK - 0.85, M['shopLight'], bevel=0)
+        box('Parapet', -W / 2, W / 2, FY - 0.12, FY, z0 - 0.1, z0 + 0.45, M['concrete'], bevel=0.01)
+        for c in range(4):
+            if rr.random() < 0.35: continue
+            x = -W / 2 + 0.9 + c * 1.4
+            m = principled('Car', srgb(car_cols[rr.randrange(5)]), rough=0.3)
+            box('CarBody', x - 0.55, x + 0.55, FY - 0.08, FY - 0.05, z0 + 0.45, z0 + 0.8, m, bevel=0.02)
+            box('CarTop', x - 0.32, x + 0.32, FY - 0.08, FY - 0.05, z0 + 0.8, z0 + 1.05, M['glassDark'], bevel=0.02)
+    for x in (-W / 2 + 0.15, 0, W / 2 - 0.15):
+        box('Column', x - 0.15, x + 0.15, FY - 0.12, FY, 0, H, M['concrete'], bevel=0.01)
+    blue = neon('ParkBlue', (0.25, 0.55, 1.0), 10)
+    blade_sign('PARK', W / 2 - 0.4, H - 0.3, 0.55, blue, M['trimDark'])
+    box('EntryBar', -1.6, -0.2, FY - 0.6, FY - 0.55, 0.9, 0.98, principled('Boom', srgb('#e0c020'), rough=0.4), bevel=0)
+    roof_bits(W, H, seed=33)
+
+
 BUILDINGS = {'walkup': walkup, 'diner': diner, 'laundromat': laundromat, 'walkupDark': walkup_dark, 'cocktail': cocktail,
-             'karaoke': karaoke, 'noodles': noodles, 'tattoo': tattoo, 'liquor': liquor, 'hotel': hotel}
+             'karaoke': karaoke, 'noodles': noodles, 'tattoo': tattoo, 'liquor': liquor, 'hotel': hotel,
+             'pizza': pizza, 'arcade': arcade, 'barber': barber, 'records': records, 'bowling': bowling, 'pawn': pawn,
+             'cinema': cinema, 'bodega': bodega, 'tacos': tacos, 'tower': tower, 'gym': gym, 'garage': garage}
 WIDTHS = {'walkup': 5.0, 'diner': 6.0, 'laundromat': 5.0, 'walkupDark': 5.0, 'cocktail': 5.0, 'karaoke': 6.0,
-          'noodles': 4.0, 'tattoo': 4.0, 'liquor': 5.0, 'hotel': 6.0}
+          'noodles': 4.0, 'tattoo': 4.0, 'liquor': 5.0, 'hotel': 6.0,
+          'pizza': 4.0, 'arcade': 6.0, 'barber': 4.0, 'records': 5.0, 'bowling': 7.0, 'pawn': 4.0,
+          'cinema': 7.0, 'bodega': 5.0, 'tacos': 4.0, 'tower': 6.0, 'gym': 5.0, 'garage': 6.0}
 
 
 # --------------------------------------------------------------------------
