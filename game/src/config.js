@@ -437,6 +437,10 @@ export const RUSH = { durationMs: 45000, cooldownMs: 180000, drinkWeight: 5, joi
 // arrivals/tips/thirst/fans: multipliers (arrivals: guests come this much
 // faster; thirst: they want drinks this much sooner; fans: fans from happy
 // leavers). shade tints the room's mood lighting.
+// While a party runs, guests pick dancing `weight` times as often (and may
+// dance again straight after dancing) and dance `longer` times as long, so
+// the dance floor packs out like Nightclub City's (the owner's ask).
+export const PARTY_DANCE = { weight: 2.5, longer: 1.5 };
 export const PARTY_LENGTH_MS = 3 * 60 * 1000;
 export const PARTY_COUNTDOWN_MS = 10 * 1000; // from paying to the party starting
 export const PARTY_COOLDOWN_MS = 6 * 60 * 1000; // after a party ends, before the next can be thrown (the owner's rule)

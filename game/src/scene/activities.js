@@ -11,7 +11,7 @@
 // Mixed into ClubScene (see ClubScene.js); `this` is the scene.
 import Phaser from 'phaser';
 import { FLOOR_DECAL_PROPS } from '../catalog.js';
-import { ADMIRE, GUEST_LUXURY, GUEST_TYPES, HAPPINESS, XP, PATRON_MOVE_INTERVAL, PATRON_POPUP_Y, VISIT } from '../config.js';
+import { ADMIRE, GUEST_LUXURY, GUEST_TYPES, HAPPINESS, XP, PARTY_DANCE, PATRON_MOVE_INTERVAL, PATRON_POPUP_Y, VISIT } from '../config.js';
 import { PROP_TYPES } from '../catalog.js';
 import { randRange } from '../util.js';
 
@@ -44,8 +44,10 @@ export class ActivitiesMixin {
   activityWeights(patron) {
     const w = { ...patron.type.weights };
     w.admire = this.admireSpot(patron) ? ADMIRE.weight : 0; // a decoration to look at
-    if (patron.lastActivity) w[patron.lastActivity] *= 0.25;
+    const party = this.currentParty && this.currentParty();
+    if (patron.lastActivity && !(party && patron.lastActivity === 'dance')) w[patron.lastActivity] *= 0.25; // at a party, dancing again is fine
     w.dance *= this.boostDanceFactor ? this.boostDanceFactor() : 1;
+    if (party) w.dance *= PARTY_DANCE.weight; // a party packs the dance floor (the owner's ask, like Nightclub City's)
     w.drink *= this.rushDrinkFactor ? this.rushDrinkFactor() : 1;
     if (!this.musicPlaying()) w.dance = 0;
     // A look not drawn dancing or sitting yet doesn't (canDoClip()).
@@ -170,7 +172,7 @@ export class ActivitiesMixin {
     const a = patron.activity;
     const kind = a && a.kind;
     if (kind === 'dance' && this.isDanceFloorTile(patron.gx, patron.gy) && this.musicPlaying()) {
-      if (!a.until) a.until = now + randRange(...VISIT.danceMs);
+      if (!a.until) a.until = now + randRange(...VISIT.danceMs) * (this.currentParty && this.currentParty() ? PARTY_DANCE.longer : 1);
       this.faceFront(patron);
       this.setPatronAnimation(patron, 'dance');
       patron.nextMoveAt = a.until;
