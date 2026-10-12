@@ -552,7 +552,7 @@ export const PROP_TYPES = {
 // level it unlocks at, so a level's new things take real saving (the owner
 // found everything far too cheap: a level 19 club had money for anything).
 // Floors, dance floors and wallpaper go by the tile, so they grow slower.
-export const PRICING = { perLevel: 1.5, perLevelTiles: 0.3 };
+export const PRICING = { perLevel: 0.5, perLevelTiles: 0.1 }; // was 1.5 / 0.3: the owner found that too far (a simple seat near $1,000)
 function itemPrice(def) {
   const level = def.unlockLevel || 1;
   const tiles = def.paintStyle || def.floorStyle || def.wallStyle;
@@ -645,8 +645,8 @@ export const EXPANSION = {
     { level: 12, size: 14 }, { level: 16, size: 15 }, { level: 20, size: 16 }, { level: 25, size: 17 },
     { level: 30, size: 18 }, { level: 35, size: 19 }, { level: 40, size: 20 },
   ],
-  perTile: 60,
-  perTileGrowth: 50,
+  perTile: 40,
+  perTileGrowth: 30,
 };
 
 // A 1-5 "Fame" rating shown in the shop instead of raw fan-rate/capacity

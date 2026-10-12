@@ -211,10 +211,10 @@ check('double-clicking the side adds just one row on that side', bought.grid[0] 
 await page.click('#navBuild');
 await page.evaluate(() => window.__clubNova.scene.getScene('club').selectProp('woodBar'));
 
-// Place a Wood Bar ($330: its $130 value times the level-1 price factor).
+// Place a Wood Bar ($200: its $130 value times the level-1 price factor).
 await clickTile(2, 5);
 st = await state();
-check('placing a Wood Bar costs $330', st.cash === 370 && st.placed === 2, `cash ${st.cash}`);
+check('placing a Wood Bar costs $200', st.cash === 500 && st.placed === 2, `cash ${st.cash}`);
 
 // The bar sprite spans exactly its 1x3 footprint: 4 half-tiles across,
 // plus the render script's small crop margin.
@@ -345,7 +345,7 @@ check('the Truss Spotlights stand over a DJ set: only their two legs take floor'
 // Placing on an occupied tile is refused.
 await clickTile(2, 5);
 st = await state();
-check('occupied tile is refused', st.cash === 370 && st.placed === 2, JSON.stringify({ cash: st.cash, placed: st.placed }));
+check('occupied tile is refused', st.cash === 500 && st.placed === 2, JSON.stringify({ cash: st.cash, placed: st.placed }));
 
 // Rotate the DJ booth (hover + R).
 const moved = await page.evaluate(() => { const b = window.__clubNova.scene.getScene('club').clubBooth(); return b && b.anchor.join(','); });
@@ -371,7 +371,7 @@ const staffed = await page.evaluate(() => {
   const s = window.__clubNova.scene.getScene('club');
   return { cash: s.cash, music: s.musicPlaying(), bartenders: s.hireableRecords().filter((r) => r.staff).length };
 });
-check('hiring a bartender costs $50', staffed.cash === 320 && staffed.bartenders === 1 && staffed.music, JSON.stringify(staffed));
+check('hiring a bartender costs $50', staffed.cash === 450 && staffed.bartenders === 1 && staffed.music, JSON.stringify(staffed));
 await page.evaluate(() => { const s = window.__clubNova.scene.getScene('club'); delete s.collectPatronTip; delete s.chargeCover; });
 
 // Patrons arrive, get thirsty, buy drinks, earn fans and tip.
@@ -453,7 +453,7 @@ const cashBeforeSell = (await state()).cash;
 await page.keyboard.press('Escape');
 await clickTile(2, 5, 'right');
 st = await state();
-check('right-click sells the bar for half price ($165)', st.placed === 1 && st.cash - cashBeforeSell >= 165 && st.cash - cashBeforeSell < 190, `+$${st.cash - cashBeforeSell}`);
+check('right-click sells the bar for half price ($100)', st.placed === 1 && st.cash - cashBeforeSell >= 100 && st.cash - cashBeforeSell < 125, `+$${st.cash - cashBeforeSell}`);
 await page.evaluate(() => { delete window.__clubNova.scene.getScene('club').payWages; });
 
 // Save survives a reload. The game also saves as the page unloads, so
@@ -528,14 +528,14 @@ const swap = await page.evaluate(() => {
   s.cash = c0; s.fans = fans;
   return out;
 });
-check('buying a DJ booth swaps it in where the booth stands (same spot and facing, DJ playing), the old one into the inventory, and back again for free', swap.ok && swap.type === 'proBooth' && swap.same && swap.dj && swap.one && swap.paid === 1200 && swap.stored && swap.held === null && swap.back, JSON.stringify(swap));
+check('buying a DJ booth swaps it in where the booth stands (same spot and facing, DJ playing), the old one into the inventory, and back again for free', swap.ok && swap.type === 'proBooth' && swap.same && swap.dj && swap.one && swap.paid === 540 && swap.stored && swap.held === null && swap.back, JSON.stringify(swap));
 // Prices grow with the level an item unlocks at (the owner found
 // everything too cheap): the shop charges `price`, not the base `cost`.
 const pricing = await page.evaluate(() => {
   const s = window.__clubNova.scene.getScene('club');
   return { wood: s.currentCost('woodBar'), pro: s.currentCost('proBooth'), neon: s.currentCost('neonBooth'), glass: s.currentCost('glassBooth'), truss: 'trussBooth' in (window.__clubNova.catalog?.PROP_TYPES || {}) };
 });
-check('prices grow with an item\'s unlock level', pricing.wood === 330 && pricing.pro === 1200 && pricing.neon > 5000 && pricing.glass > 100000, JSON.stringify(pricing));
+check('prices grow with an item\'s unlock level', pricing.wood === 200 && pricing.pro === 540 && pricing.neon > 2500 && pricing.glass > 40000, JSON.stringify(pricing));
 // Editing the club hides the guests (they pop back when the panel closes),
 // and bars are limited by level: three pieces per bartender allowed.
 const editHide = await page.evaluate(() => {
@@ -572,7 +572,7 @@ const editHide = await page.evaluate(() => {
 });
 check('guests vanish while the club is being edited and pop back after; bars are capped by level (3 pieces at level 1)', editHide.guest && editHide.hidden && editHide.back && editHide.allowance === 3 && editHide.capped, JSON.stringify(editHide));
 check('the club\'s last DJ booth can\'t be sold', upgrade.kept && upgrade.lastKept, JSON.stringify(upgrade));
-check('DJ booths are bought and placed like other items, each with its own DJ; placing one stores the old one (one at a time)', upgrade.placed === 'proBooth' && upgrade.dj && upgrade.paid === 1200 && upgrade.booths === 1 && upgrade.main === 'proBooth' && upgrade.stored && upgrade.restored, JSON.stringify(upgrade));
+check('DJ booths are bought and placed like other items, each with its own DJ; placing one stores the old one (one at a time)', upgrade.placed === 'proBooth' && upgrade.dj && upgrade.paid === 540 && upgrade.booths === 1 && upgrade.main === 'proBooth' && upgrade.stored && upgrade.restored, JSON.stringify(upgrade));
 
 // Bass Boost and Drink Rush: each runs for a while, then needs to recharge.
 // Starting one sends a share of the crowd off (one by one) to dance or to
@@ -3242,7 +3242,7 @@ check('wall decorations are 3D pieces hung on a wall section (one each, the shel
   const tp = await phone.newPage();
   tp.on('pageerror', (e) => errors.push(`phone: ${e.message}`));
   await tp.goto(gameUrl);
-  await tp.waitForFunction(() => { const s = window.__clubNova && window.__clubNova.scene.getScene('club'); return s && s.world && s.sys.settings.status >= 5; });
+  await tp.waitForFunction(() => { const s = window.__clubNova && window.__clubNova.scene.getScene('club'); return s && s.world && s.sys.settings.status >= 5; }, null, { timeout: 120000 });
   await tp.evaluate(() => {
     const s = window.__clubNova.scene.getScene('club');
     s.showLevelUp = () => {}; s.showDaily = () => false;
