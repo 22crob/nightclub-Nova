@@ -112,7 +112,7 @@ export class DrinksMixin {
       card.innerHTML = `<div class="drinkPic">${drinkIconSvg(d)}</div><div class="drinkName"></div><div class="drinkPrice"></div><div class="drinkInfo"></div><div class="drinkState"></div>`;
       card.querySelector('.drinkName').textContent = d.name;
       card.querySelector('.drinkPrice').textContent = formatMoney(d.price);
-      card.querySelector('.drinkInfo').textContent = `${'★'.repeat(d.fun)} fun · ${d.mix <= 1 ? 'quick' : d.mix <= 1.4 ? 'takes a while' : 'slow'} to mix`;
+      card.querySelector('.drinkInfo').textContent = `${'★'.repeat(d.fun)} fun · ${d.mix <= 0.95 ? 'quick' : d.mix <= 1.1 ? 'a little slower' : 'slower'} to mix`;
       card.querySelector('.drinkState').textContent = locked ? `🔒 Level ${d.unlockLevel}` : on ? 'On the menu' : 'Off';
       if (!locked) card.addEventListener('click', () => this.toggleDrink(d.key));
       list.appendChild(card);

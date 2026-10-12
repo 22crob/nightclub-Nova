@@ -236,18 +236,22 @@ export class BarsMixin {
         const t = b.task;
         if (!t) continue;
         const p = t.patron;
-        if (p.gone || p.leaving || p.queue !== t.unit || !this.atServiceSpot(p) || !group.includes(t.unit)) {
+        // The bartender starts on a customer's drink as soon as they're
+        // called up to a spot, while they walk over, and hands it over once
+        // they stand there (the October 2026 check: waiting for them to
+        // arrive first left the bar idle longer than the mixing took).
+        if (p.gone || p.leaving || p.queue !== t.unit || !p.atSpot || !group.includes(t.unit)) {
           this.releaseBartender(b);
-        } else if (t.phase === 'serve' && now >= t.until) {
+        } else if (t.phase === 'serve' && now >= t.until && this.atServiceSpot(p)) {
           this.releaseBartender(b);
           this.leaveBarQueue(p);
           this.serveDrink(t.unit, p);
-          p.nextMoveAt = now + randRange(800, 1500); // take the drink and step away
+          p.nextMoveAt = now + randRange(200, 500); // take the drink and step aside for the next
         }
       }
-      // Free bartenders go to the nearest customer waiting at a spot nobody
-      // else is serving.
-      const ready = this.barGroupQueue(group[0]).filter((p) => p.readyToOrder && this.atServiceSpot(p) && !p.servedBy && !p.leaving);
+      // Free bartenders go to the nearest customer called up to a spot
+      // nobody else is serving (there or still on their way).
+      const ready = this.barGroupQueue(group[0]).filter((p) => p.atSpot && !p.servedBy && !p.leaving);
       if (this.drinkStockLeft() <= 0) { this.warnDrinkStock(); this.checkBarPatience(group); continue; } // out of drinks
       // A unit another bartender stands at (or is walking to) is theirs:
       // two bartenders never stop on the same spot (they may walk past).

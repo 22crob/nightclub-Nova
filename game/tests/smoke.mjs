@@ -1228,11 +1228,16 @@ const queue = await page.evaluate(() => {
   const freed = where(guests[0]);
   s.leaveBarQueue(guests[0]);
   out.stepUp = guests[2].atSpot && where(guests[2]) === freed;
-  // Someone still walking to the counter isn't served.
-  guests[1].readyToOrder = true;
+  // Someone still walking to the counter may have their drink started,
+  // but it's only handed over once they stand on their spot.
   guests[1].moving = true;
   s.tickBars();
-  out.notWhileWalking = !guests[1].servedBy;
+  const early = guests[1].servedBy;
+  const sold0 = s.drinksSold || 0;
+  if (early) { early.task.phase = 'serve'; early.task.until = s.time.now - 1; }
+  s.tickBars();
+  out.notWhileWalking = !!early && (s.drinksSold || 0) === sold0 && !!guests[1].queue;
+  if (early) s.releaseBartender(early);
   guests[1].readyToOrder = false;
   guests[1].moving = false;
   // Two bartenders, two customers ready: each takes a different spot.
@@ -1244,7 +1249,7 @@ const queue = await page.evaluate(() => {
   const staff = s.barGroup(barA).filter((u) => u.staff).map((u) => u.staff);
   out.claimed = staff.every((b) => b.task) && staff[0].task.unit !== staff[1].task.unit
     && staff.every((b) => b.task.unit.claimedBy === b && b.task.patron.servedBy === b);
-  // Mixing takes about 3 seconds once they're there.
+  // Mixing takes about 3 seconds; it's handed over once they're there.
   const drinks0 = s.drinksSold || 0;
   for (const b of staff) {
     s.tweens.killTweensOf(b.container);
@@ -1256,7 +1261,10 @@ const queue = await page.evaluate(() => {
   out.notYet = (s.drinksSold || 0) === drinks0;
   for (const b of staff) b.task.until = s.time.now - 1;
   s.tickBars();
-  out.served = (s.drinksSold || 0) - drinks0 === 2 && ready.every((p) => !p.queue) && staff.every((b) => !b.task);
+  // Both served; the last one in line is called up and their drink started.
+  out.served = (s.drinksSold || 0) - drinks0 === 2 && ready.every((p) => !p.queue) && staff.every((b) => !b.task || b.task.patron === guests[3]);
+  for (const b of staff) if (b.task) s.releaseBartender(b);
+  guests[3].servedBy = null;
   // Patience: nobody gives up before 20 s; after that some do, angrily.
   const w = guests[3];
   out.w = { queue: !!w.queue, atSpot: w.atSpot };
@@ -1278,7 +1286,7 @@ const queue = await page.evaluate(() => {
   return out;
 });
 check('customers fill every spot along a long bar, then wait in rows behind and step up', queue.group && queue.spotsOk && queue.lineOk && queue.stepUp, JSON.stringify(queue));
-check('bartenders each claim a different customer, take 3 s to serve, then serve (never while they walk)', queue.notWhileWalking && queue.ready && queue.claimed && queue.notYet && queue.served, JSON.stringify(queue));
+check('bartenders each claim a different customer, mix while they walk up, and hand the drink over only once they stand there', queue.notWhileWalking && queue.ready && queue.claimed && queue.notYet && queue.served, JSON.stringify(queue));
 check('nobody gives up on the bar before 20 s; after that some walk off angry', queue.stillWaiting && queue.gaveUp, JSON.stringify(queue));
 
 // Regular floors: pick one and click (or drag across) tiles to paint them.

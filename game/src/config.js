@@ -342,14 +342,17 @@ export const ZOOM_MAX = 2.2;
 // price per drink, fun (1-5, how much it cheers a guest up beyond a plain
 // drink) and mix (how long it takes to make, times BAR.serveMs). glass and
 // color draw its picture.
+// mix: how long it takes to make, times BAR.serveMs. Fancy drinks take a
+// little longer, at most about a third (they took up to 2.25x as long as a
+// beer and the bars couldn't keep up; October 2026).
 export const DRINKS = [
   { key: 'beer', name: 'Beer', price: 8, unlockLevel: 1, fun: 1, mix: 0.8, glass: 'mug', color: '#ffb52e' },
-  { key: 'cocktail', name: 'Cocktail', price: 12, unlockLevel: 3, fun: 2, mix: 1, glass: 'cocktail', color: '#ff5fa8' },
+  { key: 'cocktail', name: 'Cocktail', price: 12, unlockLevel: 3, fun: 2, mix: 0.95, glass: 'cocktail', color: '#ff5fa8' },
   { key: 'shots', name: 'Shots', price: 16, unlockLevel: 6, fun: 2, mix: 0.9, glass: 'shots', color: '#ffd23f' },
-  { key: 'mojito', name: 'Mojito', price: 20, unlockLevel: 10, fun: 3, mix: 1.2, glass: 'highball', color: '#b8f07a' },
-  { key: 'martini', name: 'Martini', price: 26, unlockLevel: 16, fun: 3, mix: 1.3, glass: 'martini', color: '#d6f2ff' },
-  { key: 'champagne', name: 'Champagne', price: 40, unlockLevel: 24, fun: 4, mix: 1.5, glass: 'flute', color: '#ffe48a' },
-  { key: 'novaNeon', name: 'Nova Neon', price: 60, unlockLevel: 34, fun: 5, mix: 1.8, glass: 'neon', color: '#c04cff' },
+  { key: 'mojito', name: 'Mojito', price: 20, unlockLevel: 10, fun: 3, mix: 1.05, glass: 'highball', color: '#b8f07a' },
+  { key: 'martini', name: 'Martini', price: 26, unlockLevel: 16, fun: 3, mix: 1.1, glass: 'martini', color: '#d6f2ff' },
+  { key: 'champagne', name: 'Champagne', price: 40, unlockLevel: 24, fun: 4, mix: 1.2, glass: 'flute', color: '#ffe48a' },
+  { key: 'novaNeon', name: 'Nova Neon', price: 60, unlockLevel: 34, fun: 5, mix: 1.3, glass: 'neon', color: '#c04cff' },
 ];
 // Extra mood per fun star (on top of MOOD.drinkMood).
 export const DRINK_FUN_MOOD = 3;
