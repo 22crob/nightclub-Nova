@@ -26,7 +26,6 @@ export const MOOD = {
   funMoodPerSec: 1.0,      // mood gained per second while fun > 60
   drinkMood: 15,           // mood from a drink
   queuePatience: 0.35,     // thirst hurts this much less while in line at a bar
-  barsFullPatience: 0.5,   // ...and this much while the bars are too full to join (October 2026 check: they stormed out within a minute)
   stormOutBelow: 20,       // a patron this unhappy leaves early
   bubbleEveryMs: 9000,     // how often a patron repeats a need bubble
 };
@@ -68,11 +67,12 @@ export class MoodMixin {
     if (thirsty) {
       if (patron.thirstSince == null) patron.thirstSince = now;
       if (now - patron.thirstSince > MOOD.thirstGrace) {
-        // In line, or turned away by full bars just now and waiting for a
-        // gap, they're more patient.
-        const waiting = patron.queue ? MOOD.queuePatience : now - (patron.barsFullAt ?? -Infinity) < 12000 ? MOOD.barsFullPatience : 1;
+        // In line they're more patient, and while every bar line is full
+        // they wait their turn without minding (the owner's idea, October
+        // 2026: they're called up when there's room, bars.js).
+        const waiting = patron.queue ? MOOD.queuePatience : this.barsFull() ? 0 : 1;
         mood -= MOOD.thirstMoodPerSec * dt * waiting;
-        this.moodBubble(patron, '🍹?');
+        if (waiting) this.moodBubble(patron, '🍹?');
       }
     } else {
       patron.thirstSince = null;

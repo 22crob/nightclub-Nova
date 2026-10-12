@@ -13,7 +13,7 @@
 // pass each other), mixes the drink for BAR.serveMs and serves it.
 // rec.staff.atUnit is the unit a bartender is standing at.
 // Mixed into ClubScene (see ClubScene.js); `this` is the scene.
-import { BAR, BAR_QUEUE_LENGTH, CHARACTER_DISPLAY_HEIGHT } from '../config.js';
+import { BAR, BAR_QUEUE_LENGTH, CHARACTER_DISPLAY_HEIGHT, VISIT } from '../config.js';
 import { randRange } from '../util.js';
 
 export class BarsMixin {
@@ -206,6 +206,49 @@ export class BarsMixin {
     if (!p.queue || !p.atSpot || p.moving) return false;
     const spot = this.barServiceSpot(p.queue);
     return !!spot && spot[0] === p.gx && spot[1] === p.gy;
+  }
+
+  // How many more customers the bar lines can take right now (service
+  // spots plus the rows behind), or null with nothing to serve (no worked
+  // bar, or no stock): then thirst is the player's problem. Worked out once
+  // per tick.
+  barLineRoom() {
+    const now = this.time.now;
+    if (this.barRoomAt === now) return this.barRoomCache;
+    let room = null;
+    if (this.drinkStockLeft() > 0) {
+      for (const group of this.workedBars()) {
+        const customers = this.barGroupQueue(group[0]).length;
+        const spots = group.filter((u) => this.barServiceSpot(u)).length;
+        room = (room || 0) + Math.max(0, spots + this.barWaitTiles(group).length - customers);
+      }
+    }
+    this.barRoomAt = now;
+    this.barRoomCache = room;
+    this.barTurnCache = null;
+    return room;
+  }
+
+  // Every bar line full: thirsty guests wait their turn without minding.
+  barsFull() {
+    return this.barLineRoom() === 0;
+  }
+
+  // Whether a thirsty guest may head for the bar now: there's room in a
+  // line and they're among the longest thirsty (one per free place), so
+  // nobody walks over to be turned away and the bars fill as they free up.
+  mayGoForDrink(patron) {
+    const room = this.barLineRoom();
+    if (room === null) return true; // nothing to serve: they go and find out
+    if (room <= 0) return false;
+    if (!this.barTurnCache) {
+      const now = this.time.now;
+      this.barTurnCache = this.patrons
+        .filter((p) => !p.gone && !p.leaving && !p.queue && !p.arguing && now >= p.thirstyAt + VISIT.thirstGraceMs)
+        .sort((x, y) => x.thirstyAt - y.thirstyAt)
+        .slice(0, room);
+    }
+    return this.barTurnCache.includes(patron);
   }
 
   // A customer has reached their place: at a spot they wait to be served,

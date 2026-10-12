@@ -110,7 +110,7 @@ export class ActivitiesMixin {
     const now = this.time.now;
     if ((kind === 'dance' || kind === 'sit') && !this.canDoClip(patron, kind)) return false;
     if (kind === 'drink') {
-      if (!this.joinBarQueue(patron)) { patron.barsFullAt = this.time.now; return false; } // waiting for a gap (thirst hurts less, mood.js)
+      if (!this.joinBarQueue(patron)) return false;
       patron.activity = { kind, phase: 'queue' };
       return true;
     }
@@ -459,10 +459,12 @@ export class ActivitiesMixin {
       this.admireReaction(patron, a.rec);
     }
     if (a && a.kind === 'chat' && a.chatting && !patron.moving) this.chatBubble(patron);
-    // Thirsty for a while: wrap up what they're doing and go for a drink.
+    // Thirsty for a while: wrap up what they're doing and go for a drink,
+    // once there's room in a bar line and it's their turn (bars.js
+    // mayGoForDrink(): the longest thirsty go first; the rest carry on).
     const now = this.time.now;
     if (a && a.kind !== 'drink' && !patron.queue && !patron.arguing && !patron.leaving
-      && now >= patron.thirstyAt + VISIT.thirstGraceMs && now >= (patron.drinkTryAt || 0)) {
+      && now >= patron.thirstyAt + VISIT.thirstGraceMs && now >= (patron.drinkTryAt || 0) && this.mayGoForDrink(patron)) {
       patron.drinkTryAt = now + 8000; // the bars may be full: try again in a bit
       patron.wantActivity = 'drink';
       a.until = Math.min(a.until || now, now);

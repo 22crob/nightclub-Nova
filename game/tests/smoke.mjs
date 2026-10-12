@@ -1289,6 +1289,34 @@ check('customers fill every spot along a long bar, then wait in rows behind and 
 check('bartenders each claim a different customer, mix while they walk up, and hand the drink over only once they stand there', queue.notWhileWalking && queue.ready && queue.claimed && queue.notYet && queue.served, JSON.stringify(queue));
 check('nobody gives up on the bar before 20 s; after that some walk off angry', queue.stillWaiting && queue.gaveUp, JSON.stringify(queue));
 
+// When every bar line is full, thirsty guests carry on and don't mind;
+// when there's room, the longest thirsty are called up first (the owner's
+// idea, October 2026).
+const turns = await page.evaluate(() => {
+  const s = window.__clubNova.scene.getScene('club');
+  const ps = s.patrons.filter((p) => !p.gone && !p.leaving && !p.queue && !p.arguing).slice(0, 2);
+  if (ps.length < 2) return { skipped: true };
+  const [a, b] = ps;
+  const saved = ps.map((p) => [p.thirstyAt, p.mood, p.thirstSince]);
+  const now = s.time.now;
+  a.thirstyAt = now - 90000; b.thirstyAt = now - 60000;
+  for (const p of s.patrons) if (p !== a && p !== b && !p.gone) p.__t = p.thirstyAt, p.thirstyAt = now + 1e6;
+  const room = s.barLineRoom;
+  const out = {};
+  s.barLineRoom = () => 0; s.barTurnCache = null;
+  out.fullNobody = !s.mayGoForDrink(a) && !s.mayGoForDrink(b) && s.barsFull();
+  a.mood = 80; a.thirstSince = now - 60000;
+  s.updatePatronMood(a, 5);
+  out.noUpset = a.mood >= 80;
+  s.barLineRoom = () => 1; s.barTurnCache = null;
+  out.oneGoes = s.mayGoForDrink(a) && !s.mayGoForDrink(b);
+  s.barLineRoom = room; s.barRoomAt = null;
+  ps.forEach((p, i) => { [p.thirstyAt, p.mood, p.thirstSince] = saved[i]; });
+  for (const p of s.patrons) if (p.__t !== undefined) { p.thirstyAt = p.__t; delete p.__t; }
+  return out;
+});
+check('with every bar line full, thirsty guests carry on without minding; when there is room the longest thirsty go first', turns.skipped || (turns.fullNobody && turns.noUpset && turns.oneGoes), JSON.stringify(turns));
+
 // Regular floors: pick one and click (or drag across) tiles to paint them.
 // It's saved, and patrons don't dance on it.
 await page.evaluate(() => {
