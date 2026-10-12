@@ -145,7 +145,10 @@ export const STREET = {
   // A livelier street: some passers-by walk in twos and threes, and small
   // groups stand chatting on the sidewalk, breaking up now and then.
   // The buildings along each back road, in order (art/blender/build_buildings.py).
-  buildingRow: ['hotel', 'cocktail', 'walkup', 'noodles', 'karaoke', 'walkupDark', 'liquor', 'diner', 'tattoo', 'laundromat'],
+  // Down the road behind the right wall, then on down the left one, each
+  // building once (about 20 fit; the last two only if a road were longer).
+  buildingRow: ['hotel', 'records', 'pizza', 'cocktail', 'bowling', 'walkup', 'karaoke', 'barber', 'tower', 'gym',
+    'cinema', 'noodles', 'arcade', 'tattoo', 'bodega', 'diner', 'pawn', 'garage', 'tacos', 'liquor', 'laundromat', 'walkupDark'],
   groupChance: 0.25, hangouts: 2, hangoutMs: [25000, 50000],
   // Strings of bulbs across the back roads (drawStringLights()): ends every
   // `every` tiles, hung `height` px up the buildings, sagging `sag` px, a

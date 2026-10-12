@@ -146,8 +146,11 @@ export class StreetMixin {
     this.buildingLayer.removeAll(true);
     const far = t - R;
     const items = [];
-    for (const [facing, end, start] of [[0, nx + R, 0], [90, ny + R, 3]]) {
-      let i = start;
+    // One run through the row down both roads, so no building shows twice
+    // (the owner saw the first ten repeat); it only wraps if a lot were ever
+    // bigger than the row.
+    let i = 0;
+    for (const [facing, end] of [[0, nx + R], [90, ny + R]]) {
       for (let k = far; k < end; i++) {
         const name = row[i % row.length];
         const meta = BUILDING_META[name];

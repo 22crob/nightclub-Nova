@@ -591,12 +591,12 @@ def arcade(W=6.0):
 def barber(W=4.0):
     """An old barber shop: striped awning and a spinning-style pole."""
     floors = 3
-    H = GROUND + floors * STOREY + 0.6
+    H = GROUND + floors * STOREY + 1.2
     body(W, H, M['brick'])
     spill(W, (0.6, 0.75, 1.0))
     door_x = shopfront(W, '#1f3a5a', glass='shopCool', door_x=W / 2 - 0.85, awning='#c8202a', stripes='#f4efe6')
     white = neon('BarberWhite', (0.95, 0.95, 1.0), 8)
-    sign_text('BARBER', -0.3, GROUND + 0.45, 0.42, white, board=M['trimDark'], pad=0.14)
+    sign_text('BARBER', 0, GROUND + 0.32, 0.42, white, board=M['trimDark'], pad=0.12)
     # the pole beside the door: red, white and blue bands under a glass cap
     reds = [principled('PoleRed', srgb('#e02a2a'), rough=0.3, emission=srgb('#c01a1a'), emission_strength=0.8),
             principled('PoleWhite', srgb('#f4f4f4'), rough=0.3, emission=srgb('#d0d0d0'), emission_strength=0.5),
@@ -607,7 +607,7 @@ def barber(W=4.0):
     cylinder('PoleCapB', px, py, 1.1, 1.2, 0.14, M['cream'], verts=16)
     cylinder('PoleCapT', px, py, 2.46, 2.58, 0.14, M['cream'], verts=16)
     glow_ball(px, py, 2.66, 0.12, M['warm'])
-    upper_floors(W, GROUND, floors, 2, arch=True, frame='cream', fire_escape=True)
+    upper_floors(W, GROUND + 0.6, floors, 2, arch=True, frame='cream', fire_escape=True)
     roof_bits(W, H, water_tower=True, seed=23)
 
 
@@ -710,14 +710,14 @@ def cinema(W=7.0):
 def bodega(W=5.0):
     """A corner deli and grocery: green awning, fruit crates out front."""
     floors = 3
-    H = GROUND + floors * STOREY + 0.6
+    H = GROUND + floors * STOREY + 1.2
     body(W, H, M['tan'])
     spill(W, (0.4, 1.0, 0.5))
     door_x = shopfront(W, '#1a2a1e', glass='shopCool', door_x=W / 2 - 0.95, awning='#1f7a3a', stripes='#f4efe6')
     green = neon('DeliGreen', (0.3, 1.0, 0.4), 10)
     white = neon('DeliWhite', (1.0, 1.0, 0.95), 8)
-    sign_text('DELI', -1.3, GROUND + 0.4, 0.42, green, board=M['trimDark'], pad=0.12)
-    sign_text('GROCERY', 0.6, GROUND + 0.4, 0.3, white, board=M['trimDark'], pad=0.12)
+    sign_text('DELI', -1.4, GROUND + 0.32, 0.42, green, board=M['trimDark'], pad=0.1)
+    sign_text('GROCERY', 0.7, GROUND + 0.32, 0.32, white, board=M['trimDark'], pad=0.1)
     wood = principled('Crate', srgb('#7a5a3a'), rough=0.8)
     fruit = [principled('Fruit', srgb(c), rough=0.5) for c in ('#e0402a', '#f0a020', '#8ac040', '#f0d040')]
     for i in range(3):
@@ -726,7 +726,7 @@ def bodega(W=5.0):
         box('Crate', x - 0.33, x + 0.33, FY - 0.75, FY - 0.15, 0, 0.45, wood, bevel=0.01)
         for j in range(3):
             glow_ball(x - 0.2 + j * 0.2, FY - 0.45, 0.52, 0.09, fruit[(i + j) % 4])
-    upper_floors(W, GROUND, floors, 3, frame='cream', fire_escape=True)
+    upper_floors(W, GROUND + 0.6, floors, 3, frame='cream', fire_escape=True)
     roof_bits(W, H, water_tower=True, seed=28)
 
 
@@ -756,7 +756,7 @@ def tacos(W=4.0):
 
 def tower(W=6.0):
     """A dark glass office tower: rows of panels, a few lit late, a red beacon."""
-    floors = 7
+    floors = 6
     H = GROUND + floors * STOREY * 0.8 + 0.4
     box('Body', -W / 2, W / 2, FY, -FY, 0, H, M['panel'], bevel=0.02)
     box('Roof', -W / 2 + 0.1, W / 2 - 0.1, FY + 0.1, -FY - 0.1, H - 0.05, H + 0.02, M['roof'], bevel=0)
@@ -782,9 +782,9 @@ def tower(W=6.0):
         x = -W / 2 + 0.15 + c * (W - 0.3) / cols
         box('Mullion', x - 0.04, x + 0.04, FY - 0.12, FY, GROUND, H, M['iron'], bevel=0)
     # the antenna and its red light
-    box('Antenna', -0.04, 0.04, -0.04, 0.04, H, H + 2.2, M['iron'], bevel=0)
+    box('Antenna', -0.04, 0.04, -0.04, 0.04, H, H + 1.3, M['iron'], bevel=0)
     beacon = principled('Beacon', srgb('#ff3030'), rough=0.4, emission=srgb('#ff2020'), emission_strength=6)
-    glow_ball(0, 0, H + 2.25, 0.12, beacon)
+    glow_ball(0, 0, H + 1.35, 0.12, beacon)
     for k in range(2):
         box('RoofAC', -W / 2 + 0.8 + k * 1.4, -W / 2 + 1.6 + k * 1.4, 0.2, 1.0, H, H + 0.5, M['ac'], bevel=0.02)
 
