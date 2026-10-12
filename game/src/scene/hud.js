@@ -126,9 +126,6 @@ export class HudMixin {
     for (const limit of EXPANSION.limits) {
       if (limit.level === level && level > 1) out.push({ name: `Walls up to ${limit.size} tiles`, kind: 'Expand your club a row at a time (Club, Expand)', art: 'tabExpand' });
     }
-    for (const limit of EXPANSION.rightLimits) {
-      if (limit.level === level) out.push({ name: `Right wall up to ${limit.size} tiles`, kind: 'Your club can grow further along the right wall (Club, Expand)', art: 'tabExpand' });
-    }
     return out;
   }
 

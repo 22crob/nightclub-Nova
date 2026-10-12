@@ -638,16 +638,14 @@ export const VIP_BOOTHS = new Set(['vipLounge', 'blackBooth', 'goldBooth',
 export const EXPANSION = {
   // One more row per wall every couple of levels, so a club can't outgrow
   // its level by saving up (the owner asked for that).
-  // At most 20 tiles a wall (the owner found 26 far too big, October 2026);
-  // bigger clubs from before keep their size.
   limits: [
     { level: 1, size: 10 }, { level: 3, size: 11 }, { level: 6, size: 12 }, { level: 9, size: 13 },
     { level: 12, size: 14 }, { level: 16, size: 15 }, { level: 20, size: 16 }, { level: 25, size: 17 },
     { level: 30, size: 18 }, { level: 35, size: 19 }, { level: 40, size: 20 },
+    // Then on past 20, a row every three levels, to fill the 26 x 26 lot
+    // (the owner's ask, October 2026; there's no level cap).
+    { level: 43, size: 21 }, { level: 46, size: 22 }, { level: 49, size: 23 }, { level: 52, size: 24 }, { level: 55, size: 25 }, { level: 58, size: 26 },
   ],
-  // The right wall (gx) goes on past 20, a row every four levels, so the
-  // lot is a long rectangle, 24 x 20 (the owner's ask, October 2026).
-  rightLimits: [{ level: 44, size: 21 }, { level: 48, size: 22 }, { level: 52, size: 23 }, { level: 56, size: 24 }],
   perTile: 40,
   perTileGrowth: 30,
 };

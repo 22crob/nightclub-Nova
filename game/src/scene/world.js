@@ -169,7 +169,7 @@ export class WorldMixin {
   }
 
   // The far edges of the lot the club stands on: the biggest a club can
-  // grow (24 along the right wall, 20 along the left), or the club itself if an old save is
+  // grow (26 x 26), or the club itself if an old save is
   // bigger. The street is laid out round the whole lot from the start, so
   // it never moves; the club grows into the empty lot (the owner's ask,
   // like Nightclub City's lots).
@@ -303,11 +303,10 @@ export class WorldMixin {
     this.hoveredPropLabel = nextLabel;
   }
 
-  // How long each wall may grow, by level: the left wall (side 'left',
-  // gy) up to 20, the right wall (side 'right', gx) on to 24 (EXPANSION in
-  // catalog.js).
-  wallLimits(side) {
-    return side === 'right' ? [...EXPANSION.limits, ...EXPANSION.rightLimits] : EXPANSION.limits;
+  // How long each wall may grow, by level (EXPANSION in catalog.js; both
+  // walls alike, up to 26).
+  wallLimits() {
+    return EXPANSION.limits;
   }
 
   // The longest a wall may be at a level.

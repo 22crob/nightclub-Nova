@@ -12,7 +12,7 @@ P = dict(danceTipMin=5.25, bonusMin=117, capMax=32, stockPerGuest=0, happy=3, co
 for a in sys.argv[1:]:
     k,v=a.split('='); P[k]=float(v)
 def need(l): k=l-1; return P['lvFirst']+P['lvStep']*k+P['lvCurve']*k*k
-EXP=[(1,10),(3,11),(6,12),(9,13),(12,14),(16,15),(20,16),(25,17),(30,18),(35,19),(40,20)]
+EXP=[(1,10),(3,11),(6,12),(9,13),(12,14),(16,15),(20,16),(25,17),(30,18),(35,19),(40,20),(43,21),(46,22),(49,23),(52,24),(55,25),(58,26)]
 def maxwall(l): return max(s for lv,s in EXP if lv<=l)
 xp=0; level=1; into=0; cash=700; pop=0; W=H=10; fanRate=4.9; barUnits=1; bartenders=1
 stock=60; restocks=0; price=8; drinksTotal=0
