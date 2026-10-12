@@ -18,9 +18,9 @@ const STEPS = [
   { text: 'Tap Build to open the shop.', target: '#navBuild', done: (s) => s.dockTab === 'decor' },
   { text: 'Pick something you like and click the floor to place it. The first one of each thing you buy earns XP!', target: '#shopItems', done: (s) => s.tutorialFlags.placed, next: 'Skip' },
   { text: 'Click a guest to see how they feel, what they like and what they\'ve spent.', done: (s) => s.tutorialFlags.guestCard, next: 'Skip' },
-  { text: 'Happy guests hold up a gold high five now and then. Click it quick for cash!', done: (s) => s.tutorialFlags.bonus, next: 'Got it' },
-  { text: 'Open Staff: restock the bars when drinks run low, and hire bartenders and bouncers as you level up.', target: '#navStaff', done: (s) => s.dockTab === 'staff' },
-  { text: 'Throw a party for a big crowd and bigger tips (it costs a little).', target: '#partyButton', done: (s) => s.tutorialFlags.party, next: 'Later' },
+  { text: 'Happy guests hold up a big gold $ coin now and then. Click it quick for cash!', done: (s) => s.tutorialFlags.bonus, next: 'Got it' },
+  { text: 'Open Staff: hire bartenders and bouncers as you level up. When drinks run low, restock there or tap the drink meter on the right.', target: '#navStaff', done: (s) => s.dockTab === 'staff' },
+  { text: 'Throw a party for a big crowd, bigger tips and lots of XP. It costs cash, and you can throw one every few minutes.', target: '#partyButton', done: (s) => s.tutorialFlags.party, next: 'Later' },
   { text: 'Keep your guests happy: happy guests make your club Popular, and a popular club fits more guests. Have fun!', target: '#hudStats', next: 'Done!' },
 ];
 
@@ -29,12 +29,16 @@ const STEPS = [
 const HINTS = [
   { id: 'unworkedBar', text: 'A bar without a bartender can\'t sell drinks. Hire one in Staff (you can hire more bartenders as you level up).', target: '#navStaff',
     when: (s) => s.hireableRecords().some((r) => !s.isWorked(r)) },
-  { id: 'lowStock', text: 'Your bars are running low on drinks! Open Staff and press Restock before they run dry.', target: '#navStaff',
+  { id: 'lowStock', text: 'Your bars are running low on drinks! Tap the drink meter on the right (or Restock in Staff) before they run dry.', target: '#drinkMeter',
     when: (s) => s.drinkStockLeft() <= s.maxDrinkStock() * DRINK_STOCK.lowShare },
   { id: 'troublemaker', text: 'A troublemaker just walked in! They upset the guests around them. Your bouncer will spot them and walk them out (more bouncers unlock in Staff as you level up).',
     when: (s) => s.patrons.some((p) => p.troublemaker && !p.gone && !p.leaving) },
-  { id: 'full', text: 'Your club is full, so guests wait in line outside. Keep guests happy to raise your Popularity, and expand the club, to fit more.', target: '#hudStats',
+  { id: 'full', text: 'Your club is full, so guests wait in line outside. Keep guests happy to raise your Popularity: a more popular club lets more in.', target: '#hudStats',
     when: (s) => s.guestCount() >= s.patronCapacity() },
+  { id: 'barsFull', text: 'Your bar line is full! Thirsty guests wait their turn, but you could be selling more drinks: build more bar or hire another bartender in Staff.', target: '#navStaff',
+    when: (s) => s.barsFull() && s.patrons.filter((p) => !p.gone && !p.queue && p.thirstyAt <= s.time.now).length >= 3 },
+  { id: 'boothUpgrade', text: 'You can afford a better DJ booth! Pick one in Build: it goes right where your booth stands, and the old one goes into your inventory.', target: '#navBuild',
+    when: (s) => { const b = s.clubBooth(); return !!b && s.levelInfo().level >= 3 && s.betterBoothAffordable(b); } },
 ];
 const HINT_GAP_MS = 20000;
 

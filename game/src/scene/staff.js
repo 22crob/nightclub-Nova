@@ -468,6 +468,13 @@ export class StaffMixin {
     return true;
   }
 
+  // Whether a better DJ booth than `booth` is unlocked and affordable (a
+  // one-time tip, tutorial.js).
+  betterBoothAffordable(booth) {
+    const now = PROP_TYPES[booth.type].cost || 0;
+    return Object.keys(PROP_TYPES).some((k) => PROP_TYPES[k].staff === 'dj' && (PROP_TYPES[k].cost || 0) > now && this.isUnlocked(k) && this.currentCost(k) <= this.cash);
+  }
+
   // Makes sure the club has a DJ booth, every booth with its DJ playing. A
   // new club, or a save with none, gets a free Wood Booth against the back
   // wall.

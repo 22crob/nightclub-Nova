@@ -3071,7 +3071,7 @@ const hints = await page.evaluate(() => {
   const s = window.__clubNova.scene.getScene('club');
   const tick = Object.getPrototypeOf(s).tickHints;
   const out = {};
-  s.hintsSeen = ['unworkedBar', 'lowStock', 'troublemaker'];
+  s.hintsSeen = ['unworkedBar', 'lowStock', 'troublemaker', 'barsFull', 'boothUpgrade'];
   s.hint = null; s.nextHintAt = 0;
   const cap = s.patronCapacity;
   s.patronCapacity = () => 0;
