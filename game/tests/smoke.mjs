@@ -159,7 +159,7 @@ check('dance floors and regular floors share one category, and the tip says whic
 // Floors are listed in the order they unlock (LEVEL_PLAN.md): a mix of
 // regular and dance floors spread over levels 1-59.
 const floorOrder = await page.$$eval('#shopItems .propSlot', (els) => els.map((e) => /^Dance/.test(e.dataset.tipText) ? 'D' : 'R').join(''));
-check('regular and dance floors unlock mixed together, in the order of the level plan', floorOrder === 'RDDRDRDDRDRDRDDRDDRRDRDDRDRD', floorOrder);
+check('regular and dance floors unlock mixed together, in the order of the level plan', floorOrder === 'RDDRDDDRDRDRDRDRDDDRRDRDRDRD', floorOrder);
 // Clicking a card picks the item up; clicking it again puts it down.
 await page.click('.storeTab[data-tip-name="Seating"]');
 await page.locator('.propSlot').first().click();
@@ -1913,6 +1913,12 @@ const party = await page.evaluate(() => {
   const s = window.__clubNova.scene.getScene('club');
   const later = s.time.delayedCall.bind(s.time);
   s.time.delayedCall = (ms, fn) => fn(); // the crowd's staggered arrival, straight away
+  // Parties unlock at level 5 (the House Party, the owner's ladder).
+  const levelInfo = s.levelInfo;
+  s.levelInfo = () => ({ ...levelInfo.call(s), level: 4 });
+  const cashEarly = s.cash = Math.max(s.cash, 1000);
+  const lockedEarly = s.throwParty('house') === false && s.cash === cashEarly && !s.party;
+  s.levelInfo = () => ({ ...levelInfo.call(s), level: Math.max(5, levelInfo.call(s).level) });
   const labelAtStart = document.getElementById('partyButton').dataset.tipName;
   s.cash = Math.max(s.cash, 1000);
   const cap0 = s.patronCapacity();
@@ -1922,7 +1928,7 @@ const party = await page.evaluate(() => {
   const locked = document.querySelectorAll('#partyList .partyRow.blocked').length;
   document.querySelector('#partyList .partyRow[data-party="house"]').click();
   const out = {
-    rows, locked,
+    rows, locked, lockedEarly,
     paid: cash0 - s.cash,
     closed: !document.getElementById('partyPicker').classList.contains('open'),
     labelAtStart,
@@ -1975,8 +1981,10 @@ const party = await page.evaluate(() => {
   out.drift = !guest || (guest.despawnAt <= s.time.now + 71000 && guest.despawnAt > s.time.now);
   out.fans = s.fans >= fans;
   s.time.delayedCall = later;
+  s.levelInfo = levelInfo;
   return out;
 });
+check('parties unlock at level 5: before that the House Party can\'t be thrown', party.lockedEarly, JSON.stringify(party));
 check('the party picker lists seven parties, the fancy ones locked at first', party.labelAtStart === 'Throw a Party' && party.rows === 7 && party.locked >= 1, JSON.stringify(party));
 check('a House Party costs $250 and counts down before it starts', party.paid === 250 && party.closed && party.countdown, JSON.stringify(party));
 check('when it starts, a crowd lines up outside and gets let in a few at a time', party.running && party.crowdInLine > 0 && party.crowdInLine + party.crowdWaiting >= 6 && party.gradual, JSON.stringify(party));
@@ -2294,7 +2302,7 @@ const lvl = await page.evaluate(() => {
   out.closed = !document.getElementById('levelUp').classList.contains('open');
   return out;
 });
-check('levelling up shows a menu of everything unlocked, each with a picture', lvl.open && lvl.title === 'Level 5!' && lvl.names.includes('Plain Tile') && lvl.names.includes('Disco Ball') && lvl.names.includes('Hip Hop Night') && lvl.celeb && lvl.walls && lvl.pictures && lvl.closed && lvl.bartender, JSON.stringify(lvl));
+check('levelling up shows a menu of everything unlocked, each with a picture', lvl.open && lvl.title === 'Level 5!' && lvl.names.includes('Plain Tile') && lvl.names.includes('Disco Ball') && lvl.names.includes('House Party') && lvl.names.includes('Checker Floor') && lvl.celeb && lvl.walls && lvl.pictures && lvl.closed && lvl.bartender, JSON.stringify(lvl));
 
 // A new club's walls are beaten-up torn wallpaper; brick is a level 5 wallpaper.
 const walls = await page.evaluate(() => {

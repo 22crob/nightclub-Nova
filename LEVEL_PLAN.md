@@ -18,70 +18,69 @@
 
 **October 2026 feedback:** wall decorations (Hanging Fern 4, Pendant Lights 8, Cyan LED Pole 13, Neon Heart 19, Pink LED Pole 24, Wall Speaker 28, Fairy Lights 33), Red Pulse dance floor 23, Red Gloss floor 34, Leopard Print floor 41. Walls grow to 20 tiles at most (by level 40).
 
+**The unlock review (October 2026):** the owner moved 65 things on the Unlock Ladder page (every item with its picture and price): lots of seats, aquariums and lit dance floors come earlier, and parties start later (House Party 5, Hip Hop Night 10, Neon Night 17, VIP Gala 23, Foam Party 27), so a new club's guide just mentions parties for later. Prices follow the new levels by themselves (`itemPrice()`). Moved: Aquarium 26→25, Arch Aquarium 61→56, Black Leather Booth 36→27, Black Table 3→6, Blue Pulse 21→12, Bottle Service 30→18, Floating Bottle Shelf 41→32, Brick Booth 7→6, Bubble Column 45→38, Cabinet Aquarium 53→27, Club Chair 9→8, Checker Floor 8→5, Art Deco Booth 31→28, Fairy Lights 33→25, Marble 38→37, Purple Carpet 31→29, Starry Glass 58→57, Stone Tiles 11→10, Galaxy Swirl 59→58, Galaxy Egg Pods 54→53, Gem Lounge 58→57, Glass Booth 60→58, Glass Divider 44→41, Hex Aquarium 56→45, Glow High-Top 7→4, Ice Booth 27→26, Jellyfish Tank 59→54, Pink LED Pole 24→23, Purple LED Pole 30→29, Long Aquarium 57→49, Light-Up Floor 37→32, Neon Speaker 29→27, Onyx Horseshoe 39→37, Black Pool Table 30→26, Pool Table 17→12, Red Pulse 13→8, Neon Ring Booth 47→42, Retro Robot 33→31, Soft Glow 12→9, Speaker Stack 20→19, Stripe Booth 16→15, Stripe Booth Corner 16→15, Candle Table 9→3, Truss Spotlights 42→30, Tube Aquarium 49→33, Tulip Lounge 41→9, Two-Tone Blink 29→21, Red Velvet Booth 27→24, Wall Speaker 28→21, Glass Waterfall 35→32, Color Wave 46→34, Wood Lounge 32→20, Black Arches 37→36, Cinder Block 6→2, Equalizer 34→29, Holo Wall 60→58, LED Lights 57→51, Old Brick 2→4, Wood Planks 20→18, Speaker Wall 32→31.
+
 ## Level by level
 
 | Level | Unlocks |
 |---|---|
-| 1 | Bar: Wood Bar; DJ booth: Wood Booth; Floor: Concrete; Dance floor: Basic Floor; Seat/booth: Wood Stool; Seat/booth: Standing Table; Decoration: Potted Fern; Wallpaper: Paint; Drink: Beer; Party: House Party |
-| 2 | Decoration: Wood Speaker; Wallpaper: Old Brick |
-| 3 | DJ booth: Pro Booth; Dance floor: Plain Floor; Drink: Cocktail |
-| 4 | Wall decor: Hanging Fern; Seat/booth: Fabric Couch; Decoration: Velvet Rope |
-| 5 | Floor: Plain Tile; Decoration: Disco Ball; Party: Hip Hop Night; Bartender: +1 |
-| 6 | Bar: Pub Bar; Wallpaper: Cinder Block; Drink: Shots |
-| 7 | Seat/booth: Bean Bags; DJ booth: Brick Booth; Decoration: Lava Lamp |
-| 8 | Wall decor: Pendant Lights; Dance floor: Checker Floor; Decoration: Speaker Tower; Celebrity: Rico Diamond; Bouncer: +1 |
-| 9 | Seat/booth: Candle Table; Wallpaper: Brick |
-| 10 | Bar: Chrome Bar; DJ booth: Club Booth; Decoration: Globe Lamp; Drink: Mojito; Bartender: +1 |
-| 11 | Floor: Stone Tiles; Decoration: Neon Sign |
-| 12 | Dance floor: Soft Glow; Wallpaper: Stripes; Party: Neon Night |
-| 13 | Wall decor: Blue LED Pole (was Cyan); Seat/booth: Chrome Bar Stool; Decoration: Crystal Column; Celebrity: Max Volt |
-| 14 | Bar: Speakeasy Bar; Decoration: Glow Tube |
-| 15 | DJ booth: Neon Booth; Wallpaper: Subway Tile |
-| 16 | Seat/booth: Stripe Booth; Dance floor: Wood Floor; Decoration: Glow Plinth; Drink: Martini; Bartender: +1 |
-| 17 | Decoration: Pool Table; Wallpaper: Wood Panel; Wall decor: Red LED Pole (October 2026) |
-| 18 | Bar: Velvet Bar; Floor: Wood Planks; Seat/booth: Chesterfield; Celebrity: DJ Kai Blaze; Bouncer: +1 |
-| 19 | Wall decor: Neon Heart; Decoration: Pink Globe Lamp (the Truss Booth was cut, October 2026) |
-| 20 | Decoration: Speaker Stack; Wallpaper: Wood Planks; Party: VIP Gala |
-| 21 | Dance floor: Blue Pulse; Decoration: Spotlight |
-| 22 | Bar: Neon Bar; Seat/booth: Leather Couch |
-| 23 | Dance floor: Red Pulse; Decoration: Pink Crystal Column; Wallpaper: Retro Dots; Bartender: +1 |
-| 24 | Wall decor: Pink LED Pole; DJ booth: LED Screen Booth; Decoration: Glass Screen; Celebrity: Leo Lux; Drink: Champagne |
-| 25 | Floor: Red Carpet; Dance floor: Pink Pulse |
-| 26 | Bar: Ultraviolet Bar; Decoration: Aquarium; Wallpaper: Velvet; Party: Glow Party |
-| 27 | DJ booth: Ice Booth; Seat/booth: Red Velvet Booth |
-| 28 | Wall decor: Wall Speaker; Decoration: Purple Liquid Tank; Wallpaper: Neon Strip |
-| 29 | Dance floor: Two-Tone Blink; Decoration: Neon Speaker |
-| 30 | Wall decor: Purple LED Pole (October 2026); Seat/booth: Bottle Service; Bar: Ice Bar; Decoration: Purple Speaker Stack; Celebrity: Tony Fame; Bartender: +1; Bouncer: +1 |
-| 31 | DJ booth: Art Deco Booth; Floor: Purple Carpet |
-| 32 | Seat/booth: Wood Lounge; Wallpaper: Speaker Wall |
-| 33 | Wall decor: Fairy Lights; Dance floor: Glow Floor; Decoration: Retro Robot; Party: Masquerade Ball |
-| 34 | Floor: Red Gloss; Decoration: Gold Trophy; Wallpaper: Equalizer; Drink: Nova Neon |
-| 35 | Bar: Pink Neon Bar; DJ booth: Holo Booth; Decoration: Glass Waterfall |
-| 36 | Seat/booth: Black Leather Booth; Decoration: Blue Liquid Tank |
-| 37 | Dance floor: Light-Up Floor; Wallpaper: Black Arches; Celebrity: Jett Starr |
-| 38 | Floor: Marble; Decoration: Lucky Cat |
-| 39 | Seat/booth: Onyx Horseshoe; DJ booth: Steel Rack Booth; Decoration: Pagoda Statue; Party: Neon Rave |
+| 1 | Bar: Wood Bar; DJ booth: Wood Booth; Seat/booth: Wood Stool; Seat/booth: Standing Table; Floor: Concrete; Dance floor: Basic Floor; Decoration: Potted Fern; Wallpaper: Paint; Drink: Beer |
+| 2 | Seat/booth: Black Stool; Decoration: Wood Speaker; Wallpaper: Cinder Block |
+| 3 | DJ booth: Pro Booth; Seat/booth: Candle Table; Dance floor: Plain Floor; Drink: Cocktail |
+| 4 | Seat/booth: Fabric Couch; Seat/booth: Glow High-Top; Decoration: Velvet Rope; Wall decor: Hanging Fern; Wallpaper: Old Brick |
+| 5 | Floor: Plain Tile; Dance floor: Checker Floor; Decoration: Disco Ball; Party: House Party; Bartender: +1 |
+| 6 | Bar: Pub Bar; DJ booth: Brick Booth; Seat/booth: Black Table; Decoration: Snake Plant; Drink: Shots |
+| 7 | Seat/booth: Bean Bags; Decoration: Lava Lamp |
+| 8 | Seat/booth: Club Chair; Dance floor: Red Pulse; Decoration: Speaker Tower; Wall decor: Pendant Lights; Bouncer: +1; Celebrity: Rico Diamond |
+| 9 | Seat/booth: Tulip Lounge; Dance floor: Soft Glow; Wallpaper: Brick |
+| 10 | Bar: Chrome Bar; DJ booth: Club Booth; Floor: Stone Tiles; Decoration: Globe Lamp; Drink: Mojito; Party: Hip Hop Night; Bartender: +1 |
+| 11 | Decoration: Neon Sign; Decoration: Monstera |
+| 12 | Dance floor: Blue Pulse; Decoration: Pool Table; Wallpaper: Stripes |
+| 13 | Seat/booth: Chrome Bar Stool; Decoration: Crystal Column; Wall decor: Blue LED Pole; Celebrity: Max Volt |
+| 14 | Bar: Speakeasy Bar; Floor: Red Gloss; Decoration: Glow Tube |
+| 15 | DJ booth: Neon Booth; Seat/booth: Glass Table; Seat/booth: Stripe Booth; Seat/booth: Stripe Booth Corner; Wallpaper: Subway Tile |
+| 16 | Dance floor: Wood Floor; Decoration: Glow Plinth; Drink: Martini; Bartender: +1 |
+| 17 | Decoration: Black Bamboo; Wall decor: Red LED Pole; Wallpaper: Wood Panel; Party: Neon Night |
+| 18 | Bar: Velvet Bar; Seat/booth: Chesterfield; Seat/booth: Bottle Service; Floor: Wood Planks; Wallpaper: Wood Planks; Bouncer: +1; Celebrity: DJ Kai Blaze |
+| 19 | Decoration: Pink Globe Lamp; Wall decor: Neon Heart; Decoration: Speaker Stack |
+| 20 | Seat/booth: Velvet Tub Chair; Seat/booth: Wood Lounge |
+| 21 | Dance floor: Two-Tone Blink; Decoration: Spotlight; Wall decor: Wall Speaker |
+| 22 | Bar: Neon Bar; Seat/booth: Leather Couch; Wall decor: Vine Wall |
+| 23 | Decoration: Pink Crystal Column; Wall decor: Pink LED Pole; Wallpaper: Retro Dots; Party: VIP Gala; Bartender: +1 |
+| 24 | DJ booth: LED Screen Booth; Seat/booth: Red Velvet Booth; Decoration: Glass Screen; Drink: Champagne; Celebrity: Leo Lux |
+| 25 | Floor: Red Carpet; Dance floor: Pink Pulse; Decoration: Aquarium; Wall decor: Fairy Lights |
+| 26 | Bar: Ultraviolet Bar; DJ booth: Ice Booth; Decoration: Black Pool Table; Wallpaper: Velvet |
+| 27 | Seat/booth: Black Leather Booth; Decoration: Neon Speaker; Decoration: Cabinet Aquarium; Party: Foam Party |
+| 28 | DJ booth: Art Deco Booth; Decoration: Purple Liquid Tank; Wallpaper: Neon Strip |
+| 29 | Floor: Purple Carpet; Wall decor: Purple LED Pole; Wallpaper: Equalizer |
+| 30 | Bar: Ice Bar; Decoration: Purple Speaker Stack; Decoration: Truss Spotlights; Bartender: +1; Bouncer: +1; Celebrity: Tony Fame |
+| 31 | Decoration: Retro Robot; Wallpaper: Speaker Wall |
+| 32 | Dance floor: Light-Up Floor; Decoration: Glass Waterfall; Wall decor: Floating Bottle Shelf |
+| 33 | Dance floor: Glow Floor; Decoration: Tube Aquarium; Party: Masquerade Ball |
+| 34 | Dance floor: Color Wave; Decoration: Gold Trophy; Drink: Nova Neon |
+| 35 | Bar: Pink Neon Bar; DJ booth: Holo Booth |
+| 36 | Decoration: Blue Liquid Tank; Wallpaper: Black Arches |
+| 37 | Seat/booth: Onyx Horseshoe; Floor: Marble; Celebrity: Jett Starr |
+| 38 | Decoration: Lucky Cat; Decoration: Bubble Column |
+| 39 | DJ booth: Steel Rack Booth; Decoration: Pagoda Statue; Party: Neon Rave |
 | 40 | Bar: Disco Bar; Wallpaper: Mirror Tiles |
-| 41 | Floor: Leopard Print; Seat/booth: Tulip Lounge; Decoration: Bottle Cabinet |
-| 42 | Dance floor: Neon Rings; Decoration: Truss Spotlights |
+| 41 | Floor: Cheetah Print; Decoration: Glass Divider |
+| 42 | Seat/booth: Neon Ring Booth; Dance floor: Neon Rings |
 | 43 | DJ booth: Glow Panel Booth; Wallpaper: Bottle Shelf |
-| 44 | Bar: Champagne Bar; Floor: Black Gloss; Decoration: Glass Divider |
-| 45 | Seat/booth: LED Cube Bench; Decoration: Bubble Column |
-| 46 | Dance floor: Color Wave; Wallpaper: Neon Chevron |
-| 47 | Seat/booth: Neon Ring Booth; DJ booth: Faceted Booth; Decoration: Ribbon Sculpture |
+| 44 | Bar: Champagne Bar; Floor: Black Gloss |
+| 45 | Seat/booth: LED Cube Bench; Decoration: Hex Aquarium |
+| 46 | Wallpaper: Neon Chevron |
+| 47 | DJ booth: Faceted Booth; Decoration: Ribbon Sculpture |
 | 48 | Bar: Marble Lounge Bar; Wallpaper: Purple Glow |
-| 49 | Seat/booth: Gold VIP Booth; Decoration: Tube Aquarium |
-| 50 | Dance floor: Rainbow Flow; Decoration: Pop Star Statue |
-| 51 | DJ booth: Curve Booth; Floor: Gold Marble |
+| 49 | Seat/booth: Gold VIP Booth; Decoration: Long Aquarium |
+| 50 | Dance floor: Rainbow Flow; Decoration: Pop Star Statue; Wall decor: Black Lux Bottle Shelf |
+| 51 | DJ booth: Curve Booth; Floor: Gold Marble; Wallpaper: LED Lights |
 | 52 | Seat/booth: Crystal VIP Booth; Decoration: Glow Cubes; Wallpaper: LED Wall |
-| 53 | Decoration: Cabinet Aquarium; Wallpaper: Ice Panels |
-| 54 | Seat/booth: Galaxy Egg Pods; Decoration: Rapper Statue |
+| 53 | Seat/booth: Galaxy Egg Pods; Wallpaper: Ice Panels |
+| 54 | Decoration: Rapper Statue; Decoration: Jellyfish Tank |
 | 55 | DJ booth: Capsule Booth; Dance floor: Step Floor |
-| 56 | Bar: Cyber Bar; Decoration: Hex Aquarium |
-| 57 | Decoration: Long Aquarium; Wallpaper: LED Lights |
-| 58 | Floor: Starry Glass; Seat/booth: Gem Lounge |
-| 59 | Dance floor: Galaxy Swirl; Decoration: Jellyfish Tank |
-| 60 | DJ booth: Glass Booth; Wallpaper: Holo Wall |
-| 61 | Decoration: Arch Aquarium |
+| 56 | Bar: Cyber Bar; Decoration: Arch Aquarium |
+| 57 | Seat/booth: Gem Lounge; Floor: Starry Glass |
+| 58 | DJ booth: Glass Booth; Dance floor: Galaxy Swirl; Wallpaper: Holo Wall |
 
-**Walls (expansion limits)** grow to 26 tiles by level 40 (`EXPANSION.limits` in catalog.js). Bigger clubs already built keep their size.
+**Walls (expansion limits)** grow to 20 tiles by level 40, then a row every three levels to 26 at 58 (`EXPANSION.limits` in catalog.js). Bigger clubs already built keep their size.

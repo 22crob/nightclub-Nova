@@ -8,7 +8,7 @@
 // something comes up (bars running dry, a troublemaker, a full club),
 // each shown once per club (saved as `hintsSeen`).
 // Mixed into ClubScene (see ClubScene.js); `this` is the scene.
-import { DRINK_STOCK } from '../config.js';
+import { DRINK_STOCK, PARTIES } from '../config.js';
 import { SFX } from '../sfx.js';
 
 // Each step: what it says, the button it points at (glows), when it's done
@@ -20,7 +20,11 @@ const STEPS = [
   { text: 'Click a guest to see how they feel, what they like and what they\'ve spent.', done: (s) => s.tutorialFlags.guestCard, next: 'Skip' },
   { text: 'Happy guests hold up a big gold $ coin now and then. Click it quick for cash!', done: (s) => s.tutorialFlags.bonus, next: 'Got it' },
   { text: 'Open Staff: hire bartenders and bouncers as you level up. When drinks run low, restock there or tap the drink meter on the right.', target: '#navStaff', done: (s) => s.dockTab === 'staff' },
-  { text: 'Throw a party for a big crowd, bigger tips and lots of XP. It costs cash, and you can throw one every few minutes.', target: '#partyButton', done: (s) => s.tutorialFlags.party, next: 'Later' },
+  // Parties unlock at level 5 (the House Party), so a new club hears about them for later.
+  { text: (s) => (s.levelInfo().level >= PARTIES[0].unlockLevel
+    ? 'Throw a party for a big crowd, bigger tips and lots of XP. It costs cash, and you can throw one every few minutes.'
+    : `At level ${PARTIES[0].unlockLevel} you can throw parties here: a big crowd, bigger tips and lots of XP.`),
+  target: '#partyButton', done: (s) => s.tutorialFlags.party, next: 'Later' },
   { text: 'Keep your guests happy: happy guests make your club Popular, and a popular club fits more guests. Have fun!', target: '#hudStats', next: 'Done!' },
 ];
 
@@ -139,7 +143,7 @@ export class TutorialMixin {
     if (!t || t.done) { box.classList.remove('open'); return; }
     const step = STEPS[t.step];
     document.getElementById('tutorialCount').textContent = `${t.step + 1} / ${STEPS.length}`;
-    document.getElementById('tutorialText').textContent = step.text;
+    document.getElementById('tutorialText').textContent = typeof step.text === 'function' ? step.text(this) : step.text;
     const next = document.getElementById('tutorialNext');
     next.textContent = step.next || 'Next';
     next.style.display = step.next ? '' : 'none';
