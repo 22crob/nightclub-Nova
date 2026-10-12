@@ -54,6 +54,9 @@ export const ROOM_COLORS = {
   slabRight: 0x2c2c33,
   slabLeft: 0x1f1f25,
   slabEdge: 0x3c3c45,
+  lot: 0x111016, // the empty lot the club can still grow into (world.js drawEmptyLot())
+  lotGrid: 0x26242e,
+  lotEdge: 0x4a4856,
 };
 // The street outside at night (see scene/street.js). Distances are in tiles
 // out from the walls. The line stands lineOut tiles out from the left wall,

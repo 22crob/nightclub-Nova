@@ -24,8 +24,7 @@ export class StreetMixin {
   // edge is at gy = n; the walls' outer face is at t. The line runs along
   // the left sidewalk from the door (at gy = door) toward the front.
   streetSpots() {
-    const nx = this.gridW - 0.5; // the room's far edges
-    const ny = this.gridH - 0.5;
+    const { lx: nx, ly: ny } = this.lotEdges(); // the lot's far edges: the street never moves
     const t = -0.5 - WALL_THICKNESS; // the walls' outer face
     const door = this.doorTile().gy;
     const lineX = t - STREET.lineOut;

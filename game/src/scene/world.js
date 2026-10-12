@@ -116,6 +116,7 @@ export class WorldMixin {
     }
     const nx = this.gridW - 0.5; // far floor edges
     const ny = this.gridH - 0.5;
+    const { lx, ly } = this.lotEdges(); // the whole lot the club can grow into
     const t = -0.5 - WALL_THICKNESS; // outer edge of the walls
     const P = (gx, gy, h) => this.gridPoint(gx, gy, h);
     const fill = (g, color, pts) => {
@@ -127,7 +128,8 @@ export class WorldMixin {
     const g = this.groundGraphics;
     g.clear();
     const drop = FLOOR_SLAB_DEPTH; // the sidewalk sits this far below the floor
-    this.drawStreetGround(g, P, t, nx, ny, drop);
+    this.drawStreetGround(g, P, t, lx, ly, drop);
+    this.drawEmptyLot(g, P, t, nx, ny, lx, ly, drop);
     fill(g, ROOM_COLORS.slabRight, [P(nx, t, 0), P(nx, ny, 0), P(nx, ny, -drop), P(nx, t, -drop)]);
     fill(g, ROOM_COLORS.slabLeft, [P(t, ny, 0), P(nx, ny, 0), P(nx, ny, -drop), P(t, ny, -drop)]);
     g.lineStyle(1, ROOM_COLORS.slabEdge, 1);
@@ -162,8 +164,33 @@ export class WorldMixin {
     this.drawBareFloor();
     this.drawMoodShade();
     this.drawDoor();
-    this.drawStreetProps(P, t, nx, ny, FLOOR_SLAB_DEPTH);
+    this.drawStreetProps(P, t, lx, ly, FLOOR_SLAB_DEPTH);
     if (this.clubSign) this.drawClubSign(); // the sign moves with the corner (clubName.js)
+  }
+
+  // The far edges of the lot the club stands on: the biggest a club can
+  // grow (the last EXPANSION limit), or the club itself if an old save is
+  // bigger. The street is laid out round the whole lot from the start, so
+  // it never moves; the club grows into the empty lot (the owner's ask,
+  // like Nightclub City's lots).
+  lotEdges() {
+    const most = EXPANSION.limits[EXPANSION.limits.length - 1].size;
+    return { lx: Math.max(most, this.gridW) - 0.5, ly: Math.max(most, this.gridH) - 0.5 };
+  }
+
+  // The part of the lot the club hasn't grown into yet: dark empty ground
+  // at street level, faint tile lines showing the room there is to fill,
+  // and a light edge round the lot.
+  drawEmptyLot(g, P, t, nx, ny, lx, ly, drop) {
+    if (lx <= nx && ly <= ny) return;
+    const pts = (list) => list.map(([x, y]) => { const [px, py] = P(x, y, -drop); return { x: px, y: py }; });
+    g.fillStyle(ROOM_COLORS.lot, 1);
+    g.fillPoints(pts([[t, t], [lx, t], [lx, ly], [t, ly]]), true);
+    g.lineStyle(1, ROOM_COLORS.lotGrid, 0.55);
+    for (let x = 0.5; x < lx; x += 1) g.lineBetween(...P(x, x > nx ? -0.5 : ny, -drop), ...P(x, ly, -drop));
+    for (let y = 0.5; y < ly; y += 1) g.lineBetween(...P(y > ny ? -0.5 : nx, y, -drop), ...P(lx, y, -drop));
+    g.lineStyle(2, ROOM_COLORS.lotEdge, 0.9);
+    g.strokePoints(pts([[lx, t], [lx, ly], [t, ly]]), false);
   }
 
   // The tile inside the club's front door, near the back of the left wall,

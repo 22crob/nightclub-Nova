@@ -529,6 +529,21 @@ const swap = await page.evaluate(() => {
   return out;
 });
 check('buying a DJ booth swaps it in where the booth stands (same spot and facing, DJ playing), the old one into the inventory, and back again for free', swap.ok && swap.type === 'proBooth' && swap.same && swap.dj && swap.one && swap.paid === 540 && swap.stored && swap.held === null && swap.back, JSON.stringify(swap));
+// The street is laid out round the whole 20 x 20 lot from the start, and
+// expanding grows the club into the empty lot without moving it (the
+// owner's ask, like Nightclub City's lots).
+const lot = await page.evaluate(() => {
+  const s = window.__clubNova.scene.getScene('club');
+  const before = JSON.stringify(s.streetSpots());
+  const edges = s.lotEdges();
+  const size = [s.gridW, s.gridH];
+  s.gridW += 3; s.gridH += 2; // as if the club had grown
+  const after = JSON.stringify(s.streetSpots());
+  const lotAfter = s.lotEdges();
+  s.gridW = size[0]; s.gridH = size[1];
+  return { edges, size, same: before === after, lotAfter };
+});
+check('the street stands round the whole 20 x 20 lot from the start and stays put when the club expands', lot.edges.lx === 19.5 && lot.edges.ly === 19.5 && lot.same && lot.lotAfter.lx === 19.5, JSON.stringify(lot));
 // Prices grow with the level an item unlocks at (the owner found
 // everything too cheap): the shop charges `price`, not the base `cost`.
 const pricing = await page.evaluate(() => {
