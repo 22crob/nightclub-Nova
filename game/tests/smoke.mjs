@@ -507,6 +507,28 @@ const upgrade = await page.evaluate(() => {
   s.fans = fans;
   return result;
 });
+// Buying a DJ booth swaps it in where the booth stands, facing the same
+// way, DJ and all; the old one goes into the inventory, and picking it
+// there swaps it back for free (the owner's call, October 2026).
+const swap = await page.evaluate(() => {
+  const s = window.__clubNova.scene.getScene('club');
+  const fans = s.fans;
+  s.fans = Math.max(s.fans, s.fansForLevel(7));
+  const old = s.clubBooth();
+  const at = { type: old.type, anchor: old.anchor.join(), facing: old.facing };
+  const c0 = s.cash;
+  s.cash = 5000;
+  const ok = s.swapBooth('proBooth');
+  const now = s.clubBooth();
+  const out = { ok, type: now.type, same: now.anchor.join() === at.anchor && now.facing === at.facing, dj: !!now.staff, one: s.clubBooths().length === 1,
+    paid: 5000 - s.cash, stored: s.inventoryCount(at.type) >= 1, held: s.selectedProp };
+  const c1 = s.cash;
+  out.back = s.swapBooth(at.type, true) && s.clubBooth().type === at.type && s.clubBooth().anchor.join() === at.anchor && s.cash === c1 && s.inventoryCount('proBooth') >= 1;
+  s.addToInventory('proBooth', -1);
+  s.cash = c0; s.fans = fans;
+  return out;
+});
+check('buying a DJ booth swaps it in where the booth stands (same spot and facing, DJ playing), the old one into the inventory, and back again for free', swap.ok && swap.type === 'proBooth' && swap.same && swap.dj && swap.one && swap.paid === 1200 && swap.stored && swap.held === null && swap.back, JSON.stringify(swap));
 // Prices grow with the level an item unlocks at (the owner found
 // everything too cheap): the shop charges `price`, not the base `cost`.
 const pricing = await page.evaluate(() => {

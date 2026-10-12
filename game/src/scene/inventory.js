@@ -195,7 +195,7 @@ export class InventoryMixin {
       const picture = realSpriteIconFor(type) || renderIsoIcon(def.color, FLOOR_DECAL_PROPS.has(type));
       const { slot, button, cost } = this.makeCard(def.label, 'Yours to place again for free. Click it, then click in your club.', picture);
       cost.textContent = `×${this.inventoryCount(type)}`;
-      slot.addEventListener('click', () => this.selectFromInventory(type));
+      slot.addEventListener('click', () => (PROP_TYPES[type].staff === 'dj' ? this.swapBooth(type, true) : this.selectFromInventory(type)));
       el.appendChild(slot);
       this.shopButtons[type] = button;
     }

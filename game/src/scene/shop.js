@@ -258,7 +258,7 @@ export class ShopMixin {
       if (def.category === 'Floors') lines.push('Regular floor: paint it tile by tile.');
       if (def.wallDecor) lines.push(`Hangs on a wall: click a wall section${(def.span || 1) > 1 ? ` (it takes ${def.span})` : ''}. Pick low, middle or high first.`);
       if (def.category === 'Bars') lines.push(`Bar pieces: ${this.barUnitCount()} of ${this.barAllowance()} your level allows.`);
-      if (def.staff === 'dj') lines.push('One DJ booth at a time: placing it puts your old one in the inventory.');
+      if (def.staff === 'dj') lines.push('One DJ booth at a time: buying it puts it where your booth stands and your old one in the inventory. Move it with Club, Edit.');
       lines.push(`Luxury: ${Math.round((def.cost || 0) * LUXURY.perDollar)}`);
       if (def.seats) lines.push(`Comfort: ${'★'.repeat(this.seatComfort(key))}${'☆'.repeat(5 - this.seatComfort(key))} (comfier seats make guests happier and stay longer)`);
       const picture = realSpriteIconFor(key) || renderIsoIcon(def.color, FLOOR_DECAL_PROPS.has(key));
@@ -270,7 +270,7 @@ export class ShopMixin {
         tag.textContent = 'NEW';
         slot.appendChild(tag);
       }
-      slot.addEventListener('click', () => this.selectProp(key));
+      slot.addEventListener('click', () => (def.staff === 'dj' ? this.swapBooth(key) : this.selectProp(key))); // a DJ booth swaps in at once (staff.js)
       this.shopItemsEl.appendChild(slot);
       this.shopButtons[key] = button;
       this.shopCosts[key] = cost;

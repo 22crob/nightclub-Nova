@@ -426,6 +426,48 @@ export class StaffMixin {
     return booths.length <= 1 && (!booths.length || booths[0] === rec);
   }
 
+  // Picking a DJ booth (from Build, or from the inventory) swaps it in
+  // where the club's booth stands, facing the same way, DJ and all; the old
+  // one goes into the inventory (the owner's call, October 2026: one booth
+  // at a time works like an upgrade, not a piece to place). Move still
+  // takes it elsewhere. With no booth to replace, it's held to place.
+  swapBooth(type, fromInventory = false) {
+    this.cancelBoothMove();
+    const old = this.clubBooth();
+    if (!old) { if (fromInventory) this.selectFromInventory(type); else this.selectProp(type); return false; }
+    if (old.type === type && !fromInventory) { SFX.denied(); this.showToast(`🎧 The ${PROP_TYPES[type].label} is already your DJ booth.`, 2500); return false; }
+    if (fromInventory ? this.inventoryCount(type) <= 0 : (!this.isUnlocked(type) || this.cash < this.currentCost(type))) { SFX.denied(); return false; }
+    const { facing, anchor } = old;
+    const oldType = old.type;
+    const oldXp = old.xp;
+    this.removeProp(old);
+    const keepFacing = this.currentFacing;
+    this.selectedProp = type;
+    this.holdingFromInventory = fromInventory;
+    this.currentFacing = facing;
+    const before = this.clubBooths().length;
+    this.placeProp(anchor[0], anchor[1]);
+    const placed = this.clubBooths().length > before;
+    this.selectedProp = null;
+    this.holdingFromInventory = false;
+    this.currentFacing = keepFacing;
+    if (!placed) {
+      // It doesn't fit there (shouldn't happen: booths share a footprint):
+      // the old one goes back, and the new one is held to place.
+      const back = this.restoreProp(oldType, facing, anchor);
+      if (back) { back.xp = oldXp; this.attachStaff(back); }
+      if (fromInventory) this.selectFromInventory(type); else this.selectProp(type);
+      return false;
+    }
+    this.addToInventory(oldType);
+    this.pushInventoryXp(oldType, oldXp);
+    this.showToast(`🎧 Your ${PROP_TYPES[type].label} is in! The ${PROP_TYPES[oldType].label} went into your inventory.`, 3500);
+    this.updateGhost();
+    this.updateShopUI();
+    this.refreshDock();
+    return true;
+  }
+
   // Makes sure the club has a DJ booth, every booth with its DJ playing. A
   // new club, or a save with none, gets a free Wood Booth against the back
   // wall.
