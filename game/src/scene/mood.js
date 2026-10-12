@@ -15,17 +15,18 @@ import { PATRON_POPUP_Y } from '../config.js';
 export const MOOD = {
   start: 60,
   startFun: 40,
-  boredomPerSec: 0.9,      // fun lost per second (the DJ is always playing, so the room itself is a little fun)
+  boredomPerSec: 0.65,     // fun lost per second (was 0.9) (the DJ is always playing, so the room itself is a little fun)
   danceFunPerSec: 9,       // fun gained per second dancing to a live DJ
   livelyFunPerSec: 2.5,    // fun gained per second somewhere lively
   seatedFunPerSec: 3,      // fun gained per second sitting down
   seatedMoodPerSec: 0.8,   // mood gained per second sitting down
-  thirstGrace: 12000,      // ms a thirsty patron waits before getting upset
-  thirstMoodPerSec: 3.5,   // mood lost per second while thirsty past the grace
+  thirstGrace: 25000,      // ms a thirsty patron waits before getting upset
+  thirstMoodPerSec: 1.6,   // mood lost per second while thirsty past the grace (was 3.5: happy guests stormed out half a minute after a full bar turned them away)
   boredMoodPerSec: 1.5,    // mood lost per second while fun < 20
   funMoodPerSec: 1.0,      // mood gained per second while fun > 60
   drinkMood: 15,           // mood from a drink
   queuePatience: 0.35,     // thirst hurts this much less while in line at a bar
+  barsFullPatience: 0.5,   // ...and this much while the bars are too full to join (October 2026 check: they stormed out within a minute)
   stormOutBelow: 20,       // a patron this unhappy leaves early
   bubbleEveryMs: 9000,     // how often a patron repeats a need bubble
 };
@@ -52,6 +53,7 @@ export class MoodMixin {
     if (dancing) fun += MOOD.danceFunPerSec * this.djQuality() * dt; // a better booth entertains more (upgrades.js)
     else if (patron.sitting) fun += MOOD.seatedFunPerSec * this.comfortFactor(patron) * dt;
     else if (patron.chatWith && !patron.moving) fun += MOOD.livelyFunPerSec * dt; // a good chat is fun too
+    else if (!patron.moving && patron.activity && ['drink', 'admire'].includes(patron.activity.kind) && !patron.queue) fun += MOOD.livelyFunPerSec * dt; // so is a drink, or a nice piece to look at (October 2026 check: quiet guests got bored and left)
     else if (!patron.moving && this.isNearRevenueProp(patron.gx, patron.gy)) fun += MOOD.livelyFunPerSec * dt;
     patron.fun = clamp(fun);
 
@@ -66,8 +68,10 @@ export class MoodMixin {
     if (thirsty) {
       if (patron.thirstSince == null) patron.thirstSince = now;
       if (now - patron.thirstSince > MOOD.thirstGrace) {
-        // In line for a drink, they're more patient.
-        mood -= MOOD.thirstMoodPerSec * dt * (patron.queue ? MOOD.queuePatience : 1);
+        // In line, or turned away by full bars just now and waiting for a
+        // gap, they're more patient.
+        const waiting = patron.queue ? MOOD.queuePatience : now - (patron.barsFullAt ?? -Infinity) < 12000 ? MOOD.barsFullPatience : 1;
+        mood -= MOOD.thirstMoodPerSec * dt * waiting;
         this.moodBubble(patron, '🍹?');
       }
     } else {

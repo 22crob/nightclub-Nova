@@ -12,7 +12,7 @@
 import { PARTIES, PARTY_COOLDOWN_MS, PARTY_COUNTDOWN_MS, PARTY_LENGTH_MS, PATRON_POPUP_Y, XP } from '../config.js';
 import { SFX } from '../sfx.js';
 import { refreshTip } from '../tooltips.js';
-import { randRange } from '../util.js';
+import { formatMoney, randRange } from '../util.js';
 
 const clock = (ms) => {
   const s = Math.max(0, Math.ceil(ms / 1000));
@@ -253,7 +253,7 @@ export class PartiesMixin {
       row.innerHTML = `<div class="partyEmoji">${def.emoji}</div>
         <div class="partyText"><div class="partyName">${def.label}</div><div class="partyBlurb">${def.blurb}</div>
         <div class="partyPerks">a crowd of ${def.crowd} · tips ×${def.tips}${blocked ? ` · <span class="partyWhy">${blocked}</span>` : ''}</div></div>
-        <div class="partyCost">$${def.cost}</div>`;
+        <div class="partyCost">${formatMoney(def.cost)}</div>`;
       row.addEventListener('click', () => this.throwParty(def.key));
       list.appendChild(row);
     }

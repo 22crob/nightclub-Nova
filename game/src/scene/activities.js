@@ -110,7 +110,7 @@ export class ActivitiesMixin {
     const now = this.time.now;
     if ((kind === 'dance' || kind === 'sit') && !this.canDoClip(patron, kind)) return false;
     if (kind === 'drink') {
-      if (!this.joinBarQueue(patron)) return false;
+      if (!this.joinBarQueue(patron)) { patron.barsFullAt = this.time.now; return false; } // waiting for a gap (thirst hurts less, mood.js)
       patron.activity = { kind, phase: 'queue' };
       return true;
     }

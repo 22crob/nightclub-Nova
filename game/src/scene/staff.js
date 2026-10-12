@@ -463,6 +463,10 @@ export class StaffMixin {
     const bar = this.restoreProp('woodBar', 0, [this.gridW - 4, 0]);
     if (bar) this.attachStaff(bar);
     this.restoreProp('standingTable', 0, [this.gridW - 1, 0]);
+    // Two stools by it, so there's somewhere to sit from the start (the
+    // October 2026 check: with no seats, quiet guests got bored and left).
+    this.restoreProp('woodStool', 0, [this.gridW - 1, 1]);
+    this.restoreProp('woodStool', 0, [this.gridW - 1, 2]);
   }
 
   // --- Shop tab -----------------------------------------------------------

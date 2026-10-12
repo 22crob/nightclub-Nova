@@ -121,7 +121,7 @@ const opening = await page.evaluate(() => {
   const table = Object.values(s.placed).find((r) => r.type === 'standingTable');
   return { table: table && table.anchor.join(','), floor: floor.join(' '), dancing: s.isDanceFloorTile(2, 6), type: booth && booth.type, anchor: booth && booth.anchor.join(','), dj: !!(booth && booth.staff), music: s.musicPlaying(), size: s.gridW === s.gridH ? s.gridW : -1, bar: units.map((r) => r.anchor.join(',')).sort().join(' '), bartender: !!bar, staffed: units.filter((r) => r.staff).length, worked: units.every((r) => s.isWorked(r)), boothTiles: booth && booth.tiles.length, djOnTile: !!booth && (() => { const p = s.gridToScreen(0, 5.5); return Math.abs(booth.staff.container.x - p.sx) < 1 && Math.abs(booth.staff.container.y - p.sy) < 1 && booth.tiles.filter((t) => t.back).length === 2; })() };
 });
-check('starts with $700, a 10x10 room, a 2-tile DJ booth, a 3x3 dance floor, one bar with a bartender and a standing table in the corner', st.cash === 700 && st.placed === 12 && opening.boothTiles === 4 && opening.djOnTile && opening.floor === '2,5 2,6 2,7 3,5 3,6 3,7 4,5 4,6 4,7' && opening.dancing && opening.size === 10 && opening.bar === '6,0' && opening.bartender && opening.staffed === 1 && opening.worked && opening.table === '9,0', `cash ${st.cash}, placed ${st.placed}, ${JSON.stringify(opening)}`);
+check('starts with $700, a 10x10 room, a 2-tile DJ booth, a 3x3 dance floor, one bar with a bartender and a standing table with two stools in the corner', st.cash === 700 && st.placed === 14 && opening.boothTiles === 4 && opening.djOnTile && opening.floor === '2,5 2,6 2,7 3,5 3,6 3,7 4,5 4,6 4,7' && opening.dancing && opening.size === 10 && opening.bar === '6,0' && opening.bartender && opening.staffed === 1 && opening.worked && opening.table === '9,0', `cash ${st.cash}, placed ${st.placed}, ${JSON.stringify(opening)}`);
 check('every club opens with a Wood Booth and a DJ playing', opening.type === 'woodBooth' && opening.anchor === '1,5' && opening.dj && opening.music, JSON.stringify(opening));
 
 // The checks below were written for the old opening (a 16x16 room with just
@@ -1832,7 +1832,7 @@ check('your level sets how many bartenders you can hire (1, then 2 at level 5, 3
 check('a long bar can take more bartenders, spread along it, and let one go', longBar.second && longBar.letGo, JSON.stringify(longBar));
 check('a long bar keeps its bartender when the unit they stood at is sold', longBar.split && longBar.kept, JSON.stringify(longBar));
 
-// Throw a Party: the picker lists every party; a House Party costs $60,
+// Throw a Party: the picker lists every party; a House Party costs $250,
 // counts down first, then a crowd lines up outside
 // and is let in a few at a time; it lets more guests in with bigger tips;
 // one at a time; after 3 minutes its guests drift home and it earns fans.
@@ -1905,7 +1905,7 @@ const party = await page.evaluate(() => {
   return out;
 });
 check('the party picker lists seven parties, the fancy ones locked at first', party.labelAtStart === 'Throw a Party' && party.rows === 7 && party.locked >= 1, JSON.stringify(party));
-check('a House Party costs $60 and counts down before it starts', party.paid === 60 && party.closed && party.countdown, JSON.stringify(party));
+check('a House Party costs $250 and counts down before it starts', party.paid === 250 && party.closed && party.countdown, JSON.stringify(party));
 check('when it starts, a crowd lines up outside and gets let in a few at a time', party.running && party.crowdInLine > 0 && party.crowdInLine + party.crowdWaiting >= 6 && party.gradual, JSON.stringify(party));
 check('during the party tips are higher, with a timer banner', party.tips > 1 && party.banner && party.button === 'active', JSON.stringify(party));
 check('celebrities wear a star and tip big', party.celeb, JSON.stringify(party));

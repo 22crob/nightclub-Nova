@@ -162,8 +162,9 @@ export const PASSIVE_FAN_SHARE = 0.05; // small: fans (XP) come mostly from gues
 // Staff wages are paid on this interval (see STAFF_TYPES in catalog.js).
 export const WAGE_INTERVAL_MS = 30000;
 // After a drink, how long until a patron is thirsty again and heads back
-// to a bar.
-export const THIRST_INTERVAL = [60000, 110000];
+// to a bar. (Was 60-110 s: half the crowd was always at the bar, and when
+// the lines filled, thirsty guests stormed out; October 2026 check.)
+export const THIRST_INTERVAL = [110000, 190000];
 
 // Facings are in degrees, matching the rotation applied in Blender: 0/90/180/270.
 export const FACINGS = [0, 90, 180, 270];
@@ -563,20 +564,22 @@ export const CELEB = {
   minLikingToReturn: 10, returnEveryMs: [600000, 120000], returnJitter: 0.3, regularLiking: 70,
   fanTipChance: 0.45, fanTip: [5, 20],
 };
+// Prices raised in October 2026 with the shop's (the owner found money too
+// easy): each about 4-5 minutes of a club's takings at its unlock level.
 export const PARTIES = [
-  { key: 'house', label: 'House Party', emoji: '🏠', cost: 60, unlockLevel: 1, arrivals: 1.3, tips: 1.25, thirst: 1.1, fans: 1.2, shade: 0x1a0b2e, crowd: 6, leaveOverMs: [10000, 70000],
+  { key: 'house', label: 'House Party', emoji: '🏠', cost: 250, unlockLevel: 1, arrivals: 1.3, tips: 1.25, thirst: 1.1, fans: 1.2, shade: 0x1a0b2e, crowd: 6, leaveOverMs: [10000, 70000],
     blurb: 'Invite the neighbours. A couple more guests and a friendly crowd.' },
-  { key: 'hiphop', label: 'Hip Hop Night', emoji: '🎤', cost: 150, unlockLevel: 5, arrivals: 1.5, tips: 1.4, thirst: 1.3, fans: 1.4, shade: 0x2e0b12, crowd: 9, leaveOverMs: [10000, 70000],
+  { key: 'hiphop', label: 'Hip Hop Night', emoji: '🎤', cost: 800, unlockLevel: 5, arrivals: 1.5, tips: 1.4, thirst: 1.3, fans: 1.4, shade: 0x2e0b12, crowd: 9, leaveOverMs: [10000, 70000],
     blurb: 'Big beats, bigger crowd. Guests drink more and tip better.' },
-  { key: 'neon', label: 'Neon Night', emoji: '💜', cost: 300, unlockLevel: 12, arrivals: 1.7, tips: 1.6, thirst: 1.4, fans: 1.7, shade: 0x2a0636, crowd: 12, leaveOverMs: [10000, 70000],
+  { key: 'neon', label: 'Neon Night', emoji: '💜', cost: 2000, unlockLevel: 12, arrivals: 1.7, tips: 1.6, thirst: 1.4, fans: 1.7, shade: 0x2a0636, crowd: 12, leaveOverMs: [10000, 70000],
     blurb: 'Glow sticks and neon paint. The whole town wants in.' },
-  { key: 'gala', label: 'VIP Gala', emoji: '🥂', cost: 600, unlockLevel: 20, arrivals: 2, tips: 2, thirst: 1.5, fans: 2, shade: 0x2e2306, crowd: 15, leaveOverMs: [10000, 70000],
+  { key: 'gala', label: 'VIP Gala', emoji: '🥂', cost: 3500, unlockLevel: 20, arrivals: 2, tips: 2, thirst: 1.5, fans: 2, shade: 0x2e2306, crowd: 15, leaveOverMs: [10000, 70000],
     blurb: 'Red carpet, champagne, the A-list. Huge tips and XP.' },
-  { key: 'glow', label: 'Foam Party', emoji: '🫧', cost: 900, unlockLevel: 26, arrivals: 2.2, tips: 2.2, thirst: 1.6, fans: 2.2, shade: 0x062a2e, crowd: 17, leaveOverMs: [10000, 70000],
+  { key: 'glow', label: 'Foam Party', emoji: '🫧', cost: 5000, unlockLevel: 26, arrivals: 2.2, tips: 2.2, thirst: 1.6, fans: 2.2, shade: 0x062a2e, crowd: 17, leaveOverMs: [10000, 70000],
     blurb: 'Bubbles everywhere and shades on. A packed, happy floor.' },
-  { key: 'masquerade', label: 'Masquerade Ball', emoji: '🎭', cost: 1300, unlockLevel: 33, arrivals: 2.4, tips: 2.5, thirst: 1.6, fans: 2.4, shade: 0x2e0624, crowd: 19, leaveOverMs: [10000, 70000],
+  { key: 'masquerade', label: 'Masquerade Ball', emoji: '🎭', cost: 7000, unlockLevel: 33, arrivals: 2.4, tips: 2.5, thirst: 1.6, fans: 2.4, shade: 0x2e0624, crowd: 19, leaveOverMs: [10000, 70000],
     blurb: 'Masks, gowns and mystery. The fanciest guests in town, tipping big.' },
-  { key: 'rave', label: 'Neon Rave', emoji: '🌈', cost: 1800, unlockLevel: 39, arrivals: 2.7, tips: 2.7, thirst: 1.8, fans: 2.7, shade: 0x0a062e, crowd: 22, leaveOverMs: [10000, 70000],
+  { key: 'rave', label: 'Neon Rave', emoji: '🌈', cost: 9500, unlockLevel: 39, arrivals: 2.7, tips: 2.7, thirst: 1.8, fans: 2.7, shade: 0x0a062e, crowd: 22, leaveOverMs: [10000, 70000],
     blurb: 'The biggest night of the year: lasers, bass and a line round the block.' },
 ];
 // A bartender's Bottoms Up! (see scene/guests.js): for durationMs they mix
