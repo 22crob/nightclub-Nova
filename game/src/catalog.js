@@ -645,6 +645,9 @@ export const EXPANSION = {
     { level: 12, size: 14 }, { level: 16, size: 15 }, { level: 20, size: 16 }, { level: 25, size: 17 },
     { level: 30, size: 18 }, { level: 35, size: 19 }, { level: 40, size: 20 },
   ],
+  // The right wall (gx) goes on past 20, a row every four levels, so the
+  // lot is a long rectangle, 24 x 20 (the owner's ask, October 2026).
+  rightLimits: [{ level: 44, size: 21 }, { level: 48, size: 22 }, { level: 52, size: 23 }, { level: 56, size: 24 }],
   perTile: 40,
   perTileGrowth: 30,
 };

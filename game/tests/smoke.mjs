@@ -543,7 +543,7 @@ const lot = await page.evaluate(() => {
   s.gridW = size[0]; s.gridH = size[1];
   return { edges, size, same: before === after, lotAfter };
 });
-check('the street stands round the whole 20 x 20 lot from the start and stays put when the club expands', lot.edges.lx === 19.5 && lot.edges.ly === 19.5 && lot.same && lot.lotAfter.lx === 19.5, JSON.stringify(lot));
+check('the street stands round the whole 24 x 20 lot from the start and stays put when the club expands', lot.edges.lx === 23.5 && lot.edges.ly === 19.5 && lot.same && lot.lotAfter.lx === 23.5, JSON.stringify(lot));
 // Prices grow with the level an item unlocks at (the owner found
 // everything too cheap): the shop charges `price`, not the base `cost`.
 const pricing = await page.evaluate(() => {
@@ -901,9 +901,9 @@ check('8 guests fit a new club; more as popularity grows (expanding alone adds n
 // A club can only grow a row per wall every couple of levels.
 const growth = await page.evaluate(() => {
   const s = window.__clubNova.scene.getScene('club');
-  return { l1: s.maxWallAt(1), l3: s.maxWallAt(3), l10: s.maxWallAt(10), l40: s.maxWallAt(40) };
+  return { l1: s.maxWallAt(1), l3: s.maxWallAt(3), l10: s.maxWallAt(10), l40: s.maxWallAt(40), left60: s.maxWallAt(60, 'left'), right44: s.maxWallAt(44, 'right'), right60: s.maxWallAt(60, 'right') };
 });
-check('expanding is locked by level: walls of 10 at level 1, 11 at 3, 13 at 10, 20 at 40 (the most)', growth.l1 === 10 && growth.l3 === 11 && growth.l10 === 13 && growth.l40 === 20, JSON.stringify(growth));
+check('expanding is locked by level: walls of 10 at level 1, 11 at 3, 13 at 10, 20 at 40; the left wall stops there, the right goes on to 24 by level 56', growth.l1 === 10 && growth.l3 === 11 && growth.l10 === 13 && growth.l40 === 20 && growth.left60 === 20 && growth.right44 === 21 && growth.right60 === 24, JSON.stringify(growth));
 
 // XP for purchases: the first buy of an item gives XP by price (5 to 30);
 // buying it again, moving it and selling it give and take nothing, so

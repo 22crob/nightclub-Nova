@@ -169,13 +169,13 @@ export class WorldMixin {
   }
 
   // The far edges of the lot the club stands on: the biggest a club can
-  // grow (the last EXPANSION limit), or the club itself if an old save is
+  // grow (24 along the right wall, 20 along the left), or the club itself if an old save is
   // bigger. The street is laid out round the whole lot from the start, so
   // it never moves; the club grows into the empty lot (the owner's ask,
   // like Nightclub City's lots).
   lotEdges() {
-    const most = EXPANSION.limits[EXPANSION.limits.length - 1].size;
-    return { lx: Math.max(most, this.gridW) - 0.5, ly: Math.max(most, this.gridH) - 0.5 };
+    const most = (side) => { const l = this.wallLimits(side); return l[l.length - 1].size; };
+    return { lx: Math.max(most('right'), this.gridW) - 0.5, ly: Math.max(most('left'), this.gridH) - 0.5 };
   }
 
   // The part of the lot the club hasn't grown into yet: dark empty ground
@@ -303,10 +303,17 @@ export class WorldMixin {
     this.hoveredPropLabel = nextLabel;
   }
 
-  // The longest a wall may be at a level (see EXPANSION in catalog.js).
-  maxWallAt(level) {
+  // How long each wall may grow, by level: the left wall (side 'left',
+  // gy) up to 20, the right wall (side 'right', gx) on to 24 (EXPANSION in
+  // catalog.js).
+  wallLimits(side) {
+    return side === 'right' ? [...EXPANSION.limits, ...EXPANSION.rightLimits] : EXPANSION.limits;
+  }
+
+  // The longest a wall may be at a level.
+  maxWallAt(level, side = 'left') {
     let size = BASE_GRID_SIZE;
-    for (const limit of EXPANSION.limits) if (limit.level <= level) size = Math.max(size, limit.size);
+    for (const limit of this.wallLimits(side)) if (limit.level <= level) size = Math.max(size, limit.size);
     return size;
   }
 
@@ -318,9 +325,10 @@ export class WorldMixin {
     const wall = side === 'left' ? this.gridH : this.gridW; // the wall that grows
     const tiles = side === 'left' ? this.gridW : this.gridH; // tiles in the new row
     const newLen = wall + 1;
-    const top = EXPANSION.limits[EXPANSION.limits.length - 1].size;
+    const limits = this.wallLimits(side);
+    const top = limits[limits.length - 1].size;
     if (newLen > top) return null;
-    const unlockLevel = EXPANSION.limits.find((l) => l.size >= newLen).level;
+    const unlockLevel = limits.find((l) => l.size >= newLen).level;
     const perTile = EXPANSION.perTile + (newLen - BASE_GRID_SIZE - 1) * EXPANSION.perTileGrowth;
     const cost = Math.max(5, Math.round((tiles * perTile) / 5) * 5);
     return { side, tiles, newLen, cost, unlockLevel };
