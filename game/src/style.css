@@ -1136,3 +1136,37 @@ input, textarea { -webkit-user-select: text; user-select: text; }
   #hudRight { top: calc(84px + env(safe-area-inset-top, 0px)); }
   .profileMain { gap: 8px; }
 }
+
+/* Raw and edgy, not bubbly (the owner's ask, October 2026): the top's
+   pieces have sharp corners, no glossy candy domes or glows, and plain
+   white icons. The Bass Boost / Drink Rush / Party buttons are flat dark
+   squares, each with a thin line of its own colour along the bottom. */
+#hudProfile .xpBar, #hudProfile .xpFill { border-radius: 2px; }
+#hudProfile .levelStar {
+  border-radius: 3px; border: 1.5px solid rgba(255, 255, 255, 0.85); min-width: 26px; height: 22px; right: -8px; bottom: -4px;
+  background: #ff2fa8; box-shadow: 0 2px 4px rgba(0, 0, 0, 0.6);
+}
+#hudProfile .levelStar span { color: #fff; font-family: var(--money-font); font-weight: 900; }
+#hudProfile .portrait { box-shadow: 0 0 0 1.5px rgba(255, 255, 255, 0.7), 0 2px 6px rgba(0, 0, 0, 0.6); }
+#hudProfile .toolButton, #hudProfile .songButton { border-radius: 3px; border-width: 1px; }
+#hudProfile .toolButton:hover, #hudProfile .songButton:hover { animation: none; filter: brightness(1.35); }
+#hudStats .statButton {
+  border-radius: 3px; background: linear-gradient(180deg, #26262c, #18181c);
+  box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.28), 0 2px 5px rgba(0, 0, 0, 0.5);
+}
+#hudStats .statButton::after { border-radius: 0; }
+#actionButtons .roundButton {
+  --c: #b45cff; width: 54px; height: 44px; padding: 9px 14px 11px; border-radius: 3px; border: none;
+  background: linear-gradient(180deg, #2c2c33, #1a1a1f);
+  box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.3), inset 0 -3px 0 var(--c), 0 2px 5px rgba(0, 0, 0, 0.55);
+  animation: none; filter: none;
+}
+#actionButtons .rushButton { --c: #19c9b4; }
+#actionButtons .partyButton { --c: #ff8a1f; }
+#actionButtons .roundButton:hover { animation: none; background: linear-gradient(180deg, #3a3a42, #222228); }
+#actionButtons .roundButton[data-state="active"] { box-shadow: 0 0 0 1.5px var(--c), inset 0 -3px 0 var(--c), 0 0 10px color-mix(in srgb, var(--c) 60%, transparent); }
+#actionButtons .roundButton[data-state="cooldown"], #actionButtons .roundButton[data-state="off"] { --c: #55555e; filter: none; opacity: 0.55; }
+#actionButtons .roundTimer { border-radius: 2px; border: 1px solid rgba(255, 255, 255, 0.6); background: #111114; font-family: var(--money-font); bottom: -12px; }
+@media (orientation: portrait) and (width <= 560px) {
+  #actionButtons .roundButton { width: 54px; height: 46px; }
+}
