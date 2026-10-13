@@ -388,7 +388,7 @@ const looks = await page.evaluate(() => {
 });
 check('patrons use chibi characters and play an animation', looks.length > 0 && looks.every((l) => /^patron_\d+$/.test(l.tex) && /^patron_\d+_(idle|walk|dance|drink|sit|sittalk)_(front|back)$/.test(l.anim)), JSON.stringify(looks[0]));
 const guestLooks = await page.evaluate(() => [...new Set(window.__clubNova.scene.getScene('club').patrons.filter((p) => !p.celeb).map((p) => p.container.patronCharacter))]);
-check('every ordinary guest is one of the hand-drawn guest looks (guy01, suit01)', guestLooks.length >= 1 && guestLooks.length <= 2 && guestLooks.every((c) => c >= 12), JSON.stringify(guestLooks));
+check('every ordinary guest is one of the hand-drawn guest looks (guy01, suit01, grey01)', guestLooks.length >= 1 && guestLooks.length <= 3 && guestLooks.every((c) => c >= 12), JSON.stringify(guestLooks));
 
 // Facing: moving down-screen shows the front, up-screen the back, and the
 // sprite is mirrored for the right-hand diagonals.
