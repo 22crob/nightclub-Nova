@@ -142,6 +142,35 @@ function expandArt(mirror) {
     </g>`;
 }
 const ART = {
+  // Chrome pictures for the Bass Boost / Drink Rush / Party buttons, black
+  // and silver like Nightclub City's speaker and microphone buttons (the
+  // owner's reference, October 2026).
+  chromeSpeaker: `<defs><linearGradient id="cBody" x1="0" x2="1"><stop offset="0" stop-color="#3a3d44"/><stop offset=".55" stop-color="#1c1e23"/><stop offset="1" stop-color="#0b0c0f"/></linearGradient>
+    <linearGradient id="cSide" x1="0" x2="1"><stop offset="0" stop-color="#d9dde3"/><stop offset="1" stop-color="#7d838c"/></linearGradient>
+    <radialGradient id="cCone" cx=".38" cy=".32" r=".75"><stop offset="0" stop-color="#ffffff"/><stop offset=".35" stop-color="#c3c8cf"/><stop offset=".75" stop-color="#5d636c"/><stop offset="1" stop-color="#1a1c20"/></radialGradient></defs>
+    <path d="M33 6.5l6-3.2v36.4l-6 4.6Z" fill="url(#cSide)" stroke="#000" stroke-width="1.8" stroke-linejoin="round"/>
+    <rect x="8.5" y="6.5" width="24.5" height="37.8" rx="2" fill="url(#cBody)" stroke="#000" stroke-width="2"/>
+    <circle cx="20.75" cy="15" r="5.6" fill="#0a0b0d" stroke="#e6e9ee" stroke-width="1.6"/>
+    <circle cx="20.75" cy="15" r="4" fill="url(#cCone)"/>
+    <circle cx="20.75" cy="31" r="9.6" fill="#0a0b0d" stroke="#e6e9ee" stroke-width="1.8"/>
+    <circle cx="20.75" cy="31" r="7.6" fill="url(#cCone)"/>
+    <circle cx="20.75" cy="31" r="2.6" fill="#16181c"/>`,
+  chromeCocktail: `<defs><linearGradient id="cGlass" x1="0" x2="1"><stop offset="0" stop-color="#f4f6f9"/><stop offset=".45" stop-color="#9aa0a9"/><stop offset=".55" stop-color="#3a3e45"/><stop offset="1" stop-color="#c7ccd3"/></linearGradient>
+    <linearGradient id="cDrink" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#5a5f68"/><stop offset="1" stop-color="#15171b"/></linearGradient></defs>
+    <path d="M6 7h36L24 26Z" fill="url(#cGlass)" stroke="#000" stroke-width="2" stroke-linejoin="round"/>
+    <path d="M11.5 12.5h25L24 25.6Z" fill="url(#cDrink)"/>
+    <path d="M10 9.2h12" stroke="#fff" stroke-width="1.6" stroke-linecap="round" opacity=".9"/>
+    <path d="M22.4 26h3.2v13h-3.2Z" fill="url(#cGlass)" stroke="#000" stroke-width="1.6"/>
+    <ellipse cx="24" cy="41.2" rx="10.5" ry="3.3" fill="url(#cGlass)" stroke="#000" stroke-width="1.8"/>
+    <path d="M30 5 36.5 13" stroke="#000" stroke-width="2.2" stroke-linecap="round"/><circle cx="36.6" cy="13.4" r="3.4" fill="url(#cGlass)" stroke="#000" stroke-width="1.6"/>`,
+  chromeParty: `<defs><linearGradient id="cConeP" x1="0" x2="1"><stop offset="0" stop-color="#b9bec6"/><stop offset=".45" stop-color="#4a4f57"/><stop offset="1" stop-color="#121316"/></linearGradient></defs>
+    <path d="M5 43.5 15.5 17.5l15 15Z" fill="url(#cConeP)" stroke="#000" stroke-width="2" stroke-linejoin="round"/>
+    <path d="M9.2 33.6l5.2 5.2M12.2 26.1l9.7 9.7" stroke="#e6e9ee" stroke-width="2.2"/>
+    <path d="M23 13c1.4-4 5-5 6-9M34 24c4-1.4 5-5 9-6" fill="none" stroke="#000" stroke-width="3.6" stroke-linecap="round"/>
+    <path d="M23 13c1.4-4 5-5 6-9M34 24c4-1.4 5-5 9-6" fill="none" stroke="#d3d7dd" stroke-width="1.8" stroke-linecap="round"/>
+    <circle cx="20" cy="5.5" r="2.4" fill="#e6e9ee" stroke="#000" stroke-width="1.4"/><circle cx="42" cy="28" r="2.4" fill="#e6e9ee" stroke="#000" stroke-width="1.4"/>
+    <rect x="34.5" y="9.5" width="4.4" height="4.4" rx=".6" fill="#8a9099" stroke="#000" stroke-width="1.3" transform="rotate(25 36.7 11.7)"/>
+    <path d="M38.6 3.4l1.2 2.6 2.8.4-2 2 .5 2.8-2.5-1.3-2.5 1.3.5-2.8-2-2 2.8-.4Z" fill="#fff" stroke="#000" stroke-width="1.2" stroke-linejoin="round"/>`,
   // Expand: a cardboard box with green arrows pointing out of each corner.
   tabExpand: `<defs><linearGradient id="gArrow" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#b6ff8a"/><stop offset="1" stop-color="#2fae2a"/></linearGradient></defs>
     <path d="M24 13 37 19.5 24 26 11 19.5Z" fill="#f6dcaa" stroke="${O}" stroke-width="1.6" stroke-linejoin="round"/>
