@@ -9,6 +9,7 @@ import bar_velvetSprite from './assets/sprites/bar_velvet.json';
 import bar_ultravioletSprite from './assets/sprites/bar_ultraviolet.json';
 import bar_pinkneonSprite from './assets/sprites/bar_pinkneon.json';
 import bar_champagneSprite from './assets/sprites/bar_champagne.json';
+import bar_orbitSprite from './assets/sprites/bar_orbit.json';
 import bar_discoSprite from './assets/sprites/bar_disco.json';
 import bar_marbleSprite from './assets/sprites/bar_marble.json';
 import bar_cyberSprite from './assets/sprites/bar_cyber.json';
@@ -58,6 +59,7 @@ import dj_facet from './assets/sprites/dj_facet.json';
 import dj_curve from './assets/sprites/dj_curve.json';
 import dj_capsule from './assets/sprites/dj_capsule.json';
 import dj_glass from './assets/sprites/dj_glass.json';
+import dj_hover from './assets/sprites/dj_hover.json';
 import seat_facetBooth from './assets/sprites/seat_facetBooth.json';
 import seat_beanBags from './assets/sprites/seat_beanBags.json';
 import seat_stripeL from './assets/sprites/seat_stripeL.json';
@@ -71,6 +73,8 @@ import seat_bottleSectional from './assets/sprites/seat_bottleSectional.json';
 import seat_onyxBooth from './assets/sprites/seat_onyxBooth.json';
 import seat_ringBooth from './assets/sprites/seat_ringBooth.json';
 import seat_crystalBooth from './assets/sprites/seat_crystalBooth.json';
+import seat_cyberBooth from './assets/sprites/seat_cyberBooth.json';
+import seat_hoverSofa from './assets/sprites/seat_hoverSofa.json';
 import seat_candleTable from './assets/sprites/seat_candleTable.json';
 import seat_standingTable from './assets/sprites/seat_standingTable.json';
 import seat_stool from './assets/sprites/seat_stool.json';
@@ -292,6 +296,8 @@ const SEAT_SPRITES = {
   facetBooth: seat_facetBooth,
   beanBags: seat_beanBags,
   stripeL: seat_stripeL,
+  cyberBooth: seat_cyberBooth,
+  hoverSofa: seat_hoverSofa,
   blackStool: seat_blackStool,
   clubChair: seat_clubChair,
   tubChair: seat_tubChair,
@@ -380,6 +386,7 @@ export const PROP_TYPES = {
   discoBar: barTier('discoBar', 'Disco Bar', 560, 40, 'bar_disco', bar_discoSprite),
   marbleBar: barTier('marbleBar', 'Marble Lounge Bar', 750, 48, 'bar_marble', bar_marbleSprite),
   cyberBar: barTier('cyberBar', 'Cyber Bar', 900, 56, 'bar_cyber', bar_cyberSprite),
+  orbitBar: barTier('orbitBar', 'Orbit Bar', 820, 52, 'bar_orbit', bar_orbitSprite), // the future batch
   woodBooth: boothTier('woodBooth', 'Wood Booth', 180, 1, 'dj_wood', boothWoodSprite),
   proBooth: boothTier('proBooth', 'Pro Booth', 215, 3, 'dj_pro', boothProSprite),
   brickBooth: boothTier('brickBooth', 'Brick Booth', 230, 6, 'dj_brick', boothBrickSprite),
@@ -396,6 +403,7 @@ export const PROP_TYPES = {
   curveBooth: boothTier('curveBooth', 'Curve Booth', 1200, 51, 'dj_curve', dj_curve),
   capsuleBooth: boothTier('capsuleBooth', 'Capsule Booth', 1350, 55, 'dj_capsule', dj_capsule),
   glassBooth: boothTier('glassBooth', 'Glass Booth', 1500, 58, 'dj_glass', dj_glass),
+  hoverBooth: boothTier('hoverBooth', 'Hover Deck', 1150, 49, 'dj_hover', dj_hover), // the future batch
   // Floors take turns unlocking, one a level: a regular floor on odd
   // levels and a dance floor on even ones (the last two are both dance
   // floors), simple to fancy, so they sit side by side in the shop. Level 1
@@ -461,6 +469,8 @@ export const PROP_TYPES = {
   onyxBooth: seatTier('onyxBooth', 'Onyx Horseshoe', 600, 37, 'onyxBooth', 0.75, BOOTH_3X3),
   ringBooth: seatTier('ringBooth', 'Neon Ring Booth', 750, 42, 'ringBooth', 0.85, BOOTH_3X3),
   crystalBooth: seatTier('crystalBooth', 'Crystal VIP Booth', 900, 52, 'crystalBooth', 0.95, BOOTH_3X3),
+  cyberBooth: seatTier('cyberBooth', 'Cyber Booth', 820, 46, 'cyberBooth', 0.9, BOOTH_3X3), // the future batch
+  hoverSofa: seatTier('hoverSofa', 'Hover Sofa', 260, 33, 'hoverSofa', 0.4, BOOTH_FOOTPRINT),
   // Club tables, chairs and stools, sold separately (October 2026).
   blackStool: seatTier('blackStool', 'Black Stool', 45, 2, 'blackStool', 0.1),
   blackTable: seatTier('blackTable', 'Black Table', 60, 6, 'blackTable', 0.15),
@@ -623,6 +633,10 @@ const PROP_LIGHTS = {
   onyxBooth: [0xffa030, 1.5],
   ringBooth: [0xff40c0, 1.8],
   crystalBooth: [0x9fd0ff, 1.5],
+  cyberBooth: [0x3ae8ff, 1.5],
+  hoverSofa: [0x3ae8ff, 1.0],
+  orbitBar: [0x3ae8ff, 1.8],
+  hoverBooth: [0x3ae8ff, 1.8],
 };
 for (const [key, light] of Object.entries(PROP_LIGHTS)) PROP_TYPES[key].light = light;
 
@@ -653,7 +667,7 @@ export const STAFF_TYPES = {
 // The VIP booths: the only seats you can show a guest to from their card
 // (see seatGuest() in scene/guests.js), like Nightclub City's booths.
 export const VIP_BOOTHS = new Set(['vipLounge', 'blackBooth', 'goldBooth',
-  'woodLounge', 'tulipLounge', 'galaxyPods', 'gemLounge', 'stripeL', 'bottleSectional', 'onyxBooth', 'ringBooth', 'crystalBooth']);
+  'woodLounge', 'tulipLounge', 'galaxyPods', 'gemLounge', 'stripeL', 'cyberBooth', 'bottleSectional', 'onyxBooth', 'ringBooth', 'crystalBooth']);
 
 // Expanding adds one row of floor along one of the room's two open edges at
 // a time (see expandClub()). How long a wall can get depends on your level:

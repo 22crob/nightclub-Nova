@@ -178,8 +178,8 @@ def build_glass():
     turntables(plain('#1c1c22', rough=0.3), glow=frame)
 def build_hover():
     """The future batch (October 2026): the Hover Deck, a sleek black and
-    white desk floating over a glowing landing pad, cyan light underneath,
-    a thin holo panel standing up behind the decks."""
+    white desk floating over a glowing landing pad, cyan light underneath
+    (a holo panel behind the decks was taken out: it cut across the DJ)."""
     white = principled('HVWhite', srgb('#eef0f6'), rough=0.08)
     black = principled('HVBlack', srgb('#0e0e16'), rough=0.12)
     cyan = neon('HVCyan', (0.25, 0.9, 1.0), 10)
@@ -195,13 +195,6 @@ def build_hover():
     box('Seam', -0.93, 0.93, -0.41, 0.33, 0.55, 0.58, cyan, bevel=0)
     box('Body', -0.95, 0.95, -0.42, 0.34, 0.58, DESK_H, white, bevel=0.05)
     box('FrontLine', -0.7, 0.7, -0.43, -0.42, 0.74, 0.77, violet, bevel=0)
-    # The holo panel behind the decks.
-    box('PanelPost', -0.03, 0.03, 0.28, 0.32, DESK_H, DESK_H + 0.75, black, bevel=0)
-    box('Panel', -0.6, 0.6, 0.29, 0.31, DESK_H + 0.28, DESK_H + 0.78, principled('HVPanel', srgb('#a8f0ff'), rough=0.1,
-        emission=srgb('#3ae8ff'), emission_strength=1.1, alpha=0.6), bevel=0)
-    for k, h in enumerate((0.18, 0.32, 0.24, 0.4, 0.28, 0.36, 0.2)):
-        x = -0.48 + k * 0.16
-        box(f'PanelBar{k}', x - 0.04, x + 0.04, 0.285, 0.29, DESK_H + 0.32, DESK_H + 0.32 + h, (cyan, violet)[k % 2], bevel=0)
     turntables(plain('#1c1c24', rough=0.25), glow=cyan, mixer_glow=violet)
 
 

@@ -22,6 +22,8 @@
 
 **The future batch (October 2026):** holograms and future pieces the owner asked for: Plasma Orb 20, Holo Logo 23, Holo Globe 27, Cyber Pillar 30, Holo Screen 34 (wall), Gyro Rings 38, Hologram Dancer 45, Laser Gate 50.
 
+**The second future batch (October 2026):** Hover Sofa 33, Circuit Board floor 36, Hex Grid dance floor 40, Data Stream wallpaper 44, Cyber Booth 46, Hover Deck DJ booth 49, Orbit Bar 52.
+
 ## Level by level
 
 | Level | Unlocks |

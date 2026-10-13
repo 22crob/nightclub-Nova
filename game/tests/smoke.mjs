@@ -159,7 +159,7 @@ check('dance floors and regular floors share one category, and the tip says whic
 // Floors are listed in the order they unlock (LEVEL_PLAN.md): a mix of
 // regular and dance floors spread over levels 1-59.
 const floorOrder = await page.$$eval('#shopItems .propSlot', (els) => els.map((e) => /^Dance/.test(e.dataset.tipText) ? 'D' : 'R').join(''));
-check('regular and dance floors unlock mixed together, in the order of the level plan', floorOrder === 'RDDRDDDRDRDRDRDRDDDRRDRDRDRD', floorOrder);
+check('regular and dance floors unlock mixed together, in the order of the level plan', floorOrder === 'RDDRDDDRDRDRDRDRDDDRRDRDRDRDRD', floorOrder);
 // Clicking a card picks the item up; clicking it again puts it down.
 await page.click('.storeTab[data-tip-name="Seating"]');
 await page.locator('.propSlot').first().click();
@@ -747,6 +747,31 @@ const holo = await page.evaluate(() => {
 });
 check('the future batch: hologram projectors, plasma orb, laser gate, cyber pillar and holo screen have their art; each projector shows its hologram, which turns with it and goes when removed',
   holo.missing.length === 0 && Object.values(holo.shown).every((n) => n >= 2) && holo.turned && holo.gone, JSON.stringify(holo));
+
+// The second future batch: the Orbit Bar, the Hover Deck, the Cyber Booth
+// and Hover Sofa have their art and seats; the Hex Grid dance floor, the
+// Circuit Board floor and the Data Stream wallpaper are in the shop.
+const future2 = await page.evaluate(() => {
+  const s = window.__clubNova.scene.getScene('club');
+  const out = { missing: ['orbitBar', 'hoverBooth', 'cyberBooth', 'hoverSofa'].filter((k) => !s.hasAnySprite(k)), seats: {} };
+  for (const k of ['cyberBooth', 'hoverSofa']) {
+    let rec = null;
+    for (let gy = 1; gy < s.gridH - 3 && !rec; gy++) for (let gx = 1; gx < s.gridW - 3 && !rec; gx++) {
+      if (s.footprintValid(s.getFootprint(k, 0, gx, gy), k)) rec = s.restoreProp(k, 0, [gx, gy]);
+    }
+    let n = 0;
+    if (rec) { try { while (n < 9 && s.seatSpot(rec, n)) n++; } catch (e) { /* past the last seat */ } }
+    out.seats[k] = rec ? n : -1;
+    if (rec) s.removeProp(rec);
+  }
+  s.renderShopItems('Floors');
+  out.floors = ['hexFloor', 'fpCircuit'].every((k) => s.shopButtons[k]);
+  s.renderShopItems('Wallpaper');
+  out.wall = !!s.shopButtons.wpData;
+  return out;
+});
+check('the second future batch: Orbit Bar, Hover Deck, Cyber Booth (4 seats) and Hover Sofa (3 seats) have their art; Hex Grid, Circuit Board and Data Stream are in the shop',
+  future2.missing.length === 0 && future2.seats.cyberBooth === 4 && future2.seats.hoverSofa === 3 && future2.floors && future2.wall, JSON.stringify(future2));
 const disco = await page.evaluate(() => {
   const s = window.__clubNova.scene.getScene('club');
   let at = null;
