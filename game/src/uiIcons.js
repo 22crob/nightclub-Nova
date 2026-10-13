@@ -333,27 +333,34 @@ const ART = {
     <path d="M2.6 22.6a8.6 8.6 0 0 0 0 15.2" fill="none" stroke="#7ef0ff" stroke-width="2.4" stroke-linecap="round"/>`,
   // The Celebrities pad: a pink superstar in sunglasses with a big grin,
   // camera flashes going off around it.
-  // The Staff pad: a little bartender from the waist up, purple vest over a
-  // white shirt, a pink bow tie and a headset (October 2026, the owner
-  // wanted a person for Staff instead of the shaker).
-  artStaffPerson: `<defs><radialGradient id="gSkin" cx=".42" cy=".38" r=".7"><stop offset="0" stop-color="#ffe2c4"/><stop offset="1" stop-color="#e9a873"/></radialGradient>
-    <linearGradient id="gHair" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#7a4a2a"/><stop offset="1" stop-color="#3e2210"/></linearGradient>
-    <linearGradient id="gVest" x1="0" x2="1"><stop offset="0" stop-color="#9a55f0"/><stop offset="1" stop-color="#4a1a96"/></linearGradient></defs>
-    <path d="M8 46c0-9 6.5-14 16-14s16 5 16 14Z" fill="#f4f6fb" stroke="${O}" stroke-width="2" stroke-linejoin="round"/>
-    <path d="M8 46c0-8 4-12.4 10-13.6L21 46ZM40 46c0-8-4-12.4-10-13.6L27 46Z" fill="url(#gVest)" stroke="${O}" stroke-width="1.8" stroke-linejoin="round"/>
-    <circle cx="24" cy="39.5" r="1" fill="#c9cde0"/><circle cx="24" cy="43.5" r="1" fill="#c9cde0"/>
-    <path d="M18.6 33.4l5.4 3 5.4-3-1.4 5.4-4-2.2-4 2.2Z" fill="#ff4fa8" stroke="${O}" stroke-width="1.5" stroke-linejoin="round"/>
-    <circle cx="24" cy="35.9" r="1.6" fill="#ff8fcf" stroke="${O}" stroke-width="1.1"/>
-    <path d="M20 28.5h8v4.5a4 4 0 0 1-8 0Z" fill="url(#gSkin)" stroke="${O}" stroke-width="1.6"/>
-    <circle cx="24" cy="18" r="11" fill="url(#gSkin)" stroke="${O}" stroke-width="2"/>
-    <path d="M12.8 18.6C11.6 9.6 17 5 24 5s12.6 4.4 11.4 13.4c-1.6-4-4-5.6-6.6-6.2-2 2.2-6.6 3.6-11.6 3-1.6 1-2.8 2-4.4 3.4Z" fill="url(#gHair)" stroke="${O}" stroke-width="1.8" stroke-linejoin="round"/>
-    <ellipse cx="20" cy="19.6" rx="1.5" ry="2" fill="${O}"/><ellipse cx="28" cy="19.6" rx="1.5" ry="2" fill="${O}"/>
-    <circle cx="20.5" cy="19" r=".5" fill="#fff"/><circle cx="28.5" cy="19" r=".5" fill="#fff"/>
-    <path d="M20.6 24c2 1.8 4.8 1.8 6.8 0" fill="none" stroke="${O}" stroke-width="1.5" stroke-linecap="round"/>
-    <path d="M12.4 17.6a11.6 11.6 0 0 1 23.2 0" fill="none" stroke="#1d1f2c" stroke-width="2.2"/>
-    <rect x="10.4" y="15.6" width="4" height="7" rx="1.6" fill="#2a2d3e" stroke="${O}" stroke-width="1.3"/>
-    <path d="M12.6 22.4c0 3.6 2.6 5.6 6.4 5.4" fill="none" stroke="#1d1f2c" stroke-width="1.6" stroke-linecap="round"/>
-    <circle cx="19.4" cy="27.8" r="1.3" fill="#ff4fa8" stroke="${O}" stroke-width=".9"/>`,
+  // The Staff pad: a little waiter in a tuxedo from the chest up, black
+  // jacket with satin lapels, white shirt, black bow tie, a pocket square
+  // and slicked hair (October 2026, the owner wanted a person in a tux).
+  artStaffPerson: `<defs><radialGradient id="gSkin" cx=".42" cy=".36" r=".72"><stop offset="0" stop-color="#ffe6cc"/><stop offset=".7" stop-color="#f4bf8f"/><stop offset="1" stop-color="#df9c66"/></radialGradient>
+    <linearGradient id="gHair" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#4a3326"/><stop offset=".55" stop-color="#22160f"/><stop offset="1" stop-color="#0d0805"/></linearGradient>
+    <linearGradient id="gTux" x1="0" x2="1"><stop offset="0" stop-color="#3a3d4c"/><stop offset=".45" stop-color="#1a1c25"/><stop offset="1" stop-color="#08090d"/></linearGradient>
+    <linearGradient id="gLapel" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#5a5e72"/><stop offset="1" stop-color="#1c1e28"/></linearGradient>
+    <linearGradient id="gShirt" x1="0" x2="1"><stop offset="0" stop-color="#ffffff"/><stop offset="1" stop-color="#d7dcea"/></linearGradient></defs>
+    <path d="M5 48c0-8.6 5-13.4 12.4-15.4L24 35l6.6-2.4C38 34.6 43 39.4 43 48Z" fill="url(#gTux)" stroke="${O}" stroke-width="2" stroke-linejoin="round"/>
+    <path d="M19.4 32h9.2L27 48h-6Z" fill="url(#gShirt)" stroke="${O}" stroke-width="1.4" stroke-linejoin="round"/>
+    <path d="M17.4 32.6l3.4 15.4h-3.6L13 36.4ZM30.6 32.6l-3.4 15.4h3.6L35 36.4Z" fill="url(#gLapel)" stroke="${O}" stroke-width="1.4" stroke-linejoin="round"/>
+    <circle cx="24" cy="41" r=".9" fill="#1a1c25"/><circle cx="24" cy="44.6" r=".9" fill="#1a1c25"/>
+    <path d="M34.2 40.6l2.4-1.6 1.8 2.4-2.8 1Z" fill="#fff" stroke="${O}" stroke-width="1" stroke-linejoin="round"/>
+    <path d="M21 28.4h6v4.2l-3 1.6-3-1.6Z" fill="url(#gSkin)" stroke="${O}" stroke-width="1.5" stroke-linejoin="round"/>
+    <path d="M18.4 31.4l5.6 2.4 5.6-2.4v5.2l-5.6-2.4-5.6 2.4Z" fill="#0d0e14" stroke="${O}" stroke-width="1.2" stroke-linejoin="round"/>
+    <rect x="22.6" y="32.4" width="2.8" height="2.8" rx=".7" fill="#262935" stroke="${O}" stroke-width=".9"/>
+    <path d="M19.6 32.6l2.4 1" stroke="#5a5e72" stroke-width=".8" stroke-linecap="round"/>
+    <ellipse cx="13.4" cy="18.4" rx="2" ry="2.8" fill="url(#gSkin)" stroke="${O}" stroke-width="1.4"/>
+    <ellipse cx="34.6" cy="18.4" rx="2" ry="2.8" fill="url(#gSkin)" stroke="${O}" stroke-width="1.4"/>
+    <ellipse cx="24" cy="17.6" rx="10.6" ry="11.4" fill="url(#gSkin)" stroke="${O}" stroke-width="2"/>
+    <path d="M13.2 17.4C12 8.4 17.4 3.6 24.6 3.6c6.8 0 11.4 4.2 10.4 13.2-1.2-3.6-3-5.4-5.2-6.2-3.4 2-8.6 2.2-13 1.4-1.4 1.4-2.4 3.2-3.6 5.4Z" fill="url(#gHair)" stroke="${O}" stroke-width="1.8" stroke-linejoin="round"/>
+    <path d="M18.6 7.4c3-1.8 7.4-2 10.6-.4" fill="none" stroke="#8a6650" stroke-width="1.3" stroke-linecap="round" opacity=".85"/>
+    <path d="M16.8 15.6c1.2-.9 2.8-1.1 4.2-.6M27 15c1.4-.5 3-.3 4.2.6" fill="none" stroke="#2a1a10" stroke-width="1.4" stroke-linecap="round"/>
+    <ellipse cx="19.4" cy="19" rx="1.7" ry="2.2" fill="#1a1410"/><ellipse cx="28.6" cy="19" rx="1.7" ry="2.2" fill="#1a1410"/>
+    <circle cx="20" cy="18.2" r=".7" fill="#fff"/><circle cx="29.2" cy="18.2" r=".7" fill="#fff"/>
+    <path d="M24 20.4l-.8 2.6h1.6" fill="none" stroke="#c98a5a" stroke-width="1" stroke-linecap="round" stroke-linejoin="round"/>
+    <path d="M20.6 24.6c2 1.6 4.8 1.6 6.8 0" fill="none" stroke="${O}" stroke-width="1.5" stroke-linecap="round"/>
+    <ellipse cx="17" cy="22.6" rx="1.6" ry=".9" fill="#ff8f9a" opacity=".45"/><ellipse cx="31" cy="22.6" rx="1.6" ry=".9" fill="#ff8f9a" opacity=".45"/>`,
   artCeleb: `<defs><radialGradient id="gCStar" cx=".38" cy=".3" r=".85"><stop offset="0" stop-color="#ffd6f6"/><stop offset=".45" stop-color="#ff4fc8"/><stop offset="1" stop-color="#b0127f"/></radialGradient>
     <linearGradient id="gShade" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#3a3a5a"/><stop offset="1" stop-color="#0c0c18"/></linearGradient></defs>
     <path d="M24 3.6 30 17.6l15.2 1.4-11.5 10 3.4 14.8L24 36l-13.1 7.8 3.4-14.8-11.5-10L18 17.6Z" fill="url(#gCStar)" stroke="${O}" stroke-width="2" stroke-linejoin="round"/>
