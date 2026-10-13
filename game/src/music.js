@@ -35,6 +35,10 @@ const SONG_FILES = [
   { file: 'lose-my-breath.mp3', title: 'Lose My Breath', artist: 'DeltaX Music', bpm: 125.0, offset: 0.0, lengthMs: 230327 },
   { file: 'no-good-reason.mp3', title: 'No Good Reason', artist: 'Black Box', bpm: 84.99, offset: 0.0, lengthMs: 118700 },
   { file: 'lose-myself-in-you.mp3', title: 'Lose Myself In You', artist: 'Infinity Beats', bpm: 138.0, offset: 0.186, lengthMs: 269544 },
+  { file: 'lost-in-the-night.mp3', title: 'Lost In The Night', artist: 'SoundUniverseStudio', bpm: 140.0, offset: 0.104, lengthMs: 187224 },
+  { file: 'signal-collapse.mp3', title: 'Signal Collapse', artist: 'Infinity Beats', bpm: 130.99, offset: 0.441, lengthMs: 217584 },
+  { file: 'supernova-heartbeat.mp3', title: 'Supernova Heartbeat', artist: 'Infinity Beats', bpm: 140.01, offset: 0.0, lengthMs: 324024 },
+  { file: 'break-my-heart.mp3', title: 'Break My Heart', artist: 'Infinity Beats', bpm: 126.14, offset: 0.255, lengthMs: 270312 },
 ];
 // The MP3s aren't packed into the game's page (they'd make it slow to open):
 // they're separate files in public/music/, published next to the page, and
