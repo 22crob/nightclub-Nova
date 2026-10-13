@@ -80,7 +80,7 @@ export class PatronsMixin {
       nextMoveAt: now + randRange(...PATRON_MOVE_INTERVAL),
       nextTipAt: now + randRange(...PATRON_TIP_INTERVAL),
       thirstyAt: now + randRange(3000, 18000), // most patrons want a drink soon after arriving, not all at once
-      name: this.guestName(),
+      name: this.guestName(container.patronCharacter),
       spent: 0,
       mood: MOOD.start,
       fun: MOOD.startFun,

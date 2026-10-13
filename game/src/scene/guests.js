@@ -4,14 +4,16 @@
 // bartender for their card and the Bottoms Up! move, which serves their
 // whole line at once; the game suggests it when a bar is slammed.
 // Mixed into ClubScene (see ClubScene.js); `this` is the scene.
-import { PATRON_META, PATRON_SHEETS, patronMetaOf } from '../assets.js';
+import { CUTOUT_PATRONS, PATRON_META, PATRON_SHEETS, patronMetaOf } from '../assets.js';
 import { PROP_TYPES, VIP_BOOTHS } from '../catalog.js';
-import { BOTTOMS_UP, CHARACTER_DISPLAY_HEIGHT, THIRST_INTERVAL } from '../config.js';
+import { BOTTOMS_UP, CHARACTER_DISPLAY_HEIGHT, GIRL_LOOKS, THIRST_INTERVAL } from '../config.js';
 import { MOOD } from './mood.js';
 import { SFX } from '../sfx.js';
 
-// Every guest and staff member is a guy for now (the girl base isn't in
-// the game yet), so their names are guys' names.
+// Guys' names, and girls' names for the girl looks (GIRL_LOOKS in
+// config.js); staff are all guys for now.
+const FIRST_GIRLS = ['Maya', 'Zoe', 'Aaliyah', 'Nia', 'Luna', 'Jade', 'Imani', 'Sofia', 'Kiara', 'Bella', 'Aria', 'Tia',
+  'Nova', 'Layla', 'Ruby', 'Skye', 'Dani', 'Mila', 'Zara', 'Camila'];
 const FIRST = ['Marcus', 'Dev', 'Jordan', 'Kai', 'Andre', 'Theo', 'Omar', 'Rico', 'Leo', 'Sam', 'Ty', 'Malik', 'Cole', 'Rex',
   'Benny', 'Jay', 'Nico', 'Zane', 'Eli', 'Dante', 'Miles', 'Luca', 'Isaac', 'Felix', 'Hugo', 'Max', 'Ravi', 'Owen', 'Jace', 'Milo'];
 const LAST = ['High', 'Forest', 'Rivera', 'Nguyen', 'Brooks', 'Stone', 'Vega', 'Park', 'Lane', 'Cruz', 'Fox', 'Banks', 'Reed',
@@ -22,8 +24,9 @@ const CHAT = ['Nice place!', 'I love this song!', 'Have you seen the bartender\'
 const pick = (list) => list[Math.floor(Math.random() * list.length)];
 
 export class GuestsMixin {
-  guestName() {
-    return `${pick(FIRST)} ${pick(LAST)}`;
+  guestName(character) {
+    const girl = GIRL_LOOKS.some((n) => CUTOUT_PATRONS[n] === character);
+    return `${pick(girl ? FIRST_GIRLS : FIRST)} ${pick(LAST)}`;
   }
 
   // A staff member's name: the same every time the club loads (picked from
