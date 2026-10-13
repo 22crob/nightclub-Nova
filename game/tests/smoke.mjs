@@ -1453,10 +1453,10 @@ check('the newer booths and sofas all have their art', moreSeats.missing.length 
 const club26 = await page.evaluate(() => {
   const s = window.__clubNova.scene.getScene('club');
   const keys = ['blackStool', 'clubChair', 'tubChair', 'blackTable', 'highTop', 'glassTable', 'snakePlant', 'monstera', 'bamboo', 'poolBlack',
-    'hangingFern', 'pendantLights', 'ledPoleCyan', 'ledPolePink', 'neonHeart', 'wallSpeaker', 'fairyLights', 'vineWall', 'bottleShelf', 'luxBottleShelf', 'stripeCorner'];
-  return { missing: keys.filter((k) => !s.hasAnySprite(k)), stripe: s.getFootprint('stripeBooth', 0, 0, 0).length, corner: s.getFootprint('stripeCorner', 0, 0, 0).length };
+    'hangingFern', 'pendantLights', 'ledPoleCyan', 'ledPolePink', 'neonHeart', 'wallSpeaker', 'fairyLights', 'vineWall', 'bottleShelf', 'luxBottleShelf', 'stripeL'];
+  return { missing: keys.filter((k) => !s.hasAnySprite(k)), stripe: s.getFootprint('stripeL', 0, 0, 0).length, cut: ['stripeCorner', 'stripeBooth'].every((k) => { try { return !s.hasAnySprite(k); } catch (e) { return true; } }) };
 });
-check('the new tables, chairs, stools, plants, black pool table and wall decorations have their art; Stripe Booth sections are 3 x 1, its corner 1 x 1', club26.missing.length === 0 && club26.stripe === 3 && club26.corner === 1, JSON.stringify(club26));
+check('the new tables, chairs, stools, plants, black pool table and wall decorations have their art; the Stripe Booth is one 3 x 3 L-shaped piece (no separate sections or corner)', club26.missing.length === 0 && club26.stripe === 9 && club26.cut, JSON.stringify(club26));
 
 // Wall decorations hang low, in the middle or high (picked before hanging,
 // changed with the Edit tools' Turn), drawn bigger but inside the wall, and
@@ -1521,7 +1521,7 @@ check('the Wood Lounge takes 3 x 2 tiles', moreSeats.woodTiles === 6, String(mor
 // The nightclub batch of booths (October 2026): art, seats, VIP booths.
 const clubSeats = await page.evaluate(() => {
   const s = window.__clubNova.scene.getScene('club');
-  const keys = ['beanBags', 'stripeBooth', 'bottleSectional', 'onyxBooth', 'ringBooth', 'crystalBooth'];
+  const keys = ['beanBags', 'stripeL', 'bottleSectional', 'onyxBooth', 'ringBooth', 'crystalBooth'];
   const out = { missing: keys.filter((k) => !s.hasLayerSprites(k)), seats: {},  };
   for (const k of keys) {
     let rec = null;
@@ -1535,8 +1535,8 @@ const clubSeats = await page.evaluate(() => {
   }
   return out;
 });
-check('the nightclub booths have their art and seats (bean bags 2, a Stripe Booth section 3, booths 4 or 5)', clubSeats.missing.length === 0 && clubSeats.seats.beanBags === 2
-  && clubSeats.seats.stripeBooth === 3 && ['bottleSectional', 'onyxBooth', 'ringBooth'].every((k) => clubSeats.seats[k] === 4) && clubSeats.seats.crystalBooth === 5, JSON.stringify(clubSeats));
+check('the nightclub booths have their art and seats (bean bags 2, booths 4 or 5)', clubSeats.missing.length === 0 && clubSeats.seats.beanBags === 2
+  && ['stripeL', 'bottleSectional', 'onyxBooth', 'ringBooth'].every((k) => clubSeats.seats[k] === 4) && clubSeats.seats.crystalBooth === 5, JSON.stringify(clubSeats));
 
 // Decorations: the first ones have their sprites, and one can be placed and
 // rotated like any other prop.

@@ -831,6 +831,48 @@ def stripe_corner():
     return {'seats': [[0.1, -0.1]], 'sitLift': 0.0}
 
 
+def stripe_l():
+    """3 x 3: the Stripe Booth, one L-shaped piece (the owner's ask: not a
+    straight section plus a corner). Black and hot pink striped velvet
+    backs along the back and down the left side (the two far sides, so its
+    seats face the room), straight down to the floor, a black block in the
+    corner, black stripes at both open ends, a pink glow under the seat
+    edges and a little glowing table."""
+    black = principled('StripeBlack', srgb('#1a1620'), rough=0.6)
+    pink = principled('StripePink', srgb('#e0207a'), rough=0.7)
+    trim = principled('StripeTrim', srgb('#0c0a0e'), rough=0.3)
+    glow = neon('StripeGlow', (1.0, 0.15, 0.55), 5)
+    E, B, S = 1.125, 0.885, 0.3     # outer edge, inner face of the backs, front of the seats
+    # seats: along the back (+Y), and down the left side (-X)
+    box('BaseBack', -B, E, S, B, 0, 0.1, trim, bevel=0.0)
+    box('BaseLeft', -B, -S, -E, S, 0, 0.1, trim, bevel=0.0)
+    box('UnderGlowBack', -S, E, S - 0.01, S, 0.03, 0.06, glow, bevel=0)
+    box('UnderGlowLeft', -S, -S + 0.01, -E, S, 0.03, 0.06, glow, bevel=0)
+    box('SeatBack', -B, E, S, B, 0.1, 0.42, black, bevel=0.0)
+    box('SeatLeft', -B, -S, -E, S, 0.1, 0.42, black, bevel=0.0)
+    box('SeatEdgeB', -S, E, S - 0.01, S + 0.02, 0.38, 0.42, trim, bevel=0)
+    box('SeatEdgeL', -S - 0.02, -S + 0.01, -E, S, 0.38, 0.42, trim, bevel=0)
+    # the backs: an odd number of stripes along each arm, black at the open end
+    n = 11
+    w = (B + E) / n
+    for k in range(n):
+        x1 = E - k * w
+        box(f'BackStripeB{k}', x1 - w, x1, B, E, 0.0, 1.0, (black, pink)[k % 2], bevel=0.0)
+        y0 = -E + k * w
+        box(f'BackStripeL{k}', -E, -B, y0, y0 + w, 0.0, 1.0, (black, pink)[k % 2], bevel=0.0)
+    box('BackCorner', -E, -B, B, E, 0.0, 1.0, black, bevel=0.0)
+    box('BackPipeB', -E, E, B - 0.01, E + 0.01, 1.0, 1.04, trim, bevel=0.0)
+    box('BackPipeL', -E - 0.01, -B + 0.01, -E, B, 1.0, 1.04, trim, bevel=0.0)
+    # a little round glowing table in the open corner
+    cylinder('TableFoot', 0.35, -0.35, 0, 0.04, 0.18, trim, verts=24)
+    cylinder('TableStem', 0.35, -0.35, 0.04, 0.44, 0.035, trim, verts=12)
+    cylinder('Table', 0.35, -0.35, 0.44, 0.49, 0.3, principled('StripeTop', srgb('#ffffff'), rough=0.2,
+             emission=srgb('#ff6ab0'), emission_strength=0.8), verts=40)
+    for i, (x, y, c) in enumerate([(0.45, -0.3, '#ff4dcf'), (0.25, -0.45, '#7dd8ff')]):
+        cone(f'Glass{i}', x, y, 0.49, 0.61, 0.03, 0.045, mat(c, rough=0.1, glow=0.6, alpha=0.85), verts=12)
+    return seats((0.75, 0.6, 0), (0.1, 0.6, 0), (-0.6, -0.75, 90), (-0.6, -0.1, 90))
+
+
 def bottle_sectional():
     """Bottle service: a black leather L-sectional with red stitching and
     a red underglow, round a square black glass table with an ice bucket."""
@@ -980,8 +1022,7 @@ DESIGNS = {
     'onyxBooth': onyx_booth,
     'crystalBooth': crystal_booth,
     'ringBooth': ring_booth,
-    'stripeBooth': stripe_booth,
-    'stripeCorner': stripe_corner,
+    'stripeL': stripe_l,
     'bottleSectional': bottle_sectional,
     'beanBags': bean_bags,
     'blackStool': black_stool,

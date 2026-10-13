@@ -38,7 +38,7 @@
 | 12 | Dance floor: Blue Pulse; Decoration: Pool Table; Wallpaper: Stripes |
 | 13 | Seat/booth: Chrome Bar Stool; Decoration: Crystal Column; Wall decor: Blue LED Pole; Celebrity: Max Volt |
 | 14 | Bar: Speakeasy Bar; Floor: Red Gloss; Decoration: Glow Tube |
-| 15 | DJ booth: Neon Booth; Seat/booth: Glass Table; Seat/booth: Stripe Booth; Seat/booth: Stripe Booth Corner; Wallpaper: Subway Tile |
+| 15 | DJ booth: Neon Booth; Seat/booth: Glass Table; Seat/booth: Stripe Booth; Wallpaper: Subway Tile |
 | 16 | Dance floor: Wood Floor; Decoration: Glow Plinth; Drink: Martini; Bartender: +1 |
 | 17 | Decoration: Black Bamboo; Wall decor: Red LED Pole; Wallpaper: Wood Panel; Party: Neon Night |
 | 18 | Bar: Velvet Bar; Seat/booth: Chesterfield; Seat/booth: Bottle Service; Floor: Wood Planks; Wallpaper: Wood Planks; Bouncer: +1; Celebrity: DJ Kai Blaze |

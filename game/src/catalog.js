@@ -60,8 +60,7 @@ import dj_capsule from './assets/sprites/dj_capsule.json';
 import dj_glass from './assets/sprites/dj_glass.json';
 import seat_facetBooth from './assets/sprites/seat_facetBooth.json';
 import seat_beanBags from './assets/sprites/seat_beanBags.json';
-import seat_stripeBooth from './assets/sprites/seat_stripeBooth.json';
-import seat_stripeCorner from './assets/sprites/seat_stripeCorner.json';
+import seat_stripeL from './assets/sprites/seat_stripeL.json';
 import seat_blackStool from './assets/sprites/seat_blackStool.json';
 import seat_clubChair from './assets/sprites/seat_clubChair.json';
 import seat_tubChair from './assets/sprites/seat_tubChair.json';
@@ -276,8 +275,7 @@ const SEAT_SPRITES = {
   galaxyPods: seat_galaxyPods,
   facetBooth: seat_facetBooth,
   beanBags: seat_beanBags,
-  stripeBooth: seat_stripeBooth,
-  stripeCorner: seat_stripeCorner,
+  stripeL: seat_stripeL,
   blackStool: seat_blackStool,
   clubChair: seat_clubChair,
   tubChair: seat_tubChair,
@@ -440,8 +438,7 @@ export const PROP_TYPES = {
   gemLounge: seatTier('gemLounge', 'Gem Lounge', 1450, 57, 'facetBooth', 1.15, BOOTH_3X3), // the owner's Booth 7 sketch
   // The nightclub batch (October 2026, art/blender/seating_designs.py).
   beanBags: seatTier('beanBags', 'Bean Bags', 120, 7, 'beanBags', 0.25, BOOTH_FOOTPRINT),
-  stripeBooth: seatTier('stripeBooth', 'Stripe Booth', 200, 15, 'stripeBooth', 0.4, BOOTH_FOOTPRINT), // straight sections that join up, like bars
-  stripeCorner: seatTier('stripeCorner', 'Stripe Booth Corner', 90, 15, 'stripeCorner', 0.2), // turns two sections into an L (half a square)
+  stripeL: seatTier('stripeL', 'Stripe Booth', 400, 15, 'stripeL', 0.6, BOOTH_3X3), // one L-shaped piece (the owner's ask; it was straight sections and a corner)
   bottleSectional: seatTier('bottleSectional', 'Bottle Service', 450, 18, 'bottleSectional', 0.6, BOOTH_3X3),
   onyxBooth: seatTier('onyxBooth', 'Onyx Horseshoe', 600, 37, 'onyxBooth', 0.75, BOOTH_3X3),
   ringBooth: seatTier('ringBooth', 'Neon Ring Booth', 750, 42, 'ringBooth', 0.85, BOOTH_3X3),
@@ -592,8 +589,7 @@ const PROP_LIGHTS = {
   glassBooth: [0x80c8ff, 1.9],
   gemLounge: [0xff50b0, 1.3],
   beanBags: [0xb060ff, 0.9],
-  stripeBooth: [0xff2a8a, 1.3],
-  stripeCorner: [0xff2a8a, 0.6],
+  stripeL: [0xff2a8a, 1.3],
   bottleSectional: [0xff2040, 1.3],
   onyxBooth: [0xffa030, 1.5],
   ringBooth: [0xff40c0, 1.8],
@@ -628,7 +624,7 @@ export const STAFF_TYPES = {
 // The VIP booths: the only seats you can show a guest to from their card
 // (see seatGuest() in scene/guests.js), like Nightclub City's booths.
 export const VIP_BOOTHS = new Set(['vipLounge', 'blackBooth', 'goldBooth',
-  'woodLounge', 'tulipLounge', 'galaxyPods', 'gemLounge', 'stripeBooth', 'stripeCorner', 'bottleSectional', 'onyxBooth', 'ringBooth', 'crystalBooth']);
+  'woodLounge', 'tulipLounge', 'galaxyPods', 'gemLounge', 'stripeL', 'bottleSectional', 'onyxBooth', 'ringBooth', 'crystalBooth']);
 
 // Expanding adds one row of floor along one of the room's two open edges at
 // a time (see expandClub()). How long a wall can get depends on your level:
@@ -671,4 +667,4 @@ export const FLOOR_DECAL_PROPS = new Set(Object.keys(PROP_TYPES).filter((k) => P
 // (bars, booths, seating, a wallpaper and decorations): refunded in full.
 // The Bottle Cabinet became the Bottle Shelf on the wall (the owner asked).
 // The Truss Booth was cut too (the owner, October 2026).
-export const REMOVED_ITEMS = { trussBooth: 440, bottleCabinet: 800, throneBooth: 1500, barrel: 70, bathtubSofa: 300, beerBench: 120, birdcageBooth: 850, breweryBar: 420, candyBar: 620, catStatue: 480, cloudBed: 1000, crateBooth: 195, crates: 40, cruiserSofa: 220, decoSofa: 260, dinerBar: 340, discoStage: 1200, donutLounge: 750, fireSectional: 480, gardenBar: 380, gardenGazebo: 600, gargoyle: 400, glowLounge: 520, iglooBooth: 700, kissSofa: 350, palm: 110, rattanSeat: 450, rockStar: 1400, shellBooth: 900, starterBar: 100, streetLamp: 120, surfBar: 300, theatreBooth: 300, tikiBar: 220, tikiHut: 380, wpTheatre: 34 };
+export const REMOVED_ITEMS = { stripeBooth: 1700, stripeCorner: 770, trussBooth: 440, bottleCabinet: 800, throneBooth: 1500, barrel: 70, bathtubSofa: 300, beerBench: 120, birdcageBooth: 850, breweryBar: 420, candyBar: 620, catStatue: 480, cloudBed: 1000, crateBooth: 195, crates: 40, cruiserSofa: 220, decoSofa: 260, dinerBar: 340, discoStage: 1200, donutLounge: 750, fireSectional: 480, gardenBar: 380, gardenGazebo: 600, gargoyle: 400, glowLounge: 520, iglooBooth: 700, kissSofa: 350, palm: 110, rattanSeat: 450, rockStar: 1400, shellBooth: 900, starterBar: 100, streetLamp: 120, surfBar: 300, theatreBooth: 300, tikiBar: 220, tikiHut: 380, wpTheatre: 34 };
