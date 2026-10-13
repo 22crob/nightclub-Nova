@@ -3355,6 +3355,10 @@ check('wall decorations are 3D pieces hung on a wall section (one each, the shel
     const b = document.getElementById('hudRight').getBoundingClientRect();
     return { gap: Math.round(b.left - a.right), fits: b.right <= window.innerWidth };
   });
+  // A phone's sharp screen gets a sharp picture: the canvas has 2 dots per CSS pixel
+  // (SHARP.maxDpr; the iPhone has 3) while taps still land where they should (above).
+  const sharp = await tp.evaluate(() => { const s = window.__clubNova.scene.getScene('club'); const c = s.game.canvas; return { dpr: window.devicePixelRatio, dots: c.width / c.getBoundingClientRect().width, cam: s.cameras.main.zoom }; });
+  check('on a sharp phone screen the game draws at 2 dots per pixel, not stretched', sharp.dots === 2 && sharp.cam === 2, JSON.stringify(sharp));
   check('on a phone, tapping a guest opens their card', card);
   check('on a phone, tapping a high five collects it', paid === bonus.amount, `paid ${paid}`);
   check('on a phone, two fingers pinch to zoom', z1 > z0 * 1.3, `${z0.toFixed(2)} -> ${z1.toFixed(2)}`);

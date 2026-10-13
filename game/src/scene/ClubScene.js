@@ -112,6 +112,7 @@ export class ClubScene extends Phaser.Scene {
 
   create() {
     this.cameras.main.setBackgroundColor('#0a0612');
+    this.sharpScreen();
 
     // World container we can drag around and zoom. centerView() below
     // positions it once the grid size is known.

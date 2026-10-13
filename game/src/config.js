@@ -473,6 +473,10 @@ export const BONUS = { amount: 88, everyMs: [45000, 75000], lifeMs: 8000, minMoo
 // a finger that just misses a guest, the DJ or a piece still picks it if it's
 // within reach px (objectNear() in selection.js); bonus badges take a tap
 // bonusReach times their size from their middle (bonusAt()).
+// Sharp screens (phones, tablets, most laptops) have 2-3 real dots per CSS
+// pixel; the game draws at up to maxDpr of them so its art isn't stretched
+// and blurry (sharpScreen() in world.js). Capped for phones' speed.
+export const SHARP = { maxDpr: 2 };
 export const TOUCH = { tapSlop: 14, reach: 18, bonusReach: 1.1 };
 
 export const HOVER = { color: 0xffffff, strength: 2.5, selectColor: 0x5dff8a, selectStrength: 4, padding: 10, alphaHit: 40 };

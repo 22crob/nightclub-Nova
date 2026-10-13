@@ -3,7 +3,7 @@
 // Mixed into ClubScene (see ClubScene.js); `this` is the scene.
 import Phaser from 'phaser';
 import { EXPANSION } from '../catalog.js';
-import { BASE_GRID_SIZE, FLOOR_COLOR, FLOOR_SLAB_DEPTH, ROOM_COLORS, TILE_H, TILE_W, WALL_BASEBOARD, WALL_HEIGHT, WALL_THICKNESS, ZOOM_DEFAULT, ZOOM_MAX, ZOOM_MIN } from '../config.js';
+import { SHARP, BASE_GRID_SIZE, FLOOR_COLOR, FLOOR_SLAB_DEPTH, ROOM_COLORS, TILE_H, TILE_W, WALL_BASEBOARD, WALL_HEIGHT, WALL_THICKNESS, ZOOM_DEFAULT, ZOOM_MAX, ZOOM_MIN } from '../config.js';
 import { SFX } from '../sfx.js';
 import { WALL_TEX_H, WALL_TEX_W, doorCanvas } from '../walls.js';
 import { bareFloorCanvas } from '../floors.js';
@@ -12,6 +12,30 @@ import { bareFloorCanvas } from '../floors.js';
 const DOOR_CLEAR = 2;
 
 export class WorldMixin {
+  // Draw at the screen's real sharpness. On a sharp screen the browser
+  // would otherwise stretch a canvas made at CSS size, blurring the art.
+  // The game keeps working in CSS pixels (pointer.x, scale.width, the world
+  // container): only the canvas has dpr times the dots, and the camera
+  // zooms by dpr from its top left to fill it. Re-applied after every
+  // resize, after Phaser's own handlers set the canvas back to CSS size.
+  sharpScreen() {
+    const r = this.game.renderer;
+    this.dpr = r.type === Phaser.WEBGL ? Math.min(Math.max(1, window.devicePixelRatio || 1), SHARP.maxDpr) : 1;
+    const apply = () => {
+      const { width: w, height: h } = this.scale;
+      const c = this.game.canvas;
+      c.style.width = `${w}px`;
+      c.style.height = `${h}px`;
+      if (this.dpr === 1) return;
+      c.width = Math.round(w * this.dpr);
+      c.height = Math.round(h * this.dpr);
+      r.resize(c.width, c.height);
+      this.cameras.main.setSize(c.width, c.height).setOrigin(0, 0).setZoom(this.dpr);
+    };
+    apply();
+    this.scale.on('resize', apply);
+  }
+
   gridToScreen(gx, gy) {
     return {
       sx: (gx - gy) * (TILE_W / 2),

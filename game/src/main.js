@@ -4,12 +4,20 @@ import './style.css';
 import { ClubScene } from './scene/ClubScene.js';
 import { fillIcons } from './uiIcons.js';
 import { setupTooltips } from './tooltips.js';
+import { SHARP } from './config.js';
 
 fillIcons();
 setupTooltips();
 // iPhone Safari zooms the whole page on a pinch even when told not to; the
 // pinch is the club's own zoom instead (world.js).
 for (const type of ['gesturestart', 'gesturechange']) document.addEventListener(type, (e) => e.preventDefault(), { passive: false });
+
+// Words drawn in the game (floating money, speech bubbles) are made at the
+// screen's sharpness too (see sharpScreen() in world.js).
+const makeText = Phaser.GameObjects.GameObjectFactory.prototype.text;
+Phaser.GameObjects.GameObjectFactory.prototype.text = function (x, y, text, style) {
+  return makeText.call(this, x, y, text, { resolution: Math.min(Math.max(1, window.devicePixelRatio || 1), SHARP.maxDpr), ...style });
+};
 
 const config = {
   type: Phaser.AUTO,
