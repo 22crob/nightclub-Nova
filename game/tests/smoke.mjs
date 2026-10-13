@@ -1395,17 +1395,31 @@ const turns = await page.evaluate(() => {
   const out = {};
   s.barLineRoom = () => 0; s.barTurnCache = null;
   out.fullNobody = !s.mayGoForDrink(a) && !s.mayGoForDrink(b) && s.barsFull();
-  a.mood = 80; a.thirstSince = now - 60000;
-  s.updatePatronMood(a, 5);
-  out.noUpset = a.mood >= 80;
+  // The same 5 s of mood from the same start, with and without thirst, so
+  // boredom and the rest don't count: thirst alone must cost nothing while
+  // every line is full, and something once there's room.
+  const fun0 = a.fun, next0 = a.nextMoveAt, thirsty0 = a.thirstyAt;
+  const moodRun = (thirsty) => {
+    a.fun = fun0; a.mood = 80; a.nextMoveAt = next0;
+    a.thirstyAt = thirsty ? thirsty0 : now + 1e6; a.thirstSince = thirsty ? now - 60000 : null;
+    s.updatePatronMood(a, 5);
+    return a.mood;
+  };
+  const calm = moodRun(false);
+  out.full = moodRun(true);
+  out.calm = calm;
+  out.noUpset = out.full >= calm - 1e-6;
   s.barLineRoom = () => 1; s.barTurnCache = null;
+  out.room = moodRun(true);
+  out.hurtsWithRoom = out.room < calm;
+  a.fun = fun0; a.nextMoveAt = next0; a.thirstyAt = thirsty0;
   out.oneGoes = s.mayGoForDrink(a) && !s.mayGoForDrink(b);
   s.barLineRoom = room; s.barRoomAt = null;
   ps.forEach((p, i) => { [p.thirstyAt, p.mood, p.thirstSince] = saved[i]; });
   for (const p of s.patrons) if (p.__t !== undefined) { p.thirstyAt = p.__t; delete p.__t; }
   return out;
 });
-check('with every bar line full, thirsty guests carry on without minding; when there is room the longest thirsty go first', turns.skipped || (turns.fullNobody && turns.noUpset && turns.oneGoes), JSON.stringify(turns));
+check('with every bar line full, thirsty guests carry on without minding; when there is room the longest thirsty go first', turns.skipped || (turns.fullNobody && turns.noUpset && turns.hurtsWithRoom && turns.oneGoes), JSON.stringify(turns));
 
 // Regular floors: pick one and click (or drag across) tiles to paint them.
 // It's saved, and patrons don't dance on it.
