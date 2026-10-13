@@ -1,3 +1,7 @@
 output/
 __pycache__/
 art/build/
+
+# Blender files the build scripts write next to them: rebuilt from the scripts any time
+art/blender/*.blend
+art/blender/*.blend1

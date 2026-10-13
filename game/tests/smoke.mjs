@@ -33,7 +33,7 @@ const state = () => page.evaluate(() => {
   const s = window.__clubNova.scene.getScene('club');
   return {
     cash: s.cash, fans: s.fans, placed: s.placedCount(), patrons: s.patrons.length,
-    textures: ['bar_0', 'bar_90', 'bar_180', 'bar_270', 'dj_club_0', 'dj_wood_90', 'dj_ice_270', 'patron_0', 'patron_11']
+    textures: ['bar_0', 'bar_90', 'bar_180', 'bar_270', 'dj_club_0', 'dj_wood_90', 'dj_ice_270', 'patron_0', 'patron_4']
       .filter((k) => !s.textures.exists(k)),
   };
 });
@@ -388,7 +388,7 @@ const looks = await page.evaluate(() => {
 });
 check('patrons use chibi characters and play an animation', looks.length > 0 && looks.every((l) => /^patron_\d+$/.test(l.tex) && /^patron_\d+_(idle|walk|dance|drink|sit|sittalk)_(front|back)$/.test(l.anim)), JSON.stringify(looks[0]));
 const guestLooks = await page.evaluate(() => [...new Set(window.__clubNova.scene.getScene('club').patrons.filter((p) => !p.celeb).map((p) => p.container.patronCharacter))]);
-check('every ordinary guest is one of the hand-drawn guest looks (guy01, suit01, grey01, emo01)', guestLooks.length >= 1 && guestLooks.length <= 4 && guestLooks.every((c) => c >= 12), JSON.stringify(guestLooks));
+check('every ordinary guest is one of the hand-drawn guest looks (guy01, suit01, grey01, emo01, girl01)', guestLooks.length >= 1 && guestLooks.length <= 5 && guestLooks.every((c) => c >= 0 && c < 5), JSON.stringify(guestLooks));
 
 // Facing: moving down-screen shows the front, up-screen the back, and the
 // sprite is mirrored for the right-hand diagonals.
@@ -2583,34 +2583,15 @@ const drinkSpot = await page.evaluate(() => {
 });
 check('a guest with a drink sits down with it when a seat is free, and never drinks on the dance floor', !drinkSpot.noGuest && drinkSpot.onFloor === 0 && drinkSpot.seated, JSON.stringify(drinkSpot));
 
-// Guests from the owner's 3D model: their own sheet and frame grid, with
-// two more clips (drink, sittalk); the drawn guests stand or sit instead.
-const model3d = await page.evaluate(() => {
+// The hand-drawn guests have no drink or sit-and-talk clips: they stand
+// or sit instead (CLIP_FALLBACK in patrons.js).
+const fallback = await page.evaluate(() => {
   const s = window.__clubNova.scene.getScene('club');
-  const out = {};
-  let idx = 0;
-  while (s.textures.exists(`patron_${idx}`) && !s.anims.exists(`patron_${idx}_drink_front`)) idx++;
-  out.found = s.anims.exists(`patron_${idx}_drink_front`) && s.anims.exists(`patron_${idx}_sittalk_back`);
-  out.drawnFallback = s.patronAnimKey({ patronCharacter: 0, patronDir: 'front' }, 'drink') === 'patron_0_idle_front'
-    && s.patronAnimKey({ patronCharacter: 0, patronDir: 'back' }, 'sittalk') === 'patron_0_sit_back';
-  if (!out.found) return out;
-  s.everyoneLookOff = true; // draw this look, not the one everyone wears
-  const c = s.drawPatronCharacterSprite(100, 100, 1, idx);
-  const guest = { container: c };
-  s.setPatronAnimation(guest, 'drink');
-  out.drinking = c.patronSprite.anims.currentAnim.key;
-  s.setPatronAnimation(guest, 'sittalk');
-  out.talking = c.patronSprite.anims.currentAnim.key;
-  // Drawn at the same standing height as the drawn guests.
-  const drawn = s.drawPatronCharacterSprite(100, 100, 1, 0);
-  out.sameScale = Math.abs(c.patronSprite.scaleY - drawn.patronSprite.scaleY * 121.1 / 118) < 0.02;
-  out.idx = idx;
-  s.everyoneLookOff = false;
-  c.destroy();
-  drawn.destroy();
-  return out;
+  const c = s.cutoutLook('guy01');
+  return { drink: s.patronAnimKey({ patronCharacter: c, patronDir: 'front' }, 'drink') === `patron_${c}_idle_front`,
+    talk: s.patronAnimKey({ patronCharacter: c, patronDir: 'back' }, 'sittalk') === `patron_${c}_sit_back` };
 });
-check('guests made from the owner\'s 3D model load with drink and sit-and-talk clips; drawn guests fall back to standing and sitting', model3d.found && model3d.drawnFallback && ( model3d.drinking === `patron_${model3d.idx}_drink_front` && model3d.talking === `patron_${model3d.idx}_sittalk_front` && model3d.sameScale), JSON.stringify(model3d));
+check('a guest drinking or chatting seated stands or sits (the hand-drawn guests have no drink or sit-and-talk drawings)', fallback.drink && fallback.talk, JSON.stringify(fallback));
 
 // The stock meter on the right edge shows the drinks left: full when
 // stocked, a step lower with every drink served, red when low; clicking it
@@ -2688,20 +2669,13 @@ const held = await page.evaluate(() => {
 check('a held item always shows with its tiles: green where it fits, red and tinted where it does not', held.free && held.free.ghost && !held.free.tinted && held.free.filled && held.free.outlined
   && held.blocked.ghost && held.blocked.tinted && held.blocked.filled && held.blocked.outlined && held.clearedAfter, JSON.stringify(held));
 
-// The Neon Cartoon guy (art/characters/neon) is a guest too, with every
-// clip in both views, standing the same height as the drawn guests.
-const neon = await page.evaluate(() => {
+// Only the hand-drawn guest sheets are packed into the page (the older
+// guest sheets were taken out to keep it small).
+const sheets = await page.evaluate(() => {
   const s = window.__clubNova.scene.getScene('club');
-  const i = s.textures.getTextureKeys().filter((k) => /^patron_\d+$/.test(k)).length - 1;
-  const clips = ['idle', 'walk', 'dance', 'sit'].flatMap((c) => ['front', 'back'].map((d) => `patron_${i}_${c}_${d}`));
-  const c = s.drawPatronCharacterSprite(0, 0, 1, i);
-  const h = c.patronSprite.displayHeight;
-  const d = s.drawPatronCharacterSprite(0, 0, 1, 0);
-  const out = { i, anims: clips.every((k) => s.anims.exists(k)), height: Math.round(h), drawnHeight: Math.round(d.patronSprite.displayHeight) };
-  c.destroy(); d.destroy();
-  return out;
+  return s.textures.getTextureKeys().filter((k) => /^patron_\d+$/.test(k)).length;
 });
-check('the Neon Cartoon guy is a guest with idle, walk, dance and sit, front and back', neon.anims && neon.height > 0, JSON.stringify(neon));
+check('only the hand-drawn guest looks are loaded (old guest sheets gone)', sheets === 5, String(sheets));
 
 // The cut-out puppet guy (art/characters/cutout) is a guest too, with every
 // clip in both views, standing about as tall as the other guests.
@@ -2736,7 +2710,7 @@ const keepsLook = await page.evaluate(() => {
   const s = window.__clubNova.scene.getScene('club');
   const suit = s.cutoutLook('suit01');
   const guest = s.drawPatronSprite(0, 0, 1, suit); // what trySpawnPatron() draws for them
-  const staff = s.drawPatronCharacterSprite(0, 0, 1, 0);
+  const staff = s.drawPatronCharacterSprite(0, 0, 1, 99);
   const out = { suit, got: guest.patronCharacter, staffLook: staff.patronCharacter === s.everyoneLook() };
   guest.destroy(); staff.destroy();
   return out;

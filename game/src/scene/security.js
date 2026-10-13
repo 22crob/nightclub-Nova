@@ -31,7 +31,7 @@ export class SecurityMixin {
     const index = this.guards.length;
     const [gx, gy] = this.guardPost(index);
     const { sx, sy } = this.gridToScreen(gx, gy);
-    const look = BOUNCERS.characters[index] ?? SECURITY.character;
+    const look = this.everyoneLook() ?? BOUNCERS.characters[index] ?? SECURITY.character; // staff wear the main look
     const container = this.drawPatronCharacterSprite(sx, sy, SECURITY.scale, look);
     container.staffCharacter = look;
     this.propLayer.add(container);

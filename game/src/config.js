@@ -311,22 +311,6 @@ export const PATRON_Y_OFFSET = 6 * PROP_SCALE;
 // as a bar counter, so props and decorations read at the right size around
 // them. (It was 3.25 at first, which made characters about 2.4 counters
 // tall.)
-// The looks every ordinary guest wears (patron_3d_<name> sheets; see
-// PAINTED_PATRONS in assets.js). The owner asked for the ChatGPT-painted
-// guy01 to be the only guest; empty brings back the mix below.
-// Celebrities and staff keep their own looks.
-export const GUEST_LOOKS = ['guy01'];
-// Share of guests who are the owner's 3D model (when its sheets exist; see
-// MODEL_PATRONS in assets.js), the rest being the drawn characters.
-export const MODEL_PATRON_SHARE = 0.35;
-// Share of guests who are the Neon Cartoon characters (NEON_PATRONS in
-// assets.js); more on the test link, so they're easy to look at.
-export const NEON_PATRON_SHARE = 0.3;
-export const NEON_PATRON_SHARE_TEST = 0.6;
-// The cut-out puppet guests (CUTOUT_PATRONS in assets.js, by name), on
-// trial: on the test link this share of guests wears one of CUTOUT_LOOKS,
-// the real club none yet (the owner will judge them first).
-export const CUTOUT_LOOKS = ['guy01'];
 // Every character in the game (guests, the line and the street, staff,
 // bouncers, celebrities) wears this cut-out look while it's set: the
 // owner's call, October 2026 ("replace all characters with him for now").
@@ -341,8 +325,6 @@ export const GUEST_CUTOUTS = ['guy01', 'suit01', 'grey01', 'emo01', 'girl01'];
 // crowd once her back walk is drawn (randomGuestLook() skips a look that
 // borrows it) and only sits once her sit is drawn (canDoClip()).
 export const GIRL_LOOKS = ['girl01'];
-export const CUTOUT_SHARE = 0;
-export const CUTOUT_SHARE_TEST = 0.6;
 export const CHARACTER_DISPLAY_HEIGHT = 87.4; // px: big next to the furniture, like Nightclub City
 // How far above a patron's feet their tip / drink popups start.
 export const PATRON_POPUP_Y = CHARACTER_DISPLAY_HEIGHT * 0.8;
