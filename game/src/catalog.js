@@ -422,6 +422,12 @@ export const PROP_TYPES = {
   fpLeopard: paintTier('fpLeopard', 'Cheetah Print', 14, 41, 'cheetah'), // was Leopard Print (the owner found it bad); key kept for saves
   fpStarry: paintTier('fpStarry', 'Starry Glass', 24, 57, 'starryGlass'),
   fpCircuit: paintTier('fpCircuit', 'Circuit Board', 16, 36, 'circuit'), // the future batch
+  // The October 2026 batch from the owner's reference clubs.
+  fpPinDot: paintTier('fpPinDot', 'Pin Dot', 6, 7, 'pinDot'),
+  fpDiamondPlate: paintTier('fpDiamondPlate', 'Diamond Plate', 10, 12, 'diamondPlate'),
+  fpBlueSlate: paintTier('fpBlueSlate', 'Blue Slate', 13, 22, 'blueSlate'),
+  fpDecoFans: paintTier('fpDecoFans', 'Deco Fans', 18, 31, 'decoFans'),
+  fpSilverStars: paintTier('fpSilverStars', 'Silver Stars', 22, 47, 'silverStars'),
   // Dance floors (src/floors.js, drawn in code): simple to fancy, all with
   // the same gameplay. Floors are the ONLY
   // category that grants patron capacity (see patronCapacity()); a
@@ -445,6 +451,13 @@ export const PROP_TYPES = {
   stepFloor: floorTier('stepFloor', 'Step Floor', 155, 55, 'step'),
   galaxyFloor: floorTier('galaxyFloor', 'Galaxy Swirl', 185, 58, 'galaxy'),
   hexFloor: floorTier('hexFloor', 'Hex Grid', 120, 40, 'hexGrid'), // the future batch
+  // The October 2026 batch from the owner's reference clubs.
+  swirlFloor: floorTier('swirlFloor', 'Swirl', 34, 11, 'swirl'),
+  purpleHazeFloor: floorTier('purpleHazeFloor', 'Purple Haze', 42, 19, 'purpleHaze'),
+  decoRingFloor: floorTier('decoRingFloor', 'Deco Rings', 60, 23, 'decoRings'),
+  theatreFloor: floorTier('theatreFloor', 'Theatre Glow', 65, 27, 'theatreGlow'),
+  bubbleFloor: floorTier('bubbleFloor', 'Bubble Lights', 100, 38, 'bubbleLights'),
+  iceStarFloor: floorTier('iceStarFloor', 'Ice Star', 140, 46, 'iceStar'),
   // Seating, simple to fancy. 'table' and 'vipLounge' are the keys of the
   // original placeholder Table and VIP Lounge, kept for old saves.
   woodStool: seatTier('woodStool', 'Wood Stool', 40, 1, 'woodStool', 0.1),

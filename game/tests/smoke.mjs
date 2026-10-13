@@ -159,7 +159,7 @@ check('dance floors and regular floors share one category, and the tip says whic
 // Floors are listed in the order they unlock (LEVEL_PLAN.md): a mix of
 // regular and dance floors spread over levels 1-59.
 const floorOrder = await page.$$eval('#shopItems .propSlot', (els) => els.map((e) => /^Dance/.test(e.dataset.tipText) ? 'D' : 'R').join(''));
-check('regular and dance floors unlock mixed together, in the order of the level plan', floorOrder === 'RDDRDDDRDRDRDRDRDDDRRDRDRDRDRD', floorOrder);
+check('regular and dance floors unlock mixed together, in the order of the level plan', floorOrder === 'RDDRDRDDRDRDRDRDDRDRDDRRDDDRRDDRDRDRDRDRD', floorOrder);
 // Clicking a card picks the item up; clicking it again puts it down.
 await page.click('.storeTab[data-tip-name="Seating"]');
 await page.locator('.propSlot').first().click();

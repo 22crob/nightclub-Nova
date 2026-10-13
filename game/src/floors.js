@@ -456,6 +456,211 @@ export const FLOOR_STYLES = {
       bevel(ctx, S, `rgba(255,255,255,${0.1 + 0.3 * k})`, 'rgba(0,0,0,0.6)');
     },
   },
+
+  // The October 2026 batch from the owner's five reference clubs.
+  // Black-and-white waves swirling across the floor, still (01, the brick
+  // street club). The waves repeat every tile, so a floor reads as one swirl.
+  swirl: {
+    frames: 1,
+    draw(ctx, S) {
+      const img = ctx.createImageData(S, S);
+      for (let y = 0; y < S; y++) {
+        for (let x = 0; x < S; x++) {
+          const u = x / S, v = y / S;
+          const w = Math.sin(2 * Math.PI * (2 * v + 0.28 * Math.sin(2 * Math.PI * u) + 0.12 * Math.sin(4 * Math.PI * (u + v))));
+          const t = Math.max(0, Math.min(1, 0.5 + w * 2.2));
+          const c = Math.round(26 + t * (238 - 26));
+          const i = (y * S + x) * 4;
+          img.data[i] = c; img.data[i + 1] = c; img.data[i + 2] = c + 4; img.data[i + 3] = 255;
+        }
+      }
+      ctx.putImageData(img, 0, 0);
+      const g = ctx.createLinearGradient(0, 0, S, S);
+      g.addColorStop(0, 'rgba(255,255,255,0.1)');
+      g.addColorStop(1, 'rgba(0,0,0,0.12)');
+      ctx.fillStyle = g;
+      ctx.fillRect(0, 0, S, S);
+      bevel(ctx, S, 'rgba(255,255,255,0.1)', 'rgba(0,0,0,0.35)');
+    },
+  },
+
+  // A purple light-up grid, each cell glowing pink in the middle and deep
+  // purple at its edges, breathing slowly (02, the purple floor club).
+  purpleHaze: {
+    frames: 8,
+    speed: 3,
+    phase: 'sync',
+    draw(ctx, S, frame) {
+      ctx.fillStyle = '#12091e';
+      ctx.fillRect(0, 0, S, S);
+      const k = 0.55 + 0.45 * (0.5 - 0.5 * Math.cos((frame / 8) * Math.PI * 2));
+      const n = 2, gap = 5, c = (S - gap * (n + 1)) / n;
+      for (let i = 0; i < n; i++) {
+        for (let j = 0; j < n; j++) {
+          const x = gap + i * (c + gap), y = gap + j * (c + gap);
+          const g = ctx.createRadialGradient(x + c / 2, y + c / 2, 2, x + c / 2, y + c / 2, c * 0.72);
+          g.addColorStop(0, `rgba(255,${Math.round(120 + 80 * k)},235,1)`);
+          g.addColorStop(0.45, `rgba(220,${Math.round(60 + 40 * k)},240,1)`);
+          g.addColorStop(1, `rgba(${Math.round(70 + 40 * k)},20,${Math.round(130 + 50 * k)},1)`);
+          ctx.save();
+          ctx.shadowColor = `rgba(200,80,255,${0.8 * k})`;
+          ctx.shadowBlur = 10;
+          ctx.fillStyle = g;
+          ctx.fillRect(x, y, c, c);
+          ctx.restore();
+          const sh = ctx.createLinearGradient(x, y, x + c, y + c);
+          sh.addColorStop(0, 'rgba(255,255,255,0.25)');
+          sh.addColorStop(0.5, 'rgba(255,255,255,0)');
+          ctx.fillStyle = sh;
+          ctx.fillRect(x, y, c, c);
+        }
+      }
+      bevel(ctx, S, 'rgba(255,180,255,0.2)', 'rgba(0,0,0,0.6)');
+    },
+  },
+
+  // Dark green glass with glowing cyan circles: a ring in each tile's
+  // middle and quarter rings in its corners, so the circles link up across
+  // the floor (04, the art deco club). A slow glow.
+  decoRings: {
+    frames: 8,
+    speed: 3,
+    phase: 'sync',
+    draw(ctx, S, frame) {
+      const bg = ctx.createLinearGradient(0, 0, S, S);
+      bg.addColorStop(0, '#0f3a2e');
+      bg.addColorStop(1, '#082219');
+      ctx.fillStyle = bg;
+      ctx.fillRect(0, 0, S, S);
+      const k = 0.6 + 0.4 * (0.5 - 0.5 * Math.cos((frame / 8) * Math.PI * 2));
+      ctx.save();
+      ctx.shadowColor = '#4cf2ff';
+      ctx.shadowBlur = 6 + 10 * k;
+      ctx.strokeStyle = `rgba(110,240,255,${0.55 + 0.45 * k})`;
+      ctx.lineWidth = 4;
+      const ring = (x, y, r) => { ctx.beginPath(); ctx.arc(x, y, r, 0, Math.PI * 2); ctx.stroke(); };
+      ring(S / 2, S / 2, S * 0.26);
+      for (const [x, y] of [[0, 0], [S, 0], [0, S], [S, S]]) ring(x, y, S * 0.24);
+      ctx.lineWidth = 2;
+      ring(S / 2, S / 2, S * 0.12);
+      ctx.restore();
+      ctx.fillStyle = `rgba(200,255,255,${0.7 * k})`;
+      ctx.beginPath(); ctx.arc(S / 2, S / 2, 3.5, 0, Math.PI * 2); ctx.fill();
+      bevel(ctx, S, 'rgba(255,255,255,0.08)', 'rgba(0,0,0,0.5)');
+    },
+  },
+
+  // Red and orange light-up checks glowing in waves, a dark diamond line
+  // through each tile like the border on the theatre club's floor (03).
+  theatreGlow: {
+    frames: 8,
+    speed: 2,
+    phase: 'ripple',
+    draw(ctx, S, frame) {
+      const k = 0.45 + 0.55 * (0.5 - 0.5 * Math.cos((frame / 8) * Math.PI * 2));
+      const n = 2, c = S / n;
+      for (let i = 0; i < n; i++) {
+        for (let j = 0; j < n; j++) {
+          const orange = (i + j) % 2;
+          const base = orange ? [255, 140, 30] : [235, 40, 30];
+          const x = i * c, y = j * c;
+          const g = ctx.createRadialGradient(x + c / 2, y + c / 2, 2, x + c / 2, y + c / 2, c * 0.75);
+          const mix = (v, t) => Math.round(40 + (v - 40) * t);
+          g.addColorStop(0, `rgb(${mix(Math.min(255, base[0] + 30), k)},${mix(Math.min(255, base[1] + 70), k)},${mix(base[2] + 40, k)})`);
+          g.addColorStop(1, `rgb(${mix(base[0], k * 0.8)},${mix(base[1], k * 0.8)},${mix(base[2], k * 0.8)})`);
+          ctx.fillStyle = g;
+          ctx.fillRect(x, y, c, c);
+        }
+      }
+      ctx.strokeStyle = 'rgba(60,8,4,0.85)';
+      ctx.lineWidth = 3;
+      ctx.beginPath();
+      ctx.moveTo(S / 2, 0); ctx.lineTo(S, S / 2); ctx.lineTo(S / 2, S); ctx.lineTo(0, S / 2); ctx.closePath();
+      ctx.stroke();
+      ctx.strokeStyle = 'rgba(60,8,4,0.6)';
+      ctx.lineWidth = 2;
+      ctx.beginPath(); ctx.moveTo(c, 0); ctx.lineTo(c, S); ctx.moveTo(0, c); ctx.lineTo(S, c); ctx.stroke();
+      bevel(ctx, S, 'rgba(255,220,180,0.25)', 'rgba(40,0,0,0.6)');
+    },
+  },
+
+  // The classic round-bulb light-up floor: a 3x3 grid of round lights in
+  // blue, cyan and yellow blinking on and off, each tile on its own.
+  bubbleLights: {
+    frames: 8,
+    speed: 3,
+    phase: 'random',
+    draw(ctx, S, frame) {
+      ctx.fillStyle = '#13111c';
+      ctx.fillRect(0, 0, S, S);
+      const colors = ['#3d7dff', '#3de8ff', '#ffe03d'];
+      const n = 3, c = S / n, r = c * 0.36;
+      for (let i = 0; i < n; i++) {
+        for (let j = 0; j < n; j++) {
+          const x = c * (i + 0.5), y = c * (j + 0.5);
+          const lit = (i * 3 + j * 5 + frame) % 3 !== 0;
+          const color = colors[(i + j * 2 + Math.floor(frame / 2)) % 3];
+          ctx.save();
+          if (lit) { ctx.shadowColor = color; ctx.shadowBlur = 14; }
+          const g = ctx.createRadialGradient(x - r * 0.3, y - r * 0.35, 1, x, y, r);
+          g.addColorStop(0, lit ? '#ffffff' : '#3a3648');
+          g.addColorStop(0.35, lit ? color : '#2a2638');
+          g.addColorStop(1, lit ? color : '#1c1a26');
+          ctx.fillStyle = g;
+          ctx.beginPath(); ctx.arc(x, y, r, 0, Math.PI * 2); ctx.fill();
+          ctx.restore();
+          ctx.strokeStyle = 'rgba(0,0,0,0.6)';
+          ctx.lineWidth = 2;
+          ctx.beginPath(); ctx.arc(x, y, r, 0, Math.PI * 2); ctx.stroke();
+        }
+      }
+      bevel(ctx, S, 'rgba(255,255,255,0.1)', 'rgba(0,0,0,0.6)');
+    },
+  },
+
+  // Icy blue light-up diamonds with a white star twinkling in each (05, the
+  // ice club), each tile twinkling on its own.
+  iceStar: {
+    frames: 8,
+    speed: 2,
+    phase: 'random',
+    draw(ctx, S, frame) {
+      ctx.fillStyle = '#0a1630';
+      ctx.fillRect(0, 0, S, S);
+      const k = 0.55 + 0.45 * (0.5 - 0.5 * Math.cos((frame / 8) * Math.PI * 2));
+      const g = ctx.createRadialGradient(S / 2, S / 2, 4, S / 2, S / 2, S * 0.55);
+      g.addColorStop(0, `rgba(230,250,255,${0.6 + 0.4 * k})`);
+      g.addColorStop(0.5, `rgba(110,200,255,${0.75 + 0.25 * k})`);
+      g.addColorStop(1, 'rgba(30,90,200,1)');
+      ctx.save();
+      ctx.shadowColor = '#7fd8ff';
+      ctx.shadowBlur = 8 + 8 * k;
+      ctx.fillStyle = g;
+      ctx.beginPath();
+      ctx.moveTo(S / 2, 6); ctx.lineTo(S - 6, S / 2); ctx.lineTo(S / 2, S - 6); ctx.lineTo(6, S / 2); ctx.closePath();
+      ctx.fill();
+      ctx.restore();
+      ctx.strokeStyle = 'rgba(255,255,255,0.75)';
+      ctx.lineWidth = 2;
+      ctx.stroke();
+      const star = (r1, r2) => {
+        ctx.beginPath();
+        for (let a = 0; a < 8; a++) {
+          const r = a % 2 ? r2 : r1, t = (a / 8) * Math.PI * 2 - Math.PI / 2;
+          ctx.lineTo(S / 2 + Math.cos(t) * r, S / 2 + Math.sin(t) * r);
+        }
+        ctx.closePath();
+      };
+      ctx.save();
+      ctx.shadowColor = '#ffffff';
+      ctx.shadowBlur = 6 + 12 * k;
+      ctx.fillStyle = '#ffffff';
+      star(S * (0.16 + 0.06 * k), S * 0.05);
+      ctx.fill();
+      ctx.restore();
+      bevel(ctx, S, 'rgba(200,240,255,0.25)', 'rgba(0,0,0,0.6)');
+    },
+  },
 };
 
 // Regular floors: painted onto the room's floor tile by tile (see
@@ -764,6 +969,145 @@ export const FLOOR_PAINTS = {
       ctx.fillStyle = g;
       ctx.fillRect(0, 0, S, S);
       seam(ctx, S, 'rgba(200,160,70,0.5)');
+    },
+  },
+
+  // The October 2026 batch from the owner's reference clubs.
+  // Black with tiny white dots in neat staggered rows.
+  pinDot: {
+    frames: 1,
+    draw(ctx, S) {
+      const g = ctx.createLinearGradient(0, 0, S, S);
+      g.addColorStop(0, '#1a1a20');
+      g.addColorStop(1, '#0e0e12');
+      ctx.fillStyle = g;
+      ctx.fillRect(0, 0, S, S);
+      const n = 8, c = S / n;
+      ctx.fillStyle = 'rgba(255,255,255,0.6)';
+      for (let j = 0; j < n; j++) {
+        for (let i = 0; i < n; i++) {
+          const x = (i + (j % 2 ? 0.5 : 0) + 0.25) * c, y = (j + 0.5) * c;
+          ctx.beginPath(); ctx.arc(x % S, y, 1.7, 0, Math.PI * 2); ctx.fill();
+        }
+      }
+      seam(ctx, S, 'rgba(0,0,0,0.6)');
+    },
+  },
+
+  // Grey steel tread plate, raised lugs in a crisscross.
+  diamondPlate: {
+    frames: 1,
+    draw(ctx, S) {
+      const g = ctx.createLinearGradient(0, 0, S, S);
+      g.addColorStop(0, '#8d939c');
+      g.addColorStop(0.5, '#6c727b');
+      g.addColorStop(1, '#80868f');
+      ctx.fillStyle = g;
+      ctx.fillRect(0, 0, S, S);
+      const n = 4, c = S / n;
+      for (let j = 0; j < n; j++) {
+        for (let i = 0; i < n; i++) {
+          const x = (i + 0.5) * c, y = (j + 0.5) * c;
+          const a = (i + j) % 2 ? Math.PI / 4 : -Math.PI / 4;
+          ctx.save();
+          ctx.translate(x, y); ctx.rotate(a);
+          ctx.fillStyle = 'rgba(0,0,0,0.55)';
+          ctx.beginPath(); ctx.ellipse(1.5, 2.5, c * 0.36, c * 0.1, 0, 0, Math.PI * 2); ctx.fill();
+          ctx.fillStyle = '#c9ced6';
+          ctx.beginPath(); ctx.ellipse(0, 0, c * 0.36, c * 0.1, 0, 0, Math.PI * 2); ctx.fill();
+          ctx.fillStyle = 'rgba(255,255,255,0.75)';
+          ctx.beginPath(); ctx.ellipse(-1, -1.5, c * 0.26, c * 0.035, 0, 0, Math.PI * 2); ctx.fill();
+          ctx.restore();
+        }
+      }
+      seam(ctx, S, 'rgba(40,42,48,0.6)');
+    },
+  },
+
+  // Blue-grey slate flagstones, staggered (01, the brick street club).
+  blueSlate: {
+    frames: 1,
+    draw(ctx, S) {
+      const r = rng(41);
+      const h = S / 2;
+      const stones = [[0, 0, S * 0.6, h], [S * 0.6, 0, S * 0.4, h], [0, h, S * 0.35, h], [S * 0.35, h, S * 0.65, h]];
+      for (const [x, y, w, hh] of stones) {
+        const v = Math.floor(r() * 16);
+        ctx.fillStyle = `rgb(${84 + v},${100 + v},${120 + v})`;
+        ctx.fillRect(x, y, w, hh);
+        for (let k = 0; k < 40; k++) {
+          ctx.fillStyle = r() < 0.5 ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,20,0.1)';
+          ctx.fillRect(x + r() * w, y + r() * hh, 2 + r() * 4, 1.5 + r() * 2);
+        }
+        ctx.strokeStyle = 'rgba(30,36,48,0.75)';
+        ctx.lineWidth = 2.5;
+        ctx.strokeRect(x + 1.25, y + 1.25, w - 2.5, hh - 2.5);
+        ctx.fillStyle = 'rgba(255,255,255,0.1)';
+        ctx.fillRect(x + 3, y + 3, w - 6, 2.5);
+      }
+    },
+  },
+
+  // Art deco fan tiles: rows of grey and white scallops with arcs inside
+  // (04, the art deco club).
+  decoFans: {
+    frames: 1,
+    draw(ctx, S) {
+      ctx.fillStyle = '#d8d8de';
+      ctx.fillRect(0, 0, S, S);
+      const w = S / 2, h = w / 2;
+      for (let row = -1; row <= 4; row++) {
+        const y = row * h;
+        const off = row % 2 ? w / 2 : 0;
+        for (let i = -1; i <= 2; i++) {
+          const cx = i * w + off + w / 2, cy = y + h;
+          const grey = (((row + 4) % 2) === 0) !== (((i + 2) % 2) === 0);
+          ctx.fillStyle = grey ? '#9a9ca6' : '#f2f2f6';
+          ctx.strokeStyle = '#5c5e68';
+          ctx.lineWidth = 2.4;
+          ctx.beginPath(); ctx.arc(cx, cy, w / 2, Math.PI, 0); ctx.closePath(); ctx.fill(); ctx.stroke();
+          ctx.strokeStyle = grey ? 'rgba(255,255,255,0.55)' : 'rgba(90,92,104,0.45)';
+          ctx.lineWidth = 1.6;
+          for (const k of [0.78, 0.58, 0.38, 0.18]) { ctx.beginPath(); ctx.arc(cx, cy, (w / 2) * k, Math.PI, 0); ctx.stroke(); }
+        }
+      }
+      seam(ctx, S, 'rgba(60,60,70,0.35)');
+    },
+  },
+
+  // Black glossy tiles with a silver star in each and thin silver lines
+  // (05, the ice club).
+  silverStars: {
+    frames: 1,
+    draw(ctx, S) {
+      const h = S / 2;
+      for (let i = 0; i < 2; i++) {
+        for (let j = 0; j < 2; j++) {
+          const x = i * h, y = j * h;
+          const g = ctx.createLinearGradient(x, y, x + h, y + h);
+          g.addColorStop(0, '#24242c');
+          g.addColorStop(1, '#0c0c10');
+          ctx.fillStyle = g;
+          ctx.fillRect(x, y, h, h);
+          const cx = x + h / 2, cy = y + h / 2;
+          const sg = ctx.createLinearGradient(cx - 14, cy - 14, cx + 14, cy + 14);
+          sg.addColorStop(0, '#ffffff');
+          sg.addColorStop(0.5, '#a9b0ba');
+          sg.addColorStop(1, '#e6e9ee');
+          ctx.fillStyle = sg;
+          ctx.beginPath();
+          for (let a = 0; a < 8; a++) {
+            const r = a % 2 ? 4 : 15, t = (a / 8) * Math.PI * 2 - Math.PI / 2;
+            ctx.lineTo(cx + Math.cos(t) * r, cy + Math.sin(t) * r);
+          }
+          ctx.closePath(); ctx.fill();
+          ctx.strokeStyle = 'rgba(200,206,214,0.55)';
+          ctx.lineWidth = 1.5;
+          ctx.strokeRect(x + 0.75, y + 0.75, h - 1.5, h - 1.5);
+          ctx.fillStyle = 'rgba(255,255,255,0.06)';
+          ctx.fillRect(x + 3, y + 3, h - 6, h * 0.3);
+        }
+      }
     },
   },
 };
