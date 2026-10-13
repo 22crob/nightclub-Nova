@@ -469,9 +469,20 @@ export class WorldMixin {
     const bottom = (this.gridW + this.gridH - 1) * TILE_H / 2 + FLOOR_SLAB_DEPTH;
     const left = -(this.gridH + WALL_THICKNESS) * TILE_W / 2;
     const right = (this.gridW + WALL_THICKNESS) * TILE_W / 2;
-    const areaTop = 110; // below the profile strip
-    const areaBottom = this.scale.height - 150; // above the shop buttons
-    const fit = Math.min((areaBottom - areaTop) / (bottom - top), (this.scale.width - 40) / (right - left));
+    let areaTop = 110; // below the profile strip
+    let areaBottom = this.scale.height - 150; // above the shop buttons
+    let margin = 40;
+    // A phone held upright has its own layout (the end of style.css): fit
+    // the club between the stats row and the buttons above the tab bar.
+    if (window.matchMedia('(orientation: portrait) and (max-width: 560px)').matches) {
+      const box = (id) => document.getElementById(id)?.getBoundingClientRect();
+      const stats = box('hudStats');
+      const buttons = box('actionButtons');
+      if (stats && stats.bottom > 0) areaTop = stats.bottom + 60;
+      if (buttons && buttons.top > 0) areaBottom = buttons.top - 10;
+      margin = 16;
+    }
+    const fit = Math.min((areaBottom - areaTop) / (bottom - top), (this.scale.width - margin) / (right - left));
     const zoom = Phaser.Math.Clamp(Math.min(ZOOM_DEFAULT, fit), ZOOM_MIN, ZOOM_MAX);
     this.world.setScale(zoom);
     this.world.x = this.scale.width / 2 - ((left + right) / 2) * zoom;

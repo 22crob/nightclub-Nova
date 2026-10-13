@@ -3353,7 +3353,9 @@ check('wall decorations are 3D pieces hung on a wall section (one each, the shel
   const layout = await tp.evaluate(() => {
     const a = document.getElementById('hudProfile').getBoundingClientRect();
     const b = document.getElementById('hudRight').getBoundingClientRect();
-    return { gap: Math.round(b.left - a.right), fits: b.right <= window.innerWidth };
+    const t = document.getElementById('navBar').getBoundingClientRect();
+    const btn = document.getElementById('actionButtons').getBoundingClientRect();
+    return { below: Math.round(b.top - a.bottom), fits: a.right <= window.innerWidth && b.right <= window.innerWidth, tabsWide: Math.round(t.width / window.innerWidth * 100), buttonsAboveTabs: btn.bottom <= t.top };
   });
   // A phone's sharp screen gets a sharp picture: the canvas has 2 dots per CSS pixel
   // (SHARP.maxDpr; the iPhone has 3) while taps still land where they should (above).
@@ -3362,7 +3364,9 @@ check('wall decorations are 3D pieces hung on a wall section (one each, the shel
   check('on a phone, tapping a guest opens their card', card);
   check('on a phone, tapping a high five collects it', paid === bonus.amount, `paid ${paid}`);
   check('on a phone, two fingers pinch to zoom', z1 > z0 * 1.3, `${z0.toFixed(2)} -> ${z1.toFixed(2)}`);
-  check('on a phone, the top panels fit side by side', layout.gap > 0 && layout.fits, JSON.stringify(layout));
+  // Held upright a phone has its own layout (end of style.css): the player panel and the stats
+  // are full-width rows, the tabs spread across the bottom, the action buttons just above them.
+  check('on an upright phone, the player panel and stats stack as rows, the tabs span the bottom and the buttons sit above them', layout.below >= 0 && layout.fits && layout.tabsWide >= 90 && layout.buttonsAboveTabs, JSON.stringify(layout));
   // The shop is folder tabs over a low tray: open, it stays a small part of the screen and fits across.
   const dockFit = await tp.evaluate(() => {
     document.getElementById('navBuild').click();

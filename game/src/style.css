@@ -937,3 +937,84 @@ input, textarea { -webkit-user-select: text; user-select: text; }
   padding: 7px 16px; font-size: 14px; white-space: nowrap; cursor: pointer; animation: cheer 0.9s ease-out 2;
 }
 #updateButton.open { display: block; }
+
+/* ------------------------------------------------------------------ */
+/* Phones held upright (the owner's ask, October 2026): their own       */
+/* layout instead of the desktop one shrunk. The player panel and the   */
+/* stats are two full-width rows at the top, the goals tab and the      */
+/* drink meter hang under them at the sides, the Bass Boost / Drink     */
+/* Rush / Party buttons sit just above the tab bar, and the tabs spread */
+/* across the bottom like a phone app's, icon over name. centerView()   */
+/* in world.js fits the club between the top rows and the buttons.     */
+/* ------------------------------------------------------------------ */
+@media (orientation: portrait) and (width <= 560px) {
+  #hudProfile, #hudRight, #goalSide, #drinkMeter, .partyBanner, #selectedChip, #wallHeightBar, #testModeTag, #updateButton, #dock { zoom: 1; }
+  /* Row 1: the player panel, full width. */
+  #hudProfile {
+    left: 8px; right: 8px; width: auto; top: calc(6px + env(safe-area-inset-top, 0px));
+    flex-direction: row; align-items: center; gap: 8px; padding: 6px 8px; border-radius: 14px;
+  }
+  .profileTop { flex: 1 1 auto; min-width: 0; gap: 9px; }
+  .portrait { width: 42px; height: 42px; }
+  .portraitFace { width: 18px; height: 18px; margin: 12px; }
+  .levelStar { min-width: 22px; height: 22px; right: -7px; bottom: -5px; }
+  .levelStar span { font-size: 11px; }
+  .xpBar { height: 14px; }
+  .xpText { font-size: 9.5px; }
+  #hudCash { height: 24px; gap: 4px; }
+  .cashStack { width: 24px; height: 24px; }
+  #hudCash .amount { font-size: 18px; }
+  #hudTools { grid-template-columns: 22px 22px; grid-auto-rows: 22px; gap: 3px; }
+  .toolButton { width: 22px; height: 22px; padding: 3px; }
+  /* The song: just its spinning record and buttons, stacked at the end. */
+  #songBox { flex: 0 0 auto; flex-direction: column; gap: 3px; padding: 4px; background: none; box-shadow: none; }
+  #songBox .songText, #songBox .songDisc { display: none; }
+  .songButtons { flex-direction: row; }
+  /* Row 2: the stats, full width; the action buttons go above the tabs. */
+  #hudRight { left: 8px; right: 8px; width: auto; top: calc(70px + env(safe-area-inset-top, 0px)); }
+  #hudStats { padding: 3px 2px; border-radius: 12px; }
+  .statValue { font-size: 13px; }
+  .statLabel { font-size: 7.5px; }
+  #actionButtons {
+    position: fixed; right: 10px; bottom: calc(66px + env(safe-area-inset-bottom, 0px)); z-index: 11;
+    gap: 10px; padding: 0;
+  }
+  .roundButton { width: 54px; height: 46px; padding: 8px 12px; }
+  /* Out of the way while a shop panel is open over them. */
+  body:has(#dock:not([data-mode="closed"])) #actionButtons { display: none; }
+  .partyBanner { top: calc(126px + env(safe-area-inset-top, 0px)); right: 8px; width: 210px; }
+  /* Under the rows: goals on the left, the drink meter on the right. */
+  #goalSide { left: 8px; top: calc(126px + env(safe-area-inset-top, 0px)); }
+  #goalTab { width: 46px; height: 46px; padding: 5px; border-radius: 13px; }
+  #goalTab > .uiArt { width: 36px; height: 36px; }
+  #goals { width: min(300px, calc(100vw - 16px)); }
+  #drinkMeter { top: calc(130px + env(safe-area-inset-top, 0px)); right: 10px; transform: none; width: 38px; }
+  .meterCap { width: 32px; height: 8px; }
+  .meterGlass { width: 30px; height: 96px; }
+  .meterBase { width: 36px; height: 26px; padding: 4px 9px; }
+  #tutorialBox { top: calc(126px + env(safe-area-inset-top, 0px)); }
+  #selectedChip { top: calc(126px + env(safe-area-inset-top, 0px)); }
+  #wallHeightBar { top: calc(166px + env(safe-area-inset-top, 0px)); }
+  #testModeTag { left: 50%; bottom: auto; top: calc(124px + env(safe-area-inset-top, 0px)); transform: translateX(-50%) rotate(-3deg); font-size: 10px; padding: 2px 8px; }
+  /* The tab bar: spread evenly across the bottom, icon over name. */
+  #dock { padding: 0 6px; bottom: calc(4px + env(safe-area-inset-bottom, 0px)); }
+  #navBar { width: 100%; padding: 0; gap: 3px; justify-content: space-between; }
+  .navPad, #dock[data-mode="closed"] .navPad {
+    flex: 1 1 0; width: auto; height: 52px; padding: 4px 2px 3px; gap: 1px;
+    flex-direction: column; justify-content: center; border-radius: 13px;
+  }
+  #dock:not([data-mode="closed"]) .navPad { border-radius: 13px 13px 0 0; }
+  .navPad > .uiArt { width: 28px; height: 28px; }
+  .navPad:not(.active) .navLabel, .navLabel { display: block; font-size: 10px; }
+  .navPad:not(.active) { padding-right: 2px; }
+  #storeOk { flex: 0 0 46px; width: 46px; height: 52px; margin-left: 2px; padding: 12px 10px; }
+  #dockCenter { width: 100%; border-radius: 0 0 14px 14px; }
+}
+@media (orientation: portrait) and (width <= 560px) {
+  /* A guest's card: across the bottom of the club, clear of the top rows. */
+  #infoCard { left: 50%; transform: translateX(-50%); top: auto; bottom: calc(126px + env(safe-area-inset-bottom, 0px)); width: min(300px, calc(100vw - 24px)); }
+  /* Tall dialogs (the party list) scroll inside instead of running off the top. */
+  .overlay { padding: calc(10px + env(safe-area-inset-top, 0px)) 10px calc(10px + env(safe-area-inset-bottom, 0px)); box-sizing: border-box; }
+  .overlay .summaryCard, .overlay .levelCard { max-height: 100%; overflow-y: auto; }
+  #testModeTag { z-index: 9; }
+}
