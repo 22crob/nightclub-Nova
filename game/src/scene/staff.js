@@ -542,8 +542,8 @@ export class StaffMixin {
     return this.headshots[character];
   }
 
-  // The dock's Staff tab, in three titled groups: the Bar (drink menu,
-  // restocking, training), the Bartenders (one card per bar: who works it,
+  // The dock's Staff tab, in three titled groups: the Bar (drink menu and
+  // training; restocking is only the drink meter, the owner's call), the Bartenders (one card per bar: who works it,
   // or hire one) and the Bouncers (each one, and a card to hire another).
   // People show as headshots with their name. Details are in the hover tips.
   renderStaffCard() {
@@ -604,7 +604,7 @@ export class StaffMixin {
       slot.appendChild(fire);
     };
 
-    // --- The bar: menu, stock and training ---
+    // --- The bar: menu and training (restocking is the drink meter's job: click it) ---
     const bar = group('Bar');
     if (records.length) {
       const menu = this.drinkMenu();
@@ -614,19 +614,6 @@ export class StaffMixin {
       card.cost.textContent = `Menu ×${menu.length}`;
       card.slot.addEventListener('click', () => this.openDrinkMenu());
       bar.appendChild(card.slot);
-      const left = this.drinkStockLeft();
-      const full = this.maxDrinkStock();
-      const restock = this.restockCost();
-      const stock = this.makeCard('Restock the bars', left === 0
-        ? `Out of drinks! The bartenders can't serve anyone. Restock all ${full} for $${restock}.`
-        : `${left} of ${full} drinks in stock. Every drink served uses one${restock > 0 ? `; restock the rest for $${restock}` : ': fully stocked'}.`, null);
-      stock.slot.classList.add('menuSlot', 'stockSlot');
-      stock.icon.innerHTML = '<div class="emojiIcon">📦</div>';
-      stock.cost.textContent = `Stock ${left}/${full}`;
-      stock.button.classList.toggle('unaffordable', restock > 0 && this.cash < restock);
-      if (left <= full * DRINK_STOCK.lowShare) stock.slot.classList.add('lowStock');
-      stock.slot.addEventListener('click', () => { this.restockBar(); this.renderStaffCard(); });
-      bar.appendChild(stock.slot);
       const nextT = this.nextTraining();
       const stars = '★'.repeat(this.barTraining || 0) + '☆'.repeat(BAR_TRAINING.costs.length - (this.barTraining || 0));
       const train = this.makeCard(`Bartender training ${stars}`, nextT

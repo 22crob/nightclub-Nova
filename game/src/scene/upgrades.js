@@ -4,7 +4,7 @@
 //   - Song Dedication: the DJ plays one for a guest (their card).
 //   - Bar Tricks: a bartender shows off; bigger tips at that bar for a while.
 //   - Bartender training: every bartender works faster (Staff panel).
-//   - Drink stock: drinks run out and the bars need restocking (Staff panel).
+//   - Drink stock: drinks run out and the bars need restocking (click the drink meter).
 //   - VIP booths: big spenders and celebrities pay a reservation to sit there.
 // Mixed into ClubScene (see ClubScene.js); `this` is the scene.
 import { PROP_TYPES, VIP_BOOTHS } from '../catalog.js';

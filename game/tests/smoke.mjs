@@ -3316,6 +3316,17 @@ const topHud = await page.evaluate(() => {
 });
 check('the top sits on a carbon-fibre strip like Nightclub City\'s, chrome stat tiles round blue panels and chrome buttons, the tab pictures standing on a ledge over a blue panel at the bottom: no panel behind the level, a long XP bar, the square buttons in one row, the stats as separate tiles', topHud.ledgeTabs && topHud.bluePanels && topHud.chrome && topHud.strip && !topHud.panel && topHud.bar >= 250 && topHud.buttons === 7 && topHud.oneRow && topHud.tilesApart, JSON.stringify(topHud));
 
+// Restocking is only the drink meter (the owner's call): the Staff panel has no stock card.
+const noStockCard = await page.evaluate(() => {
+  const s = window.__clubNova.scene.getScene('club');
+  s.setDockTab('staff'); s.renderStaffCard();
+  const n = document.querySelectorAll('#shopItems .stockSlot').length;
+  const menu = document.querySelectorAll('#shopItems .menuSlot').length;
+  s.closeDock();
+  return { n, menu };
+});
+check('the Staff panel has no restock card (restocking is the drink meter)', noStockCard.n === 0 && noStockCard.menu >= 1, JSON.stringify(noStockCard));
+
 // Phones: on a touch screen a tap on a guest opens their card, a tap
 // collects a high five (a little off the badge still counts), two fingers
 // pinch to zoom, and the HUD's top panels don't overlap.

@@ -616,7 +616,7 @@ export const BAR_TRICKS = { durationMs: 30 * 1000, cooldownMs: 120 * 1000, tipMu
 // Bartender training (Staff panel): each level makes every bartender work
 // speedPer faster. Level n costs costs[n-1] and unlocks at levels[n-1].
 export const BAR_TRAINING = { costs: [400, 1200, 3000], levels: [3, 8, 15], speedPer: 0.2 };
-// Drink stock (Staff panel): every drink served uses one; the bars hold
+// Drink stock (restocked by clicking the drink meter): every drink served uses one; the bars hold
 // base + perBarUnit per bar unit. Restocking costs costPerDrink a drink. At
 // lowShare the bartender warns, and with none left they can't serve. The
 // bars hold base + perGuest per guest the club fits: about 12-20 minutes

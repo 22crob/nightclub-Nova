@@ -19,7 +19,7 @@ const STEPS = [
   { text: 'Pick something you like and click the floor to place it. The first one of each thing you buy earns XP!', target: '#shopItems', done: (s) => s.tutorialFlags.placed, next: 'Skip' },
   { text: 'Click a guest to see how they feel, what they like and what they\'ve spent.', done: (s) => s.tutorialFlags.guestCard, next: 'Skip' },
   { text: 'Happy guests hold up a big gold $ coin now and then. Click it quick for cash!', done: (s) => s.tutorialFlags.bonus, next: 'Got it' },
-  { text: 'Open Staff: hire bartenders and bouncers as you level up. When drinks run low, restock there or tap the drink meter on the right.', target: '#navStaff', done: (s) => s.dockTab === 'staff' },
+  { text: 'Open Staff: hire bartenders and bouncers as you level up. When drinks run low, tap the drink meter on the right to restock.', target: '#navStaff', done: (s) => s.dockTab === 'staff' },
   // Parties unlock at level 5 (the House Party), so a new club hears about them for later.
   { text: (s) => (s.levelInfo().level >= PARTIES[0].unlockLevel
     ? 'Throw a party for a big crowd, bigger tips and lots of XP. It costs cash, and you can throw one every few minutes.'
@@ -33,7 +33,7 @@ const STEPS = [
 const HINTS = [
   { id: 'unworkedBar', text: 'A bar without a bartender can\'t sell drinks. Hire one in Staff (you can hire more bartenders as you level up).', target: '#navStaff',
     when: (s) => s.hireableRecords().some((r) => !s.isWorked(r)) },
-  { id: 'lowStock', text: 'Your bars are running low on drinks! Tap the drink meter on the right (or Restock in Staff) before they run dry.', target: '#drinkMeter',
+  { id: 'lowStock', text: 'Your bars are running low on drinks! Tap the drink meter on the right to restock before they run dry.', target: '#drinkMeter',
     when: (s) => s.drinkStockLeft() <= s.maxDrinkStock() * DRINK_STOCK.lowShare },
   { id: 'troublemaker', text: 'A troublemaker just walked in! They upset the guests around them. Your bouncer will spot them and walk them out (more bouncers unlock in Staff as you level up).',
     when: (s) => s.patrons.some((p) => p.troublemaker && !p.gone && !p.leaving) },
