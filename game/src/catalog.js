@@ -108,6 +108,14 @@ import decor_partition from './assets/sprites/decor_partition.json';
 import decor_tank from './assets/sprites/decor_tank.json';
 import decor_tankBlue from './assets/sprites/decor_tankBlue.json';
 import decor_robot from './assets/sprites/decor_robot.json';
+import decor_holoDancer from './assets/sprites/decor_holoDancer.json';
+import decor_holoGlobe from './assets/sprites/decor_holoGlobe.json';
+import decor_holoRings from './assets/sprites/decor_holoRings.json';
+import decor_holoLogo from './assets/sprites/decor_holoLogo.json';
+import decor_plasmaOrb from './assets/sprites/decor_plasmaOrb.json';
+import decor_laserGate from './assets/sprites/decor_laserGate.json';
+import decor_cyberPillar from './assets/sprites/decor_cyberPillar.json';
+import decor_wallHoloScreen from './assets/sprites/decor_wallHoloScreen.json';
 import decor_waterfall from './assets/sprites/decor_waterfall.json';
 import decor_pagoda from './assets/sprites/decor_pagoda.json';
 
@@ -207,6 +215,14 @@ const DECOR_SPRITES = {
   tank: decor_tank,
   tankBlue: decor_tankBlue,
   robot: decor_robot,
+  holoDancer: decor_holoDancer,
+  holoGlobe: decor_holoGlobe,
+  holoRings: decor_holoRings,
+  holoLogo: decor_holoLogo,
+  plasmaOrb: decor_plasmaOrb,
+  laserGate: decor_laserGate,
+  cyberPillar: decor_cyberPillar,
+  wallHoloScreen: decor_wallHoloScreen,
   waterfall: decor_waterfall,
   pagoda: decor_pagoda,
   // The owner's own sketches (October 2026, art/blender/decor_batch2.py).
@@ -484,6 +500,15 @@ export const PROP_TYPES = {
   liquidTank: decorTier('liquidTank', 'Purple Liquid Tank', 380, 28, 'tank', 0.8, { tankFx: 'liquid' }),
   speakerStackPurple: decorTier('speakerStackPurple', 'Purple Speaker Stack', 420, 30, 'stackPurple', 0.85, { speakerCones: 'stackPurple' }),
   robot: decorTier('robot', 'Retro Robot', 460, 31, 'robot', 0.88),
+  // The future batch (October 2026, the owner's ask): hologram projectors
+  // whose holograms move (scene/holoFx.js), a plasma orb, a laser gate.
+  plasmaOrb: decorTier('plasmaOrb', 'Plasma Orb', 420, 20, 'plasmaOrb', 0.8, { holo: 'orb' }),
+  holoLogo: decorTier('holoLogo', 'Holo Logo', 500, 23, 'holoLogo', 0.85, { holo: 'logo' }),
+  holoGlobe: decorTier('holoGlobe', 'Holo Globe', 650, 27, 'holoGlobe', 0.9, { holo: 'globe' }),
+  cyberPillar: decorTier('cyberPillar', 'Cyber Pillar', 380, 30, 'cyberPillar', 0.8),
+  holoRings: decorTier('holoRings', 'Gyro Rings', 800, 38, 'holoRings', 1.0, { holo: 'rings' }),
+  holoDancer: decorTier('holoDancer', 'Hologram Dancer', 1100, 45, 'holoDancer', 1.15, { holo: 'dancer' }),
+  laserGate: { ...decorTier('laserGate', 'Laser Gate', 1300, 50, 'laserGate', 1.2, { holo: 'lasers' }), footprint: BOOTH_FOOTPRINT },
   waterfall: decorTier('waterfall', 'Glass Waterfall', 560, 32, 'waterfall', 1.0),
   liquidTankBlue: decorTier('liquidTankBlue', 'Blue Liquid Tank', 520, 36, 'tankBlue', 0.95, { tankFx: 'liquid' }),
   pagoda: decorTier('pagoda', 'Pagoda Statue', 650, 39, 'pagoda', 1.1),
@@ -516,6 +541,7 @@ export const PROP_TYPES = {
   ledPoleRed: wallDecorTier('ledPoleRed', 'Red LED Pole', 160, 17, 'wallLedRed', 0.5), // the owner asked for more colours (October 2026)
   ledPolePurple: wallDecorTier('ledPolePurple', 'Purple LED Pole', 200, 29, 'wallLedPurple', 0.6),
   wallSpeaker: wallDecorTier('wallSpeaker', 'Wall Speaker', 200, 21, 'wallSpeaker', 0.6),
+  wallHoloScreen: wallDecorTier('wallHoloScreen', 'Holo Screen', 450, 34, 'wallHoloScreen', 0.75),
   fairyLights: { ...wallDecorTier('fairyLights', 'Fairy Lights', 220, 25, 'wallFairy', 0.65), wallScale: 1.2 }, // a touch smaller so rows stack low, middle and high
   bottleShelf: wallDecorTier('bottleShelf', 'Floating Bottle Shelf', 800, 32, 'wallBottles', 1.12, 2), // the Bottle Cabinet, now on the wall
   luxBottleShelf: wallDecorTier('luxBottleShelf', 'Black Lux Bottle Shelf', 1600, 50, 'wallBottlesLux', 1.5, 2), // black cabinet, lights shining down on the bottles

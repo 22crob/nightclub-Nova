@@ -719,6 +719,34 @@ const spot = await page.evaluate(() => {
   return out;
 });
 check('the spotlight shines a beam that turns with it and goes when it is removed', spot.beam && spot.turned && spot.gone, JSON.stringify(spot));
+
+// The future batch: each hologram projector shows its moving hologram
+// (holoFx.js), it follows a turn, and it goes when the piece is removed.
+const holo = await page.evaluate(() => {
+  const s = window.__clubNova.scene.getScene('club');
+  const out = { missing: [], shown: {}, turned: true, gone: true };
+  for (const key of ['plasmaOrb', 'holoLogo', 'holoGlobe', 'cyberPillar', 'holoRings', 'holoDancer', 'laserGate', 'wallHoloScreen']) {
+    if (!s.hasAnySprite(key)) out.missing.push(key);
+  }
+  for (const key of ['plasmaOrb', 'holoLogo', 'holoGlobe', 'holoRings', 'holoDancer', 'laserGate']) {
+    let at = null;
+    for (let gy = 1; gy < s.gridH - 1 && !at; gy++) for (let gx = 1; gx < s.gridW - 3 && !at; gx++) {
+      if (s.footprintValid(s.getFootprint(key, 0, gx, gy), key)) at = [gx, gy];
+    }
+    if (!at) { out.shown[key] = 'no room'; continue; }
+    const rec = s.restoreProp(key, 0, at);
+    out.shown[key] = rec.holoFx ? rec.holoFx.parts.filter((p) => p.active).length : 0;
+    const first = rec.holoFx && rec.holoFx.parts[0];
+    s.rotatePlacedProp(`${at[0]},${at[1]}`);
+    if (!rec.holoFx || (first && first.active)) out.turned = false;
+    const parts = rec.holoFx ? rec.holoFx.parts : [];
+    s.removeProp(rec);
+    if (!parts.every((p) => !p.active)) out.gone = false;
+  }
+  return out;
+});
+check('the future batch: hologram projectors, plasma orb, laser gate, cyber pillar and holo screen have their art; each projector shows its hologram, which turns with it and goes when removed',
+  holo.missing.length === 0 && Object.values(holo.shown).every((n) => n >= 2) && holo.turned && holo.gone, JSON.stringify(holo));
 const disco = await page.evaluate(() => {
   const s = window.__clubNova.scene.getScene('club');
   let at = null;

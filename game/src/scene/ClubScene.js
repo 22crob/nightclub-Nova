@@ -19,6 +19,7 @@ import { WallpaperMixin } from './wallpaper.js';
 import { WallDecorMixin } from './wallDecor.js';
 import { SeatingMixin } from './seating.js';
 import { LightingMixin } from './lighting.js';
+import { HoloFxMixin } from './holoFx.js';
 import { BoostMixin } from './boost.js';
 import { FloorPaintMixin } from './floorPaint.js';
 import { StreetMixin } from './street.js';
@@ -463,6 +464,7 @@ applyMixins(ClubScene, [
   WallDecorMixin,
   SeatingMixin,
   LightingMixin,
+  HoloFxMixin,
   BoostMixin,
   FloorPaintMixin,
   StreetMixin,
