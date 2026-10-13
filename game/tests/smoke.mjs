@@ -3310,9 +3310,11 @@ const topHud = await page.evaluate(() => {
   const strip = document.getElementById('topStrip').getBoundingClientRect();
   const firstTile = document.querySelector('#hudStats .statButton').getBoundingClientRect();
   const boost = getComputedStyle(document.getElementById('boostButton'));
-  return { bluePanels: getComputedStyle(document.querySelector('#hudStats .statValue')).backgroundImage.includes('gradient'), chrome: parseFloat(boost.borderTopLeftRadius) <= 8 && boost.backgroundImage.includes('gradient') && !!document.querySelector('#boostButton svg.uiArt'), strip: strip.top === 0 && strip.width >= window.innerWidth - 1 && firstTile.bottom <= strip.bottom + 2, panel: st.backgroundImage !== 'none' || st.backgroundColor !== 'rgba(0, 0, 0, 0)', bar: Math.round(document.querySelector('#hudProfile .xpBar').getBoundingClientRect().width), buttons: tops.length, oneRow: new Set(tops).size === 1, tilesApart: tiles.every((t, i) => i === 0 || t.left - tiles[i - 1].right >= 4) };
+  const pad = document.getElementById('navBuild');
+  const bottom = document.getElementById('bottomStrip').getBoundingClientRect();
+  return { chromeTabs: !!pad.querySelector('svg.uiArt') && getComputedStyle(pad).backgroundImage.includes('gradient') && bottom.bottom >= window.innerHeight - 1 && bottom.width >= window.innerWidth - 1, bluePanels: getComputedStyle(document.querySelector('#hudStats .statValue')).backgroundImage.includes('gradient'), chrome: parseFloat(boost.borderTopLeftRadius) <= 8 && boost.backgroundImage.includes('gradient') && !!document.querySelector('#boostButton svg.uiArt'), strip: strip.top === 0 && strip.width >= window.innerWidth - 1 && firstTile.bottom <= strip.bottom + 2, panel: st.backgroundImage !== 'none' || st.backgroundColor !== 'rgba(0, 0, 0, 0)', bar: Math.round(document.querySelector('#hudProfile .xpBar').getBoundingClientRect().width), buttons: tops.length, oneRow: new Set(tops).size === 1, tilesApart: tiles.every((t, i) => i === 0 || t.left - tiles[i - 1].right >= 4) };
 });
-check('the top sits on a carbon-fibre strip like Nightclub City\'s, chrome stat tiles round blue panels and chrome buttons: no panel behind the level, a long XP bar, the square buttons in one row, the stats as separate tiles', topHud.bluePanels && topHud.chrome && topHud.strip && !topHud.panel && topHud.bar >= 250 && topHud.buttons === 7 && topHud.oneRow && topHud.tilesApart, JSON.stringify(topHud));
+check('the top sits on a carbon-fibre strip like Nightclub City\'s, chrome stat tiles round blue panels and chrome buttons, chrome tabs on a mesh strip along the bottom: no panel behind the level, a long XP bar, the square buttons in one row, the stats as separate tiles', topHud.chromeTabs && topHud.bluePanels && topHud.chrome && topHud.strip && !topHud.panel && topHud.bar >= 250 && topHud.buttons === 7 && topHud.oneRow && topHud.tilesApart, JSON.stringify(topHud));
 
 // Phones: on a touch screen a tap on a guest opens their card, a tap
 // collects a high five (a little off the badge still counts), two fingers
@@ -3388,9 +3390,9 @@ check('the top sits on a carbon-fibre strip like Nightclub City\'s, chrome stat 
     const ok = document.getElementById('storeOk').getBoundingClientRect();
     const tray = document.getElementById('dockCenter').getBoundingClientRect();
     const tabs = document.getElementById('navBar').getBoundingClientRect();
-    return { share: +(d.height / window.innerHeight).toFixed(2), okOn: ok.right <= window.innerWidth && ok.width > 0, tabsOnTray: Math.abs(tabs.bottom - tray.top) < 2 };
+    return { share: +(d.height / window.innerHeight).toFixed(2), okOn: ok.right <= window.innerWidth && ok.width > 0, tabsOnTray: tray.top - tabs.bottom >= 0 && tray.top - tabs.bottom < 12 };
   });
-  check('on a phone, the open shop (folder tabs over a tray) takes under a third of the screen and fits across', dockFit.share < 0.33 && dockFit.okOn && dockFit.tabsOnTray, JSON.stringify(dockFit));
+  check('on a phone, the open shop (the tabs just over the tray) takes under a third of the screen and fits across', dockFit.share < 0.33 && dockFit.okOn && dockFit.tabsOnTray, JSON.stringify(dockFit));
   // Placing on a phone: picking an item puts it on a free spot (nothing bought yet); a tap hops it,
   // a drag from it slides it, and only the ✓ buys it there. ✕ puts it down.
   const scr = (gx, gy) => tp.evaluate(([gx, gy]) => { const s = window.__clubNova.scene.getScene('club'); const t = s.gridToScreen(gx, gy); return { x: s.world.x + t.sx * s.world.scaleX, y: s.world.y + t.sy * s.world.scaleY }; }, [gx, gy]);

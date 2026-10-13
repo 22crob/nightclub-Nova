@@ -145,6 +145,41 @@ const ART = {
   // Chrome pictures for the Bass Boost / Drink Rush / Party buttons, black
   // and silver like Nightclub City's speaker and microphone buttons (the
   // owner's reference, October 2026).
+  // Chrome pictures for the bottom tabs (October 2026, the same black and
+  // silver as the top's buttons): a bag, a shaker, a disco ball, a box, a star.
+  chromeBag: `<defs><linearGradient id="bgB" x1="0" x2="1"><stop offset="0" stop-color="#eef1f4"/><stop offset=".5" stop-color="#8f959e"/><stop offset="1" stop-color="#2c2f35"/></linearGradient></defs>
+    <path d="M16.5 17v-4.5a7.5 7.5 0 0 1 15 0V17" fill="none" stroke="#000" stroke-width="4.4" stroke-linecap="round"/>
+    <path d="M16.5 17v-4.5a7.5 7.5 0 0 1 15 0V17" fill="none" stroke="#d3d7dd" stroke-width="2" stroke-linecap="round"/>
+    <path d="M8.5 15h31l-2.4 27.5a2 2 0 0 1-2 1.8H12.9a2 2 0 0 1-2-1.8Z" fill="url(#bgB)" stroke="#000" stroke-width="2" stroke-linejoin="round"/>
+    <path d="M24 22.5l2.1 4.3 4.7.7-3.4 3.3.8 4.7-4.2-2.2-4.2 2.2.8-4.7-3.4-3.3 4.7-.7Z" fill="#1a1c20" stroke="#fff" stroke-width=".9" stroke-linejoin="round"/>
+    <path d="M12 18h4" stroke="#fff" stroke-width="1.6" stroke-linecap="round" opacity=".9"/>`,
+  chromeShaker: `<defs><linearGradient id="shB" x1="0" x2="1"><stop offset="0" stop-color="#f4f6f9"/><stop offset=".4" stop-color="#b9bec6"/><stop offset=".6" stop-color="#4a4f57"/><stop offset="1" stop-color="#a9aeb6"/></linearGradient></defs>
+    <rect x="20" y="3" width="8" height="5.5" rx="1.6" fill="url(#shB)" stroke="#000" stroke-width="1.8"/>
+    <path d="M17 9.5h14l-1.5 7h-11Z" fill="url(#shB)" stroke="#000" stroke-width="1.8" stroke-linejoin="round"/>
+    <path d="M18 17.5h12l2.6 24.3a2 2 0 0 1-2 2.2H17.4a2 2 0 0 1-2-2.2Z" fill="url(#shB)" stroke="#000" stroke-width="2" stroke-linejoin="round"/>
+    <path d="M16.6 27h14.8" stroke="#000" stroke-width="2.4"/><path d="M16.6 27h14.8" stroke="#2a2d33" stroke-width="1"/>
+    <path d="M20 20v20" stroke="#fff" stroke-width="1.6" stroke-linecap="round" opacity=".85"/>
+    <path d="M38 6l1 2.2 2.3.4-1.7 1.6.4 2.3-2-1.1-2 1.1.4-2.3-1.7-1.6 2.3-.4Z" fill="#fff" stroke="#000" stroke-width="1"/>`,
+  chromeDisco: `<defs><radialGradient id="dcB" cx=".36" cy=".3" r=".8"><stop offset="0" stop-color="#ffffff"/><stop offset=".3" stop-color="#cfd3d9"/><stop offset=".7" stop-color="#5f656e"/><stop offset="1" stop-color="#1c1e22"/></radialGradient>
+    <clipPath id="dcC"><circle cx="24" cy="27" r="16"/></clipPath></defs>
+    <path d="M24 2v9" stroke="#000" stroke-width="2"/>
+    <circle cx="24" cy="27" r="16" fill="url(#dcB)" stroke="#000" stroke-width="2"/>
+    <g clip-path="url(#dcC)" stroke="#000" stroke-width="1.1" fill="none" opacity=".75">
+      <path d="M8 21h32M8 27h32M8 33h32M10 15h28M10 39h28"/>
+      <path d="M24 11v32M18 11.5c-3 5-3 26 0 31M30 11.5c3 5 3 26 0 31M13 14c-4 6-4 20 0 26M35 14c4 6 4 20 0 26"/>
+    </g>
+    <rect x="15" y="17" width="5" height="4" fill="#fff" opacity=".9"/><rect x="21" y="22" width="3" height="3" fill="#fff" opacity=".6"/>`,
+  chromeBox: `<defs><linearGradient id="bxT" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#f4f6f9"/><stop offset="1" stop-color="#b9bec6"/></linearGradient>
+    <linearGradient id="bxL" x1="0" x2="1"><stop offset="0" stop-color="#9aa0a9"/><stop offset="1" stop-color="#5d636c"/></linearGradient>
+    <linearGradient id="bxR" x1="0" x2="1"><stop offset="0" stop-color="#3a3e45"/><stop offset="1" stop-color="#16181c"/></linearGradient></defs>
+    <path d="M24 9 41 17.5 24 26 7 17.5Z" fill="url(#bxT)" stroke="#000" stroke-width="2" stroke-linejoin="round"/>
+    <path d="M7 17.5 24 26v17.5L7 35Z" fill="url(#bxL)" stroke="#000" stroke-width="2" stroke-linejoin="round"/>
+    <path d="M24 26 41 17.5V35L24 43.5Z" fill="url(#bxR)" stroke="#000" stroke-width="2" stroke-linejoin="round"/>
+    <path d="M15.5 13.25 32.5 21.75v6" fill="none" stroke="#000" stroke-width="2.6"/><path d="M15.5 13.25 32.5 21.75v6" fill="none" stroke="#6a7079" stroke-width="1.2"/>`,
+  chromeStar: `<defs><linearGradient id="stB" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#ffffff"/><stop offset=".45" stop-color="#b9bec6"/><stop offset=".55" stop-color="#4a4f57"/><stop offset="1" stop-color="#c7ccd3"/></linearGradient></defs>
+    <path d="M24 3.5l6.1 12.6 13.9 2-10 9.8 2.4 13.8L24 35.2l-12.4 6.5L14 27.9l-10-9.8 13.9-2Z" fill="url(#stB)" stroke="#000" stroke-width="2.2" stroke-linejoin="round"/>
+    <path d="M24 13l3.2 6.5 7.2 1-5.2 5.1 1.2 7.1-6.4-3.4-6.4 3.4 1.2-7.1-5.2-5.1 7.2-1Z" fill="#1c1e22" stroke="#fff" stroke-width=".9" stroke-linejoin="round"/>
+    <text x="24" y="28.3" text-anchor="middle" font-family="Arial Black, Arial, sans-serif" font-weight="900" font-size="6.2" fill="#fff">VIP</text>`,
   chromeSpeaker: `<defs><linearGradient id="cBody" x1="0" x2="1"><stop offset="0" stop-color="#3a3d44"/><stop offset=".55" stop-color="#1c1e23"/><stop offset="1" stop-color="#0b0c0f"/></linearGradient>
     <linearGradient id="cSide" x1="0" x2="1"><stop offset="0" stop-color="#d9dde3"/><stop offset="1" stop-color="#7d838c"/></linearGradient>
     <radialGradient id="cCone" cx=".38" cy=".32" r=".75"><stop offset="0" stop-color="#ffffff"/><stop offset=".35" stop-color="#c3c8cf"/><stop offset=".75" stop-color="#5d636c"/><stop offset="1" stop-color="#1a1c20"/></radialGradient></defs>
