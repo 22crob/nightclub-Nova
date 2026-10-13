@@ -1278,3 +1278,11 @@ input, textarea { -webkit-user-select: text; user-select: text; }
   .meterCap { width: 34px; height: 34px; }
   .meterGlass { width: 22px; }
 }
+
+/* The cash in the middle of the top strip (the owner's ask, October 2026). */
+#hudProfile #hudCash {
+  position: fixed; left: 50%; transform: translateX(-50%); z-index: 11;
+  top: calc(28px + env(safe-area-inset-top, 0px)); margin-top: -17px; height: 34px;
+}
+/* Narrow screens: no room in the middle, so it stays at the XP bar's end. */
+@media (width <= 700px) { #hudProfile #hudCash { position: static; transform: none; margin-top: 0; height: 28px; } }
