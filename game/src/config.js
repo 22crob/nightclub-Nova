@@ -324,7 +324,7 @@ export const EVERYONE_LOOK = 'guy01';
 // random one of these hand-drawn looks; staff and celebrities wear
 // EVERYONE_LOOK. A look missing a move (its sheet's `missing`, e.g. not
 // drawn dancing yet) never does it (canDoClip() in patrons.js).
-export const GUEST_CUTOUTS = ['guy01', 'suit01', 'grey01'];
+export const GUEST_CUTOUTS = ['guy01', 'suit01', 'grey01', 'emo01'];
 export const CUTOUT_SHARE = 0;
 export const CUTOUT_SHARE_TEST = 0.6;
 export const CHARACTER_DISPLAY_HEIGHT = 87.4; // px: big next to the furniture, like Nightclub City
