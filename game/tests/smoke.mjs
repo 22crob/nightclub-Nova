@@ -3307,9 +3307,11 @@ const topHud = await page.evaluate(() => {
   const st = getComputedStyle(document.getElementById('hudProfile'));
   const tops = [...document.querySelectorAll('#hudProfile .toolButton, #hudProfile .songButton')].map((b) => Math.round(b.getBoundingClientRect().top));
   const tiles = [...document.querySelectorAll('#hudStats .statButton')].map((t) => t.getBoundingClientRect());
-  return { panel: st.backgroundImage !== 'none' || st.backgroundColor !== 'rgba(0, 0, 0, 0)', bar: Math.round(document.querySelector('#hudProfile .xpBar').getBoundingClientRect().width), buttons: tops.length, oneRow: new Set(tops).size === 1, tilesApart: tiles.every((t, i) => i === 0 || t.left - tiles[i - 1].right >= 4) };
+  const strip = document.getElementById('topStrip').getBoundingClientRect();
+  const firstTile = document.querySelector('#hudStats .statButton').getBoundingClientRect();
+  return { strip: strip.top === 0 && strip.width >= window.innerWidth - 1 && firstTile.bottom <= strip.bottom + 2, panel: st.backgroundImage !== 'none' || st.backgroundColor !== 'rgba(0, 0, 0, 0)', bar: Math.round(document.querySelector('#hudProfile .xpBar').getBoundingClientRect().width), buttons: tops.length, oneRow: new Set(tops).size === 1, tilesApart: tiles.every((t, i) => i === 0 || t.left - tiles[i - 1].right >= 4) };
 });
-check('the top floats on the club: no panel behind the level, a long XP bar, the square buttons in one row, the stats as separate tiles', !topHud.panel && topHud.bar >= 250 && topHud.buttons === 7 && topHud.oneRow && topHud.tilesApart, JSON.stringify(topHud));
+check('the top sits on a carbon-fibre strip like Nightclub City\'s: no panel behind the level, a long XP bar, the square buttons in one row, the stats as separate tiles', topHud.strip && !topHud.panel && topHud.bar >= 250 && topHud.buttons === 7 && topHud.oneRow && topHud.tilesApart, JSON.stringify(topHud));
 
 // Phones: on a touch screen a tap on a guest opens their card, a tap
 // collects a high five (a little off the badge still counts), two fingers

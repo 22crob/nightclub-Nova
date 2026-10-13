@@ -1085,3 +1085,54 @@ input, textarea { -webkit-user-select: text; user-select: text; }
   #wallHeightBar { top: calc(180px + env(safe-area-inset-top, 0px)); }
   #testModeTag { top: calc(140px + env(safe-area-inset-top, 0px)); }
 }
+
+/* The carbon-fibre strip behind the top and flat numbers, tiles and buttons
+   (the owner's ask after seeing Nightclub City's top again, October 2026). */
+#topStrip {
+  position: fixed; left: 0; right: 0; top: 0; z-index: 9; pointer-events: none;
+  height: calc(56px + env(safe-area-inset-top, 0px));
+  background:
+    radial-gradient(#0b0b0d 15%, transparent 16%) 0 0,
+    radial-gradient(#0b0b0d 15%, transparent 16%) 4px 4px,
+    radial-gradient(rgba(255, 255, 255, 0.09) 15%, transparent 20%) 0 1px,
+    radial-gradient(rgba(255, 255, 255, 0.09) 15%, transparent 20%) 4px 5px,
+    linear-gradient(180deg, #2a2a2e, #1a1a1e);
+  background-size: 8px 8px, 8px 8px, 8px 8px, 8px 8px, 100% 100%;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.14);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.55);
+}
+/* Flat numbers: plain white, a crisp drop shadow, no glow. */
+#hudProfile #hudCash .amount { color: #f4f5f8; font-size: 23px; font-weight: 800; text-shadow: 0 1.5px 0 rgba(0, 0, 0, 0.75); }
+#hudProfile #hudCash .amount.rolling { color: #b8ffa8; }
+#hudProfile .xpText { font-weight: 800; text-shadow: 0 1px 0 rgba(0, 0, 0, 0.8); }
+#hudStats .statValue { font-weight: 800; color: #fff; text-shadow: 0 1px 0 rgba(0, 0, 0, 0.6); }
+#hudStats .statLabel { color: rgba(255, 255, 255, 0.75); text-shadow: none; }
+/* A flat XP bar: a dark track, a flat fill, a thin rim. */
+#hudProfile .xpBar { background: #0c0c10; box-shadow: 0 0 0 1.5px rgba(255, 255, 255, 0.55), 0 1px 3px rgba(0, 0, 0, 0.6); }
+#hudProfile .xpBar::after { display: none; }
+#hudProfile .xpFill { background: linear-gradient(90deg, #ff3ddc, #ff9a3a); }
+#hudProfile .portrait { box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.85), 0 2px 6px rgba(0, 0, 0, 0.6); }
+/* Flat stat tiles: one solid colour and a thin light rim. */
+#hudStats .statButton {
+  top: 0; height: 44px; border-radius: 9px; padding: 2px 8px 3px;
+  background: linear-gradient(180deg, #5a2aa8, #46208a);
+  box-shadow: 0 0 0 1.5px rgba(255, 255, 255, 0.55), 0 2px 5px rgba(0, 0, 0, 0.5);
+}
+#hudStats .statButton::after { height: 2px; margin-top: 2px; box-shadow: none; }
+#hudRight { top: calc(6px + env(safe-area-inset-top, 0px)); gap: 12px; }
+/* Flat square buttons: dark grey like Nightclub City's, white icons. */
+#hudProfile .toolButton, #hudProfile .songButton {
+  background: linear-gradient(180deg, #3a3a42, #26262c); border: 1.5px solid rgba(255, 255, 255, 0.5);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.55);
+}
+#hudProfile .toolButton::before, #hudProfile .toolButton::after, #hudProfile .songButton::before, #hudProfile .songButton::after { display: none; }
+#hudProfile #songLike.liked { background: linear-gradient(180deg, #3aa83f, #23752a); }
+#hudProfile #muteButton.muted { opacity: 0.6; }
+.profileMain { gap: 12px; }
+
+@media (orientation: portrait) and (width <= 560px) {
+  #topStrip { height: calc(132px + env(safe-area-inset-top, 0px)); }
+  #hudStats .statButton { height: 40px; }
+  #hudRight { top: calc(84px + env(safe-area-inset-top, 0px)); }
+  .profileMain { gap: 8px; }
+}
