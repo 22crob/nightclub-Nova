@@ -31,6 +31,10 @@ const SONG_FILES = [
   { file: 'party-dance-club.mp3', title: 'Party Dance Club', artist: 'Tatamusic', bpm: 122.0, offset: 0.464, lengthMs: 103314 },
   { file: 'waiting-for-you.mp3', title: 'Waiting For You', artist: 'Paul Yudin', bpm: 115.0, offset: 0.023, lengthMs: 146128 },
   { file: 'i-will-be-here.mp3', title: 'I Will Be Here', artist: 'FASSounds', bpm: 120.0, offset: 0.0, lengthMs: 185182 },
+  { file: 'energetic-party.mp3', title: 'Energetic Party', artist: 'Alex Morgan', bpm: 137.44, offset: 0.163, lengthMs: 205032 },
+  { file: 'lose-my-breath.mp3', title: 'Lose My Breath', artist: 'DeltaX Music', bpm: 125.0, offset: 0.0, lengthMs: 230327 },
+  { file: 'no-good-reason.mp3', title: 'No Good Reason', artist: 'Black Box', bpm: 84.99, offset: 0.0, lengthMs: 118700 },
+  { file: 'lose-myself-in-you.mp3', title: 'Lose Myself In You', artist: 'Infinity Beats', bpm: 138.0, offset: 0.186, lengthMs: 269544 },
 ];
 // The MP3s aren't packed into the game's page (they'd make it slow to open):
 // they're separate files in public/music/, published next to the page, and
