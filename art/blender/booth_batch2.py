@@ -182,8 +182,7 @@ def build_hover():
     """The future batch (October 2026): the Hover Deck, a sleek black and
     white desk floating over a glowing landing pad, cyan light underneath;
     the turntables and mixer float a little above the desk on glowing pads,
-    and a glowing screen floats high above the DJ's head (the owner liked
-    the screen; down behind the decks it cut across the DJ)."""
+    and a see-through holo panel stands on a post behind the decks."""
     white = principled('HVWhite', srgb('#eef0f6'), rough=0.08)
     black = principled('HVBlack', srgb('#0e0e16'), rough=0.12)
     cyan = neon('HVCyan', (0.25, 0.9, 1.0), 10)
@@ -204,16 +203,14 @@ def build_hover():
         box(f'DeckPad{x}', x - 0.3, x + 0.3, -0.28, 0.24, DESK_H, DESK_H + 0.012, glowpad, bevel=0)
     box('MixerPad', -0.18, 0.18, -0.26, 0.22, DESK_H, DESK_H + 0.012, glowpad, bevel=0)
     turntables(plain('#1c1c24', rough=0.25), glow=cyan, mixer_glow=violet, lift=0.13)
-    # The screen, floating high over the DJ (clear of their head from the
-    # front), no post: just light.
-    z0, z1 = DESK_H + 1.95, DESK_H + 2.45
-    box('Screen', -0.62, 0.62, 0.29, 0.31, z0, z1, principled('HVScreen', srgb('#a8f0ff'), rough=0.1,
+    # The holo panel on a slim post behind the decks (the owner's pick: the
+    # first design; raised high over the DJ it looked too far up).
+    box('PanelPost', -0.03, 0.03, 0.28, 0.32, DESK_H, DESK_H + 0.75, black, bevel=0)
+    box('Panel', -0.6, 0.6, 0.29, 0.31, DESK_H + 0.28, DESK_H + 0.78, principled('HVPanel', srgb('#a8f0ff'), rough=0.1,
         emission=srgb('#3ae8ff'), emission_strength=1.1, alpha=0.6), bevel=0)
-    box('ScreenTop', -0.64, 0.64, 0.285, 0.315, z1, z1 + 0.02, cyan, bevel=0)
-    box('ScreenBottom', -0.64, 0.64, 0.285, 0.315, z0 - 0.02, z0, cyan, bevel=0)
     for k, h in enumerate((0.18, 0.32, 0.24, 0.4, 0.28, 0.36, 0.2)):
         x = -0.48 + k * 0.16
-        box(f'ScreenBar{k}', x - 0.04, x + 0.04, 0.285, 0.29, z0 + 0.05, z0 + 0.05 + h, (cyan, violet)[k % 2], bevel=0)
+        box(f'PanelBar{k}', x - 0.04, x + 0.04, 0.285, 0.29, DESK_H + 0.32, DESK_H + 0.32 + h, (cyan, violet)[k % 2], bevel=0)
 
 DESIGNS = {
     'glowFront': build_glow_front,
