@@ -26,8 +26,5 @@
     "walk": 4,
     "dance": 5,
     "sit": 1
-  },
-  "borrowed": [
-    "dance_back"
-  ]
+  }
 }
