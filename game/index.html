@@ -6,46 +6,49 @@
 <title>Club Nova</title>
 </head>
 <body>
-  <!-- Top-left: the player panel, one glass panel with the level and XP,
-       the cash under it, and the song playing with tiny audio controls. -->
+  <!-- Top-left, floating on the club like Nightclub City's (no panel
+       behind): the level on a spinning record, a long XP bar with the cash
+       at its end, and a row of small square buttons under the bar (sound,
+       skip and like the song, then the club's tools) with the song's name. -->
   <div id="hudProfile">
-    <div class="profileTop">
       <div class="portrait">
         <div class="portraitFace">🪩</div>
         <div class="levelStar" data-tip-name="Level" data-tip-text="Your club's level. Earn XP to level up and unlock new things."><span id="levelVal">1</span></div>
       </div>
-      <div class="profileRight">
-        <div class="xpBar" data-tip-name="XP" data-tip-text="Experience. You earn XP serving drinks, from happy guests and parties, and by buying furniture, decorations and expansions (selling takes it back). XP raises your level, which unlocks new items.">
-          <div class="xpFill" id="xpBarFill"></div>
-          <div class="xpText" id="xpText">Level 1</div>
+      <div class="profileMain">
+        <div class="profileBarRow">
+          <div class="xpBar" data-tip-name="XP" data-tip-text="Experience. You earn XP serving drinks, from happy guests and parties, and by buying furniture, decorations and expansions (selling takes it back). XP raises your level, which unlocks new items.">
+            <div class="xpFill" id="xpBarFill"></div>
+            <div class="xpText" id="xpText">Level 1</div>
+          </div>
+          <div id="hudCash" data-tip-name="Cash" data-tip-text="Your money. Drinks, the cover charge, tips and bonuses bring it in; furniture, staff and parties spend it.">
+            <div class="cashStack" data-icon="cash"></div>
+            <span class="amount" id="cashVal">$500</span>
+          </div>
         </div>
-        <div id="hudCash" data-tip-name="Cash" data-tip-text="Your money. Drinks, the cover charge, tips and bonuses bring it in; furniture, staff and parties spend it.">
-          <div class="cashStack" data-icon="cash"></div>
-          <span class="amount" id="cashVal">$500</span>
+        <div class="profileButtons">
+          <!-- Now playing (see scene/songs.js): sound, skip and like, then the song's name. -->
+          <div id="songBox">
+            <div class="songButtons">
+              <div id="muteButton" class="songButton" data-icon="sound" data-tip-name="Sound" data-tip-text="Turn the music and sounds on or off"></div>
+              <div id="songChange" class="songButton iconOnly" data-icon="next" data-tip-name="Change song" data-tip-text="Skip to the DJ's next track"></div>
+              <div id="songLike" class="songButton like iconOnly" data-icon="like" data-tip-name="Like this song" data-tip-text="+1 XP, once a song"></div>
+            </div>
+            <div class="songText" data-tip-name="Now playing" data-tip-text="The DJ's current track">
+              <span class="songTitle" id="songTitle">Basement Lights</span>
+              <span class="songArtist" id="songArtist">DJ Nova</span>
+              <span class="songEnds" id="songEnds"></span>
+            </div>
+          </div>
+          <div id="hudTools">
+            <div id="tipsButton" class="toolButton" data-icon="tips" data-tip-name="How to play"
+              data-tip-text="Click for the step-by-step guide. The club never closes. Happy guests tip and earn you XP; thirsty or bored ones leave. Click a guest or bartender for their card. Click to place, right-click to sell, R to rotate, Esc to put down, drag to move around, scroll (or + and -) to zoom."></div>
+            <div id="restartButton" class="toolButton" data-icon="restart" data-tip-name="New club" data-tip-text="Start a brand-new club from scratch"></div>
+            <div id="renameButton" class="toolButton" data-icon="rename" data-tip-name="Rename club" data-tip-text="Change the name on your neon sign"></div>
+            <div id="backupButton" class="toolButton" data-icon="backup" data-tip-name="Save backup" data-tip-text="Copy your club as a code to keep it safe or move it to another computer, or load a club from a code"></div>
+          </div>
         </div>
       </div>
-      <div id="hudTools">
-        <div id="tipsButton" class="toolButton" data-icon="tips" data-tip-name="How to play"
-          data-tip-text="Click for the step-by-step guide. The club never closes. Happy guests tip and earn you XP; thirsty or bored ones leave. Click a guest or bartender for their card. Click to place, right-click to sell, R to rotate, Esc to put down, drag to move around, scroll (or + and -) to zoom."></div>
-        <div id="restartButton" class="toolButton" data-icon="restart" data-tip-name="New club" data-tip-text="Start a brand-new club from scratch"></div>
-        <div id="renameButton" class="toolButton" data-icon="rename" data-tip-name="Rename club" data-tip-text="Change the name on your neon sign"></div>
-        <div id="backupButton" class="toolButton" data-icon="backup" data-tip-name="Save backup" data-tip-text="Copy your club as a code to keep it safe or move it to another computer, or load a club from a code"></div>
-      </div>
-    </div>
-    <!-- Now playing (see scene/songs.js), with the audio controls. -->
-    <div id="songBox">
-      <div class="songDisc">🎧</div>
-      <div class="songText" data-tip-name="Now playing" data-tip-text="The DJ's current track">
-        <span class="songTitle" id="songTitle">Basement Lights</span>
-        <span class="songArtist" id="songArtist">DJ Nova</span>
-        <span class="songEnds" id="songEnds"></span>
-      </div>
-      <div class="songButtons">
-        <div id="songLike" class="songButton like iconOnly" data-icon="like" data-tip-name="Like this song" data-tip-text="+1 XP, once a song"></div>
-        <div id="songChange" class="songButton iconOnly" data-icon="next" data-tip-name="Change song" data-tip-text="Skip to the DJ's next track"></div>
-        <div id="muteButton" class="songButton" data-icon="sound" data-tip-name="Sound" data-tip-text="Turn the music and sounds on or off"></div>
-      </div>
-    </div>
   </div>
 
   <!-- Asked before starting over (see restartClub()) -->

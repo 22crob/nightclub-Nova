@@ -949,27 +949,6 @@ input, textarea { -webkit-user-select: text; user-select: text; }
 /* ------------------------------------------------------------------ */
 @media (orientation: portrait) and (width <= 560px) {
   #hudProfile, #hudRight, #goalSide, #drinkMeter, .partyBanner, #selectedChip, #wallHeightBar, #testModeTag, #updateButton, #dock { zoom: 1; }
-  /* Row 1: the player panel, full width. */
-  #hudProfile {
-    left: 8px; right: 8px; width: auto; top: calc(6px + env(safe-area-inset-top, 0px));
-    flex-direction: row; align-items: center; gap: 8px; padding: 6px 8px; border-radius: 14px;
-  }
-  .profileTop { flex: 1 1 auto; min-width: 0; gap: 9px; }
-  .portrait { width: 42px; height: 42px; }
-  .portraitFace { width: 18px; height: 18px; margin: 12px; }
-  .levelStar { min-width: 22px; height: 22px; right: -7px; bottom: -5px; }
-  .levelStar span { font-size: 11px; }
-  .xpBar { height: 14px; }
-  .xpText { font-size: 9.5px; }
-  #hudCash { height: 24px; gap: 4px; }
-  .cashStack { width: 24px; height: 24px; }
-  #hudCash .amount { font-size: 18px; }
-  #hudTools { grid-template-columns: 22px 22px; grid-auto-rows: 22px; gap: 3px; }
-  .toolButton { width: 22px; height: 22px; padding: 3px; }
-  /* The song: just its spinning record and buttons, stacked at the end. */
-  #songBox { flex: 0 0 auto; flex-direction: column; gap: 3px; padding: 4px; background: none; box-shadow: none; }
-  #songBox .songText, #songBox .songDisc { display: none; }
-  .songButtons { flex-direction: row; }
   /* Row 2: the stats, full width; the action buttons go above the tabs. */
   #hudRight { left: 8px; right: 8px; width: auto; top: calc(70px + env(safe-area-inset-top, 0px)); }
   #hudStats { padding: 3px 2px; border-radius: 12px; }
@@ -1017,4 +996,92 @@ input, textarea { -webkit-user-select: text; user-select: text; }
   .overlay { padding: calc(10px + env(safe-area-inset-top, 0px)) 10px calc(10px + env(safe-area-inset-bottom, 0px)); box-sizing: border-box; }
   .overlay .summaryCard, .overlay .levelCard { max-height: 100%; overflow-y: auto; }
   #testModeTag { z-index: 9; }
+}
+
+/* ------------------------------------------------------------------ */
+/* The top of the screen like Nightclub City's (the owner's favourite  */
+/* part of its HUD, October 2026): nothing boxed in, the pieces float  */
+/* on the club. Top left, the level record with a long glossy XP bar   */
+/* running off it and the cash at the bar's end; a row of small square */
+/* buttons under the bar (sound, skip and like the song, then How to   */
+/* play, New club, Rename, Save backup) and the song's name beside     */
+/* them. Top right, each stat is its own glossy tile.                  */
+/* ------------------------------------------------------------------ */
+#hudProfile {
+  flex-direction: row; align-items: flex-start; gap: 0; width: auto; padding: 0;
+  background: none; box-shadow: none; backdrop-filter: none; border-radius: 0;
+}
+#hudProfile .portrait { position: relative; z-index: 2; width: 62px; height: 62px; box-shadow: 0 0 0 3px #fff, 0 0 0 5px var(--edge), 0 0 14px rgba(255, 61, 220, 0.6); }
+#hudProfile .portraitFace { width: 26px; height: 26px; margin: 18px; }
+#hudProfile .levelStar { right: -6px; bottom: -6px; min-width: 28px; height: 28px; }
+#hudProfile .levelStar span { font-size: 13px; }
+.profileMain { display: flex; flex-direction: column; gap: 6px; margin-left: -12px; padding-top: 8px; }
+.profileBarRow { display: flex; align-items: center; gap: 12px; }
+/* The XP bar: a long glossy capsule tucked under the record. */
+#hudProfile .xpBar {
+  width: 300px; height: 22px; border-radius: 11px; padding-left: 12px; box-sizing: border-box;
+  background: linear-gradient(180deg, #0a0418, #1c0c36); overflow: hidden;
+  box-shadow: 0 0 0 2px #fff, 0 0 0 4px var(--edge), inset 0 3px 6px rgba(0, 0, 0, 0.7), 0 0 12px rgba(255, 61, 220, 0.35);
+}
+#hudProfile .xpFill { position: absolute; left: 0; top: 0; border-radius: 11px; }
+#hudProfile .xpBar::after { content: ''; position: absolute; left: 6px; right: 6px; top: 2px; height: 7px; border-radius: 4px; background: linear-gradient(180deg, rgba(255, 255, 255, 0.45), rgba(255, 255, 255, 0)); pointer-events: none; }
+#hudProfile .xpText { font-size: 11px; padding-left: 10px; }
+/* The cash at the bar's end, just the money, outlined so it reads on the club. */
+#hudProfile #hudCash { height: 30px; }
+#hudProfile #hudCash .amount { font-size: 24px; text-shadow: 0 2px 0 #0a2a10, 0 0 3px #000, 0 0 10px rgba(80, 230, 110, 0.6), -1px 0 0 #0a2a10, 1px 0 0 #0a2a10, 0 -1px 0 #0a2a10; }
+/* Small square glossy buttons under the bar, all one colour. */
+.profileButtons { display: flex; align-items: center; gap: 4px; padding-left: 18px; }
+#songBox { display: contents; }
+#songBox .songButtons { display: flex; gap: 4px; order: 0; }
+#hudProfile #hudTools { order: 1; display: flex; flex-direction: row; gap: 4px; margin-left: 6px; align-self: center; }
+#songBox .songText { order: 2; margin-left: 8px; max-width: 170px; }
+#songBox .songTitle { font-size: 11.5px; text-shadow: 0 1px 2px #000, 0 0 4px #000; }
+#songBox .songArtist { text-shadow: 0 1px 2px #000; }
+#hudProfile .toolButton, #hudProfile .songButton {
+  --c: #6a3fb0; width: 28px; height: 28px; padding: 5px; border-radius: 8px; border-width: 2px; box-sizing: border-box;
+  box-shadow: 0 0 0 1.5px var(--edge), 0 3px 5px rgba(0, 0, 0, 0.5);
+}
+#hudProfile #songLike.liked { --c: #43e04a; }
+#hudProfile #muteButton.muted { --c: #4a3a66; }
+/* Top right: each stat its own glossy tile, number on top, name under it. */
+#hudRight { width: auto; align-items: flex-end; }
+#hudStats { gap: 8px; padding: 0; background: none; box-shadow: none; backdrop-filter: none; border-radius: 0; }
+#hudStats .statButton {
+  flex: 0 0 auto; min-width: 72px; height: 50px; padding: 3px 8px 4px; border-radius: 12px;
+  background: var(--shine), linear-gradient(180deg, #7a3ad6 0%, #4a1a96 55%, #2c0c62 100%);
+  box-shadow: 0 0 0 2px #fff, 0 0 0 4px var(--edge), 0 4px 8px rgba(0, 0, 0, 0.5);
+}
+#hudStats .statButton + .statButton { border-left: none; }
+#hudStats .statValue { font-size: 16px; }
+#hudStats .statLabel { color: #ffd6f6; font-size: 8px; }
+#actionButtons { gap: 10px; justify-content: flex-end; padding: 6px 0 0; }
+@media (width <= 700px) { #hudProfile .xpBar { width: 200px; } #songBox .songText { display: none; } }
+
+/* Phones held upright: the same idea, fitted to the width. */
+@media (orientation: portrait) and (width <= 560px) {
+  #hudProfile { left: 8px; right: 8px; top: calc(6px + env(safe-area-inset-top, 0px)); }
+  #hudProfile .portrait { width: 48px; height: 48px; }
+  #hudProfile .portraitFace { width: 20px; height: 20px; margin: 14px; }
+  #hudProfile .levelStar { min-width: 24px; height: 24px; }
+  #hudProfile .levelStar span { font-size: 11px; }
+  .profileMain { flex: 1 1 auto; min-width: 0; margin-left: -10px; padding-top: 5px; gap: 6px; }
+  .profileBarRow { gap: 8px; }
+  #hudProfile .xpBar { flex: 1 1 auto; width: auto; height: 18px; }
+  #hudProfile .xpText { font-size: 9.5px; }
+  #hudProfile #hudCash { height: 24px; gap: 3px; }
+  #hudProfile .cashStack { width: 22px; height: 22px; }
+  #hudProfile #hudCash .amount { font-size: 17px; }
+  .profileButtons { padding-left: 14px; gap: 4px; }
+  #hudProfile .toolButton, #hudProfile .songButton { width: 26px; height: 26px; padding: 4px; }
+  #hudProfile #hudTools { margin-left: 4px; }
+  #hudRight { top: calc(84px + env(safe-area-inset-top, 0px)); align-items: stretch; }
+  #hudStats { gap: 6px; justify-content: space-between; }
+  #hudStats .statButton { flex: 1 1 0; min-width: 0; height: 42px; padding: 2px 2px 3px; border-radius: 10px; }
+  #hudStats .statValue { font-size: 13px; }
+  #hudStats .statLabel { font-size: 7px; }
+  #goalSide { top: calc(140px + env(safe-area-inset-top, 0px)); }
+  #drinkMeter { top: calc(142px + env(safe-area-inset-top, 0px)); }
+  #tutorialBox, #selectedChip, .partyBanner { top: calc(140px + env(safe-area-inset-top, 0px)); }
+  #wallHeightBar { top: calc(180px + env(safe-area-inset-top, 0px)); }
+  #testModeTag { top: calc(140px + env(safe-area-inset-top, 0px)); }
 }
