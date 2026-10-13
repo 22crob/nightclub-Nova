@@ -3189,7 +3189,7 @@ const groupWalk = await page.evaluate(() => {
   try { s.spawnPasserBy(); } finally { Math.random = r; }
   return s.streetWalkers.length - n0;
 });
-check('the street: modelled buildings line both back roads, strings of bulbs hang across them, groups chat on the sidewalk, and people walk by in groups', streetLook.buildings >= 10 && streetLook.lights && streetLook.both && streetLook.kinds >= 8 && streetLook.hangouts >= 2 && streetLook.hangoutPeople >= 4 && groupWalk >= 2, JSON.stringify({ ...streetLook, groupWalk }));
+check('the street: modelled buildings line both back roads, every one different (about 20), strings of bulbs hang across them, groups chat on the sidewalk, and people walk by in groups', streetLook.buildings >= 18 && streetLook.kinds === streetLook.buildings && streetLook.lights && streetLook.both && streetLook.hangouts >= 2 && streetLook.hangoutPeople >= 4 && groupWalk >= 2, JSON.stringify({ ...streetLook, groupWalk }));
 
 // The October 2026 wallpapers: each paints a wall section at the top level.
 const newWalls = await page.evaluate(() => {
