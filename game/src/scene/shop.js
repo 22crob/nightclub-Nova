@@ -8,7 +8,7 @@ import { SFX } from '../sfx.js';
 import { hideTip } from '../tooltips.js';
 import { fillIcons } from '../uiIcons.js';
 
-// The dock along the bottom is the game's navigation: Build, Staff, Club,
+// The dock along the bottom is the game's navigation: Build, Staff, Edit (data-nav club),
 // Inventory and VIP (the celebrities) in one bar, the open one glowing,
 // with its panel above. Build shows a row of category keys on the panel's
 // top edge (NEW first, then the store), with the items standing on the
@@ -258,7 +258,7 @@ export class ShopMixin {
       if (def.category === 'Floors') lines.push('Regular floor: paint it tile by tile.');
       if (def.wallDecor) lines.push(`Hangs on a wall: click a wall section${(def.span || 1) > 1 ? ` (it takes ${def.span})` : ''}. Pick low, middle or high first.`);
       if (def.category === 'Bars') lines.push(`Bar pieces: ${this.barUnitCount()} of ${this.barAllowance()} your level allows.`);
-      if (def.staff === 'dj') lines.push('One DJ booth at a time: buying it puts it where your booth stands and your old one in the inventory. Move it with Club, Edit.');
+      if (def.staff === 'dj') lines.push('One DJ booth at a time: buying it puts it where your booth stands and your old one in the inventory. Move it with Edit.');
       lines.push(`Luxury: ${Math.round((def.cost || 0) * LUXURY.perDollar)}`);
       if (def.seats) lines.push(`Comfort: ${'★'.repeat(this.seatComfort(key))}${'☆'.repeat(5 - this.seatComfort(key))} (comfier seats make guests happier and stay longer)`);
       const picture = realSpriteIconFor(key) || renderIsoIcon(def.color, FLOOR_DECAL_PROPS.has(key));

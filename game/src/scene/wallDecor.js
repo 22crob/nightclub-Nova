@@ -235,7 +235,7 @@ export class WallDecorMixin {
       b.dataset.level = level;
       b.textContent = WALL_DECOR.labels[level];
       b.dataset.tipName = `Hang it ${WALL_DECOR.labels[level].toLowerCase()}`;
-      b.dataset.tipText = 'How high on the wall it hangs. R switches too; change it later with Club, Edit, Turn.';
+      b.dataset.tipText = 'How high on the wall it hangs. R switches too; change it later with Edit, Turn.';
       b.addEventListener('pointerdown', (e) => { e.stopPropagation(); this.setHeldWallLevel(level); });
       bar.appendChild(b);
     }
@@ -276,7 +276,7 @@ export class WallDecorMixin {
     const level = this.heldWallLevel || 'mid';
     if (!this.wallDecorFits(section, type, level)) {
       SFX.denied();
-      this.showToast(this.wallDecorSections(section, type) ? '🖼️ Something already hangs there: try another height, or move it first (Club, Edit).' : '🖼️ It doesn\'t fit there: the wall ends.');
+      this.showToast(this.wallDecorSections(section, type) ? '🖼️ Something already hangs there: try another height, or move it first (Edit).' : '🖼️ It doesn\'t fit there: the wall ends.');
       return false;
     }
     const fromInventory = this.holdingFromInventory && this.inventoryCount(type) > 0;

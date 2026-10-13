@@ -150,7 +150,7 @@ const storeTabs = await visibleKeys();
 await page.click('#navClub');
 const clubKeys = await visibleKeys();
 await page.click('#navBuild');
-check('the dock is Build, Staff, Club, Inventory, VIP (labelled); Build has NEW and 6 categories; Club has Edit and Expand', tabs.join() === 'Build=Build,Staff=Staff,Club=Club,Inventory=Inventory,VIP Celebrities=VIP' && storeTabs.join() === 'New,Bars,Seating,Floors,Wallpaper,Decorations,DJ Booths' && clubKeys.join() === 'Edit,Expand', `${tabs.join(' / ')} | ${storeTabs.join(' / ')} | ${clubKeys.join(' / ')}`);
+check('the dock is Build, Staff, Edit, Inventory, VIP (labelled); Build has NEW and 6 categories; Edit has Edit and Expand', tabs.join() === 'Build=Build,Staff=Staff,Edit=Edit,Inventory=Inventory,VIP Celebrities=VIP' && storeTabs.join() === 'New,Bars,Seating,Floors,Wallpaper,Decorations,DJ Booths' && clubKeys.join() === 'Edit,Expand', `${tabs.join(' / ')} | ${storeTabs.join(' / ')} | ${clubKeys.join(' / ')}`);
 check('bar shows its real sprite icon', await page.locator('.propButton .icon').first().evaluate((el) => el.style.backgroundImage.includes('data:image/png')));
 // Floors: dance floors and regular floors in one category, the tip says which.
 await page.click('.storeTab[data-tip-name="Floors"]');

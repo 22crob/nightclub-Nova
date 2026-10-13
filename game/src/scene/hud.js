@@ -124,7 +124,7 @@ export class HudMixin {
       if (drink.unlockLevel === level && level > 1) out.push({ name: drink.name, kind: `New drink (${formatMoney(drink.price)}): it goes on your bars' menu (Staff, Drink Menu)`, svg: drinkIconSvg(drink) });
     }
     for (const limit of EXPANSION.limits) {
-      if (limit.level === level && level > 1) out.push({ name: `Walls up to ${limit.size} tiles`, kind: 'Expand your club a row at a time (Club, Expand)', art: 'tabExpand' });
+      if (limit.level === level && level > 1) out.push({ name: `Walls up to ${limit.size} tiles`, kind: 'Expand your club a row at a time (Edit, Expand)', art: 'tabExpand' });
     }
     return out;
   }
