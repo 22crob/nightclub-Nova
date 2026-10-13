@@ -3203,13 +3203,13 @@ check('a troublemaker upsets guests near them; a bouncer spots them and walks th
 const streetLook = await page.evaluate(() => {
   const s = window.__clubNova.scene.getScene('club');
   const imgs = s.buildingLayer ? s.buildingLayer.list.filter((o) => o.type === 'Image') : [];
-  const lights = s.streetStrings && s.buildingLayer.list.includes(s.streetStrings) && s.streetStrings.list.filter((o) => o.type === 'Image').length > 50;
+  const noLights = !s.streetStrings && !s.textures.exists('streetBulb');
   const keys = imgs.map((i) => i.texture.key);
   return {
     buildings: imgs.length,
     both: keys.some((k) => k.endsWith('_0')) && keys.some((k) => k.endsWith('_90')),
     kinds: new Set(keys.map((k) => k.replace(/^bldg_|_\d+$/g, ''))).size,
-    lights,
+    noLights,
     hangouts: (s.hangouts || []).length,
     hangoutPeople: (s.hangouts || []).reduce((n, h) => n + h.people.length, 0),
   };
@@ -3221,7 +3221,7 @@ const groupWalk = await page.evaluate(() => {
   try { s.spawnPasserBy(); } finally { Math.random = r; }
   return s.streetWalkers.length - n0;
 });
-check('the street: modelled buildings line both back roads, every one different (about 20), strings of bulbs hang across them, groups chat on the sidewalk, and people walk by in groups', streetLook.buildings >= 18 && streetLook.kinds === streetLook.buildings && streetLook.lights && streetLook.both && streetLook.hangouts >= 2 && streetLook.hangoutPeople >= 4 && groupWalk >= 2, JSON.stringify({ ...streetLook, groupWalk }));
+check('the street: modelled buildings line both back roads, every one different (about 20), no strings of bulbs hang across the roads (the owner took them out), groups chat on the sidewalk, and people walk by in groups', streetLook.buildings >= 18 && streetLook.kinds === streetLook.buildings && streetLook.noLights && streetLook.both && streetLook.hangouts >= 2 && streetLook.hangoutPeople >= 4 && groupWalk >= 2, JSON.stringify({ ...streetLook, groupWalk }));
 
 // The October 2026 wallpapers: each paints a wall section at the top level.
 const newWalls = await page.evaluate(() => {

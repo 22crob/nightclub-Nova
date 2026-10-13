@@ -14,7 +14,7 @@
 // the walls. Street people aren't in this.patrons until they go in.
 // Mixed into ClubScene (see ClubScene.js); `this` is the scene.
 import Phaser from 'phaser';
-import { FLOOR_SLAB_DEPTH as DROP, STREET, WALL_HEIGHT, WALL_THICKNESS } from '../config.js';
+import { FLOOR_SLAB_DEPTH as DROP, STREET, WALL_THICKNESS } from '../config.js';
 import { BUILDING_META } from '../assets.js';
 
 const randRange = (min, max) => min + Math.random() * (max - min);
@@ -85,7 +85,6 @@ export class StreetMixin {
     const S = STREET.sidewalk;
 
     if (!this.placeStreetBuildings(t, nx, ny, drop, R)) this.drawStreetBuildings(g, P, t, nx, ny, drop, R);
-    this.drawStringLights(t, nx, ny, drop, R);
     quad(STREET.asphalt, t - R, t - R, nx + R, ny + R);
     quad(STREET.curb, t - S - 0.25, t - S - 0.25, nx + S + 0.25, ny + S + 0.25);
     quad(STREET.pavement, t - S, t - S, nx + S, ny + S);
@@ -167,75 +166,6 @@ export class StreetMixin {
       this.buildingLayer.add(img);
     }
     return true;
-  }
-
-  // Strings of round bulbs hung across both back roads, zigzagging from the
-  // top of the club's wall to the buildings opposite, like the reference
-  // street. Drawn over the buildings, under the walls and the people.
-  drawStringLights(t, nx, ny, drop, R) {
-    if (!this.buildingLayer) return;
-    const L = STREET.stringLights;
-    this.streetStrings?.destroy();
-    const g = this.add.graphics();
-    // The bulbs are one small picture each (streetBulbTexture()), not shapes:
-    // hundreds of drawn circles were redrawn every frame and slowed big clubs.
-    const holder = this.add.container(0, 0, [g]);
-    this.buildingLayer.add(holder);
-    this.streetStrings = holder;
-    const bulbKey = this.streetBulbTexture();
-    const far = t - R + 0.05; // the buildings' fronts
-    const wallTop = WALL_HEIGHT + 2;
-    const strands = [];
-    // Along each back road, the club end and the building end of each
-    // strand step along by `every`, so they zigzag over the road.
-    for (const [along, end] of [['gx', nx], ['gy', ny]]) {
-      const ends = [];
-      for (let k = t + 0.6; k <= end - 0.3; k += L.every) ends.push(k);
-      for (let i = 0; i < ends.length - 1; i++) {
-        const club = ends[i + (i % 2)];
-        const bldg = ends[i + 1 - (i % 2)];
-        const a = along === 'gx' ? [club, t + 0.05] : [t + 0.05, club];
-        const b = along === 'gx' ? [bldg, far] : [far, bldg];
-        strands.push([[...a, wallTop - drop], [...b, L.height - drop]]);
-      }
-    }
-    const bulbs = [];
-    for (const [[ax, ay, ah], [bx, by, bh]] of strands) {
-      const len = Math.hypot(bx - ax, by - ay);
-      const steps = Math.max(2, Math.round(len / L.spacing));
-      const pts = [];
-      for (let s = 0; s <= steps; s++) {
-        const f = s / steps;
-        const h = ah + (bh - ah) * f - L.sag * 4 * f * (1 - f);
-        pts.push(this.gridPoint(ax + (bx - ax) * f, ay + (by - ay) * f, h));
-      }
-      g.lineStyle(1, L.wire, 0.9);
-      g.beginPath();
-      g.moveTo(...pts[0]);
-      for (const p of pts.slice(1)) g.lineTo(...p);
-      g.strokePath();
-      bulbs.push(...pts.slice(1, -1));
-    }
-    for (const [x, y] of bulbs) holder.add(this.add.image(x, y + 3, bulbKey).setScale(0.5));
-  }
-
-  // One string-light bulb with its soft glow, drawn once at twice the size
-  // it's shown (so it stays sharp zoomed in).
-  streetBulbTexture() {
-    const key = 'streetBulb';
-    if (this.textures.exists(key)) return key;
-    const L = STREET.stringLights;
-    const g = this.make.graphics({ x: 0, y: 0, add: false });
-    const c = 32; // centre of a 64 x 64 picture; everything at 2x
-    g.fillStyle(L.glow, 0.06); g.fillCircle(c, c, 30);
-    g.fillStyle(L.glow, 0.1); g.fillCircle(c, c, 18);
-    g.fillStyle(L.glow, 0.22); g.fillCircle(c, c, 10);
-    g.fillStyle(L.wire, 1); g.fillRect(c - 1.6, c - 7, 3.2, 4);
-    g.fillStyle(L.glow, 1); g.fillCircle(c, c, 5.6);
-    g.fillStyle(L.bulb, 1); g.fillCircle(c - 1, c - 1, 3.2);
-    g.generateTexture(key, 64, 64);
-    g.destroy();
-    return key;
   }
 
   // The round bits of the street props, drawn once at twice their size:

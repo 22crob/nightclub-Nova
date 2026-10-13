@@ -162,10 +162,6 @@ export const STREET = {
   buildingRow: ['hotel', 'records', 'pizza', 'cocktail', 'bowling', 'walkup', 'karaoke', 'barber', 'tower', 'gym',
     'cinema', 'noodles', 'arcade', 'tattoo', 'bodega', 'diner', 'pawn', 'garage', 'tacos', 'liquor', 'laundromat', 'walkupDark'],
   groupChance: 0.25, hangouts: 2, hangoutMs: [25000, 50000],
-  // Strings of bulbs across the back roads (drawStringLights()): ends every
-  // `every` tiles, hung `height` px up the buildings, sagging `sag` px, a
-  // bulb every `spacing` tiles.
-  stringLights: { every: 3, height: 150, sag: 26, spacing: 0.75, wire: 0x15131b, bulb: 0xfff1c2, glow: 0xffc96a },
 };
 
 // The floor tiles are invisible (the seamless bare floor shows through, see
