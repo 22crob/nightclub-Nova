@@ -773,6 +773,8 @@ import decor_batch2  # noqa: E402  (the owner's October 2026 drafts)
 DECOR.update(decor_batch2.DESIGNS)
 import decor_batch3  # noqa: E402  (plants, black pool table, 3D wall decorations)
 DECOR.update(decor_batch3.DESIGNS)
+import decor_batch4  # noqa: E402  (the future batch: hologram projectors, plasma orb, laser gate)
+DECOR.update(decor_batch4.DESIGNS)
 
 
 def build(name, preview_dir=None):
