@@ -345,6 +345,53 @@ export const FLOOR_STYLES = {
     },
   },
 
+  // The future batch (October 2026): a hex grid of glass cells, faint
+  // cyan outlines always on, a band of light flowing across the whole floor
+  // lighting the cells it passes cyan, then violet behind it.
+  hexGrid: {
+    frames: 16,
+    speed: 1,
+    phase: 'flow',
+    period: 4,
+    draw(ctx, S, frame) {
+      ctx.fillStyle = '#0b0c16';
+      ctx.fillRect(0, 0, S, S);
+      const w = S / 4, rowH = S / 4, ry = rowH * 0.66;   // 4 cells across, 4 rows: repeats every tile
+      const shift = (frame / 16) * 4;
+      const hex = (cx, cy, inset) => {
+        ctx.beginPath();
+        const hw = w / 2 - inset, top = ry - inset, side = ry / 2 - inset / 2;
+        ctx.moveTo(cx, cy - top); ctx.lineTo(cx + hw, cy - side); ctx.lineTo(cx + hw, cy + side);
+        ctx.lineTo(cx, cy + top); ctx.lineTo(cx - hw, cy + side); ctx.lineTo(cx - hw, cy - side);
+        ctx.closePath();
+      };
+      for (let r = -1; r <= 4; r++) {
+        for (let c = -1; c <= 4; c++) {
+          const cx = c * w + (r % 2 ? w / 2 : 0) + w / 4, cy = r * rowH + rowH / 2;
+          const along = (cx + cy) / S;                       // across the tile in tiles, like flowFill()
+          const x = ((((along - shift) / 4) % 1) + 1) % 1;
+          const lead = Math.pow(Math.max(0, Math.cos(x * Math.PI * 2)), 8);
+          const trail = Math.pow(Math.max(0, Math.cos((x + 0.12) * Math.PI * 2)), 6) * 0.6;
+          const k = Math.max(lead, trail);
+          if (k > 0.05) {
+            const r1 = Math.round(40 + 20 * lead + 150 * trail), g1 = Math.round(60 + 170 * lead), b1 = Math.round(90 + 165 * k);
+            ctx.save();
+            ctx.shadowColor = `rgba(${r1},${g1},${b1},${k})`;
+            ctx.shadowBlur = 12 * k;
+            ctx.fillStyle = `rgba(${r1},${g1},${b1},${0.25 + 0.7 * k})`;
+            hex(cx, cy, 3);
+            ctx.fill();
+            ctx.restore();
+          }
+          ctx.strokeStyle = `rgba(90,220,255,${0.35 + 0.5 * k})`;
+          ctx.lineWidth = 2;
+          hex(cx, cy, 2);
+          ctx.stroke();
+        }
+      }
+    },
+  },
+
   // A band of light that rolls across the whole dance floor.
   wave: {
     frames: 16,
@@ -469,6 +516,46 @@ export const FLOOR_PAINTS = {
       ctx.fillStyle = sheen;
       ctx.fillRect(0, 0, S, S);
       ctx.strokeStyle = 'rgba(160,170,200,0.35)';
+      ctx.lineWidth = 2;
+      ctx.strokeRect(1, 1, S - 2, S - 2);
+    },
+  },
+
+  // The future batch (October 2026): a dark circuit board, thin cyan
+  // traces with round pads, two of them running straight across so the
+  // tiles join up.
+  circuit: {
+    frames: 1,
+    draw(ctx, S) {
+      ctx.fillStyle = '#0c1416';
+      ctx.fillRect(0, 0, S, S);
+      const g = ctx.createLinearGradient(0, 0, S, S);
+      g.addColorStop(0, 'rgba(40,90,100,0.25)');
+      g.addColorStop(1, 'rgba(0,0,0,0.2)');
+      ctx.fillStyle = g;
+      ctx.fillRect(0, 0, S, S);
+      ctx.save();
+      ctx.shadowColor = 'rgba(60,230,255,0.9)';
+      ctx.shadowBlur = 6;
+      ctx.strokeStyle = 'rgba(70,225,255,0.85)';
+      ctx.lineWidth = 2.5;
+      ctx.lineCap = 'round';
+      const line = (pts) => { ctx.beginPath(); pts.forEach(([x, y], i) => (i ? ctx.lineTo(x, y) : ctx.moveTo(x, y))); ctx.stroke(); };
+      line([[0, 32], [S, 32]]);                    // straight across: joins the next tile
+      line([[96, 0], [96, S]]);
+      line([[0, 88], [40, 88], [60, 108], [60, S]]);
+      line([[18, 0], [18, 14], [44, 40], [44, 60], [70, 60]]);
+      line([[96, 70], [118, 70], [118, 100], [S, 100]]);
+      line([[60, 32], [60, 46]]);
+      ctx.fillStyle = 'rgba(160,245,255,1)';
+      for (const [x, y] of [[70, 60], [60, 46], [96, 70], [44, 60], [18, 14]]) { ctx.beginPath(); ctx.arc(x, y, 4.5, 0, Math.PI * 2); ctx.fill(); }
+      ctx.restore();
+      ctx.fillStyle = '#1a2a30';
+      for (const [x, y, w, h] of [[72, 76, 18, 26], [10, 44, 22, 14], [104, 8, 18, 16]]) {   // little chips
+        ctx.fillRect(x, y, w, h);
+        ctx.strokeStyle = 'rgba(70,225,255,0.4)'; ctx.lineWidth = 1; ctx.strokeRect(x + 0.5, y + 0.5, w - 1, h - 1);
+      }
+      ctx.strokeStyle = 'rgba(70,225,255,0.12)';
       ctx.lineWidth = 2;
       ctx.strokeRect(1, 1, S - 2, S - 2);
     },

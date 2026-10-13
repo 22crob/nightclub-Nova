@@ -496,6 +496,45 @@ export const WALL_STYLES = {
       baseboard(ctx, W, H, '#050508');
     },
   },
+  // The future batch (October 2026): dark glass panels with streams of
+  // cyan and violet light falling down them, a glowing rail at head height.
+  dataStream: {
+    frames: 16,
+    speed: 1,
+    phase: 'sync',
+    draw(ctx, W, H, frame) {
+      ctx.fillStyle = '#080a12';
+      ctx.fillRect(0, 0, W, H);
+      const top = H - BASEBOARD;
+      const rand = rng(77);
+      const cols = 6, cw = W / cols, cell = 9;
+      for (let c = 0; c < cols; c++) {
+        const speed = 1 + Math.floor(rand() * 2);
+        const start = rand() * top;
+        const len = 5 + Math.floor(rand() * 6);
+        const color = rand() < 0.7 ? [80, 230, 255] : [170, 110, 255];
+        const head = ((start + (frame / 16) * top * speed) % top);
+        for (let k = 0; k < len; k++) {
+          const y = head - k * cell;
+          const yy = ((y % top) + top) % top;
+          const a = k === 0 ? 1 : 0.75 * (1 - k / len);
+          ctx.fillStyle = k === 0 ? `rgba(230,250,255,${a})` : `rgba(${color[0]},${color[1]},${color[2]},${a})`;
+          ctx.fillRect(c * cw + cw * 0.3, yy, cw * 0.4, cell - 3);
+        }
+      }
+      // Panel seams, and the glowing rail.
+      ctx.fillStyle = 'rgba(60,80,110,0.5)';
+      ctx.fillRect(0, 0, 2, top);
+      ctx.fillRect(W - 2, 0, 2, top);
+      ctx.save();
+      ctx.shadowColor = 'rgba(80,230,255,1)';
+      ctx.shadowBlur = 10;
+      ctx.fillStyle = '#7ef0ff';
+      ctx.fillRect(0, top * 0.42, W, 3);
+      ctx.restore();
+      baseboard(ctx, W, H, '#10121c');
+    },
+  },
   // --- The October 2026 batch, from the owner's reference clubs ----------
 
   // Grey cinder blocks, a cheap first step up from the torn paper.

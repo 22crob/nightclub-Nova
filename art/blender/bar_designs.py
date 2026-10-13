@@ -664,6 +664,47 @@ def build_pinkneon():
     for i, (x, c) in enumerate(((-0.3, '#ff3fb4'), (-0.16, '#ff8ad8'))):
         cocktail(f'Pink{i}', x, -1.12, 1.05, clear_glass(), c)
 
+# 16. Orbit Bar (the future batch, October 2026): glossy white like a
+#     spaceship, cyan light slits along the front; behind it a round
+#     porthole screen showing a glowing planet, floating glass shelves.
+def build_orbit():
+    white = principled('OrbitWhite', srgb('#e8ecf2'), rough=0.08)
+    grey = principled('OrbitGrey', srgb('#9aa2b2'), rough=0.15)
+    cyan = glowing('#3ae8ff', 6)
+    violet = glowing('#9a5aff', 5)
+    shell(white, white, white, floor_mat=plain('#1a1c26', rough=0.4))
+    for j, z in enumerate((0.28, 0.52, 0.76)):          # light slits along the front
+        box(f'Slit{j}', -0.42, 0.42, -1.292, -1.28, z - 0.012, z + 0.012, cyan, bevel=0)
+    box('TopGlow', -0.49, 0.49, -1.385, -1.37, 1.0, 1.03, cyan, bevel=0)
+    box('BackTopGlow', -0.48, 0.48, 0.83, 0.845, 0.895, 0.925, violet, bevel=0)
+    hutch(white, principled('OrbitDeep', srgb('#0a0c18'), rough=0.2), crown=white, depth=0.1)
+    # The porthole: a white ring round a dark window with a glowing planet.
+    y = HY1 - 0.11
+    bpy.ops.mesh.primitive_torus_add(major_radius=0.3, minor_radius=0.045, major_segments=48, minor_segments=10,
+                                     location=(0, y, 1.62), rotation=(math.radians(90), 0, 0))
+    bb._finish(bpy.context.active_object, white, 0)
+    bpy.ops.mesh.primitive_torus_add(major_radius=0.27, minor_radius=0.008, major_segments=48, minor_segments=6,
+                                     location=(0, y - 0.03, 1.62), rotation=(math.radians(90), 0, 0))
+    bb._finish(bpy.context.active_object, cyan, 0)
+    sphere('Planet', 0.04, y + 0.02, 1.6, 0.14, principled('Planet', srgb('#7a4aff'), rough=0.4, emission=srgb('#6a3aff'), emission_strength=1.6), segs=32)
+    bpy.ops.mesh.primitive_torus_add(major_radius=0.21, minor_radius=0.006, major_segments=40, minor_segments=6,
+                                     location=(0.04, y - 0.02, 1.6), rotation=(math.radians(75), math.radians(-20), 0))
+    bb._finish(bpy.context.active_object, glowing('#ffd8ff', 4), 0)
+    for k, (sx, sz) in enumerate(((-0.17, 1.78), (0.19, 1.72), (-0.12, 1.44), (0.15, 1.47), (0.0, 1.85))):
+        sphere(f'Star{k}', sx, y + 0.03, sz, 0.008, glowing('#ffffff', 6), segs=8)
+    # Floating glass shelves either side, glowing bottles on them.
+    glass = principled('OrbitGlass', srgb('#cff6ff'), rough=0.03, transmission=0.9)
+    for side in (-1, 1):
+        for j, z in enumerate((1.3, 1.95)):
+            x0, x1 = (0.33, 0.45) if side > 0 else (-0.45, -0.33)
+            box(f'FloatShelf{side}{j}', x0, x1, 0.92, 1.3, z - 0.012, z, glass, bevel=0.002)
+            box(f'FloatGlow{side}{j}', x0, x1, 0.915, 0.925, z - 0.018, z - 0.01, cyan, bevel=0)
+            bottle_row(f'FloatBottle{side}{j}_', x0 + 0.03, x1 - 0.03, 1.11, z, 2, bottles_of('#3ae8ff', '#ff6ad8', glow=2.0), seed=260 + j + (side > 0) * 5)
+    bottle_row('BackBottle', -0.36, 0.36, 1.0, 0.94, 6, bottles_of('#3ae8ff', '#9a5aff', '#ffffff', '#ff6ad8', glow=2.0), seed=251)
+    for i, (x, c) in enumerate(((-0.3, '#3ae8ff'), (-0.16, '#9a5aff'))):
+        cocktail(f'Orbit{i}', x, -1.12, 1.05, clear_glass('OrbitCocktail'), c)
+    foot_rail(grey)
+
 
 
 DESIGNS = {
@@ -682,6 +723,7 @@ DESIGNS = {
     'velvet': ('Velvet Bar', build_velvet),
     'chrome': ('Chrome Bar', build_chrome),
     'pinkneon': ('Pink Neon Bar', build_pinkneon),
+    'orbit': ('Orbit Bar', build_orbit),
 }
 
 

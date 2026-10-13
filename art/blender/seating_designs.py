@@ -873,6 +873,42 @@ def stripe_l():
     return seats((0.75, 0.6, 0), (0.1, 0.6, 0), (-0.6, -0.75, 90), (-0.6, -0.1, 90))
 
 
+def cyber_booth():
+    """The future batch (October 2026): a glossy white U booth, cyan light
+    along its tops and base, violet channels in the backs, round a glass
+    table floating on a glowing column."""
+    white = principled('CyberWhite', srgb('#eef0f6'), rough=0.1)
+    white2 = principled('CyberWhite2', srgb('#dfe3ec'), rough=0.12)
+    cyan = neon('CyberCyan', (0.25, 0.9, 1.0), 5)
+    violet = neon('CyberViolet', (0.6, 0.3, 1.0), 4)
+    out = u_booth(white2, white, mat('#14141c', rough=0.3), cyan, top_glow=cyan, channel=violet)
+    cylinder('TableFoot', 0, -0.2, 0, 0.03, 0.2, mat('#14141c', rough=0.3), verts=32)
+    cylinder('TableBeam', 0, -0.2, 0.03, 0.5, 0.05, principled('CyberBeam', srgb('#bff6ff'), rough=0.3,
+             emission=srgb('#3ae8ff'), emission_strength=3.0, alpha=0.7), verts=24)
+    cylinder('Table', 0, -0.2, 0.5, 0.54, 0.34, principled('CyberGlass', srgb('#cff6ff'), rough=0.03, alpha=0.55), verts=48)
+    torus('TableRim', 0, -0.2, 0.54, 0.34, 0.012, cyan)
+    for i, (x, y, c) in enumerate([(-0.1, -0.12, '#3ae8ff'), (0.12, -0.3, '#c07aff')]):
+        cone(f'Glass{i}', x, y, 0.54, 0.66, 0.03, 0.045, mat(c, rough=0.1, glow=0.6, alpha=0.85), verts=12)
+    return out
+
+
+def hover_sofa():
+    """The future batch: 3 x 1, a rounded glossy white sofa floating over a
+    cyan glow, no legs, a violet light line along its back."""
+    white = principled('HoverWhite', srgb('#eef0f6'), rough=0.1)
+    seat = principled('HoverSeat', srgb('#e2e6ee'), rough=0.18)
+    cyan = neon('HoverCyan', (0.25, 0.9, 1.0), 6)
+    violet = neon('HoverViolet', (0.6, 0.3, 1.0), 6)
+    box('Glow', -0.95, 0.95, -0.3, 0.25, 0.0, 0.015, principled('HoverPad', srgb('#bff6ff'), rough=0.3,
+        emission=srgb('#3ae8ff'), emission_strength=3.0), bevel=0)
+    box('Base', -1.1, 1.1, -0.42, 0.4, 0.14, 0.32, white, bevel=0.08)
+    box('BaseLine', -1.0, 1.0, -0.425, -0.42, 0.2, 0.22, cyan, bevel=0)
+    box('Seat', -0.98, 0.98, -0.4, 0.14, 0.32, 0.44, seat, bevel=0.05)
+    box('BackRest', -1.1, 1.1, 0.14, 0.4, 0.32, 1.0, white, bevel=0.1)
+    box('BackLine', -0.9, 0.9, 0.135, 0.14, 0.86, 0.88, violet, bevel=0)
+    return {'seats': [[-0.56, -0.12], [0.0, -0.12], [0.56, -0.12]], 'sitLift': 0.02}
+
+
 def bottle_sectional():
     """Bottle service: a black leather L-sectional with red stitching and
     a red underglow, round a square black glass table with an ice bucket."""
@@ -1023,6 +1059,8 @@ DESIGNS = {
     'crystalBooth': crystal_booth,
     'ringBooth': ring_booth,
     'stripeL': stripe_l,
+    'cyberBooth': cyber_booth,
+    'hoverSofa': hover_sofa,
     'bottleSectional': bottle_sectional,
     'beanBags': bean_bags,
     'blackStool': black_stool,

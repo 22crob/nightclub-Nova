@@ -413,6 +413,7 @@ export const PROP_TYPES = {
   fpRedGloss: paintTier('fpRedGloss', 'Red Gloss', 8, 14, 'redGloss'),
   fpLeopard: paintTier('fpLeopard', 'Cheetah Print', 14, 41, 'cheetah'), // was Leopard Print (the owner found it bad); key kept for saves
   fpStarry: paintTier('fpStarry', 'Starry Glass', 24, 57, 'starryGlass'),
+  fpCircuit: paintTier('fpCircuit', 'Circuit Board', 16, 36, 'circuit'), // the future batch
   // Dance floors (src/floors.js, drawn in code): simple to fancy, all with
   // the same gameplay. Floors are the ONLY
   // category that grants patron capacity (see patronCapacity()); a
@@ -435,6 +436,7 @@ export const PROP_TYPES = {
   rainbowFloor: floorTier('rainbowFloor', 'Rainbow Flow', 130, 50, 'rainbow'),
   stepFloor: floorTier('stepFloor', 'Step Floor', 155, 55, 'step'),
   galaxyFloor: floorTier('galaxyFloor', 'Galaxy Swirl', 185, 58, 'galaxy'),
+  hexFloor: floorTier('hexFloor', 'Hex Grid', 120, 40, 'hexGrid'), // the future batch
   // Seating, simple to fancy. 'table' and 'vipLounge' are the keys of the
   // original placeholder Table and VIP Lounge, kept for old saves.
   woodStool: seatTier('woodStool', 'Wood Stool', 40, 1, 'woodStool', 0.1),
@@ -567,6 +569,7 @@ export const PROP_TYPES = {
   wpIce: wallTier('wpIce', 'Ice Panels', 96, 53, 'icePanels'),
   wpLedDots: wallTier('wpLedDots', 'LED Lights', 100, 51, 'ledDots'),
   wpHolo: wallTier('wpHolo', 'Holo Wall', 110, 58, 'holo'),
+  wpData: wallTier('wpData', 'Data Stream', 92, 44, 'dataStream'), // the future batch
 };
 
 // What things sell for in the shop (`price`, from currentCost()): `cost` is
