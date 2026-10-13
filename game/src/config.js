@@ -316,11 +316,11 @@ export const EVERYONE_LOOK = 'guy01';
 // random one of these hand-drawn looks; staff and celebrities wear
 // EVERYONE_LOOK. A look missing a move (its sheet's `missing`, e.g. not
 // drawn dancing yet) never does it (canDoClip() in patrons.js).
-export const GUEST_CUTOUTS = ['guy01', 'suit01', 'grey01', 'emo01', 'girl01'];
+export const GUEST_CUTOUTS = ['guy01', 'suit01', 'grey01', 'emo01', 'girl01', 'girl02'];
 // The girl looks (girls' names, guests.js). girl01 (October 2026) is drawn in
 // every clip; a new look missing its back walk would wait (randomGuestLook()
 // skips a look that borrows it) and one not drawn sitting won't sit (canDoClip()).
-export const GIRL_LOOKS = ['girl01'];
+export const GIRL_LOOKS = ['girl01', 'girl02'];
 export const CHARACTER_DISPLAY_HEIGHT = 87.4; // px: big next to the furniture, like Nightclub City
 // How far above a patron's feet their tip / drink popups start.
 export const PATRON_POPUP_Y = CHARACTER_DISPLAY_HEIGHT * 0.8;
