@@ -30,6 +30,7 @@ const SONG_FILES = [
   { file: 'party-club-dance.mp3', title: 'Party Club Dance', artist: 'MFCC', bpm: 127.99, offset: 0.0, lengthMs: 131369 },
   { file: 'party-dance-club.mp3', title: 'Party Dance Club', artist: 'Tatamusic', bpm: 122.0, offset: 0.464, lengthMs: 103314 },
   { file: 'waiting-for-you.mp3', title: 'Waiting For You', artist: 'Paul Yudin', bpm: 115.0, offset: 0.023, lengthMs: 146128 },
+  { file: 'i-will-be-here.mp3', title: 'I Will Be Here', artist: 'FASSounds', bpm: 120.0, offset: 0.0, lengthMs: 185182 },
 ];
 // The MP3s aren't packed into the game's page (they'd make it slow to open):
 // they're separate files in public/music/, published next to the page, and
