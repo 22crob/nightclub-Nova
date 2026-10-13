@@ -1,14 +1,11 @@
-// ClubScene methods: the drink menu. Drinks (DRINKS in config.js) unlock
-// with level; the player picks which ones the bars serve (#drinkMenu, opened
-// from the Drink Menu card in the Staff panel). A guest orders one from the
-// menu when a bartender comes to them (celebrities have the priciest);
-// fancier drinks pay more and cheer guests up more but take longer to mix.
-// New drinks go on the menu when they unlock; the ones taken off are saved
-// as `drinksOff`.
+// ClubScene methods: the drinks. Drinks (DRINKS in config.js) unlock with
+// level and the bars serve every unlocked one; there's no menu to manage
+// (the owner took it out, October 2026: the game is about designing the
+// club). A guest orders one when a bartender comes to them (celebrities
+// have the priciest); fancier drinks pay more and cheer guests up more but
+// take longer to mix.
 // Mixed into ClubScene (see ClubScene.js); `this` is the scene.
 import { DRINKS } from '../config.js';
-import { SFX } from '../sfx.js';
-import { formatMoney } from '../util.js';
 
 // Each drink's picture, drawn in code: a glass of its shape, filled with its
 // colour. viewBox 0 0 48 48.
@@ -43,32 +40,10 @@ export class DrinksMixin {
     return DRINKS.filter((d) => d.unlockLevel <= level);
   }
 
-  // What the bars serve: every unlocked drink not taken off (never empty).
+  // What the bars serve: every unlocked drink (never empty).
   drinkMenu() {
-    const off = new Set(this.drinksOff || []);
-    const on = this.unlockedDrinks().filter((d) => !off.has(d.key));
-    return on.length ? on : [this.unlockedDrinks()[0] || DRINKS[0]];
-  }
-
-  isOnMenu(key) {
-    return this.drinkMenu().some((d) => d.key === key);
-  }
-
-  // Puts a drink on or takes it off. The last one can't come off.
-  toggleDrink(key) {
-    const d = DRINKS.find((x) => x.key === key);
-    if (!d || d.unlockLevel > this.levelInfo().level) { SFX.denied(); return false; }
-    const off = new Set(this.drinksOff || []);
-    if (off.has(key)) off.delete(key);
-    else {
-      if (this.drinkMenu().length <= 1) { SFX.denied(); this.showToast('Keep at least one drink on the menu.'); return false; }
-      off.add(key);
-    }
-    this.drinksOff = [...off];
-    SFX.unlock();
-    this.renderDrinkMenu();
-    this.saveGame();
-    return true;
+    const on = this.unlockedDrinks();
+    return on.length ? on : [DRINKS[0]];
   }
 
   // What a guest orders: a celebrity has the priciest on the menu, anyone
@@ -85,37 +60,5 @@ export class DrinksMixin {
 
   drinkOf(key) {
     return DRINKS.find((d) => d.key === key) || this.drinkMenu()[0];
-  }
-
-  setupDrinkMenu() {
-    const box = document.getElementById('drinkMenu');
-    if (!box) return;
-    document.getElementById('drinkMenuClose')?.addEventListener('click', () => box.classList.remove('open'));
-  }
-
-  openDrinkMenu() {
-    this.renderDrinkMenu();
-    document.getElementById('drinkMenu')?.classList.add('open');
-  }
-
-  renderDrinkMenu() {
-    const list = document.getElementById('drinkList');
-    if (!list) return;
-    const level = this.levelInfo().level;
-    list.innerHTML = '';
-    for (const d of DRINKS) {
-      const locked = d.unlockLevel > level;
-      const on = !locked && this.isOnMenu(d.key);
-      const card = document.createElement('div');
-      card.className = `drinkCard${locked ? ' locked' : on ? ' on' : ''}`;
-      card.dataset.drink = d.key;
-      card.innerHTML = `<div class="drinkPic">${drinkIconSvg(d)}</div><div class="drinkName"></div><div class="drinkPrice"></div><div class="drinkInfo"></div><div class="drinkState"></div>`;
-      card.querySelector('.drinkName').textContent = d.name;
-      card.querySelector('.drinkPrice').textContent = formatMoney(d.price);
-      card.querySelector('.drinkInfo').textContent = `${'★'.repeat(d.fun)} fun · ${d.mix <= 0.95 ? 'quick' : d.mix <= 1.1 ? 'a little slower' : 'slower'} to mix`;
-      card.querySelector('.drinkState').textContent = locked ? `🔒 Level ${d.unlockLevel}` : on ? 'On the menu' : 'Off';
-      if (!locked) card.addEventListener('click', () => this.toggleDrink(d.key));
-      list.appendChild(card);
-    }
   }
 }

@@ -56,7 +56,7 @@ export class SaveMixin {
       inventory[this.movingBooth.type] -= 1;
       if (inventory[this.movingBooth.type] <= 0) delete inventory[this.movingBooth.type];
     }
-    return { cash: this.cash, fans: this.fans, popularity: this.popularity || 0, bouncers: this.bouncers || 1, barTraining: this.barTraining || 0, tutorial: this.tutorial || null, achievements: this.achievements || [], hintsSeen: this.hintsSeen || [], bought: [...(this.boughtTypes || [])], drinkStock: this.drinkStock ?? null, gridW: this.gridW, gridH: this.gridH, placed: placedList, wallpaper: { ...this.wallpaper }, wallDecor: { ...(this.wallDecor || {}) }, floorPaint: { ...this.floorPaint }, nightStars: this.nightStars || [], inventory, inventoryXp, goalsDone: this.goalsDone || [], goalStats: this.goalStats || {}, clubName: this.clubName || '', daily: this.daily || null, drinksOff: this.drinksOff || [], celebs: this.celebState || {}, celebInvited: Object.keys(this.celebInvites || {}), partyReadyAt: this.partyReadyAt || 0 };
+    return { cash: this.cash, fans: this.fans, popularity: this.popularity || 0, bouncers: this.bouncers || 1, barTraining: this.barTraining || 0, tutorial: this.tutorial || null, achievements: this.achievements || [], hintsSeen: this.hintsSeen || [], bought: [...(this.boughtTypes || [])], drinkStock: this.drinkStock ?? null, gridW: this.gridW, gridH: this.gridH, placed: placedList, wallpaper: { ...this.wallpaper }, wallDecor: { ...(this.wallDecor || {}) }, floorPaint: { ...this.floorPaint }, nightStars: this.nightStars || [], inventory, inventoryXp, goalsDone: this.goalsDone || [], goalStats: this.goalStats || {}, clubName: this.clubName || '', daily: this.daily || null, celebs: this.celebState || {}, celebInvited: Object.keys(this.celebInvites || {}), partyReadyAt: this.partyReadyAt || 0 };
   }
 
   saveGame() {
@@ -169,7 +169,6 @@ export class SaveMixin {
 
     if (typeof data.cash === 'number') this.cash = data.cash;
     if (typeof data.clubName === 'string') this.clubName = cleanClubName(data.clubName);
-    if (Array.isArray(data.drinksOff)) this.drinksOff = data.drinksOff.filter((k) => typeof k === 'string');
     if (data.daily && typeof data.daily.last === 'string') this.daily = { last: data.daily.last, streak: Number(data.daily.streak) || 1 };
     if (typeof data.fans === 'number') this.fans = data.fans;
     if (Array.isArray(data.bought)) this.boughtTypes = new Set(data.bought.filter((k) => typeof k === 'string'));

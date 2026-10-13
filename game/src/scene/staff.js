@@ -6,7 +6,6 @@ import { BAR_LIMIT, BAR_QUEUE_LENGTH, BARTENDERS, BOOST, DRINK_FUN_MOOD, XP, CHA
 import { SFX } from '../sfx.js';
 import { randRange } from '../util.js';
 import { MOOD } from './mood.js';
-import { drinkIconSvg } from './drinks.js';
 
 // Money popping up over guests is always green (the owner asked for no red).
 const MONEY_GREEN = '#1fc94a';
@@ -300,7 +299,7 @@ export class StaffMixin {
   // A patron gets a drink from a staffed bar and pays for it.
   serveDrink(rec, patron) {
     const now = this.time.now;
-    // Their order from the drink menu (drinks.js; Bottoms Up! serves one
+    // Their order from the drinks unlocked (drinks.js; Bottoms Up! serves one
     // without asking), doubled while the drink meter is full.
     const drink = this.drinkOf(patron.order || this.pickDrink(patron).key);
     patron.order = null;
@@ -542,13 +541,12 @@ export class StaffMixin {
     return this.headshots[character];
   }
 
-  // The dock's Staff tab, in three titled groups: the Bar (drink menu and
-  // training; restocking is only the drink meter, the owner's call), the Bartenders (one card per bar: who works it,
+  // The dock's Staff tab, in three titled groups: the Bar (bartender
+  // training; restocking is only the drink meter and there's no drink menu, the owner's calls), the Bartenders (one card per bar: who works it,
   // or hire one) and the Bouncers (each one, and a card to hire another).
   // People show as headshots with their name. Details are in the hover tips.
   renderStaffCard() {
     const el = this.shopItemsEl;
-    const menuKey = this.drinkMenu().map((d) => d.key).join(',');
     const records = this.hireableRecords();
     const type = STAFF_TYPES.bartender;
     const allowed = this.bartenderAllowance();
@@ -558,7 +556,7 @@ export class StaffMixin {
     const bouncerCost = BOUNCERS.hireCost[bouncers] || 0;
     const bouncerAllowed = this.bouncerAllowance();
     // Only rebuild when something on the cards changed (this runs often).
-    const key = 'staff:' + menuKey + ':' + records.map((r) => `${r.anchor}:${!!r.staff}:${this.barGroup(r).length}`).join('|')
+    const key = 'staff:' + records.map((r) => `${r.anchor}:${!!r.staff}:${this.barGroup(r).length}`).join('|')
       + `:${this.cash >= type.hireCost}:${allowed}:${bouncers}:${bouncerAllowed}:${this.cash >= bouncerCost}:${this.drinkStockLeft()}:${this.barTraining || 0}:${this.cash >= this.restockCost()}:${this.levelInfo().level}`;
     if (el.dataset.rendered === key) return;
     el.innerHTML = '';
@@ -604,16 +602,9 @@ export class StaffMixin {
       slot.appendChild(fire);
     };
 
-    // --- The bar: menu and training (restocking is the drink meter's job: click it) ---
+    // --- The bar: training (restocking is the drink meter's job: click it) ---
     const bar = group('Bar');
     if (records.length) {
-      const menu = this.drinkMenu();
-      const card = this.makeCard('Drink Menu', `On the menu: ${menu.map((d) => d.name).join(', ')}. Click to choose what your bars serve. Fancier drinks pay more and make guests happier, but take longer to mix.`, null);
-      card.slot.classList.add('menuSlot');
-      card.icon.innerHTML = drinkIconSvg(menu.reduce((a, b) => (b.price > a.price ? b : a)));
-      card.cost.textContent = `Menu ×${menu.length}`;
-      card.slot.addEventListener('click', () => this.openDrinkMenu());
-      bar.appendChild(card.slot);
       const nextT = this.nextTraining();
       const stars = '★'.repeat(this.barTraining || 0) + '☆'.repeat(BAR_TRAINING.costs.length - (this.barTraining || 0));
       const train = this.makeCard(`Bartender training ${stars}`, nextT

@@ -2750,40 +2750,29 @@ const partial = await page.evaluate(() => {
 check('the suit guy, drawn in every clip now, dances and sits like the drawn guy', partial.found && partial.suitDance && partial.suitSit && partial.suitWalk
   && partial.weights[1] > 0 && partial.guyWeights[0] && partial.guyWeights[1], JSON.stringify(partial));
 
-// The drink menu: drinks unlock with level and go on the menu; a click
-// takes one off or puts it back (never the last one); guests order from the
-// menu (celebrities the priciest), pay its price and fancier drinks take
-// longer to mix; the level-up menu lists new drinks.
-const drinkMenu = await page.evaluate(() => {
+// Drinks: no menu to manage (the owner took it out). The bars serve every
+// unlocked drink; guests order one (celebrities the priciest), pay its price,
+// and fancier drinks take longer to mix. No menu card, pop-up or level-up line.
+const noMenu = await page.evaluate(() => {
   const s = window.__clubNova.scene.getScene('club');
-  const saved = { off: s.drinksOff, fans: s.fans };
-  s.drinksOff = [];
+  const saved = { fans: s.fans };
   s.fans = 0;
   const out = { level1: s.drinkMenu().map((d) => d.key).join() };
   s.fans = s.fansForLevel(16);
-  out.level8 = s.drinkMenu().map((d) => d.key).join();
-  s.openDrinkMenu();
-  out.cards = document.querySelectorAll('#drinkList .drinkCard').length;
-  out.locked = document.querySelectorAll('#drinkList .drinkCard.locked').length;
-  document.querySelector('#drinkList .drinkCard[data-drink="beer"]').click();
-  out.beerOff = !s.isOnMenu('beer') && !document.querySelector('#drinkList .drinkCard[data-drink="beer"]').classList.contains('on');
-  for (const k of ['cocktail', 'shots', 'mojito']) s.toggleDrink(k);
-  out.lastStays = s.toggleDrink('martini') === false && s.drinkMenu().map((d) => d.key).join() === 'martini';
-  out.order = s.pickDrink({}).key;
-  out.celebOrder = (s.drinksOff = [], s.pickDrink({ celeb: {} }).key);
-  document.getElementById('drinkMenuClose').click();
-  out.closed = !document.getElementById('drinkMenu').classList.contains('open');
+  out.level16 = s.drinkMenu().map((d) => d.key).join();
+  out.celebOrder = s.pickDrink({ celeb: {} }).key;
+  out.noPopup = !document.getElementById('drinkMenu');
+  out.noLevelUpLine = !s.unlocksAt(24).some((u) => u.name === 'Champagne');
   const bar = s.hireableRecords().find((r) => s.isWorked(r));
   const guest = s.patrons.find((p) => !p.leaving);
   if (bar && guest) { guest.order = 'champagne'; out.price = s.serveDrink(bar, guest); }
   out.slower = s.drinkOf('champagne').mix > s.drinkOf('beer').mix;
-  out.levelUpLists = s.unlocksAt(24).some((u) => u.name === 'Champagne' && /<svg/.test(u.svg));
-  s.drinksOff = saved.off; s.fans = saved.fans;
+  s.fans = saved.fans;
   return out;
 });
-check('the drink menu: drinks unlock and go on the menu, toggle off and on (never the last), guests order from it, fancier ones pay more and mix slower',
-  drinkMenu.level1 === 'beer' && drinkMenu.level8 === 'beer,cocktail,shots,mojito,martini' && drinkMenu.cards === 7 && drinkMenu.locked === 2 && drinkMenu.beerOff
-  && drinkMenu.lastStays && drinkMenu.order === 'martini' && drinkMenu.celebOrder === 'martini' && drinkMenu.closed && (drinkMenu.price === undefined || drinkMenu.price >= 40) && drinkMenu.slower && drinkMenu.levelUpLists, JSON.stringify(drinkMenu));
+check('drinks have no menu: the bars serve every unlocked drink, celebrities order the priciest, fancier ones pay more and mix slower',
+  noMenu.level1 === 'beer' && noMenu.level16 === 'beer,cocktail,shots,mojito,martini' && noMenu.celebOrder === 'martini' && noMenu.noPopup && noMenu.noLevelUpLine
+  && (noMenu.price === undefined || noMenu.price >= 40) && noMenu.slower, JSON.stringify(noMenu));
 
 // The daily gift: once a day; the streak moves on day by day (day 7 adds a
 // decoration), starts over after a missed day, and only pays once a day.
@@ -3060,7 +3049,7 @@ const upgrades = await page.evaluate(() => {
 });
 check('a better DJ booth entertains more; Song Dedication cheers a guest up, then recovers', upgrades.boothMatters && upgrades.dedicated && upgrades.cooldown, JSON.stringify(upgrades));
 check('Bar Tricks makes a bar\'s tips 1.5x for a while; training makes bartenders 20% faster (more at higher levels)', upgrades.tricks && upgrades.trained && upgrades.notYet, JSON.stringify(upgrades));
-check('drinks run out (nobody can order) and restocking from Staff fills the bars for $2 a drink; big spenders pay once to sit at a VIP booth', upgrades.cantOrderWhenOut && upgrades.restocked && upgrades.fee >= 20 && upgrades.feeOnce && upgrades.regularNoFee, JSON.stringify(upgrades));
+check('drinks run out (nobody can order) and restocking (the drink meter) fills the bars for $2 a drink; big spenders pay once to sit at a VIP booth', upgrades.cantOrderWhenOut && upgrades.restocked && upgrades.fee >= 20 && upgrades.feeOnce && upgrades.regularNoFee, JSON.stringify(upgrades));
 
 // Parties have their own look: guests dress up (masks at the Masquerade)
 // and the room gets effects (neon lights flying round at Neon Night); it
@@ -3321,11 +3310,11 @@ const noStockCard = await page.evaluate(() => {
   const s = window.__clubNova.scene.getScene('club');
   s.setDockTab('staff'); s.renderStaffCard();
   const n = document.querySelectorAll('#shopItems .stockSlot').length;
-  const menu = document.querySelectorAll('#shopItems .menuSlot').length;
+  const menu = [...document.querySelectorAll('#shopItems .menuSlot')].filter((e) => !e.classList.contains('trainSlot')).length;
   s.closeDock();
   return { n, menu };
 });
-check('the Staff panel has no restock card (restocking is the drink meter)', noStockCard.n === 0 && noStockCard.menu >= 1, JSON.stringify(noStockCard));
+check('the Staff panel has no restock card or drink menu card (restocking is the drink meter)', noStockCard.n === 0 && noStockCard.menu === 0, JSON.stringify(noStockCard));
 
 // Phones: on a touch screen a tap on a guest opens their card, a tap
 // collects a high five (a little off the badge still counts), two fingers
