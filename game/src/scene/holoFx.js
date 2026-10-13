@@ -198,17 +198,26 @@ export class HoloFxMixin {
       if (look === undefined || !this.textures.exists(`patron_${look}`)) return null;
       cone(holo.height * 1.05, 0.9);
       const meta = patronMetaOf(look);
-      const fig = add(this.add.sprite(lens.x, lens.y - holo.lift * unit, `patron_${look}`)
-        .setOrigin(meta.originX, meta.originY).setScale((holo.height * unit) / meta.standingHeight)
-        .setTint(holo.color).setAlpha(0.75));
-      const anim = `patron_${look}_dance_front`;
-      if (this.anims.exists(anim)) fig.play(anim);
-      flicker(fig, 0.4, 0.75);
+      // Two copies: a solid glowing silhouette, and the drawing faintly
+      // over it, so he reads as light rather than a person.
+      const figure = (fill, alpha) => {
+        const f = add(this.add.sprite(lens.x, lens.y - holo.lift * unit, `patron_${look}`)
+          .setOrigin(meta.originX, meta.originY).setScale((holo.height * unit) / meta.standingHeight).setAlpha(alpha));
+        if (fill) f.setTintFill(holo.color); else f.setTint(holo.color);
+        const anim = `patron_${look}_dance_front`;
+        if (this.anims.exists(anim)) f.play(anim);
+        return f;
+      };
+      const glowFig = figure(true, 0.45);
+      const fig = figure(false, 0.55);
+      flicker(glowFig, 0.25, 0.45);
+      flicker(fig, 0.35, 0.55);
       // Now and then the picture glitches sideways for a moment.
       tweens.push(this.time.addEvent({ delay: 2600, loop: true, callback: () => {
-        fig.x = lens.x + (Math.random() < 0.5 ? -3 : 3);
-        this.time.delayedCall(70, () => { if (fig.active) fig.x = lens.x; });
-        if (Math.random() < 0.3) fig.setFlipX(!fig.flipX);
+        const dx = Math.random() < 0.5 ? -3 : 3;
+        [glowFig, fig].forEach((f) => { f.x = lens.x + dx; });
+        this.time.delayedCall(70, () => [glowFig, fig].forEach((f) => { if (f.active) f.x = lens.x; }));
+        if (Math.random() < 0.3) [glowFig, fig].forEach((f) => f.setFlipX(!f.flipX));
       } }));
     } else if (holo.kind === 'globe' || holo.kind === 'rings') {
       cone(holo.above + holo.r, holo.r * 2.2);
@@ -226,7 +235,7 @@ export class HoloFxMixin {
       const sx = (holo.size * unit) / 120;
       logo.setScale(sx);
       const turn = { t: 0 };
-      tweens.push(this.tweens.add({ targets: turn, t: Math.PI * 2, duration: 4200, repeat: -1, onUpdate: () => logo.setScale(sx * Math.cos(turn.t), sx) }));
+      tweens.push(this.tweens.add({ targets: turn, t: Math.PI * 2, duration: 4200, repeat: -1, onUpdate: () => logo.setScale(sx * Math.max(0.04, Math.abs(Math.cos(turn.t))), sx) })); // edge on, then round again, always reading the right way
       tweens.push(this.tweens.add({ targets: logo, y: y - 3, duration: 1500, yoyo: true, repeat: -1, ease: 'Sine.easeInOut' }));
       flicker(logo, 0.55, 0.9);
     } else if (holo.kind === 'orb') {

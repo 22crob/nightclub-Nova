@@ -85,10 +85,10 @@ export const TRUSS_BEAMS = {
 // its model's own units (art/blender/decor_batch4.py), the colour, and how
 // big and how high above the lens the hologram floats.
 export const HOLO = {
-  dancer: { kind: 'dancer', at: [0, 0, 0.15], color: 0x5ee8ff, height: 1.35, lift: 0.02, look: 'guy01' },
+  dancer: { kind: 'dancer', at: [0, 0, 0.15], color: 0x7af0ff, height: 1.9, lift: 0.02, look: 'guy01' },
   globe: { kind: 'globe', at: [0, 0, 0.95], color: 0x5ee8ff, r: 0.36, above: 0.12 },
   rings: { kind: 'rings', at: [0, 0, 0.37], color: 0xc28aff, r: 0.4, above: 0.25 },
-  logo: { kind: 'logo', at: [0, 0, 0.33], color: 0xff6ad8, size: 0.62, above: 0.3 },
+  logo: { kind: 'logo', at: [0, 0, 0.33], color: 0xff6ad8, size: 0.95, above: 0.35 },
   orb: { kind: 'orb', at: [0, 0, 0.98], color: 0xd49aff, r: 0.32, arcs: 4 },
   lasers: { kind: 'lasers', from: [-0.83, 0], to: [0.83, 0], heights: [0.45, 0.8, 1.15, 1.5], colors: [0xff2a4a, 0xff3ad8, 0x3ae0ff, 0x7a3aff] },
 };
