@@ -321,9 +321,9 @@ export const EVERYONE_LOOK = 'guy01';
 // EVERYONE_LOOK. A look missing a move (its sheet's `missing`, e.g. not
 // drawn dancing yet) never does it (canDoClip() in patrons.js).
 export const GUEST_CUTOUTS = ['guy01', 'suit01', 'grey01', 'emo01', 'girl01'];
-// The girl looks (girls' names, guests.js). girl01 (October 2026) joins the
-// crowd once her back walk is drawn (randomGuestLook() skips a look that
-// borrows it) and only sits once her sit is drawn (canDoClip()).
+// The girl looks (girls' names, guests.js). girl01 (October 2026) is drawn in
+// every clip; a new look missing its back walk would wait (randomGuestLook()
+// skips a look that borrows it) and one not drawn sitting won't sit (canDoClip()).
 export const GIRL_LOOKS = ['girl01'];
 export const CHARACTER_DISPLAY_HEIGHT = 87.4; // px: big next to the furniture, like Nightclub City
 // How far above a patron's feet their tip / drink popups start.

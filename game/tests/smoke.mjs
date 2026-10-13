@@ -2717,8 +2717,8 @@ const keepsLook = await page.evaluate(() => {
 });
 check('a guest from the line keeps their look inside the club; staff still wear the main look', keepsLook.suit !== undefined && keepsLook.got === keepsLook.suit && keepsLook.staffLook, JSON.stringify(keepsLook));
 
-// The first girl look (girl01) waits until her back walk is drawn, and girl
-// looks get girls' names.
+// The first girl look (girl01) is drawn in every clip now, so she joins the
+// crowd and sits, and girl looks get girls' names.
 const girl = await page.evaluate(() => {
   const s = window.__clubNova.scene.getScene('club');
   const g = s.cutoutLook('girl01');
@@ -2728,9 +2728,10 @@ const girl = await page.evaluate(() => {
   for (let k = 0; k < 40; k++) if (s.randomGuestLook() === g) picked = true;
   s.guestLooks = keep;
   const girlsNames = ['Maya', 'Zoe', 'Aaliyah', 'Nia', 'Luna', 'Jade', 'Imani', 'Sofia', 'Kiara', 'Bella', 'Aria', 'Tia', 'Nova', 'Layla', 'Ruby', 'Skye', 'Dani', 'Mila', 'Zara', 'Camila'];
-  return { found: g !== undefined, waits: !picked, name: girlsNames.includes(s.guestName(g).split(' ')[0]) };
+  const sits = s.canDoClip({ container: { patronCharacter: g } }, 'sit');
+  return { found: g !== undefined, picked, sits, name: girlsNames.includes(s.guestName(g).split(' ')[0]) };
 });
-check('the girl look is built, waits for her back walk before joining the crowd, and gets girls\' names', girl.found && girl.waits && girl.name, JSON.stringify(girl));
+check('the girl look is built, joins the crowd, sits, and gets girls\' names', girl.found && girl.picked && girl.sits && girl.name, JSON.stringify(girl));
 
 // The suit guy is drawn in every clip now (October 2026), so he dances and
 // sits like the drawn guy. (A look with a clip not drawn lists it under

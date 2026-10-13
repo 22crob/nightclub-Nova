@@ -25,12 +25,6 @@
     "idle": 2,
     "walk": 4,
     "dance": 5,
-    "sit": 2
-  },
-  "missing": [
-    "sit"
-  ],
-  "borrowed": [
-    "walk_back"
-  ]
+    "sit": 1
+  }
 }
