@@ -1355,3 +1355,21 @@ body.kick #navBar .navPad > .uiArt { transform: none; }
   #dock #storeOk { flex: 0 0 48px; width: 48px; }
   #actionButtons { bottom: calc(80px + env(safe-area-inset-bottom, 0px)); }
 }
+
+/* Less silver (the owner found the chrome went too far, October 2026):
+   chrome stays only where the references had it (Bass Boost / Drink Rush /
+   Party and the stat tiles' frames). The bottom tabs, the OK and the small
+   square buttons under the XP bar are dark gunmetal with the thin teal rim;
+   their silver pictures and light names stand out on the dark. */
+#navBar .navPad, #dock[data-mode="closed"] #navBar .navPad, #dock:not([data-mode="closed"]) #navBar .navPad, #dock #storeOk,
+#hudProfile .toolButton, #hudProfile .songButton {
+  background: linear-gradient(180deg, #3a3c43 0%, #26272c 50%, #1b1c20 100%);
+  box-shadow: 0 0 0 1.5px rgba(82, 214, 230, 0.75), inset 0 1px 0 rgba(255, 255, 255, 0.12), 0 3px 5px rgba(0, 0, 0, 0.55);
+}
+#navBar .navPad > .uiArt { filter: none; }
+#navBar .navPad .navLabel, #navBar .navPad:not(.active) .navLabel { color: #d9dde3; text-shadow: 0 1px 0 #000; }
+#navBar .navPad:hover, #hudProfile .toolButton:hover, #hudProfile .songButton:hover { background: linear-gradient(180deg, #4a4c54 0%, #303137 50%, #222327 100%); filter: none; }
+#navBar .navPad.active { background: linear-gradient(180deg, #2f4f58 0%, #1e3036 55%, #142226 100%); box-shadow: 0 0 0 2px #7af2ff, 0 0 14px rgba(82, 214, 230, 0.8), inset 0 1px 0 rgba(255, 255, 255, 0.15), 0 3px 5px rgba(0, 0, 0, 0.55); filter: none; }
+#dock #storeOk { box-shadow: 0 0 0 2px #6dff6a, 0 0 10px rgba(109, 255, 106, 0.6), inset 0 1px 0 rgba(255, 255, 255, 0.12), 0 3px 5px rgba(0, 0, 0, 0.55); }
+#dock #storeOk > .uiGlyph, #hudProfile .toolButton > .uiGlyph, #hudProfile .songButton > .uiGlyph { filter: drop-shadow(0 1px 0 #000); }
+#hudProfile #songLike.liked { box-shadow: 0 0 0 1.5px #6dff6a, 0 0 8px rgba(109, 255, 106, 0.7), 0 3px 5px rgba(0, 0, 0, 0.55); }
