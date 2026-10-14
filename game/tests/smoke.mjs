@@ -2745,10 +2745,10 @@ const girl = await page.evaluate(() => {
   const sits = s.canDoClip({ container: { patronCharacter: g } }, 'sit');
   // girl02, the red-haired girl in the leather jacket (October 2026).
   const g2 = s.cutoutLook('girl02');
-  const g2ok = g2 !== undefined && s.canDoClip({ container: { patronCharacter: g2 } }, 'sit') && girlsNames.includes(s.guestName(g2).split(' ')[0]);
+  const g2ok = g2 !== undefined && s.canDoClip({ container: { patronCharacter: g2 } }, 'sit') && s.canDoClip({ container: { patronCharacter: g2 } }, 'dance') && girlsNames.includes(s.guestName(g2).split(' ')[0]);
   return { found: g !== undefined, picked, sits, name: girlsNames.includes(s.guestName(g).split(' ')[0]), g2ok };
 });
-check('the girl looks are built, join the crowd, sit, and get girls\' names', girl.found && girl.picked && girl.sits && girl.name && girl.g2ok, JSON.stringify(girl));
+check('the girl looks are built, join the crowd, sit, dance, and get girls\' names', girl.found && girl.picked && girl.sits && girl.name && girl.g2ok, JSON.stringify(girl));
 
 // The suit guy is drawn in every clip now (October 2026), so he dances and
 // sits like the drawn guy. (A look with a clip not drawn lists it under
