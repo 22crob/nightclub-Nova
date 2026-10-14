@@ -192,15 +192,16 @@ export const FACINGS = [0, 90, 180, 270];
 // this.
 // ---------------------------------------------------------------------
 // How many guests fit (see patronCapacity() in popularity.js): `base`, plus
-// perRootPopularity x the square root of the club's popularity (8 at 0, 13 at
-// 25, 18 at 100, 28 at 400), but never more than one per tilesPerGuest floor
-// tiles (20 in the first 10x10 room), so a bigger room still matters later,
-// and never more than `max` (a crowd that size is plenty, and phones cope).
-// Balance-checked with a simulated club (October 2026).
+// perLevel for every level past 1 (the owner found a level 10 club with only
+// 11 guests far too few, October 2026: the limit grew with popularity alone,
+// which climbs slowly), plus perRootPopularity x the square root of the
+// club's popularity, but never more than one per tilesPerGuest floor tiles
+// (20 in the first 10x10 room), so a bigger room still matters, and never
+// more than `max`. About 12 at level 5, 20 at level 10, 32 by about level 22.
 // The owner wants to see the club, not just a crowd: at most `max` guests
 // normally, and a running party lets in `partyBonus` more, never past
 // `partyMax` (40) (October 2026; it was 80, and a long-played club had 57).
-export const CAPACITY = { base: 8, perRootPopularity: 0.8, tilesPerGuest: 6, max: 32, partyBonus: 8, partyMax: 40 };
+export const CAPACITY = { base: 8, perLevel: 1, perRootPopularity: 0.8, tilesPerGuest: 5, max: 32, partyBonus: 8, partyMax: 40 };
 // Popularity (see popularity.js): the club's reputation. Each guest's visit
 // moves it: leaving happy (mood 70+) +happy, content (40+) +content, unhappy
 // +unhappy, storming out +stormOut. It sets how many guests fit

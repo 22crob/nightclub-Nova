@@ -21,12 +21,6 @@ export class HudMixin {
     if (this.luxuryText) this.luxuryText.textContent = this.luxury();
     const pop = document.getElementById('popularityVal');
     if (pop) pop.textContent = formatMoney(this.popularity || 0).replace('$', '');
-    const rating = this.clubRating();
-    const ratingEl = document.getElementById('ratingVal');
-    if (ratingEl) ratingEl.textContent = rating == null ? '–' : String(rating);
-    // Guests inside out of how many fit (see patronCapacity()).
-    if (this.placedText) this.placedText.textContent = `${this.guestCount()}/${this.patronCapacity()}`;
-
     const { level, into, need, progress } = this.levelInfo();
     if (this.levelText) this.levelText.textContent = level;
     if (this.xpBarFill) this.xpBarFill.style.width = `${(progress * 100).toFixed(1)}%`;
@@ -36,7 +30,13 @@ export class HudMixin {
     // for a level actually crossed during THIS play session — never once
     // on load, and never for time that passed while the game was closed.
     if (level > this.currentLevel) this.onLevelUp(level);
-    this.currentLevel = level;
+    this.currentLevel = level; // first: the guest limit and rating below go by it
+
+    const rating = this.clubRating();
+    const ratingEl = document.getElementById('ratingVal');
+    if (ratingEl) ratingEl.textContent = rating == null ? '–' : String(rating);
+    // Guests inside out of how many fit (see patronCapacity()).
+    if (this.placedText) this.placedText.textContent = `${this.guestCount()}/${this.patronCapacity()}`;
 
     this.updateShopUI();
   }

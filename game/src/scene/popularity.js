@@ -1,7 +1,7 @@
 // ClubScene methods: Popularity, the club's reputation (settings POPULARITY
 // in config.js, saved as `popularity`). Every visit moves it, by how the
 // guest felt leaving (noteVisitPopularity(), called from patronLeaves()).
-// It sets how many guests fit (patronCapacity(), CAPACITY) and how fast new
+// It sets, with the club's level, how many guests fit (patronCapacity(), CAPACITY) and how fast new
 // ones arrive (popularityArrivalFactor(), used in spawnDelayFactor()).
 // Mixed into ClubScene (see ClubScene.js); `this` is the scene.
 import { CAPACITY, POPULARITY } from '../config.js';
@@ -23,9 +23,11 @@ export class PopularityMixin {
     this.popularity = Math.max(0, Math.round((this.popularity || 0) + delta));
   }
 
-  // How many guests fit: grows with popularity, but the room has to hold them.
+  // How many guests fit: grows with level and popularity, but the room has
+  // to hold them.
   patronCapacity() {
-    const byFame = CAPACITY.base + Math.floor(CAPACITY.perRootPopularity * Math.sqrt(this.popularity || 0));
+    const level = this.currentLevel || 1;
+    const byFame = CAPACITY.base + CAPACITY.perLevel * (level - 1) + Math.floor(CAPACITY.perRootPopularity * Math.sqrt(this.popularity || 0));
     const byRoom = Math.max(CAPACITY.base, Math.floor((this.gridW * this.gridH) / CAPACITY.tilesPerGuest));
     const normal = Math.min(byFame, byRoom, CAPACITY.max);
     // A party squeezes a few more in, up to the hard limit.

@@ -911,10 +911,15 @@ check('in Edit, clicking anywhere on the booth picks the whole booth up', select
 // storming out lowers it. Shown as "n/max" over a Guests label.
 const capacity = await page.evaluate(() => {
   const s = window.__clubNova.scene.getScene('club');
-  const [w, h, pop] = [s.gridW, s.gridH, s.popularity];
+  const [w, h, pop, lvl] = [s.gridW, s.gridH, s.popularity, s.currentLevel];
   const out = {};
-  s.gridW = 10; s.gridH = 10; s.popularity = 0;
+  s.gridW = 10; s.gridH = 10; s.popularity = 0; s.currentLevel = 1;
   out.base = s.patronCapacity();
+  // Each level adds a place: a level 10 club with a little popularity
+  // holds about 20 (the owner found 11 far too few).
+  s.currentLevel = 10; s.gridW = 13; s.gridH = 13; s.popularity = 16;
+  out.level10 = s.patronCapacity();
+  s.currentLevel = 1; s.gridW = 10; s.gridH = 10; s.popularity = 0;
   s.gridW = 12;
   out.expandedOnly = s.patronCapacity();
   s.gridW = 10; s.popularity = 49;
@@ -935,7 +940,7 @@ const capacity = await page.evaluate(() => {
   s.noteVisitPopularity({ mood: 10, stormedOut: true });
   out.stormDown = s.popularity - 50 - out.happyUp;
   out.faster = s.popularityArrivalFactor() > 1;
-  [s.gridW, s.gridH, s.popularity] = [w, h, pop];
+  [s.gridW, s.gridH, s.popularity, s.currentLevel] = [w, h, pop, lvl];
   s.updateUI();
   out.text = document.getElementById('placedVal').textContent;
   out.matches = out.text === `${s.patrons.filter((p) => !p.gone).length}/${s.patronCapacity()}`;
@@ -949,7 +954,7 @@ const capacity = await page.evaluate(() => {
   s.patronCapacity = cap;
   return out;
 });
-check('8 guests fit a new club; more as popularity grows (expanding alone adds none), up to what the room holds, 32 at most (40 at a party); happy visits raise popularity and storm-outs lower it', capacity.base === 8 && capacity.expandedOnly === 8 && capacity.popular === 13 && capacity.roomLimit === 16 && capacity.max === 32 && capacity.partyMax === 40 && capacity.happyUp === 3 && capacity.stormDown === -5 && capacity.faster && capacity.matches && capacity.popShown && capacity.fullBlocks, JSON.stringify(capacity));
+check('8 guests fit a new club; more with each level and as popularity grows (about 20 at level 10; expanding alone adds none), up to what the room holds, 32 at most (40 at a party); happy visits raise popularity and storm-outs lower it', capacity.base === 8 && capacity.expandedOnly === 8 && capacity.level10 === 20 && capacity.popular === 13 && capacity.roomLimit === 20 && capacity.max === 32 && capacity.partyMax === 40 && capacity.happyUp === 3 && capacity.stormDown === -5 && capacity.faster && capacity.matches && capacity.popShown && capacity.fullBlocks, JSON.stringify(capacity));
 
 // A club can only grow a row per wall every couple of levels.
 const growth = await page.evaluate(() => {

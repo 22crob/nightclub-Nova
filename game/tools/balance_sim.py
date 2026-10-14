@@ -5,7 +5,7 @@
 # Run: python3 game/tools/balance_sim.py [name=value ...] to try other numbers.
 import math, sys
 # --- tunables under test ---
-P = dict(danceTipMin=5.25, bonusMin=117, capMax=32, stockPerGuest=0, happy=3, content=1, unhappy=-1, storm=-5, capBase=8, capRoot=1.2, tilesPerGuest=4,
+P = dict(danceTipMin=5.25, bonusMin=117, capMax=32, stockPerGuest=0, happy=3, content=1, unhappy=-1, storm=-5, capBase=8, capPerLevel=1, capRoot=0.8, tilesPerGuest=5,
          stockBase=40, stockPerUnit=20, costPerDrink=2,
          lvFirst=185, lvStep=162, lvCurve=5.4, passiveShare=0.05, hours=150, top=61,
          drinkRate=0.33, perLevel=0.5, itemsPerLevel=2.5, expTile=40, expGrowth=30, drinkXp=3)
@@ -19,7 +19,7 @@ stock=60; restocks=0; price=8; drinksTotal=0
 log=[]; t=0; lastLevelT={1:0}
 while t < 60*P['hours'] and level<P['top']:
     t+=1
-    cap=min(P['capMax'], P['capBase']+int(P['capRoot']*math.sqrt(pop)), max(P['capBase'], W*H//P['tilesPerGuest']))
+    cap=min(P['capMax'], P['capBase']+P['capPerLevel']*(level-1)+int(P['capRoot']*math.sqrt(pop)), max(P['capBase'], W*H//P['tilesPerGuest']))
     guests=cap*0.9
     visit=7.0
     leavers=guests/visit
