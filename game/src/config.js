@@ -32,7 +32,7 @@ export const STARTING_CASH = 700;
 // Room shell, modelled on the reference game's rooms: thick light-grey
 // concrete walls with pale top caps, a raised floor slab with dark front
 // edges, and a tiled sidewalk outside. Walls are about 1.3x a patron.
-export const WALL_HEIGHT = 104; // px: about 1.3 guests tall, like Nightclub City (was 128, which felt too tall)
+export const WALL_HEIGHT = 118; // px: about 1.7 guests tall, like Nightclub City (October 2026: 104 with bigger guests; 128 felt too tall then)
 // Wall decorations (scene/wallDecor.js): drawn this much bigger than their
 // render (the owner found them small), but never taller than the wall less
 // `margin` px; hung at one of three heights the player picks (`levels`).
@@ -322,7 +322,7 @@ export const GUEST_CUTOUTS = ['suit01', 'grey01', 'emo01', 'girl01', 'girl02', '
 // every clip; a new look missing its back walk would wait (randomGuestLook()
 // skips a look that borrows it) and one not drawn sitting won't sit (canDoClip()).
 export const GIRL_LOOKS = ['girl01', 'girl02', 'girl03', 'girl04'];
-export const CHARACTER_DISPLAY_HEIGHT = 87.4; // px: big next to the furniture, like Nightclub City
+export const CHARACTER_DISPLAY_HEIGHT = 77; // px: was 87.4; the owner found a busy club hard to see, October 2026
 // How far above a patron's feet their tip / drink popups start.
 export const PATRON_POPUP_Y = CHARACTER_DISPLAY_HEIGHT * 0.8;
 
