@@ -2749,9 +2749,9 @@ const girl = await page.evaluate(() => {
     const c = s.cutoutLook(n);
     return c !== undefined && s.canDoClip({ container: { patronCharacter: c } }, 'sit') && s.canDoClip({ container: { patronCharacter: c } }, 'dance') && girlsNames.includes(s.guestName(c).split(' ')[0]);
   });
-  // girl04, long dark hair and a white blazer: in the crowd, sits.
+  // girl04, long dark hair and a white blazer: in the crowd, sits and dances.
   const g4 = s.cutoutLook('girl04');
-  const g4ok = g4 !== undefined && s.canDoClip({ container: { patronCharacter: g4 } }, 'sit') && girlsNames.includes(s.guestName(g4).split(' ')[0]);
+  const g4ok = g4 !== undefined && s.canDoClip({ container: { patronCharacter: g4 } }, 'sit') && s.canDoClip({ container: { patronCharacter: g4 } }, 'dance') && girlsNames.includes(s.guestName(g4).split(' ')[0]);
   return { g4ok, found: g !== undefined, picked, sits, name: girlsNames.includes(s.guestName(g).split(' ')[0]), g2ok };
 });
 check('the girl looks are built, join the crowd, sit, dance, and get girls\' names', girl.found && girl.picked && girl.sits && girl.name && girl.g2ok && girl.g4ok, JSON.stringify(girl));

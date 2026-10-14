@@ -18,19 +18,13 @@
   "frames": {
     "idle": 1,
     "walk": 4,
-    "dance": 1,
+    "dance": 4,
     "sit": 1
   },
   "fps": {
     "idle": 2,
     "walk": 4,
-    "dance": 2,
+    "dance": 3,
     "sit": 1
-  },
-  "missing": [
-    "dance"
-  ],
-  "borrowed": [
-    "sit_back"
-  ]
+  }
 }
