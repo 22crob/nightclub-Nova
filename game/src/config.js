@@ -85,7 +85,7 @@ export const TRUSS_BEAMS = {
 // its model's own units (art/blender/decor_batch4.py), the colour, and how
 // big and how high above the lens the hologram floats.
 export const HOLO = {
-  dancer: { kind: 'dancer', at: [0, 0, 0.15], color: 0x7af0ff, height: 1.9, lift: 0.02, look: 'guy01' },
+  dancer: { kind: 'dancer', at: [0, 0, 0.15], color: 0x7af0ff, height: 1.9, lift: 0.02, look: 'suit01' },
   globe: { kind: 'globe', at: [0, 0, 0.95], color: 0x5ee8ff, r: 0.36, above: 0.12 },
   rings: { kind: 'rings', at: [0, 0, 0.37], color: 0xc28aff, r: 0.4, above: 0.25 },
   logo: { kind: 'logo', at: [0, 0, 0.33], color: 0xff6ad8, size: 0.95, above: 0.35 },
@@ -312,12 +312,12 @@ export const PATRON_Y_OFFSET = 6 * PROP_SCALE;
 // bouncers, celebrities) wears this cut-out look while it's set: the
 // owner's call, October 2026 ("replace all characters with him for now").
 // null brings back each one's own look.
-export const EVERYONE_LOOK = 'guy01';
+export const EVERYONE_LOOK = 'suit01';
 // While EVERYONE_LOOK is set, guests (and the line and street crowd) are a
 // random one of these hand-drawn looks; staff and celebrities wear
 // EVERYONE_LOOK. A look missing a move (its sheet's `missing`, e.g. not
 // drawn dancing yet) never does it (canDoClip() in patrons.js).
-export const GUEST_CUTOUTS = ['guy01', 'suit01', 'grey01', 'emo01', 'girl01', 'girl02', 'girl03', 'girl04'];
+export const GUEST_CUTOUTS = ['suit01', 'grey01', 'emo01', 'girl01', 'girl02', 'girl03', 'girl04'];
 // The girl looks (girls' names, guests.js). girl01 (October 2026) is drawn in
 // every clip; a new look missing its back walk would wait (randomGuestLook()
 // skips a look that borrows it) and one not drawn sitting won't sit (canDoClip()).

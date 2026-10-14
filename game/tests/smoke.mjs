@@ -69,7 +69,7 @@ const waitForScene = async () => {
     s.tickHints = () => {};
     // Guests are the fully drawn look, so every check can make them dance
     // and sit (a look missing a move is checked on its own below).
-    s.guestLooks = ['guy01'];
+    s.guestLooks = ['suit01'];
   });
 };
 
@@ -388,7 +388,7 @@ const looks = await page.evaluate(() => {
 });
 check('patrons use chibi characters and play an animation', looks.length > 0 && looks.every((l) => /^patron_\d+$/.test(l.tex) && /^patron_\d+_(idle|walk|dance|drink|sit|sittalk)_(front|back)$/.test(l.anim)), JSON.stringify(looks[0]));
 const guestLooks = await page.evaluate(() => [...new Set(window.__clubNova.scene.getScene('club').patrons.filter((p) => !p.celeb).map((p) => p.container.patronCharacter))]);
-check('every ordinary guest is one of the hand-drawn guest looks (guy01, suit01, grey01, emo01, girl01, girl02, girl03, girl04)', guestLooks.length >= 1 && guestLooks.length <= 8 && guestLooks.every((c) => c >= 0 && c < 8), JSON.stringify(guestLooks));
+check('every ordinary guest is one of the hand-drawn guest looks (suit01, grey01, emo01, girl01, girl02, girl03, girl04)', guestLooks.length >= 1 && guestLooks.length <= 7 && guestLooks.every((c) => c >= 0 && c < 7), JSON.stringify(guestLooks));
 
 // Facing: moving down-screen shows the front, up-screen the back, and the
 // sprite is mirrored for the right-hand diagonals.
@@ -2606,7 +2606,7 @@ check('a guest with a drink sits down with it when a seat is free, and never dri
 // or sit instead (CLIP_FALLBACK in patrons.js).
 const fallback = await page.evaluate(() => {
   const s = window.__clubNova.scene.getScene('club');
-  const c = s.cutoutLook('guy01');
+  const c = s.cutoutLook('suit01');
   return { drink: s.patronAnimKey({ patronCharacter: c, patronDir: 'front' }, 'drink') === `patron_${c}_idle_front`,
     talk: s.patronAnimKey({ patronCharacter: c, patronDir: 'back' }, 'sittalk') === `patron_${c}_sit_back` };
 });
@@ -2694,13 +2694,13 @@ const sheets = await page.evaluate(() => {
   const s = window.__clubNova.scene.getScene('club');
   return s.textures.getTextureKeys().filter((k) => /^patron_\d+$/.test(k)).length;
 });
-check('only the hand-drawn guest looks are loaded (old guest sheets gone)', sheets === 8, String(sheets));
+check('only the hand-drawn guest looks are loaded (old guest sheets gone)', sheets === 7, String(sheets));
 
 // The cut-out puppet guy (art/characters/cutout) is a guest too, with every
 // clip in both views, standing about as tall as the other guests.
 const cut = await page.evaluate(() => {
   const s = window.__clubNova.scene.getScene('club');
-  const i = s.cutoutLook('guy01');
+  const i = s.cutoutLook('suit01');
   if (i === undefined) return { found: false };
   const clips = ['idle', 'walk', 'dance', 'sit'].flatMap((c) => ['front', 'back'].map((d) => `patron_${i}_${c}_${d}`));
   const c = s.drawPatronCharacterSprite(0, 0, 1, i);
@@ -2711,8 +2711,8 @@ const cut = await page.evaluate(() => {
 });
 check('the cut-out puppet guy is a guest with idle, walk, dance and sit, front and back', cut.anims && cut.height > 0, JSON.stringify(cut));
 
-// For now every character wears the owner's hand-drawn guy (EVERYONE_LOOK):
-// guests, staff and bouncers alike.
+// Staff, bouncers and celebrities wear one look for now (EVERYONE_LOOK, the
+// white-suit guy since the first drawn guy was retired, October 2026).
 const everyone = await page.evaluate(() => {
   const s = window.__clubNova.scene.getScene('club');
   const look = s.everyoneLook();
@@ -2721,13 +2721,13 @@ const everyone = await page.evaluate(() => {
   const guards = (s.guards || []).map((g) => g.container && (g.container.patronCharacter ?? g.container.staffCharacter));
   return { look, guests: guests.every((c) => c === look), staff: staff.length > 0 && staff.every((c) => c === look), guards: guards.every((c) => c === undefined || c === look) };
 });
-check('every character wears the hand-drawn guy for now (guests, staff, bouncers)', everyone.look !== undefined && everyone.guests && everyone.staff && everyone.guards, JSON.stringify(everyone));
+check('staff and bouncers wear the white-suit guy for now (the first drawn guy is retired)', everyone.look !== undefined && everyone.guests && everyone.staff && everyone.guards, JSON.stringify(everyone));
 
 // Someone in the line walks in as the same guy (the owner saw guests
 // switch looks at the door).
 const keepsLook = await page.evaluate(() => {
   const s = window.__clubNova.scene.getScene('club');
-  const suit = s.cutoutLook('suit01');
+  const suit = s.cutoutLook('grey01'); // a guest look other than the staff's
   const guest = s.drawPatronSprite(0, 0, 1, suit); // what trySpawnPatron() draws for them
   const staff = s.drawPatronCharacterSprite(0, 0, 1, 99);
   const out = { suit, got: guest.patronCharacter, staffLook: staff.patronCharacter === s.everyoneLook() };
@@ -2742,7 +2742,7 @@ const girl = await page.evaluate(() => {
   const s = window.__clubNova.scene.getScene('club');
   const g = s.cutoutLook('girl01');
   const keep = s.guestLooks;
-  s.guestLooks = ['guy01', 'girl01'];
+  s.guestLooks = ['suit01', 'girl01'];
   let picked = false;
   for (let k = 0; k < 40; k++) if (s.randomGuestLook() === g) picked = true;
   s.guestLooks = keep;
@@ -2767,7 +2767,7 @@ check('the girl looks are built, join the crowd, sit, dance, and get girls\' nam
 const partial = await page.evaluate(() => {
   const s = window.__clubNova.scene.getScene('club');
   const suit = s.cutoutLook('suit01');
-  const guy = s.cutoutLook('guy01');
+  const guy = s.cutoutLook('grey01');
   if (suit === undefined) return { found: false };
   const fake = (c) => ({ container: { patronCharacter: c }, type: { weights: { drink: 1, dance: 1, sit: 1, chat: 1, wander: 1, admire: 0 } } });
   const w = s.activityWeights(fake(suit));
