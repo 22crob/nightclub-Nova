@@ -2761,6 +2761,33 @@ const girl = await page.evaluate(() => {
 });
 check('the girl looks are built, join the crowd, sit, dance, and get girls\' names', girl.found && girl.picked && girl.sits && girl.name && girl.g2ok && girl.g4ok, JSON.stringify(girl));
 
+// Standing and walking drawings of a guest have heads about the same size
+// (the owner saw guests grow when they set off walking, October 2026):
+// the widest row across the top fifth of the figure, standing over walking.
+const heads = await page.evaluate(() => {
+  const s = window.__clubNova.scene.getScene('club');
+  const width = (key, frame) => {
+    const f = s.textures.getFrame(key, frame);
+    const c = document.createElement('canvas'); c.width = f.cutWidth; c.height = f.cutHeight;
+    const g = c.getContext('2d'); g.drawImage(f.source.image, f.cutX, f.cutY, f.cutWidth, f.cutHeight, 0, 0, f.cutWidth, f.cutHeight);
+    const d = g.getImageData(0, 0, c.width, c.height).data;
+    const rows = [];
+    for (let y = 0; y < c.height; y++) { let a = -1, b = -1; for (let x = 0; x < c.width; x++) if (d[(y * c.width + x) * 4 + 3] > 40) { if (a < 0) a = x; b = x; } rows.push(a < 0 ? null : [a, b]); }
+    const top = rows.findIndex(Boolean), bottom = rows.length - 1 - [...rows].reverse().findIndex(Boolean);
+    let w = 0; for (let y = top; y <= top + Math.max(1, Math.floor((bottom - top) * 0.2)); y++) if (rows[y]) w = Math.max(w, rows[y][1] - rows[y][0] + 1);
+    return w;
+  };
+  const out = {};
+  for (const n of ['suit01', 'grey01', 'emo01', 'girl01', 'girl02', 'girl03', 'girl04']) {
+    const c = s.cutoutLook(n), key = `patron_${c}`;
+    const first = (clip, v) => s.anims.get(`${key}_${clip}_${v}`)?.frames[0]?.frame.name;
+    if (c === undefined || first('idle', 'front') === undefined) { out[n] = null; continue; }
+    out[n] = ['front', 'back'].map((v) => +(width(key, first('idle', v)) / width(key, first('walk', v))).toFixed(2));
+  }
+  return out;
+});
+check('standing and walking drawings of each guest have heads the same size, within 7%', Object.values(heads).every((r) => r && r.every((x) => x >= 0.93 && x <= 1.07)), JSON.stringify(heads));
+
 // The suit guy is drawn in every clip now (October 2026), so he dances and
 // sits like the drawn guy. (A look with a clip not drawn lists it under
 // `missing` in its JSON and canDoClip() keeps it from that.)

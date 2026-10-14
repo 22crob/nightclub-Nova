@@ -408,10 +408,14 @@ def build(name, preview=None):
         drawn = {}
         for v in ('front', 'back'):
             figs = drawn_frames(name, clip, v)
-            # Standing still is sized by height, as tall as the walk: the
-            # hair is drawn fuller in some standing drawings, so matching its
-            # width made him shrink when he stopped.
-            scale = standing * 0.97 * SS / figs[0].height if figs and clip == 'idle' else figs and ref[v] / hair_width(figs[0])
+            # Standing still is sized halfway between matching the walk's
+            # height and its hair width: the hair is drawn fuller in some
+            # standing drawings (matching it alone made him shrink when he
+            # stopped), and the head smaller in others (matching height alone
+            # made the head grow when he set off walking).
+            scale = figs and ref[v] / hair_width(figs[0])
+            if figs and clip == 'idle':
+                scale = (scale * standing * 0.97 * SS / figs[0].height) ** 0.5
             drawn[v] = figs and place_figs(figs, scale, (FEET_Y - standing) if clip == 'sit' else None)
         if not rigs:
             # Nothing to pose: a view not drawn yet shows the other view's
