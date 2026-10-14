@@ -388,7 +388,7 @@ const looks = await page.evaluate(() => {
 });
 check('patrons use chibi characters and play an animation', looks.length > 0 && looks.every((l) => /^patron_\d+$/.test(l.tex) && /^patron_\d+_(idle|walk|dance|drink|sit|sittalk)_(front|back)$/.test(l.anim)), JSON.stringify(looks[0]));
 const guestLooks = await page.evaluate(() => [...new Set(window.__clubNova.scene.getScene('club').patrons.filter((p) => !p.celeb).map((p) => p.container.patronCharacter))]);
-check('every ordinary guest is one of the hand-drawn guest looks (guy01, suit01, grey01, emo01, girl01, girl02, girl03)', guestLooks.length >= 1 && guestLooks.length <= 7 && guestLooks.every((c) => c >= 0 && c < 7), JSON.stringify(guestLooks));
+check('every ordinary guest is one of the hand-drawn guest looks (guy01, suit01, grey01, emo01, girl01, girl02, girl03, girl04)', guestLooks.length >= 1 && guestLooks.length <= 8 && guestLooks.every((c) => c >= 0 && c < 8), JSON.stringify(guestLooks));
 
 // Facing: moving down-screen shows the front, up-screen the back, and the
 // sprite is mirrored for the right-hand diagonals.
@@ -2689,7 +2689,7 @@ const sheets = await page.evaluate(() => {
   const s = window.__clubNova.scene.getScene('club');
   return s.textures.getTextureKeys().filter((k) => /^patron_\d+$/.test(k)).length;
 });
-check('only the hand-drawn guest looks are loaded (old guest sheets gone)', sheets === 7, String(sheets));
+check('only the hand-drawn guest looks are loaded (old guest sheets gone)', sheets === 8, String(sheets));
 
 // The cut-out puppet guy (art/characters/cutout) is a guest too, with every
 // clip in both views, standing about as tall as the other guests.
@@ -2749,9 +2749,12 @@ const girl = await page.evaluate(() => {
     const c = s.cutoutLook(n);
     return c !== undefined && s.canDoClip({ container: { patronCharacter: c } }, 'sit') && s.canDoClip({ container: { patronCharacter: c } }, 'dance') && girlsNames.includes(s.guestName(c).split(' ')[0]);
   });
-  return { found: g !== undefined, picked, sits, name: girlsNames.includes(s.guestName(g).split(' ')[0]), g2ok };
+  // girl04, long dark hair and a white blazer: in the crowd, sits.
+  const g4 = s.cutoutLook('girl04');
+  const g4ok = g4 !== undefined && s.canDoClip({ container: { patronCharacter: g4 } }, 'sit') && girlsNames.includes(s.guestName(g4).split(' ')[0]);
+  return { g4ok, found: g !== undefined, picked, sits, name: girlsNames.includes(s.guestName(g).split(' ')[0]), g2ok };
 });
-check('the girl looks are built, join the crowd, sit, dance, and get girls\' names', girl.found && girl.picked && girl.sits && girl.name && girl.g2ok, JSON.stringify(girl));
+check('the girl looks are built, join the crowd, sit, dance, and get girls\' names', girl.found && girl.picked && girl.sits && girl.name && girl.g2ok && girl.g4ok, JSON.stringify(girl));
 
 // The suit guy is drawn in every clip now (October 2026), so he dances and
 // sits like the drawn guy. (A look with a clip not drawn lists it under

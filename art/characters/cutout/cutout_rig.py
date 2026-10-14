@@ -278,6 +278,8 @@ def sit_flip(view, p):
 # is a picture of the frames side by side, left to right, on white. They
 # replace the posed frames for that clip, at their own speed.
 DRAWN_FPS = {'walk': 4, 'idle': 2, 'dance': 5, 'sit': 1}
+# The girls' dances are slower and smoother (the owner found them too fast).
+GIRL_FPS = {'dance': 3}
 
 
 def drawn_frames(name, clip, view):
@@ -426,7 +428,7 @@ def build(name, preview=None):
         n = next((len(d) for d in drawn.values() if d), len(poses))
         counts[clip] = n
         if any(drawn.values()) and clip not in missing:
-            fps[clip] = DRAWN_FPS[clip]
+            fps[clip] = (GIRL_FPS if name.startswith('girl') else {}).get(clip, DRAWN_FPS[clip])
             # The view not drawn yet takes the same number of posed frames,
             # evenly spaced (a two-step walk takes the two steps).
             poses = [poses[i * len(poses) // n] for i in range(n)]

@@ -24,7 +24,7 @@
   "fps": {
     "idle": 2,
     "walk": 4,
-    "dance": 5,
+    "dance": 3,
     "sit": 1
   }
 }
