@@ -534,7 +534,7 @@ export const BOUNCERS = { levels: [1, 8, 18, 30], hireCost: [0, 300, 900, 2000],
 // over and walks them out the door, for `xp` XP.
 export const TROUBLE = { annoyEveryMs: [7000, 12000], annoyRange: 2, annoyMood: 6, detectRange: 8, xp: 5 };
 export const SECURITY = {
-  character: 4, scale: 1.12, stepMs: 380, // all in black, like the bouncer
+  character: 4, scale: 1, stepMs: 380, // guest size (was 1.12; the owner found the bouncer too big, October 2026)
   // Livelier since October 2026 (the owner wasn't seeing fights): more
   // arguments, and fewer talked down.
   argueChance: 0.22, cooldownMs: 60 * 1000, argueMs: [7000, 11000],

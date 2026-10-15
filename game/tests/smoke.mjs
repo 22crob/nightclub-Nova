@@ -3221,6 +3221,8 @@ const security = await page.evaluate(() => {
   out.headshots = [...document.querySelectorAll('#shopItems .headshot')].every((e) => /data:image/.test(e.style.backgroundImage));
   out.hired = s.hireBouncer() && s.guards.length === 2 && s.bouncers === 2;
   out.cantThird = !s.hireBouncer() && s.guards.length === 2; // the third unlocks at 18
+  // Bouncers are guest size, inside and at the door (the owner found them too big).
+  out.guestSize = s.guards.every((b) => Math.abs(b.container.scaleY - 1) < 1e-6) && (!s.streetBouncer || Math.abs(s.streetBouncer.container.scaleY - 1) < 1e-6);
   out.saved = s.serializeState().bouncers === 2;
   out.fired = s.fireBouncer() && s.guards.length === 1;
   s.levelInfo = real;
@@ -3250,7 +3252,7 @@ const security = await page.evaluate(() => {
   out.out = bad.ejected && bad.leaving && s.fans - fans0 === 5 && !g.target;
   return out;
 });
-check('the Staff panel is grouped (Bar, Bartenders, Bouncers) with headshots; a second bouncer can be hired at level 8 (saved), a third not until 18', security.people >= 2 && security.portraits && security.groups === 'Bar,Bartenders,Bouncers' && security.headshots && security.hireCard && security.hired && security.cantThird && security.saved && security.fired, JSON.stringify(security));
+check('the Staff panel is grouped (Bar, Bartenders, Bouncers) with headshots; a second bouncer can be hired at level 8 (saved), a third not until 18; bouncers are guest size', security.people >= 2 && security.portraits && security.groups === 'Bar,Bartenders,Bouncers' && security.headshots && security.hireCard && security.hired && security.cantThird && security.guestSize && security.saved && security.fired, JSON.stringify(security));
 check('a troublemaker upsets guests near them; a bouncer spots them and walks them out the door, for 5 XP', security.annoyed && security.spotted && security.out, JSON.stringify(security));
 
 // The street: modelled buildings line both back roads (both facings), the

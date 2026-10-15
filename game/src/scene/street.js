@@ -286,8 +286,8 @@ export class StreetMixin {
     if (this.streetBouncer) this.streetBouncer.container.destroy();
     if (this.hasCharacterSprites()) {
       const { sx, sy } = this.gridToScreen(sp.bouncer.gx, sp.bouncer.gy);
-      const container = this.drawPatronCharacterSprite(sx, sy + drop, 1.08, this.everyoneLook() ?? STREET.bouncerCharacter);
-      this.streetBouncer = { container, scaleVariance: 1.08 };
+      const container = this.drawPatronCharacterSprite(sx, sy + drop, 1, this.everyoneLook() ?? STREET.bouncerCharacter);
+      this.streetBouncer = { container, scaleVariance: 1 };
       this.faceToward(this.streetBouncer, sx - 10, sy + 5); // watching the line
       container.setDepth(sp.bouncer.gx + sp.bouncer.gy);
       this.streetQueueLayer.add(container);
