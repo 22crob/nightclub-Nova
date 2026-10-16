@@ -1435,3 +1435,131 @@ body.kick #navBar .navPad > .uiArt { transform: none; }
   #dock #storeOk { width: 42px; height: 42px; padding: 9px; margin-bottom: 10px; }
   #actionButtons { bottom: calc(96px + env(safe-area-inset-bottom, 0px)); }
 }
+
+/* ------------------------------------------------------------------ */
+/* Dialogs, the Goals tab, the guest card and the guide like the top    */
+/* and bottom (the owner's ask to finish the look, October 2026): a     */
+/* chrome frame with a thin teal glow round a glossy blue panel, silver */
+/* condensed titles, dark navy wells for lists, sharp-ish corners and   */
+/* glossy flat buttons (green go, red danger, chrome for "not now").    */
+/* These override every earlier rule for them.                         */
+/* ------------------------------------------------------------------ */
+:root {
+  --nc-font: 'Helvetica Neue', 'Arial Narrow', Arial, sans-serif;
+  --nc-chrome: linear-gradient(180deg, #f2f4f7 0%, #c4c9d0 30%, #7b818a 70%, #d3d7dd 100%);
+  --nc-blue: linear-gradient(180deg, #5ab4ff 0%, #2a85e6 10%, #1765c8 50%, #0e4aa0 100%);
+  --nc-frame: 0 0 0 1.5px #52d6e6, 0 0 12px rgba(82, 214, 230, 0.55), 0 8px 24px rgba(0, 0, 0, 0.65);
+  --nc-well: rgba(4, 18, 52, 0.55);
+  --nc-well-edge: inset 0 0 0 1px rgba(255, 255, 255, 0.22), inset 0 2px 5px rgba(0, 0, 0, 0.4);
+}
+.summaryCard, .levelCard, #infoCard, #goals, #tutorialBox {
+  border: 4px solid transparent; border-radius: 10px; backdrop-filter: none;
+  background: var(--nc-blue) padding-box, var(--nc-chrome) border-box;
+  box-shadow: var(--nc-frame); text-shadow: 0 1px 0 rgba(0, 20, 70, 0.8);
+}
+.overlay { background: rgba(2, 6, 20, 0.6); }
+/* Titles: tall, narrow, bold silver lettering like the cash. */
+.summaryTitle, .levelTitle, #goalsTitle, .tutorialTitle {
+  font-family: var(--nc-font); font-stretch: condensed; font-weight: 900; letter-spacing: 0.01em;
+  -webkit-text-stroke: 0; text-shadow: none; color: transparent;
+  background: linear-gradient(180deg, #ffffff 0%, #eef1f4 45%, #9aa3ad 58%, #e3e7ec 100%);
+  -webkit-background-clip: text; background-clip: text;
+  filter: drop-shadow(0 2px 0 rgba(0, 12, 45, 0.95)) drop-shadow(0 0 3px rgba(0, 12, 45, 0.6));
+}
+.summaryTitle { font-size: 28px; }
+.levelTitle { font-size: 38px; }
+.summaryVerdict, .levelSub { color: #fff; font-weight: 700; text-shadow: 0 1px 0 rgba(0, 20, 70, 0.9); }
+/* Buttons: glossy flat bars, a white rim and a dark navy edge. */
+.summaryButton, .levelButton {
+  --c: #43d83a; border: 2px solid #fff; border-radius: 6px; animation: none;
+  background: linear-gradient(180deg, color-mix(in srgb, var(--c) 45%, white) 0%, var(--c) 45%, color-mix(in srgb, var(--c) 65%, black) 100%);
+  box-shadow: 0 0 0 1.5px #0b1430, 0 3px 5px rgba(0, 0, 0, 0.5);
+  font-family: var(--nc-font); font-stretch: condensed; font-weight: 900; font-size: 16px; letter-spacing: 0.02em;
+  color: #fff; text-shadow: 0 1px 0 rgba(0, 0, 0, 0.55);
+}
+.summaryButton:hover, .levelButton:hover { animation: none; filter: brightness(1.12); }
+.summaryButton.danger { --c: #ef3048; }
+.levelButton.shop { --c: #ff8a1f; }
+.summaryButton.later {
+  border-color: #fff; background: var(--nc-chrome); color: #1a1f2a; text-shadow: 0 1px 0 rgba(255, 255, 255, 0.6);
+}
+.levelButton { border-radius: 6px; }
+/* Lists inside: dark navy wells. */
+.summaryRow, .partyRow, .goalRow, .unlockTile, .dayTile {
+  border: none; border-radius: 6px; background: var(--nc-well); box-shadow: var(--nc-well-edge);
+}
+.partyRow:hover { transform: none; background: rgba(10, 40, 100, 0.7); box-shadow: inset 0 0 0 1.5px #7af2ff, 0 0 10px rgba(82, 214, 230, 0.6); }
+.partyRow.blocked:hover { background: var(--nc-well); box-shadow: var(--nc-well-edge); }
+.partyBlurb, .goalMeta, #tutorialCount, .dayXp { color: #cfe3ff; }
+.unlockName { margin: 4px -4px 0; border-radius: 0 0 6px 6px; background: #0b1430; text-shadow: none; }
+.unlockPic { border-radius: 4px; background: radial-gradient(circle at 50% 40%, #2a5aa8 0%, #0b1a3c 80%); }
+.unlockPic[style*="background-image"] { background-color: #12305e; }
+.dayTile { opacity: 0.85; }
+.dayTile.today { opacity: 1; background: linear-gradient(180deg, #8fd8ff, #3aa0f0 50%, #1a6fd0); box-shadow: 0 0 0 2px #fff, 0 0 14px #7af2ff; }
+.dayTile.today .dayCash { color: #fff; }
+.dayTile.done { opacity: 0.55; }
+#clubNameInput, #backupCode, #backupPaste {
+  border-radius: 6px; border: 1.5px solid #52d6e6; background: #071330; box-shadow: inset 0 2px 6px rgba(0, 0, 0, 0.6), 0 0 8px rgba(82, 214, 230, 0.35);
+}
+/* Close buttons: a small red square. */
+.infoClose { border-radius: 4px; border: 1.5px solid #fff; background: linear-gradient(180deg, #ff7a8e, #d81432); box-shadow: 0 0 0 1px #0b1430; }
+
+/* The Goals tab: a chrome square with a teal rim, like the buttons up top. */
+#goalTab {
+  border-radius: 8px; backdrop-filter: none; background: var(--nc-chrome);
+  box-shadow: 0 0 0 1.5px #52d6e6, 0 0 8px rgba(82, 214, 230, 0.55), inset 0 1px 0 #fff, 0 3px 6px rgba(0, 0, 0, 0.55);
+}
+#goalTab:hover { filter: brightness(1.1); }
+#goalTab:hover > .uiArt { animation: none; }
+#goalSide.open #goalTab { box-shadow: 0 0 0 2px #7af2ff, 0 0 16px #52d6e6, inset 0 1px 0 #fff, 0 3px 6px rgba(0, 0, 0, 0.55); }
+#goals { padding: 10px; }
+#goalsTitle { font-size: 20px; }
+.goalText { text-shadow: 0 1px 0 rgba(0, 0, 0, 0.6); }
+.goalBar { border-radius: 2px; background: #050c20; }
+.goalFill { background: linear-gradient(90deg, #ff3ddc, #ff9a3a); }
+.goalRow.ready { box-shadow: inset 0 0 0 2px #8dff7a, 0 0 10px rgba(141, 255, 122, 0.45); }
+
+/* A guest's card: the same frame; chrome round stat badges and actions. */
+#infoCard { border-radius: 10px; }
+.bubbleIcon { background: var(--nc-chrome); border: none; box-shadow: 0 0 0 1.5px #52d6e6, inset 0 1px 0 #fff, 0 2px 4px rgba(0, 0, 0, 0.55); }
+.bubbleNum { font-family: var(--nc-font); font-stretch: condensed; font-size: 12px; color: #fff; }
+.infoPortrait { border-radius: 6px; border: 3px solid transparent; background-color: #0b1a3c; box-shadow: 0 0 0 1.5px #52d6e6, inset 0 0 14px #000; }
+.infoPortrait { background-clip: padding-box; outline: 0; }
+.infoName { font-family: var(--nc-font); font-stretch: condensed; font-size: 17px; }
+.infoRole { color: #9fe8ff; }
+.infoQuote { border-color: #0b1430; border-radius: 8px; }
+.infoQuote:after { border-right-color: #0b1430; }
+.actionButton {
+  border: none; animation: none;
+  background: linear-gradient(180deg, #f2f4f7 0%, #c4c9d0 24%, #6a7079 47%, #33363c 53%, #7b818a 78%, #d3d7dd 100%);
+  box-shadow: 0 0 0 1.5px #52d6e6, 0 0 7px rgba(82, 214, 230, 0.5), inset 0 1px 0 rgba(255, 255, 255, 0.9), 0 3px 5px rgba(0, 0, 0, 0.55);
+}
+.actionButton:hover { animation: none; filter: brightness(1.12); }
+.actionButton.disabled:hover { filter: grayscale(1) brightness(0.65); }
+
+/* The guide: a small framed card at the top. */
+#tutorialBox { border-radius: 8px; padding: 10px 14px; }
+.tutorialTitle { font-size: 16px; }
+.tutorialLink { color: #cfe3ff; }
+#tutorialBox.hint { box-shadow: var(--nc-frame), 0 0 0 4px rgba(255, 228, 92, 0.5); }
+
+/* Messages: a strip of the dark mesh with a teal rim. */
+#toast {
+  border-radius: 4px; font-family: var(--nc-font); font-stretch: condensed; font-size: 16px; text-shadow: 0 1px 0 #000;
+  background:
+    linear-gradient(45deg, transparent 42%, rgba(0, 0, 0, 0.85) 42%, rgba(0, 0, 0, 0.85) 58%, transparent 58%),
+    linear-gradient(-45deg, transparent 42%, rgba(0, 0, 0, 0.85) 42%, rgba(0, 0, 0, 0.85) 58%, transparent 58%),
+    linear-gradient(180deg, #3a3c43, #1f2024);
+  background-size: 9px 9px, 9px 9px, 100% 100%;
+  box-shadow: 0 0 0 1.5px #52d6e6, 0 0 12px rgba(82, 214, 230, 0.55), 0 4px 10px rgba(0, 0, 0, 0.6);
+}
+/* Big popups: chrome lettering with a coloured glow. */
+#bigPopup .bpTitle {
+  font-family: var(--nc-font); font-stretch: condensed; font-weight: 900; letter-spacing: 0;
+  color: transparent; text-shadow: none;
+  background: linear-gradient(180deg, #ffffff 0%, #eef1f4 45%, #8f98a3 56%, #e3e7ec 100%);
+  -webkit-background-clip: text; background-clip: text;
+  filter: drop-shadow(0 3px 0 #0b1430) drop-shadow(0 0 2px #0b1430) drop-shadow(0 0 14px var(--bp-glow, #52d6e6));
+}
+#bigPopup[data-theme] .bpTitle { color: transparent; }
+#bigPopup .bpSub { font-family: var(--nc-font); font-stretch: condensed; font-weight: 900; }
