@@ -1563,3 +1563,10 @@ body.kick #navBar .navPad > .uiArt { transform: none; }
 }
 #bigPopup[data-theme] .bpTitle { color: transparent; }
 #bigPopup .bpSub { font-family: var(--nc-font); font-stretch: condensed; font-weight: 900; }
+/* Colour in the big popups' lettering (the owner found plain silver too
+   plain, October 2026): a shiny band like chrome, in the popup's colour. */
+#bigPopup[data-theme="boost"] .bpTitle { background-image: linear-gradient(180deg, #ffe6fb 0%, #ff7ae6 38%, #c22fe0 54%, #7a1cc8 72%, #e9a8ff 100%); }
+#bigPopup[data-theme="rush"] .bpTitle { background-image: linear-gradient(180deg, #e6fffb 0%, #6ff5e4 38%, #13b8b0 54%, #0a7c8a 72%, #9ff7ee 100%); }
+#bigPopup[data-theme="celeb"] .bpTitle { background-image: linear-gradient(180deg, #fffbe0 0%, #ffe45c 38%, #f2a50c 54%, #b8620a 72%, #ffe9a0 100%); }
+#bigPopup[data-theme="boost"] .bpSub { color: #ffd23f; }
+#bigPopup[data-theme="rush"] .bpSub { color: #c8fff4; }
