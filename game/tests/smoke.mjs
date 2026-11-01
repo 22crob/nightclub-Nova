@@ -150,6 +150,21 @@ const storeTabs = await visibleKeys();
 await page.click('#navClub');
 const clubKeys = await visibleKeys();
 await page.click('#navBuild');
+// The starting view is close in (October 2026): the club fills the space
+// between the top strip and the dock, its sign still on screen.
+const view = await page.evaluate(() => {
+  const s = window.__clubNova.scene.getScene('club');
+  const keep = { x: s.world.x, y: s.world.y, z: s.world.scaleX };
+  s.centerView();
+  const sign = s.clubSign && s.clubSign.getBounds();
+  const front = s.gridToScreen(s.gridW - 1, s.gridH - 1);
+  const frontY = s.world.y + front.sy * s.world.scaleX;
+  const out = { zoom: +s.world.scaleX.toFixed(2), signTop: sign ? Math.round(sign.top) : null, frontY: Math.round(frontY), height: s.scale.height, grid: s.gridW };
+  s.world.setScale(keep.z); s.world.x = keep.x; s.world.y = keep.y;
+  return out;
+});
+check('the club starts close in, filling the screen between the top bar and the dock with its sign in view', view.zoom >= (view.grid <= 10 ? 1.5 : 1.0) && view.signTop !== null && view.signTop >= 0 && view.frontY < view.height - 90, JSON.stringify(view));
+
 // Dialogs, the Goals panel, the guest card and the guide share the top and
 // bottom's look: a chrome frame with a teal glow round a glossy blue panel.
 const ncLook = await page.evaluate(() => {

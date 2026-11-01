@@ -353,7 +353,12 @@ export const PATRON_POPUP_Y = CHARACTER_DISPLAY_HEIGHT * 0.8;
 // Floor and dance floor tiles are drawn this much bigger than a tile so
 // neighbours overlap and no seams show between them.
 export const FLOOR_OVERLAP = 1.04;
-export const ZOOM_DEFAULT = 1.35;
+export const ZOOM_DEFAULT = 1.6; // the closest the starting view goes (centerView() in world.js)
+// The starting view (centerView()): how much of the wall height must show
+// (a little over 1 keeps the club's sign on the right wall in view),
+// the free space under the top strip and over the dock, and how far a
+// phone's view may run past its sides (a share of the screen width).
+export const CAMERA = { wallShown: 1.1, top: 64, bottom: 110, phoneOverflow: 0.08 };
 export const ZOOM_MIN = 0.6;
 export const ZOOM_MAX = 2.2;
 
