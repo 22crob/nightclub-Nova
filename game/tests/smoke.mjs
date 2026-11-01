@@ -150,6 +150,18 @@ const storeTabs = await visibleKeys();
 await page.click('#navClub');
 const clubKeys = await visibleKeys();
 await page.click('#navBuild');
+// The starting view stays at the smaller look (the owner found a closer
+// start, October 2026, undid the smaller guests): never zoomed in past 1.35.
+const startZoom = await page.evaluate(() => {
+  const s = window.__clubNova.scene.getScene('club');
+  const keep = { x: s.world.x, y: s.world.y, z: s.world.scaleX };
+  s.centerView();
+  const z = s.world.scaleX;
+  s.world.setScale(keep.z); s.world.x = keep.x; s.world.y = keep.y;
+  return +z.toFixed(2);
+});
+check('the starting view is not zoomed in past 1.35, so guests and furniture keep the smaller look', startZoom <= 1.35, `${startZoom}`);
+
 // Dialogs, the Goals panel, the guest card and the guide share the top and
 // bottom's look: a chrome frame with a teal glow round a glossy blue panel.
 const ncLook = await page.evaluate(() => {
