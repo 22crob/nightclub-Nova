@@ -11,11 +11,11 @@ const rand = mulberry32(77);
 export const PEOPLE = [
   {
     id: 'maren', name: 'Elder Maren', x: 3.5, z: 4, wander: 1.5,
-    look: { skin: '#e8bf9a', shirt: '#4b3f8f', pants: '#4b3f8f', hair: '#e8e6e0', beard: '#e8e6e0', robe: true, hat: 'wizard' },
+    look: { skin: '#f0c8a4', shirt: '#5a4fc4', pants: '#5a4fc4', hair: '#eeeef4', beard: '#f4f4f8', robe: true, hat: 'wizard' },
   },
   {
     id: 'tobin', name: 'Tobin', x: -9, z: -4, wander: 5,
-    look: { skin: '#c98e62', shirt: '#b5652a', pants: '#5a4630', hair: '#2c1d12', hat: 'straw' },
+    look: { skin: '#c98e62', shirt: '#e0893a', pants: '#5a6a8a', hair: '#2c1d12', hat: 'straw' },
     lines: [
       'Slimes got into the turnips again. Bouncy little thieves.',
       'Follow the dirt paths and you\'ll find all sorts out there.',
@@ -24,7 +24,7 @@ export const PEOPLE = [
   },
   {
     id: 'wren', name: 'Wren', x: 9, z: -9, wander: 4.5,
-    look: { skin: '#f5d2b3', shirt: '#3f8a5a', pants: '#2f3a4f', hair: '#9b3b2a', hat: 'hood' },
+    look: { skin: '#f8d9bd', shirt: '#3f9a6a', pants: '#2f3a4f', hair: '#c4532f', hairStyle: 'long' },
     lines: [
       'I hid a treasure chest in the woods once. Then I forgot where. Maybe you\'ll find it?',
       'At night the mushrooms in Glowcap Grove light up like lanterns.',

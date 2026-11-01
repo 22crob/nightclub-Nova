@@ -5,28 +5,45 @@ import { SLIMES, WORLD, VILLAGE, PLAYER } from './config.js';
 import { heightAt } from './terrain.js';
 import { resolve } from './colliders.js';
 import { mulberry32 } from './noise.js';
+import { toon, part } from './materials.js';
 
 const COLORS = ['#6fd35a', '#4fb8e8', '#e06fb4', '#f0b43c'];
 const rand = mulberry32(2024);
 
 function slimeMesh(color) {
   const g = new THREE.Group();
-  const bodyMat = new THREE.MeshLambertMaterial({ color, flatShading: true, transparent: true, opacity: 0.92, emissive: new THREE.Color(color), emissiveIntensity: 0 });
-  const body = new THREE.Mesh(new THREE.IcosahedronGeometry(0.75, 1), bodyMat);
-  body.scale.set(1, 0.78, 1);
-  body.position.y = 0.55;
-  body.castShadow = true;
-  g.add(body);
-  const white = new THREE.MeshBasicMaterial({ color: '#ffffff' });
-  const black = new THREE.MeshBasicMaterial({ color: '#1b1622' });
-  for (const s of [-1, 1]) {
-    const eye = new THREE.Mesh(new THREE.SphereGeometry(0.15, 8, 6), white);
-    eye.position.set(s * 0.25, 0.72, 0.6);
-    const pupil = new THREE.Mesh(new THREE.SphereGeometry(0.08, 6, 4), black);
-    pupil.position.set(0, 0, 0.1);
-    eye.add(pupil);
-    g.add(eye);
+  const bodyMat = toon(color, { emissive: new THREE.Color(color), emissiveIntensity: 0 });
+  // A soft drop shape: rounder at the bottom.
+  const geo = new THREE.SphereGeometry(0.75, 28, 20);
+  const p = geo.attributes.position;
+  for (let i = 0; i < p.count; i++) {
+    const y = p.getY(i), k = 1 + Math.max(0, -y) * 0.25 - Math.max(0, y) * 0.08;
+    p.setXYZ(i, p.getX(i) * k, y, p.getZ(i) * k);
   }
+  geo.computeVertexNormals();
+  const body = part(geo, bodyMat, { y: 0.55, outline: 0.04 });
+  body.scale.set(1, 0.78, 1);
+  g.add(body);
+  const shine = new THREE.Mesh(new THREE.SphereGeometry(0.16, 10, 8), new THREE.MeshBasicMaterial({ color: '#ffffff', transparent: true, opacity: 0.85 }));
+  shine.scale.set(1.3, 0.6, 0.6);
+  shine.position.set(-0.3, 0.55, 0.45);
+  shine.rotation.z = 0.6;
+  body.add(shine);
+  const dark = toon('#241826'), white = new THREE.MeshBasicMaterial({ color: '#ffffff' });
+  for (const s of [-1, 1]) {
+    const eye = new THREE.Mesh(new THREE.SphereGeometry(0.12, 12, 10), dark);
+    eye.scale.set(0.8, 1.15, 0.5);
+    eye.position.set(s * 0.24, 0.66, 0.66);
+    eye.rotation.y = s * 0.3;
+    g.add(eye);
+    const glint = new THREE.Mesh(new THREE.SphereGeometry(0.04, 8, 6), white);
+    glint.position.set(s * 0.24 + 0.03, 0.71, 0.72);
+    g.add(glint);
+  }
+  const mouth = new THREE.Mesh(new THREE.TorusGeometry(0.06, 0.018, 4, 10, Math.PI), dark);
+  mouth.position.set(0, 0.5, 0.71);
+  mouth.rotation.z = Math.PI;
+  g.add(mouth);
   return { group: g, body, bodyMat };
 }
 

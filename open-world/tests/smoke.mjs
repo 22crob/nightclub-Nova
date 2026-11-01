@@ -65,13 +65,20 @@ check('starts with full hearts', s.hearts === 5, `hearts ${s.hearts}`);
 check('quest starts at intro', s.quest === 'intro');
 check('world was built', await G(() => {
   const c = window.__lumen.nature.userData.counts;
-  return c.trees > 1000 && c.rocks > 200 && c.grass > 5000;
+  return c.trees > 1000 && c.rocks > 200 && c.bushes > 300 && c.flowers > 1000;
 }));
 
+check('painterly look is set up', await G(() => {
+  const g = window.__lumen;
+  let outlines = 0;
+  g.player.model.traverse((o) => { if (o.userData.outline) outlines++; });
+  return g.grass.geometry.instanceCount > 50000 && g.water.material.isShaderMaterial && !!g.bloom
+    && outlines > 10 && g.sky.clouds.children.length > 10;
+}));
 // The picture isn't blank: lots of different colours on screen.
 const colours = await G(() => {
   const gl = window.__lumen.renderer.getContext();
-  window.__lumen.renderer.render(window.__lumen.scene, window.__lumen.camera);
+  window.__lumen.render();
   const w = gl.drawingBufferWidth, h = gl.drawingBufferHeight;
   const px = new Uint8Array(4);
   const seen = new Set();

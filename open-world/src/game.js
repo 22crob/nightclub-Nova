@@ -1,7 +1,14 @@
 // Lumen Vale: builds the world and runs the game loop.
 import * as THREE from 'three';
 import { WORLD, VILLAGE, PLACES, PLAYER, CAMERA, QUEST, SLIMES } from './config.js';
-import { buildTerrain, buildWater, heightAt } from './terrain.js';
+import { buildTerrain, heightAt } from './terrain.js';
+import { buildWater } from './water.js';
+import { buildGrass } from './grass.js';
+import { timeUniform } from './materials.js';
+import { EffectComposer } from 'three/addons/postprocessing/EffectComposer.js';
+import { RenderPass } from 'three/addons/postprocessing/RenderPass.js';
+import { UnrealBloomPass } from 'three/addons/postprocessing/UnrealBloomPass.js';
+import { OutputPass } from 'three/addons/postprocessing/OutputPass.js';
 import { buildNature } from './nature.js';
 import { buildPlaces, glowSprite } from './places.js';
 import { Sky } from './sky.js';
@@ -27,13 +34,25 @@ export class Game {
 
     this.scene = new THREE.Scene();
     this.camera = new THREE.PerspectiveCamera(55, innerWidth / innerHeight, 0.1, 1200);
+    this.renderer.toneMapping = THREE.NeutralToneMapping;
+    this.renderer.toneMappingExposure = 1.05;
+    // Finishing touches: a soft glow around bright things (bloom).
+    this.composer = new EffectComposer(this.renderer, new THREE.WebGLRenderTarget(innerWidth, innerHeight, { type: THREE.HalfFloatType, samples: 4 }));
+    this.composer.addPass(new RenderPass(this.scene, this.camera));
+    this.bloom = new UnrealBloomPass(new THREE.Vector2(innerWidth, innerHeight), 0.32, 0.55, 0.82);
+    this.composer.addPass(this.bloom);
+    this.composer.addPass(new OutputPass());
+    this.composer.setPixelRatio(Math.min(devicePixelRatio || 1, 2));
     addEventListener('resize', () => {
       this.camera.aspect = innerWidth / innerHeight;
       this.camera.updateProjectionMatrix();
       this.renderer.setSize(innerWidth, innerHeight);
+      this.composer.setSize(innerWidth, innerHeight);
     });
 
-    this.scene.add(buildTerrain(), buildWater());
+    this.water = buildWater();
+    this.grass = buildGrass();
+    this.scene.add(buildTerrain(), this.water, this.grass);
     this.nature = buildNature();
     this.scene.add(this.nature);
     this.places = buildPlaces();
@@ -118,12 +137,30 @@ export class Game {
     const dt = Math.min(0.05, (t - this.last) / 1000);
     this.last = t;
     this.step(dt);
-    this.renderer.render(this.scene, this.camera);
+    this.render();
     requestAnimationFrame((tt) => this.frame(tt));
+  }
+
+  render() { this.composer.render(); }
+
+  // Passes the light, fog and hero position on to the grass and water.
+  updateShaders(focus) {
+    const fog = this.scene.fog, light = this.sky.groundLight;
+    const g = this.grass.userData.uniforms, w = this.water.userData.uniforms;
+    for (const u of [g, w]) {
+      u.uFogColor.value.copy(fog.color); u.uFogNear.value = fog.near; u.uFogFar.value = fog.far;
+      if (light) u.uLight.value.copy(light);
+    }
+    g.uCenter.value.set(focus.x, focus.z);
+    g.uPlayer.value.copy(this.player.pos);
+    if (this.sky.sunDir) w.uSunDir.value.copy(this.sky.sunDir);
+    w.uSky.value.copy(this.sky.horizon);
+    w.uSun.value = 1 - this.sky.night;
   }
 
   step(dt) {
     const input = this.input;
+    timeUniform.value += dt;
     if (!this.playing) {
       // Title screen: a slow flight around the village.
       this.sky.update(dt * 0.3, new THREE.Vector3(0, 0, 0), this.camera.position);
@@ -132,6 +169,7 @@ export class Game {
       this.camera.position.set(Math.sin(a) * 46, VILLAGE.h + 20, Math.cos(a) * 46);
       this.camera.lookAt(0, VILLAGE.h + 3, 0);
       this.villagers.update(dt, performance.now(), this.player);
+      this.updateShaders(new THREE.Vector3(0, 0, 0));
       input.endFrame();
       return;
     }
@@ -189,6 +227,7 @@ export class Game {
     if (dying && now - this.dyingAt > 1600) this.respawn();
 
     this.updateCamera(dt);
+    this.updateShaders(p.pos);
     this.hud.setHearts(p.hearts);
     this.hud.setClock(this.sky.clockText());
     this.hud.drawMinimap(p, this.places.shards, this.cam.yaw);

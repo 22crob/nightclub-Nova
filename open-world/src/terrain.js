@@ -2,7 +2,8 @@
 // edge, flat spots for the village and each place, and dirt paths between.
 import * as THREE from 'three';
 import { WORLD, VILLAGE, LAKE, PLACES, PATHS } from './config.js';
-import { makeNoise2D, smoothstep, lerp, distToSegment, mulberry32 } from './noise.js';
+import { makeNoise2D, smoothstep, lerp, distToSegment } from './noise.js';
+import { toon } from './materials.js';
 
 const noise = makeNoise2D(WORLD.seed);
 const detail = makeNoise2D(WORLD.seed + 1);
@@ -101,69 +102,109 @@ export function slopeAt(x, z) {
 
 export const placeGround = (k) => heightAt(PLACES[k].x, PLACES[k].z);
 
-// Colour of the ground at a spot, used by the mesh and the minimap.
+// Colour of the ground at a spot, used by the mesh, the grass and the minimap.
 const C = {
-  sand: new THREE.Color('#dcc890'), grass: new THREE.Color('#79b34e'), lush: new THREE.Color('#5a9a3e'),
-  meadow: new THREE.Color('#9cc35a'), rock: new THREE.Color('#8b867c'), darkRock: new THREE.Color('#6d6a66'),
-  snow: new THREE.Color('#f1f4f8'), path: new THREE.Color('#bf9f6c'), lakeBed: new THREE.Color('#9c8f68'),
+  sand: new THREE.Color('#f0d89c'), grass: new THREE.Color('#78c257'), lush: new THREE.Color('#4fa64a'),
+  meadow: new THREE.Color('#b5d965'), rock: new THREE.Color('#a49c96'), darkRock: new THREE.Color('#7d7787'),
+  snow: new THREE.Color('#f4f7ff'), path: new THREE.Color('#d9ae72'), lakeBed: new THREE.Color('#b6a77a'),
 };
 export function groundColor(x, z, h, slope, out = new THREE.Color()) {
   const w = WORLD.waterLevel;
   if (h < w - 0.4) return out.copy(C.lakeBed);
-  if (h < w + 0.7) return out.copy(C.sand);
-  const v = detail(x / 40, z / 40);
-  out.copy(C.grass).lerp(C.lush, smoothstep(-0.2, 0.6, v)).lerp(C.meadow, smoothstep(0.3, 0.9, -v) * 0.7);
-  if (pathDistance(x, z) < 2.2 + detail(x / 5, z / 5) * 0.8) out.copy(C.path);
-  const rockiness = Math.max(smoothstep(0.75, 1.1, slope), smoothstep(20, 28, h));
+  const v = detail(x / 40, z / 40), v2 = detail(x / 9 + 50, z / 9);
+  out.copy(C.grass).lerp(C.lush, smoothstep(-0.2, 0.6, v)).lerp(C.meadow, smoothstep(0.2, 0.8, -v) * 0.8);
+  out.offsetHSL(0, 0, v2 * 0.025);
+  out.lerp(C.sand, 1 - smoothstep(w + 0.3, w + 1.1, h));
+  const pd = pathDistance(x, z) + v2 * 0.6;
+  out.lerp(C.path, 1 - smoothstep(1.6, 2.6, pd));
+  const rockiness = Math.max(smoothstep(0.7, 1.05, slope), smoothstep(22, 30, h));
   if (rockiness > 0) out.lerp(slope > 1.4 ? C.darkRock : C.rock, rockiness);
   if (h > 38) out.lerp(C.snow, smoothstep(38, 44, h + v * 3));
   return out;
 }
 
+// How much grass grows at a spot, 0..1.
+export function grassAt(x, z, h, slope) {
+  if (h < WORLD.waterLevel + 0.6 || h > 30) return 0;
+  let d = 1 - smoothstep(0.55, 0.85, slope);
+  d *= smoothstep(1.8, 3.2, pathDistance(x, z));
+  d *= 1 - (1 - smoothstep(4, 9, Math.hypot(x - VILLAGE.x, z - VILLAGE.z))) * 0.9;
+  d *= smoothstep(WORLD.waterLevel + 0.6, WORLD.waterLevel + 1.6, h);
+  d *= 0.75 + 0.25 * detail(x / 25, z / 25);
+  return Math.max(0, Math.min(1, d));
+}
+
 export function buildTerrain() {
-  const tris = N * N * 2;
-  const pos = new Float32Array(tris * 9);
-  const col = new Float32Array(tris * 9);
-  const rand = mulberry32(WORLD.seed + 9);
+  const V = N + 1;
+  const pos = new Float32Array(V * V * 3);
+  const col = new Float32Array(V * V * 3);
   const c = new THREE.Color();
-  let p = 0;
-  const put = (i, j, color) => {
-    pos[p] = i * WORLD.cell - half; pos[p + 1] = hAt(i, j); pos[p + 2] = j * WORLD.cell - half;
-    col[p] = color.r; col[p + 1] = color.g; col[p + 2] = color.b;
-    p += 3;
-  };
+  for (let j = 0; j < V; j++) {
+    for (let i = 0; i < V; i++) {
+      const k = j * V + i, x = i * WORLD.cell - half, z = j * WORLD.cell - half, h = H[k];
+      pos.set([x, h, z], k * 3);
+      groundColor(x, z, h, slopeAt(x, z), c);
+      col.set([c.r, c.g, c.b], k * 3);
+    }
+  }
+  // Same triangles as heightAt(): (00, 11, 10) and (00, 01, 11) in each cell.
+  const idx = new Uint32Array(N * N * 6);
+  let o = 0;
   for (let j = 0; j < N; j++) {
     for (let i = 0; i < N; i++) {
-      // Two triangles: (00, 11, 10) and (00, 01, 11), wound to face up.
-      for (const tri of [[[0, 0], [1, 1], [1, 0]], [[0, 0], [0, 1], [1, 1]]]) {
-        let cx = 0, cz = 0, ch = 0;
-        for (const [a, b] of tri) { cx += (i + a); cz += (j + b); ch += hAt(i + a, j + b); }
-        cx = cx / 3 * WORLD.cell - half; cz = cz / 3 * WORLD.cell - half; ch /= 3;
-        groundColor(cx, cz, ch, slopeAt(cx, cz), c);
-        c.offsetHSL(0, 0, (rand() - 0.5) * 0.035);
-        for (const [a, b] of tri) put(i + a, j + b, c);
-      }
+      const a = j * V + i, b = a + 1, d = a + V, e = d + 1;
+      idx.set([a, e, b, a, d, e], o);
+      o += 6;
     }
   }
   const geo = new THREE.BufferGeometry();
   geo.setAttribute('position', new THREE.BufferAttribute(pos, 3));
   geo.setAttribute('color', new THREE.BufferAttribute(col, 3));
+  geo.setIndex(new THREE.BufferAttribute(idx, 1));
   geo.computeVertexNormals();
-  const mesh = new THREE.Mesh(geo, new THREE.MeshLambertMaterial({ vertexColors: true, flatShading: true }));
+  const mesh = new THREE.Mesh(geo, toon('#ffffff', { vertexColors: true }));
   mesh.receiveShadow = true;
   mesh.name = 'terrain';
   return mesh;
 }
 
-export function buildWater() {
-  const geo = new THREE.PlaneGeometry(WORLD.size * 1.5, WORLD.size * 1.5, 1, 1);
-  geo.rotateX(-Math.PI / 2);
-  const mat = new THREE.MeshPhongMaterial({
-    color: '#3f8fc9', transparent: true, opacity: 0.78, shininess: 90, specular: '#cfe9ff',
-  });
-  const mesh = new THREE.Mesh(geo, mat);
-  mesh.position.y = WORLD.waterLevel;
-  mesh.receiveShadow = true;
-  mesh.name = 'water';
-  return mesh;
+// The heights and ground colours as textures, for the grass and water shaders.
+let texCache = null;
+export function terrainTextures() {
+  if (texCache) return texCache;
+  const V = N + 1;
+  const hData = new Float32Array(V * V);
+  hData.set(H);
+  const heightTex = new THREE.DataTexture(hData, V, V, THREE.RedFormat, THREE.FloatType);
+  heightTex.minFilter = heightTex.magFilter = THREE.NearestFilter;
+  heightTex.needsUpdate = true;
+  const gData = new Uint8Array(V * V * 4);
+  const c = new THREE.Color();
+  for (let j = 0; j < V; j++) {
+    for (let i = 0; i < V; i++) {
+      const x = i * WORLD.cell - half, z = j * WORLD.cell - half, h = H[j * V + i], sl = slopeAt(x, z);
+      groundColor(x, z, h, sl, c);
+      gData.set([c.r * 255, c.g * 255, c.b * 255, grassAt(x, z, h, sl) * 255], (j * V + i) * 4);
+    }
+  }
+  const groundTex = new THREE.DataTexture(gData, V, V, THREE.RGBAFormat);
+  groundTex.minFilter = groundTex.magFilter = THREE.LinearFilter;
+  groundTex.needsUpdate = true;
+  texCache = { heightTex, groundTex, n: N, half, cell: WORLD.cell };
+  return texCache;
+}
+
+// GLSL for reading the ground height in a shader, matching heightAt().
+export const HEIGHT_GLSL = `
+  uniform sampler2D uHeight; uniform float uN; uniform float uHalf; uniform float uCell;
+  float hFetch(ivec2 c) { c = clamp(c, ivec2(0), ivec2(int(uN))); return texelFetch(uHeight, c, 0).r; }
+  float groundHeight(vec2 p) {
+    vec2 g = (p + uHalf) / uCell; ivec2 i = ivec2(floor(g)); vec2 f = g - floor(g);
+    float h00 = hFetch(i), h10 = hFetch(i + ivec2(1, 0)), h01 = hFetch(i + ivec2(0, 1)), h11 = hFetch(i + ivec2(1, 1));
+    if (f.x >= f.y) return h00 + (h10 - h00) * f.x + (h11 - h10) * f.y;
+    return h00 + (h11 - h01) * f.x + (h01 - h00) * f.y;
+  }`;
+export function heightUniforms() {
+  const t = terrainTextures();
+  return { uHeight: { value: t.heightTex }, uN: { value: t.n }, uHalf: { value: t.half }, uCell: { value: t.cell } };
 }

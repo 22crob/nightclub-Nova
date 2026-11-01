@@ -8,7 +8,7 @@ import { makePerson, animatePerson } from './character.js';
 export class Player {
   constructor(scene) {
     this.model = makePerson({
-      skin: '#f3c9a4', shirt: '#2f7a5f', pants: '#3e3a52', boots: '#4a2f1f', hair: '#c8742c',
+      skin: '#f8d2ae', shirt: '#2f9a6f', pants: '#4a4870', boots: '#6a3f26', hair: '#e08a34',
       cape: '#b8323a', sword: true, shield: true,
     });
     scene.add(this.model);

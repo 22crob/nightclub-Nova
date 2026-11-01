@@ -5,15 +5,15 @@ import { smoothstep, mulberry32 } from './noise.js';
 
 const KEYS = [
   // time, sky top, horizon, sun colour, sun strength, ambient strength
-  [0.0, '#070b22', '#141c3c', '#8fa6ff', 0.0, 0.32],
-  [0.21, '#0b1233', '#22284a', '#8fa6ff', 0.0, 0.32],
+  [0.0, '#0a1030', '#1d2650', '#8fa6ff', 0.0, 0.55],
+  [0.21, '#0e1640', '#2a3160', '#8fa6ff', 0.0, 0.55],
   [0.26, '#4a5d9c', '#ff9d6b', '#ffb07a', 1.2, 0.6],
   [0.32, '#4f95e0', '#bfe0f7', '#fff1d6', 2.6, 1.0],
   [0.5, '#3f8ae0', '#c8e6fa', '#ffffff', 3.0, 1.1],
   [0.68, '#4f95e0', '#bfe0f7', '#fff1d6', 2.6, 1.0],
   [0.74, '#5a5a9c', '#ff8a55', '#ff9a5c', 1.2, 0.6],
-  [0.79, '#0b1233', '#22284a', '#8fa6ff', 0.0, 0.32],
-  [1.0, '#070b22', '#141c3c', '#8fa6ff', 0.0, 0.32],
+  [0.79, '#0e1640', '#2a3160', '#8fa6ff', 0.0, 0.55],
+  [1.0, '#0a1030', '#1d2650', '#8fa6ff', 0.0, 0.55],
 ].map(([t, top, hor, sun, s, a]) => ({ t, top: new THREE.Color(top), hor: new THREE.Color(hor), sun: new THREE.Color(sun), s, a }));
 
 export class Sky {
@@ -64,13 +64,17 @@ export class Sky {
     this.stars.frustumCulled = false;
     scene.add(this.stars);
 
+    this.clouds = makeClouds();
+    scene.add(this.clouds);
+
     this.sun = new THREE.DirectionalLight('#ffffff', 2.5);
     this.sun.castShadow = true;
     this.sun.shadow.mapSize.set(2048, 2048);
     const sc = this.sun.shadow.camera;
     sc.left = -45; sc.right = 45; sc.top = 45; sc.bottom = -45; sc.near = 1; sc.far = 260;
-    this.sun.shadow.bias = -0.0006;
-    this.sun.shadow.normalBias = 0.04;
+    this.sun.shadow.bias = -0.0005;
+    this.sun.shadow.normalBias = 0.05;
+    this.sun.shadow.radius = 3;
     scene.add(this.sun, this.sun.target);
     this.hemi = new THREE.HemisphereLight('#cfe6ff', '#5b6b3a', 1);
     scene.add(this.hemi);
@@ -112,12 +116,65 @@ export class Sky {
     this.sun.position.copy(center).addScaledVector(lightDir.normalize(), 120);
     this.sun.target.position.copy(center);
     this.sun.color.copy(a.sun).lerp(b.sun, k);
-    this.sun.intensity = (a.s + (b.s - a.s) * k) + this.night * 0.5;
+    this.sun.intensity = (a.s + (b.s - a.s) * k) + this.night * 1.0;
     this.hemi.intensity = a.a + (b.a - a.a) * k;
     this.hemi.color.set(day > 0.5 ? '#cfe6ff' : '#7f8fd0');
     this.stars.material.opacity = smoothstep(0.4, 0.9, this.night);
     this.dome.position.copy(camPos);
     this.stars.position.copy(camPos);
     this.stars.rotation.y = t * Math.PI * 2;
+    this.sunDir = sunDir;
+
+    // Clouds drift, and take the colour of the sky's light.
+    this.clouds.position.set(camPos.x, 0, camPos.z);
+    this.clouds.rotation.y += dt * 0.002;
+    const cc = new THREE.Color('#ffffff').lerp(this.horizon, 0.35).multiplyScalar(0.35 + day * 0.75);
+    for (const c of this.clouds.children) c.material.color.copy(cc);
+
+    // Roughly how lit flat, upward-facing ground is, for the grass and water.
+    const up = Math.max(lightDir.y, 0);
+    this.groundLight = new THREE.Color().copy(this.sun.color).multiplyScalar(this.sun.intensity * (0.35 + up * 0.6) / Math.PI)
+      .add(new THREE.Color().copy(this.hemi.color).multiplyScalar(this.hemi.intensity * 0.8 / Math.PI));
   }
+}
+
+// Puffy painted clouds on sprites, in a ring high above the land.
+function cloudTexture(seed) {
+  const rand = mulberry32(seed);
+  const c = document.createElement('canvas');
+  c.width = 256; c.height = 128;
+  const g = c.getContext('2d');
+  const blobs = [];
+  for (let i = 0; i < 9; i++) {
+    const x = 50 + rand() * 156, r = 20 + rand() * 26;
+    blobs.push([x, 80 - r * 0.5 - rand() * 18 * Math.sin(((x - 50) / 156) * Math.PI), r]);
+  }
+  // Shadowed underside first, then the bright tops.
+  g.fillStyle = 'rgba(200,210,235,1)';
+  for (const [x, y, r] of blobs) { g.beginPath(); g.arc(x, y + 6, r, 0, Math.PI * 2); g.fill(); }
+  g.fillStyle = 'rgba(255,255,255,1)';
+  for (const [x, y, r] of blobs) { g.beginPath(); g.arc(x - 2, y - 2, r * 0.92, 0, Math.PI * 2); g.fill(); }
+  g.globalCompositeOperation = 'destination-in';
+  const fade = g.createLinearGradient(0, 0, 0, 128);
+  fade.addColorStop(0, 'rgba(0,0,0,1)'); fade.addColorStop(0.85, 'rgba(0,0,0,1)'); fade.addColorStop(1, 'rgba(0,0,0,0)');
+  g.fillStyle = fade; g.fillRect(0, 0, 256, 128);
+  const tex = new THREE.CanvasTexture(c);
+  tex.colorSpace = THREE.SRGBColorSpace;
+  return tex;
+}
+
+function makeClouds() {
+  const group = new THREE.Group();
+  const rand = mulberry32(17);
+  const texs = [1, 2, 3, 4].map(cloudTexture);
+  for (let i = 0; i < 26; i++) {
+    const a = rand() * Math.PI * 2, r = 380 + rand() * 300;
+    const s = new THREE.Sprite(new THREE.SpriteMaterial({ map: texs[i % 4], transparent: true, fog: false, depthWrite: false, opacity: 0.95 }));
+    const w = 140 + rand() * 160;
+    s.scale.set(w, w / 2, 1);
+    s.position.set(Math.cos(a) * r, 90 + rand() * 110, Math.sin(a) * r);
+    group.add(s);
+  }
+  group.renderOrder = -1;
+  return group;
 }
