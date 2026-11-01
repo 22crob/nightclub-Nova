@@ -3,7 +3,7 @@
 // Mixed into ClubScene (see ClubScene.js); `this` is the scene.
 import Phaser from 'phaser';
 import { EXPANSION } from '../catalog.js';
-import { CAMERA, SHARP, BASE_GRID_SIZE, FLOOR_COLOR, FLOOR_SLAB_DEPTH, ROOM_COLORS, TILE_H, TILE_W, WALL_BASEBOARD, WALL_HEIGHT, WALL_THICKNESS, ZOOM_DEFAULT, ZOOM_MAX, ZOOM_MIN } from '../config.js';
+import { SHARP, BASE_GRID_SIZE, FLOOR_COLOR, FLOOR_SLAB_DEPTH, ROOM_COLORS, TILE_H, TILE_W, WALL_BASEBOARD, WALL_HEIGHT, WALL_THICKNESS, ZOOM_DEFAULT, ZOOM_MAX, ZOOM_MIN } from '../config.js';
 import { SFX } from '../sfx.js';
 import { WALL_TEX_H, WALL_TEX_W, doorCanvas } from '../walls.js';
 import { bareFloorCanvas } from '../floors.js';
@@ -465,15 +465,12 @@ export class WorldMixin {
   // top bar and the shop button.
   // Zooms out from ZOOM_DEFAULT if needed so the whole room fits.
   centerView() {
-    // Closer in, like Nightclub City (October 2026): the club fills the
-    // space between the top strip and the dock, with CAMERA.wallShown of
-    // the wall height kept in view above the floor (the sign included).
-    const top = -TILE_H / 2 - WALL_HEIGHT * CAMERA.wallShown - WALL_THICKNESS * TILE_H;
+    const top = -TILE_H / 2 - WALL_HEIGHT - WALL_THICKNESS * TILE_H;
     const bottom = (this.gridW + this.gridH - 1) * TILE_H / 2 + FLOOR_SLAB_DEPTH;
     const left = -(this.gridH + WALL_THICKNESS) * TILE_W / 2;
     const right = (this.gridW + WALL_THICKNESS) * TILE_W / 2;
-    let areaTop = CAMERA.top; // below the top strip
-    let areaBottom = this.scale.height - CAMERA.bottom; // above the dock
+    let areaTop = 110; // below the profile strip
+    let areaBottom = this.scale.height - 150; // above the shop buttons
     let margin = 40;
     // A phone held upright has its own layout (the end of style.css): fit
     // the club between the stats row and the buttons above the tab bar.
@@ -481,10 +478,9 @@ export class WorldMixin {
       const box = (id) => document.getElementById(id)?.getBoundingClientRect();
       const stats = box('hudStats');
       const buttons = box('actionButtons');
-      if (stats && stats.bottom > 0) areaTop = stats.bottom + 24;
-      if (buttons && buttons.top > 0) areaBottom = buttons.top - 6;
-      margin = -CAMERA.phoneOverflow * this.scale.width; // the side corners may run a little off a narrow screen
-
+      if (stats && stats.bottom > 0) areaTop = stats.bottom + 60;
+      if (buttons && buttons.top > 0) areaBottom = buttons.top - 10;
+      margin = 16;
     }
     const fit = Math.min((areaBottom - areaTop) / (bottom - top), (this.scale.width - margin) / (right - left));
     const zoom = Phaser.Math.Clamp(Math.min(ZOOM_DEFAULT, fit), ZOOM_MIN, ZOOM_MAX);
