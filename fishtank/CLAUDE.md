@@ -9,3 +9,4 @@ A fish tank tycoon, separate from Club Nova (the repo root's CLAUDE.md is about 
 - Breeding tanks: `parentsIn()` is the pair (grown-ups not born there), `youngIn()` the babies plus grown-up babies that haven't moved out (`f.young`); grown-up babies take over as parents when a parent place is free.
 - Fish are drawn in code, facing right, as a body and a tail picture (`fishTextures()`), cached per look. `fishThumb()` gives a cropped picture for cards.
 - Save key `reefRiverSave_v1` in localStorage; time away is caught up on load (up to `OFFLINE_MAX_MS`). Don't break existing saves; `load()` drops anything it doesn't recognise.
+- Playable link: https://claude.ai/artifact/DxrVAxYQYCaQ8dejwZuB12. To update it, run `npm run build`, strip the outer `<!DOCTYPE>`/`<html>`/`<head>`/`<body>` tags and the charset/viewport metas from `dist/index.html` (the artifact host adds its own), and publish that file to the same link.
