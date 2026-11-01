@@ -1,5 +1,7 @@
 # Nightclub Nova
 
+This repo holds two games: **Club Nova**, the nightclub tycoon in `game/`, and **Lumen Vale**, a 3D open-world fantasy adventure in `open-world/` (see `open-world/README.md`).
+
 ## The game: Club Nova
 
 `game/` holds the club tycoon game, built with Phaser 3. You build out an isometric club with bars, DJ booths, dance floors and decorations. Patrons walk in, earn you fans and tip you.

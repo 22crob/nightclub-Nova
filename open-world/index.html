@@ -1,0 +1,66 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" />
+  <title>Lumen Vale</title>
+  <link rel="stylesheet" href="./src/style.css" />
+</head>
+<body>
+  <div id="app"></div>
+
+  <div id="hud" class="hidden">
+    <div id="stats" class="panel">
+      <div id="hearts"></div>
+      <div class="row"><span class="coinIcon"></span><span id="coins">0</span></div>
+      <div class="row"><span class="shardIcon"></span><span id="shards">0 / 5</span></div>
+    </div>
+    <div id="quest" class="panel">
+      <div class="questTitle" id="questTitle">A Traveller Arrives</div>
+      <div id="questText">Talk to Elder Maren by the village well.</div>
+    </div>
+    <div id="mapBox">
+      <canvas id="minimap" width="180" height="180"></canvas>
+      <div id="clock" class="panel small">8:00 AM</div>
+    </div>
+    <div id="prompt" class="hidden"><span class="key">E</span><span id="promptText"></span></div>
+    <div id="toast" class="hidden"><div id="toastBig"></div><div id="toastSmall"></div></div>
+    <div id="dialog" class="hidden">
+      <div id="dialogName"></div>
+      <div id="dialogText"></div>
+      <div id="dialogMore">E or click to continue</div>
+    </div>
+    <div id="help" class="panel small">
+      <b>WASD</b> move · <b>Shift</b> run · <b>Space</b> jump · <b>Click</b> / <b>F</b> sword · <b>E</b> talk / open · <b>Drag</b> look · <b>Wheel</b> zoom
+    </div>
+    <button id="muteBtn" class="roundBtn" title="Sound on / off">♪</button>
+    <div id="touch" class="hidden">
+      <div id="stick"><div id="knob"></div></div>
+      <button id="tAttack" class="tBtn">⚔</button>
+      <button id="tJump" class="tBtn">⤒</button>
+      <button id="tUse" class="tBtn">E</button>
+    </div>
+  </div>
+
+  <div id="fade"></div>
+
+  <div id="title">
+    <div class="titleCard">
+      <div class="logo">Lumen Vale</div>
+      <div class="tagline">The Moonshards have scattered. The lanterns are going dark.</div>
+      <div class="buttons">
+        <button id="continueBtn" class="bigBtn hidden">Continue</button>
+        <button id="newBtn" class="bigBtn">New Adventure</button>
+      </div>
+      <div class="controls">
+        <div><b>WASD</b> or arrows: walk &nbsp; <b>Shift</b>: run &nbsp; <b>Space</b>: jump</div>
+        <div><b>Click</b> or <b>F</b>: swing sword &nbsp; <b>E</b>: talk, open chests</div>
+        <div><b>Drag</b> the mouse to look around &nbsp; <b>Wheel</b>: zoom</div>
+      </div>
+      <div id="loading">Growing the forest…</div>
+    </div>
+  </div>
+
+  <script type="module" src="./src/main.js"></script>
+</body>
+</html>
