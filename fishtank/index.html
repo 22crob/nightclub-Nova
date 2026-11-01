@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Reef &amp; River</title>
+</head>
+<body>
+  <div id="hud">
+    <div id="profile" class="glass">
+      <div class="lvl" title="Your level"><span id="lvlNum">1</span></div>
+      <div class="profCol">
+        <div class="title">Reef &amp; River</div>
+        <div class="xpBar"><div id="xpFill"></div><span id="xpText"></span></div>
+        <div class="cash" id="cash">$0</div>
+      </div>
+      <div class="mini">
+        <button id="helpBtn" class="round" style="--c:#3fb5ff" title="How to play">?</button>
+        <button id="newBtn" class="round" style="--c:#ff6b8a" title="Start over">⟲</button>
+      </div>
+    </div>
+    <div id="tankPanel" class="glass"></div>
+    <div id="dock" class="glass">
+      <button id="shopBtn" class="dockBtn" style="--c:#ff8fd8"><span class="dIcon">🛒</span><span class="dLabel">Shop</span></button>
+      <button id="bookBtn" class="dockBtn" style="--c:#ffc21a"><span class="dIcon">📖</span><span class="dLabel">Fish Book</span></button>
+      <div id="tankStrip"></div>
+      <button id="feedBtn" class="dockBtn" style="--c:#ffb347"><span class="dIcon">🍤</span><span class="dLabel">Feed</span></button>
+      <button id="cleanBtn" class="dockBtn" style="--c:#5fd3ff"><span class="dIcon">🧽</span><span class="dLabel">Clean</span></button>
+    </div>
+    <div id="shop" class="glass hidden"></div>
+    <div id="card" class="glass hidden"></div>
+    <div id="holdChip" class="hidden"></div>
+    <div id="toasts"></div>
+    <div id="modal" class="hidden"></div>
+  </div>
+  <script type="module" src="/src/main.js"></script>
+</body>
+</html>

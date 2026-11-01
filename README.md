@@ -32,6 +32,10 @@ npm run build:artifact   # makes dist/artifact.html, the version published as th
 | `game/src/scene/*.js` | The scene's other methods, one file per topic: `world` (floor, walls, expansion), `placement`, `propVisuals`, `shop`, `economy`, `save`, `patrons`, `hud` |
 | `game/tests/smoke.mjs` | Automated play-through test |
 
+## Another game: Reef & River
+
+`fishtank/` is a separate fish tank tycoon game: freshwater and saltwater tanks, breeding fish for rare looks, selling them or keeping them to show off. See `fishtank/README.md`.
+
 ## Game art (Blender)
 
 Props are modelled and rendered in Blender by scripts in `art/blender/`, so every sprite has the same camera, lighting and scale. One Blender unit is one game tile (1 m), and the shared camera in `iso_rig.py` renders a tile at exactly the game's tile size. Each build script also writes a JSON file with the sprite's size and anchor point, and the game reads those numbers directly.
