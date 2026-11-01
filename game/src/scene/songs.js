@@ -2,7 +2,9 @@
 // City's. The box under the profile shows the track, its artist and when it
 // ends on the night's clock; Change skips to the next track, and Like gives
 // a fan once a song. Each song plays to its end (songLength()), then the next starts,
-// and the dancers cheer a new one. The tracks themselves are in music.js.
+// and the dancers cheer a new one. The songs come shuffled (the owner's ask,
+// October 2026): each plays once in a random order, then they're shuffled
+// again, never the same song twice running (nextSongIndex()). The tracks themselves are in music.js.
 // Mixed into ClubScene (see ClubScene.js); `this` is the scene.
 import { SONGS } from '../config.js';
 import { Music, TRACKS } from '../music.js';
@@ -35,11 +37,29 @@ export class SongsMixin {
     this.updateSongBox();
   }
 
+  // The next song in the shuffle: the songs not yet played this round, in a
+  // random order; a new round is shuffled so it never starts with the song
+  // just heard.
+  nextSongIndex() {
+    if (TRACKS.length < 2) return 0;
+    if (!this.songBag || !this.songBag.length) {
+      const bag = TRACKS.map((_, i) => i);
+      for (let i = bag.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [bag[i], bag[j]] = [bag[j], bag[i]];
+      }
+      // Songs are taken from the end; keep the one just played off it.
+      if (bag[bag.length - 1] === this.songIndex) [bag[0], bag[bag.length - 1]] = [bag[bag.length - 1], bag[0]];
+      this.songBag = bag;
+    }
+    return this.songBag.pop();
+  }
+
   // The Change button: skip to the next track.
   changeSong() {
     if (!this.clubOpen()) { SFX.denied(); return; }
     SFX.unlock();
-    this.playSong((this.songIndex || 0) + 1);
+    this.playSong(this.nextSongIndex());
     this.showToast(`🎵 Now playing: ${this.currentSong().title} by ${this.currentSong().artist}`);
   }
 
@@ -56,7 +76,8 @@ export class SongsMixin {
   // Runs every second: the next song when this one is over.
   tickSongs() {
     if (!this.clubOpen()) return;
-    if (this.time.now - this.songStartedAt >= this.songLength()) this.playSong(this.songIndex + 1);
+    if (this.songStartedAt === undefined) this.playSong(this.nextSongIndex()); // the night starts on a random song
+    else if (this.time.now - this.songStartedAt >= this.songLength()) this.playSong(this.nextSongIndex());
     this.updateSongBox();
   }
 

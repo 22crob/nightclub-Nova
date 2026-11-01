@@ -1796,6 +1796,22 @@ const extras = await page.evaluate(async () => {
   // Skip goes to the next song (or starts the only one again).
   out.changed = document.getElementById('songTitle').textContent === s.currentSong().title && s.time.now - s.songStartedAt < 1000
     && (s.songIndex !== index0 || s.songLength() === s.currentSong().lengthMs);
+  // The songs come shuffled: each round plays every song once in a random
+  // order, and the same song never plays twice running.
+  {
+    const keepBag = s.songBag, keepIndex = s.songIndex;
+    s.songBag = null;
+    const first = s.nextSongIndex();
+    const n = s.songBag.length + 1;
+    const picks = [first];
+    s.songIndex = first;
+    while (picks.length < n * 6) { const i = s.nextSongIndex(); picks.push(i); s.songIndex = i; }
+    const rounds = [...Array(6)].map((_, r) => picks.slice(r * n, r * n + n));
+    out.shuffle = { n, everyRound: rounds.every((r) => new Set(r).size === n),
+      noRepeats: picks.every((i, k) => k === 0 || i !== picks[k - 1]),
+      notInOrder: rounds.some((r) => r.some((i, k) => k > 0 && i !== (r[k - 1] + 1) % n)) };
+    s.songBag = keepBag; s.songIndex = keepIndex;
+  }
   // Opened from disk the songs (separate files) can't load: the
   // made-in-code tracks play instead. (Real songs are checked over http
   // at the end.)
@@ -1940,6 +1956,7 @@ const extras = await page.evaluate(async () => {
   return out;
 });
 check('the song box changes tracks, and Like gives a fan once a song', extras.changed && extras.liked === 1, JSON.stringify(extras));
+check('the songs play shuffled: every song once a round in a random order, never the same one twice running', extras.shuffle.n >= 2 && extras.shuffle.everyRound && extras.shuffle.noRepeats && extras.shuffle.notInOrder, JSON.stringify(extras.shuffle));
 check('opened from disk, the club plays the made-in-code tracks (the songs are separate files)', extras.diskFallback, JSON.stringify(extras));
 check('guests can only be seated at a VIP booth; the button is greyed out without one', extras.greyed && extras.couchOnly && extras.lit && extras.seated, JSON.stringify(extras));
 check('a drink on the house, once a visit', extras.onHouse, JSON.stringify(extras));
