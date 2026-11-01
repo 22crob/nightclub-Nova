@@ -24,10 +24,12 @@ export class PatronsMixin {
 
   // Animation key for a patron's character, clip and facing. Only the 3D
   // characters have drink and sittalk; the drawn ones stand or sit instead.
+  // A repainted guest's animations are their repaint's (variety.js).
   patronAnimKey(container, clip) {
-    const key = `patron_${container.patronCharacter}_${clip}_${container.patronDir}`;
+    const tex = container.patronTex || `patron_${container.patronCharacter}`;
+    const key = `${tex}_${clip}_${container.patronDir}`;
     if (this.anims.exists(key) || !CLIP_FALLBACK[clip]) return key;
-    return `patron_${container.patronCharacter}_${CLIP_FALLBACK[clip]}_${container.patronDir}`;
+    return `${tex}_${CLIP_FALLBACK[clip]}_${container.patronDir}`;
   }
 
   // ---------------------------------------------------------------------
@@ -65,7 +67,10 @@ export class PatronsMixin {
     // container's scale) because faceToward() below has to re-apply
     // it every time it flips the container to face left/right.
     const scaleVariance = 0.95 + Math.random() * 0.1;
-    const container = this.drawPatronSprite(sx, sy, scaleVariance, character);
+    // In their own colours (variety.js): the repaint they wore in the line, or
+    // a new one; a celebrity keeps their own look.
+    const repaint = info && info.celeb ? undefined : (info && info.tex) || true;
+    const container = this.drawPatronSprite(sx, sy, scaleVariance, character, repaint);
     // Patrons share the props' layer and draw order (see setPropDepth()), so
     // they can walk behind a bar or in front of it. Tip popups stay on
     // patronLayer, above everything.
@@ -125,9 +130,9 @@ export class PatronsMixin {
 
   // Picks the real character sprite when it loaded, else the old
   // colored-primitive token.
-  drawPatronSprite(sx, sy, scaleVariance, character) {
+  drawPatronSprite(sx, sy, scaleVariance, character, repaint) {
     if (this.hasCharacterSprites()) {
-      return this.drawPatronCharacterSprite(sx, sy, scaleVariance, character);
+      return this.drawPatronCharacterSprite(sx, sy, scaleVariance, character, repaint);
     }
     return this.drawPatronFallbackToken(sx, sy, scaleVariance);
   }
@@ -167,7 +172,9 @@ export class PatronsMixin {
     return !missing || !missing.includes(clip);
   }
 
-  drawPatronCharacterSprite(sx, sy, scaleVariance, character) {
+  // `repaint`: true for a guest in their own new colours, or the key of the
+  // repaint they already wear (variety.js); staff and celebrities leave it out.
+  drawPatronCharacterSprite(sx, sy, scaleVariance, character, repaint) {
     const container = this.add.container(sx, sy);
     const shadow = this.add.ellipse(0, 2 * PROP_SCALE, 30 * PROP_SCALE, 12 * PROP_SCALE, 0x000000, 0.3);
     // Everyone wears the hand-drawn looks for now: a guest (no character
@@ -180,7 +187,13 @@ export class PatronsMixin {
     container.patronCharacter = character ?? this.randomGuestLook() ?? 0;
     container.patronDir = 'front';
     const meta = patronMetaOf(container.patronCharacter);
-    const sprite = this.add.sprite(0, 0, `patron_${container.patronCharacter}`);
+    const own = `patron_${container.patronCharacter}`;
+    const isGuestLook = guestLooks.includes(container.patronCharacter);
+    container.patronTex = !isGuestLook || !repaint ? own
+      : repaint === true ? this.guestTexture(container.patronCharacter)
+        : this.textures.exists(repaint) && repaint.startsWith(`${own}v`) ? repaint : own;
+    if (container.patronTex !== own) this.wearRepaint(container, container.patronTex);
+    const sprite = this.add.sprite(0, 0, container.patronTex);
     sprite.setOrigin(meta.originX, meta.originY);
     sprite.setScale((CHARACTER_DISPLAY_HEIGHT * 0.9) / meta.standingHeight);
     container.add([shadow, sprite]);
@@ -743,7 +756,7 @@ export class PatronsMixin {
     this.removeSeatOccluder(patron);
     this.leaveBarQueue(patron);
     this.patronLeaves(patron);
-    this.streetLeaver(patron.container.patronCharacter); // walks off down the street outside
+    this.streetLeaver(patron.container.patronCharacter, patron.container.patronTex); // walks off down the street outside, in their colours
     // From here the patron is fading out at the door: nothing may move or
     // animate it again (its container is destroyed when the fade ends).
     patron.gone = true;

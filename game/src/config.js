@@ -322,6 +322,28 @@ export const GUEST_CUTOUTS = ['suit01', 'grey01', 'emo01', 'girl01', 'girl02', '
 // every clip; a new look missing its back walk would wait (randomGuestLook()
 // skips a look that borrows it) and one not drawn sitting won't sit (canDoClip()).
 export const GIRL_LOOKS = ['girl01', 'girl02', 'girl03', 'girl04'];
+// Every guest repainted in their own colours, so the crowd never repeats
+// (the owner's ask, October 2026: real skin tones, normal clothes and hair
+// colours, nothing crazy; scene/variety.js, maps from
+// art/characters/cutout/color_map.py). `plain` of guests keep the colours
+// they were drawn in, and each part is left as drawn `keep` of the time.
+// Light clothes colours only go on clothes drawn light (on dark-drawn ones
+// they come out washed-out), and hair drawn dark only gets dark and middle
+// shades (blonde on it leaves dark roots). A repaint is a picture of its
+// own, thrown away when nobody wears it; at most `maxLive` at once, for
+// phones' memory, after which new guests share one.
+export const VARIETY = {
+  plain: 0.2, keep: 0.2, maxLive: 14,
+  skins: [[255, 224, 200], [236, 190, 152], [208, 152, 108], [170, 112, 74], [128, 82, 54], [92, 58, 40]],
+  clothes: {
+    any: [[24, 26, 32], [28, 34, 58], [112, 22, 38], [36, 66, 48], [64, 66, 74], [80, 36, 96], [36, 58, 104], [96, 64, 40]],
+    light: [[236, 232, 224], [196, 176, 146], [200, 202, 208], [222, 196, 200], [184, 206, 226]],
+  },
+  hair: {
+    dark: [[[14, 12, 14], [40, 36, 40], [92, 88, 96]], [[30, 18, 12], [70, 44, 28], [130, 92, 64]], [[54, 32, 18], [120, 78, 44], [190, 140, 96]], [[60, 20, 12], [140, 58, 30], [210, 120, 80]]],
+    light: [[[54, 32, 18], [120, 78, 44], [190, 140, 96]], [[60, 20, 12], [140, 58, 30], [210, 120, 80]], [[120, 86, 40], [214, 176, 110], [250, 232, 186]], [[130, 124, 118], [206, 200, 192], [250, 248, 242]], [[110, 66, 30], [176, 118, 62], [226, 176, 120]]],
+  },
+};
 export const CHARACTER_DISPLAY_HEIGHT = 77; // px: was 87.4; the owner found a busy club hard to see, October 2026
 // How far above a patron's feet their tip / drink popups start.
 export const PATRON_POPUP_Y = CHARACTER_DISPLAY_HEIGHT * 0.8;

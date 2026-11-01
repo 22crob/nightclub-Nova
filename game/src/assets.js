@@ -40,6 +40,16 @@ const drawnMeta = {
 const PATRON_METAS = cutKeys.map((k) => patronSheetMetas[k.replace(/\.png$/, '.json')]);
 // The cut-out guests by name (guy01, suit01...): their character index.
 export const CUTOUT_PATRONS = Object.fromEntries(cutKeys.map((k, i) => [k.match(/patron_cut_(\w+)\.png$/)[1], i]));
+// Colour maps for repainting the guests (art/characters/cutout/color_map.py,
+// scene/variety.js): per character, the map's URL and the colours it was drawn in.
+const colorMapPngs = import.meta.glob('./assets/sprites/patrons/colors/*.png', { eager: true, import: 'default' });
+const colorMapInfo = import.meta.glob('./assets/sprites/patrons/colors/*.json', { eager: true, import: 'default' });
+export const PATRON_COLOR_MAPS = cutKeys.map((k) => {
+  const name = k.match(/patron_cut_(\w+)\.png$/)[1];
+  const url = colorMapPngs[`./assets/sprites/patrons/colors/${name}.png`];
+  const info = colorMapInfo[`./assets/sprites/patrons/colors/${name}.json`];
+  return url && info ? { url, info } : null;
+});
 export function patronMetaOf(character) {
   return PATRON_METAS[character] || drawnMeta;
 }

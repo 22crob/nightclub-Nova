@@ -401,9 +401,34 @@ const looks = await page.evaluate(() => {
   const s = window.__clubNova.scene.getScene('club');
   return s.patrons.map((p) => ({ tex: p.container.patronSprite && p.container.patronSprite.texture.key, anim: p.container.patronSprite && p.container.patronSprite.anims.currentAnim && p.container.patronSprite.anims.currentAnim.key }));
 });
-check('patrons use chibi characters and play an animation', looks.length > 0 && looks.every((l) => /^patron_\d+$/.test(l.tex) && /^patron_\d+_(idle|walk|dance|drink|sit|sittalk)_(front|back)$/.test(l.anim)), JSON.stringify(looks[0]));
+check('patrons use chibi characters and play an animation', looks.length > 0 && looks.every((l) => /^patron_\d+(v\d+)?$/.test(l.tex) && /^patron_\d+(v\d+)?_(idle|walk|dance|drink|sit|sittalk)_(front|back)$/.test(l.anim)), JSON.stringify(looks[0]));
 const guestLooks = await page.evaluate(() => [...new Set(window.__clubNova.scene.getScene('club').patrons.filter((p) => !p.celeb).map((p) => p.container.patronCharacter))]);
 check('every ordinary guest is one of the hand-drawn guest looks (suit01, grey01, emo01, girl01, girl02, girl03, girl04)', guestLooks.length >= 1 && guestLooks.length <= 7 && guestLooks.every((c) => c >= 0 && c < 7), JSON.stringify(guestLooks));
+
+// Guests come in their own colours (variety.js): a repaint is its own
+// picture with the look's animations, coloured differently from the drawn
+// sheet, kept by someone walking in from the line, and thrown away once
+// nobody wears it.
+const variety = await page.evaluate(async () => {
+  const s = window.__clubNova.scene.getScene('club');
+  const c = s.cutoutLook('suit01');
+  const base = s.varietyBase(c);
+  const key = s.makeRepaint(c, base, { skin: [128, 82, 54], cloth: [[28, 34, 58]], hair: [[60, 20, 12], [140, 58, 30], [210, 120, 80]] });
+  const changed = (() => { const a = s.textures.get(key).getSourceImage().getContext('2d').getImageData(0, 0, base.pixels.width, base.pixels.height).data; let n = 0; for (let i = 0; i < a.length; i += 4) if (a[i] !== base.pixels.data[i]) n++; return n; })();
+  const anims = ['idle', 'walk', 'dance', 'sit'].every((clip) => s.anims.exists(`${key}_${clip}_front`) && s.anims.exists(`${key}_${clip}_back`));
+  const person = s.drawPatronCharacterSprite(100, 100, 1, c, key);
+  const wears = person.patronTex === key && person.patronSprite.texture.key === key;
+  const card = !!s.repaintPortrait(key);
+  person.destroy();
+  const kept = s.textures.exists(key); // a moment's grace for the line-to-door hand-off
+  s.dropRepaint(key);
+  const staff = s.drawPatronCharacterSprite(100, 100, 1, c);
+  const staffPlain = staff.patronTex === `patron_${c}`;
+  staff.destroy();
+  return { changed, anims, wears, card, kept, gone: !s.textures.exists(key) && !s.anims.exists(`${key}_walk_front`), staffPlain,
+    maps: [0, 1, 2, 3, 4, 5, 6].filter((i) => s.varietyBase(i)).length };
+});
+check('guests come in their own colours: a repaint has its own picture and moves, shows on their card, and goes once nobody wears it; staff stay as drawn', variety.changed > 20000 && variety.anims && variety.wears && variety.card && variety.kept && variety.gone && variety.staffPlain && variety.maps === 7, JSON.stringify(variety));
 
 // Facing: moving down-screen shows the front, up-screen the back, and the
 // sprite is mirrored for the right-hand diagonals.

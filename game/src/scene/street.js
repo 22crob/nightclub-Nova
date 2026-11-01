@@ -354,7 +354,7 @@ export class StreetMixin {
       const at = { gx: spot.gx + Math.cos(a) * 0.55, gy: spot.gy + Math.sin(a) * 0.55 };
       const from = onFront ? { gx: Math.random() < 0.5 ? sp.laneEnds[0] : sp.nx + STREET.sidewalk + 1, gy: at.gy }
         : { gx: at.gx, gy: Math.random() < 0.5 ? sp.laneEnds[0] : sp.ny + STREET.sidewalk + 1 };
-      const person = this.makeStreetPerson(already ? at : from, this.streetPassLayer, this.streetCharacter());
+      const person = this.makeStreetPerson(already ? at : from, this.streetPassLayer, this.streetCharacter(), true);
       person.hangout = g;
       g.people.push(person);
       this.streetWalkers.push(person);
@@ -398,7 +398,7 @@ export class StreetMixin {
     // New arrivals walk up the left sidewalk from the front of the block.
     const start = already ? sp.slot(k) : { gx: sp.leftX, gy: sp.laneEnds[1] };
     const celeb = info && info.celeb ? this.celebDef(info.celeb) : null; // a celebrity has their own look
-    const person = this.makeStreetPerson(start, this.streetQueueLayer, celeb ? celeb.character : undefined);
+    const person = this.makeStreetPerson(start, this.streetQueueLayer, celeb ? celeb.character : undefined, !celeb);
     person.info = info;
     if (info && info.celeb) this.addStarIcon(person.container); // a celebrity in the line
     person.slot = k;
@@ -421,10 +421,12 @@ export class StreetMixin {
     this.setPatronAnimation(person, 'idle'); // show the back-facing pose
   }
 
-  makeStreetPerson(at, layer, character) {
+  // `repaint` as for drawPatronCharacterSprite(): guests and passers-by in
+  // their own colours (variety.js).
+  makeStreetPerson(at, layer, character, repaint) {
     const { sx, sy } = this.gridToScreen(at.gx, at.gy);
     const scaleVariance = 0.95 + Math.random() * 0.1;
-    const container = this.drawPatronCharacterSprite(sx, sy + DROP, scaleVariance, character);
+    const container = this.drawPatronCharacterSprite(sx, sy + DROP, scaleVariance, character, repaint);
     container.setDepth(at.gx + at.gy);
     layer.add(container);
     return { container, scaleVariance, gx: at.gx, gy: at.gy };
@@ -508,17 +510,18 @@ export class StreetMixin {
     this.tweens.add({ targets: front.container, alpha: 0, delay: 600, duration: 500 });
     this.streetWalkTo(front, [{ gx: sp.lineX, gy: sp.door }, sp.enterTo], () => {
       const character = front.container.patronCharacter;
+      const tex = front.container.patronTex; // the same colours inside (variety.js)
       front.container.destroy();
-      this.trySpawnPatron(character, front.info);
+      this.trySpawnPatron(character, { ...(front.info || {}), tex });
     });
   }
 
   // A patron has left through the door: they step out by the bouncer and
   // walk off along the left sidewalk.
-  streetLeaver(character) {
+  streetLeaver(character, tex) {
     if (!this.hasCharacterSprites() || !this.streetPassLayer) return;
     const sp = this.streetSpots();
-    const person = this.makeStreetPerson(sp.exitFrom, this.streetBackPassLayer, character);
+    const person = this.makeStreetPerson(sp.exitFrom, this.streetBackPassLayer, character, tex); // still in their colours
     this.streetWalkers.push(person);
     person.container.setAlpha(0);
     this.tweens.add({ targets: person.container, alpha: 1, duration: 500 });
@@ -552,7 +555,7 @@ export class StreetMixin {
     for (let i = 0; i < n; i++) {
       const lag = i * 0.35, sideOff = (i - (n - 1) / 2) * 0.55;
       const o = [off[0] + side[0] * sideOff - along[0] * lag, off[1] + side[1] * sideOff - along[1] * lag];
-      const person = this.makeStreetPerson({ gx: a[0] + o[0], gy: a[1] + o[1] }, r.front ? this.streetPassLayer : this.streetBackPassLayer, this.streetCharacter());
+      const person = this.makeStreetPerson({ gx: a[0] + o[0], gy: a[1] + o[1] }, r.front ? this.streetPassLayer : this.streetBackPassLayer, this.streetCharacter(), true);
       this.streetWalkers.push(person);
       person.container.setAlpha(0);
       this.tweens.add({ targets: person.container, alpha: 1, duration: 600 });

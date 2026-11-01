@@ -1,7 +1,7 @@
 // The main game scene. Its methods are split across the files in this
 // folder by topic and mixed in below, so each file stays small.
 import Phaser from 'phaser';
-import { PATRON_SHEETS, SPRITE_URLS, patronMetaOf } from '../assets.js';
+import { PATRON_COLOR_MAPS, PATRON_SHEETS, SPRITE_URLS, patronMetaOf } from '../assets.js';
 import { PROP_TYPES } from '../catalog.js';
 import { BASE_GRID_SIZE, FACINGS, PASSIVE_FAN_SHARE, FLOOR_TICK_MS, STARTING_CASH, TOUCH, WAGE_INTERVAL_MS, ZOOM_DEFAULT } from '../config.js';
 import { SFX } from '../sfx.js';
@@ -37,6 +37,7 @@ import { BonusesMixin } from './bonuses.js';
 import { SpeakersMixin } from './speakers.js';
 import { SelectionMixin } from './selection.js';
 import { GoalsMixin } from './goals.js';
+import { VarietyMixin } from './variety.js';
 import { MeterMixin } from './meter.js';
 import { ClubNameMixin } from './clubName.js';
 import { DailyMixin } from './daily.js';
@@ -107,6 +108,7 @@ export class ClubScene extends Phaser.Scene {
     PATRON_SHEETS.forEach((url, i) => {
       const meta = patronMetaOf(i);
       this.load.spritesheet(`patron_${i}`, url, { frameWidth: meta.frameWidth, frameHeight: meta.frameHeight });
+      if (PATRON_COLOR_MAPS[i]) this.load.image(`patron_${i}_colors`, PATRON_COLOR_MAPS[i].url); // for repainting guests (variety.js)
     });
   }
 
@@ -480,6 +482,7 @@ applyMixins(ClubScene, [
   SpeakersMixin,
   SelectionMixin,
   GoalsMixin,
+  VarietyMixin,
   MeterMixin,
   ClubNameMixin,
   DailyMixin,

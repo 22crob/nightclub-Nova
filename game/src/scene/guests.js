@@ -99,9 +99,10 @@ export class GuestsMixin {
 
   // A portrait for the card, cut from the character's sheet (standing,
   // facing front).
-  setPortrait(el, character) {
+  setPortrait(el, character, tex) {
     const url = PATRON_SHEETS[character];
     if (!el || !url) return;
+    const repaint = tex && tex !== `patron_${character}` && this.repaintPortrait(tex);
     // Framed like a drawn character at 0.8x: the head 10 px below the top
     // and the body centred where theirs is (sheets differ in grid and size).
     const meta = patronMetaOf(character);
@@ -112,6 +113,12 @@ export class GuestsMixin {
     const cellY = Math.floor(first / meta.columns) * meta.frameHeight;
     const headTop = meta.originY * meta.frameHeight - meta.standingHeight;
     const centreX = (drawn.originX - 0.12) * drawn.frameWidth * 0.8;
+    if (repaint) { // their own colours: the repaint's standing frame on its own
+      el.style.backgroundImage = `url(${repaint})`;
+      el.style.backgroundSize = `${meta.frameWidth * k}px auto`;
+      el.style.backgroundPosition = `${centreX - meta.originX * meta.frameWidth * k}px ${-(headTop - 10) * k}px`;
+      return;
+    }
     el.style.backgroundImage = `url(${url})`;
     el.style.backgroundSize = `${meta.frameWidth * meta.columns * k}px auto`;
     el.style.backgroundPosition = `${centreX - (cellX + meta.originX * meta.frameWidth) * k}px ${-(cellY + headTop - 10) * k}px`;
@@ -139,7 +146,7 @@ export class GuestsMixin {
     if (card.kind === 'guest') {
       const p = card.target;
       if (p.gone) { this.closeInfoCard(); return; }
-      this.setPortrait(document.getElementById('infoPortrait'), p.container.patronCharacter);
+      this.setPortrait(document.getElementById('infoPortrait'), p.container.patronCharacter, p.container.patronTex);
       set('infoName', p.name || 'Guest');
       set('infoRole', p.leaving ? 'Heading home' : (p.celeb ? `⭐ Celebrity · ${'★'.repeat(p.celeb.fame)} · likes your club ${this.celebRecord(p.celeb.key).liking}%` : (p.type ? p.type.label : 'Guest')));
       set('infoQuote', `"${this.guestQuote(p)}"`);
