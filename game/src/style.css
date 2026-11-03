@@ -1570,3 +1570,52 @@ body.kick #navBar .navPad > .uiArt { transform: none; }
 #bigPopup[data-theme="celeb"] .bpTitle { background-image: linear-gradient(180deg, #fffbe0 0%, #ffe45c 38%, #f2a50c 54%, #b8620a 72%, #ffe9a0 100%); }
 #bigPopup[data-theme="boost"] .bpSub { color: #ffd23f; }
 #bigPopup[data-theme="rush"] .bpSub { color: #c8fff4; }
+
+/* ------------------------------------------------------------------ */
+/* No silver (the owner's ask, November 2026: "I don't like the silver */
+/* on the UI"). Every chrome frame and button becomes dark navy with   */
+/* the same thin teal glow, the buttons glossy blue like the stat      */
+/* panels, and the silver lettering plain white. Overrides all above.  */
+/* ------------------------------------------------------------------ */
+:root {
+  --nc-chrome: linear-gradient(180deg, #2a3f78 0%, #16295a 45%, #0d1c44 100%);
+  --nav-frame: linear-gradient(180deg, #2a3f78 0%, #16295a 45%, #0d1c44 100%);
+  --nav-button: linear-gradient(180deg, #5ab4ff 0%, #2a85e6 30%, #1765c8 60%, #0e4aa0 100%);
+}
+/* Lettering: white, a crisp dark shadow. */
+.silverText, #hudProfile #hudCash .amount, #hudStats .statLabel,
+.summaryTitle, .levelTitle, #goalsTitle, .tutorialTitle {
+  background: none; -webkit-background-clip: border-box; background-clip: border-box; color: #fff;
+}
+#hudProfile #hudCash .amount { filter: drop-shadow(0 2px 0 rgba(0, 0, 0, 0.9)) drop-shadow(0 0 4px rgba(0, 0, 0, 0.6)); }
+#hudProfile #hudCash .amount.rolling { color: #9dff8a; }
+#hudStats .statLabel { color: #fff; filter: drop-shadow(0 1px 0 rgba(0, 0, 0, 0.85)); }
+.summaryTitle, .levelTitle, #goalsTitle, .tutorialTitle { filter: drop-shadow(0 2px 0 rgba(0, 12, 45, 0.95)); }
+/* Stat tiles: a navy frame round the blue panel. */
+#hudStats .statButton { background: var(--nav-frame); box-shadow: 0 0 0 1.5px #52d6e6, 0 0 9px rgba(82, 214, 230, 0.6), inset 0 1px 0 rgba(255, 255, 255, 0.25), 0 3px 6px rgba(0, 0, 0, 0.55); }
+/* Bass Boost / Drink Rush / Party: glossy blue, white pictures. */
+#actionButtons .roundButton, #actionButtons .roundButton:hover {
+  background: var(--nav-button);
+  box-shadow: 0 0 0 1.5px #52d6e6, 0 0 7px rgba(82, 214, 230, 0.55), inset 0 1px 0 rgba(255, 255, 255, 0.6), 0 3px 5px rgba(0, 0, 0, 0.55);
+}
+#actionButtons .roundButton:hover { filter: brightness(1.12); }
+#actionButtons .roundButton > .uiArt { filter: invert(1) grayscale(1) brightness(1.6) drop-shadow(0 1px 1px rgba(0, 0, 0, 0.7)); }
+#actionButtons .roundButton[data-state="active"] { box-shadow: 0 0 0 2px #7af2ff, 0 0 14px #52d6e6, inset 0 1px 0 rgba(255, 255, 255, 0.6), 0 3px 5px rgba(0, 0, 0, 0.55); }
+/* The small square buttons under the XP bar: dark navy, white glyphs. */
+#hudProfile .toolButton, #hudProfile .songButton, #hudProfile .toolButton:hover, #hudProfile .songButton:hover {
+  background: var(--nav-frame); box-shadow: 0 0 0 1px #52d6e6, 0 2px 4px rgba(0, 0, 0, 0.55);
+}
+#hudProfile .toolButton > .uiGlyph, #hudProfile .songButton > .uiGlyph { filter: drop-shadow(0 1px 0 rgba(0, 0, 0, 0.6)); }
+/* The Goals tab and the guest card's round badges and buttons. */
+#goalTab { background: var(--nav-frame); box-shadow: 0 0 0 1.5px #52d6e6, 0 0 8px rgba(82, 214, 230, 0.55), 0 3px 6px rgba(0, 0, 0, 0.55); }
+.bubbleIcon { background: var(--nav-frame); }
+.actionButton, .actionButton:hover { background: var(--nav-button); }
+/* "Not now" buttons: navy with white words. */
+.summaryButton.later { background: var(--nav-frame); color: #fff; text-shadow: 0 1px 0 rgba(0, 0, 0, 0.6); }
+/* The drink meter: a navy frame, cap and foot round the purple glass. */
+.meterCap { background: radial-gradient(circle at 38% 30%, #6fa8ff 0 8%, #2a4f9a 30%, #0d1c44 100%); }
+.meterGlass {
+  background: linear-gradient(90deg, rgba(255, 255, 255, 0.18), rgba(255, 255, 255, 0.04) 45%, rgba(255, 255, 255, 0.16)) padding-box, rgba(16, 10, 30, 0.75) padding-box,
+    linear-gradient(90deg, #0d1c44, #2a4f9a 35%, #16295a 65%, #0b1430) border-box;
+}
+.meterBase { background: linear-gradient(180deg, #2a4f9a, #16295a 60%, #0b1430); }

@@ -171,12 +171,16 @@ const ncLook = await page.evaluate(() => {
     const cs = getComputedStyle(el);
     out[sel] = /gradient/.test(cs.backgroundImage) && /82, 214, 230/.test(cs.boxShadow);
   }
+  // No silver anywhere (the owner's ask, November 2026): no chrome-white in the frames and buttons.
+  const silver = /242, 244, 247|196, 201, 208|211, 215, 221/;
+  out.noSilver = ['#hudStats .statButton', '#boostButton', '#goalTab', '#infoCard', '#levelUp .levelCard', '.meterCap', '#hudProfile .toolButton']
+    .every((sel) => { const el = document.querySelector(sel); return el && !silver.test(getComputedStyle(el).backgroundImage); });
   const bp = document.getElementById('bigPopup'); const keep = bp.dataset.theme; bp.dataset.theme = 'boost';
   out.boostColour = /255, 122, 230/.test(getComputedStyle(bp.querySelector('.bpTitle')).backgroundImage); // pink, not plain silver
   if (keep === undefined) delete bp.dataset.theme; else bp.dataset.theme = keep;
   return out;
 });
-check('dialogs, the Goals tab and panel, the guest card and the guide have the chrome frame and teal glow; the Bass Boost popup is in colour', Object.values(ncLook).every(Boolean), JSON.stringify(ncLook));
+check('dialogs, the Goals tab and panel, the guest card and the guide have the chrome frame and teal glow; the Bass Boost popup is in colour; no silver', Object.values(ncLook).every(Boolean), JSON.stringify(ncLook));
 check('the dock is Build, Staff, Edit, Inventory, VIP (labelled); Build has NEW and 6 categories; Edit has Edit and Expand', tabs.join() === 'Build=Build,Staff=Staff,Edit=Edit,Inventory=Inventory,VIP Celebrities=VIP' && storeTabs.join() === 'New,Bars,Seating,Floors,Wallpaper,Decorations,DJ Booths' && clubKeys.join() === 'Edit,Expand', `${tabs.join(' / ')} | ${storeTabs.join(' / ')} | ${clubKeys.join(' / ')}`);
 check('bar shows its real sprite icon', await page.locator('.propButton .icon').first().evaluate((el) => el.style.backgroundImage.includes('data:image/png')));
 // Floors: dance floors and regular floors in one category, the tip says which.
