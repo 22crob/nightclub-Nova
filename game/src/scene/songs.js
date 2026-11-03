@@ -2,9 +2,10 @@
 // City's. The box under the profile shows the track, its artist and when it
 // ends on the night's clock; Change skips to the next track, and Like gives
 // a fan once a song. Each song plays to its end (songLength()), then the next starts,
-// and the dancers cheer a new one. The songs come shuffled (the owner's ask,
-// October 2026): each plays once in a random order, then they're shuffled
-// again, never the same song twice running (nextSongIndex()). The tracks themselves are in music.js.
+// and the dancers cheer a new one. The songs are shuffled once when the game
+// loads (the owner's ask, October 2026): a random order, starting on a random
+// song, that then plays round and round as normal until the game is reloaded
+// (nextSongIndex()). The tracks themselves are in music.js.
 // Mixed into ClubScene (see ClubScene.js); `this` is the scene.
 import { SONGS } from '../config.js';
 import { Music, TRACKS } from '../music.js';
@@ -37,22 +38,21 @@ export class SongsMixin {
     this.updateSongBox();
   }
 
-  // The next song in the shuffle: the songs not yet played this round, in a
-  // random order; a new round is shuffled so it never starts with the song
-  // just heard.
+  // The next song in this load's order: shuffled once, the first time a song
+  // is needed, then played in that order round and round.
   nextSongIndex() {
     if (TRACKS.length < 2) return 0;
-    if (!this.songBag || !this.songBag.length) {
-      const bag = TRACKS.map((_, i) => i);
-      for (let i = bag.length - 1; i > 0; i--) {
+    if (!this.songOrder) {
+      const order = TRACKS.map((_, i) => i);
+      for (let i = order.length - 1; i > 0; i--) {
         const j = Math.floor(Math.random() * (i + 1));
-        [bag[i], bag[j]] = [bag[j], bag[i]];
+        [order[i], order[j]] = [order[j], order[i]];
       }
-      // Songs are taken from the end; keep the one just played off it.
-      if (bag[bag.length - 1] === this.songIndex) [bag[0], bag[bag.length - 1]] = [bag[bag.length - 1], bag[0]];
-      this.songBag = bag;
+      this.songOrder = order;
+      this.songPos = -1;
     }
-    return this.songBag.pop();
+    this.songPos = (this.songPos + 1) % this.songOrder.length;
+    return this.songOrder[this.songPos];
   }
 
   // The Change button: skip to the next track.

@@ -1796,21 +1796,19 @@ const extras = await page.evaluate(async () => {
   // Skip goes to the next song (or starts the only one again).
   out.changed = document.getElementById('songTitle').textContent === s.currentSong().title && s.time.now - s.songStartedAt < 1000
     && (s.songIndex !== index0 || s.songLength() === s.currentSong().lengthMs);
-  // The songs come shuffled: each round plays every song once in a random
-  // order, and the same song never plays twice running.
+  // The songs are shuffled once a load: a random order, every song once,
+  // that then repeats as it is; a new load gets a new order.
   {
-    const keepBag = s.songBag, keepIndex = s.songIndex;
-    s.songBag = null;
-    const first = s.nextSongIndex();
-    const n = s.songBag.length + 1;
-    const picks = [first];
-    s.songIndex = first;
-    while (picks.length < n * 6) { const i = s.nextSongIndex(); picks.push(i); s.songIndex = i; }
-    const rounds = [...Array(6)].map((_, r) => picks.slice(r * n, r * n + n));
-    out.shuffle = { n, everyRound: rounds.every((r) => new Set(r).size === n),
-      noRepeats: picks.every((i, k) => k === 0 || i !== picks[k - 1]),
-      notInOrder: rounds.some((r) => r.some((i, k) => k > 0 && i !== (r[k - 1] + 1) % n)) };
-    s.songBag = keepBag; s.songIndex = keepIndex;
+    const keep = { order: s.songOrder, pos: s.songPos };
+    const run = () => { s.songOrder = null; return [...Array(30)].map(() => s.nextSongIndex()); };
+    const picks = run();
+    const n = s.songOrder.length;
+    const loops = [0, 1, 2].map((r) => picks.slice(r * n, r * n + n).join());
+    const loads = [...Array(8)].map(() => run().slice(0, n).join());
+    out.shuffle = { n, everySong: new Set(picks.slice(0, n)).size === n, sameOrder: loops.every((l) => l === loops[0]),
+      noRepeats: picks.every((i, k) => k === 0 || i !== picks[k - 1]), newOrders: new Set(loads).size > 1,
+      notInOrder: loads.some((l) => l !== [...Array(n).keys()].join()) };
+    s.songOrder = keep.order; s.songPos = keep.pos;
   }
   // Opened from disk the songs (separate files) can't load: the
   // made-in-code tracks play instead. (Real songs are checked over http
@@ -1956,7 +1954,7 @@ const extras = await page.evaluate(async () => {
   return out;
 });
 check('the song box changes tracks, and Like gives a fan once a song', extras.changed && extras.liked === 1, JSON.stringify(extras));
-check('the songs play shuffled: every song once a round in a random order, never the same one twice running', extras.shuffle.n >= 2 && extras.shuffle.everyRound && extras.shuffle.noRepeats && extras.shuffle.notInOrder, JSON.stringify(extras.shuffle));
+check('the songs are shuffled once a load: a random order of every song, played round and round as it is until a reload gives a new one', extras.shuffle.n >= 2 && extras.shuffle.everySong && extras.shuffle.sameOrder && extras.shuffle.noRepeats && extras.shuffle.newOrders && extras.shuffle.notInOrder, JSON.stringify(extras.shuffle));
 check('opened from disk, the club plays the made-in-code tracks (the songs are separate files)', extras.diskFallback, JSON.stringify(extras));
 check('guests can only be seated at a VIP booth; the button is greyed out without one', extras.greyed && extras.couchOnly && extras.lit && extras.seated, JSON.stringify(extras));
 check('a drink on the house, once a visit', extras.onHouse, JSON.stringify(extras));
